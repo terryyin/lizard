@@ -34,6 +34,50 @@ export function isSessionId(value) {
   );
 }
 
+const adHocStoryPrefix = "ad-hoc#";
+
+export function adHocStoryIdentity(sessionId) {
+  return isSessionId(sessionId) ? `${adHocStoryPrefix}${sessionId}` : undefined;
+}
+
+/** @param {string} identity */
+export function adHocStorySessionId(identity) {
+  if (!identity.startsWith(adHocStoryPrefix)) return undefined;
+  const sessionId = identity.slice(adHocStoryPrefix.length);
+  return isSessionId(sessionId) ? sessionId : undefined;
+}
+
+export function adHocCloseTitle(workflow, title) {
+  return workflow === "ad-hoc" && typeof title === "string" && title.trim()
+    ? title
+    : undefined;
+}
+
+// The originating close carries the title and the identity derived from its
+// own session. A follow-up carries its parent's identity.
+export function isOriginatingAdHocClose(record) {
+  if (adHocCloseTitle(record?.workflow, record?.title) === undefined)
+    return false;
+  const identity = adHocStoryIdentity(record.sessionId);
+  return identity !== undefined && record.story === identity;
+}
+
+// A concurrent close of the same originating session keeps the first title,
+// close time and comparison that reached the published repository.
+export function matchingOriginatingAdHocClose(bytes, record) {
+  if (!isOriginatingAdHocClose(record)) return undefined;
+  try {
+    const accepted = JSON.parse(bytes);
+    return accepted?.version === sessionRecordVersion &&
+      accepted.sessionId === record.sessionId &&
+      isOriginatingAdHocClose(accepted)
+      ? accepted
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // The file name (within the session-record directory) the record of `sessionId`
 // takes. The same UUID always names the same file.
 function sessionRecordFileName(sessionId) {

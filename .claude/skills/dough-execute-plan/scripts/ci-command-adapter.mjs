@@ -22,7 +22,6 @@ const unavailableReasonBytes = 600;
 // notification stream suppresses completed startup history. Integrated-state
 // facts come only from the poll's own discovery: none survive a failed one.
 export function createCommandAcquisition(options) {
-  const discover = createCommandDiscovery(options);
   const currentRuns = createStartupRunFilter();
   let retained = [];
   let polled;
@@ -31,7 +30,7 @@ export function createCommandAcquisition(options) {
     acquireRuns: async (signal) => {
       polled = undefined;
       queue = undefined;
-      const snapshot = await discover(signal);
+      const snapshot = await discoverCommandAttempts(options, signal);
       const { attempts } = snapshot;
       queue = snapshot.queue;
       retained = latestCommandAttempts(attempts);
@@ -51,9 +50,6 @@ export function createCommandAcquisition(options) {
     // Coverage owns workflow-path applicability; candidates retain their real
     // attempt state and never enter the ordinary failure stream by themselves.
     discoverAncestorCandidates: async () => retained,
-    // Every attempt this poll's discover answered, before newest-per-check
-    // retention: CI status counts attemptId ambiguity over these.
-    discoverAnsweredAttempts: async () => polled ?? [],
     discoverQueue: async () => queue,
     readCurrentAttempt: async (run) => {
       if (!polled) throw new Error("CI adapter discovery is unavailable");
@@ -62,28 +58,33 @@ export function createCommandAcquisition(options) {
   };
 }
 
-function createCommandDiscovery({
-  command,
-  repo,
-  branch,
-  root,
-  timeoutMs = defaultAdapterTimeoutMs,
-  includeOtherBranches = false,
-}) {
-  return async (signal) => {
-    const response = await runAdapter(
-      command,
-      { operation: "discover", check: { repo, branch } },
-      { signal, cwd: root, timeoutMs },
-    );
-    if (!response || !Array.isArray(response.attempts))
-      throw new Error("CI adapter discovery must return an attempts array");
-    return {
-      attempts: (includeOtherBranches
-        ? answeredCommandAttempts
-        : targetCommandAttempts)(response.attempts, branch),
-      queue: targetCommandQueue(response.queue, branch),
-    };
+// One discover for `branch`: every attempt it answered, in provider order and
+// before newest-per-check retention (other branches' attempts only with
+// `includeOtherBranches`), and that branch's queue snapshot. Read-only callers
+// use it directly; the watcher's acquisition keeps its own polling state.
+export async function discoverCommandAttempts(
+  {
+    command,
+    repo,
+    branch,
+    root,
+    timeoutMs = defaultAdapterTimeoutMs,
+    includeOtherBranches = false,
+  },
+  signal,
+) {
+  const response = await runAdapter(
+    command,
+    { operation: "discover", check: { repo, branch } },
+    { signal, cwd: root, timeoutMs },
+  );
+  if (!response || !Array.isArray(response.attempts))
+    throw new Error("CI adapter discovery must return an attempts array");
+  return {
+    attempts: (includeOtherBranches
+      ? answeredCommandAttempts
+      : targetCommandAttempts)(response.attempts, branch),
+    queue: targetCommandQueue(response.queue, branch),
   };
 }
 
