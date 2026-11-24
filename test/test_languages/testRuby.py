@@ -614,6 +614,21 @@ end
             [(fn.name, fn.start_line, fn.end_line) for fn in functions])
         self.assertEqual(8, functions[0].token_count)
 
+    def test_colon_character_can_be_multiplied(self):
+        code = r'''
+def repeat_separator = ?:*
+  2
+
+def repeat_escaped_separator = ?\:*
+  3
+'''
+
+        functions = get_ruby_function_list(code)
+
+        self.assertEqual(
+            [('repeat_separator', 2, 3), ('repeat_escaped_separator', 5, 6)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in functions])
+
     def test_setter_and_operator_methods_keep_their_body(self):
         result = get_ruby_function_list('''
 class Box
