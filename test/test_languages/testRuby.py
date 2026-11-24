@@ -629,6 +629,18 @@ def repeat_escaped_separator = ?\:*
             [('repeat_separator', 2, 3), ('repeat_escaped_separator', 5, 6)],
             [(fn.name, fn.start_line, fn.end_line) for fn in functions])
 
+    def test_load_path_global_can_be_joined_with_star(self):
+        code = '''
+def load_path = $:*
+  File::PATH_SEPARATOR
+'''
+
+        functions = get_ruby_function_list(code)
+
+        self.assertEqual(
+            [('load_path', 2, 3)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in functions])
+
     def test_setter_and_operator_methods_keep_their_body(self):
         result = get_ruby_function_list('''
 class Box
