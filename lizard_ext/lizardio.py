@@ -57,6 +57,10 @@ class LizardExtension(ExtensionBase):
     def cross_file_process(self, fileinfos):
         for fileinfo in fileinfos:
             try:
+                for function in fileinfo.function_list:
+                    # a function the reader starts and ends between two tokens
+                    if not hasattr(function, 'tokens'):
+                        function.tokens = []
                 new_funcs = {f.unqualified_name: f for f in
                              fileinfo.function_list}
                 self.all_methods.update(new_funcs)

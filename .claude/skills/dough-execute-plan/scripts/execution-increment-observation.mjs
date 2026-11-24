@@ -7,6 +7,7 @@
 // retained: delivery verifies that exact directory against the coordinator's
 // claim and never selects a stream by repository and target. Interrupted
 // registration recovers through execution-increment-observation-recovery.mjs.
+import { executionBudgetMs } from "./watch-ci-execution.mjs";
 import {
   bindHostObserver,
   eventRecipient,
@@ -142,7 +143,6 @@ export async function establishObservation({
   observerDirectory,
   workspace,
   runtime,
-  maxDurationMs,
   env,
   root,
   storage,
@@ -217,7 +217,7 @@ export async function establishObservation({
       mode: "execution",
       repo,
       branch,
-      maxDurationMs,
+      maxDurationMs: executionBudgetMs,
     },
     { root, storage, env },
   );

@@ -4,14 +4,7 @@
 // from the whole checkout rather than from the directories already in view.
 import { execFileSync } from "node:child_process";
 import { existsSync, lstatSync, realpathSync } from "node:fs";
-import {
-  basename,
-  dirname,
-  isAbsolute,
-  relative,
-  resolve,
-  sep,
-} from "node:path";
+import { basename, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
 import { consumerKind, renderConsumerTrace } from "./consumer-trace-record.mjs";
@@ -22,7 +15,7 @@ import {
 } from "./consumer-trace-terms.mjs";
 
 const USAGE =
-  "usage: consumer-trace.mjs --checkout <path> [--base <revision>] [--path <changed file>]... [--term <text>]... (at least one --base, --path or --term; --base HEAD traces the uncommitted and untracked change)";
+  "usage: consumer-trace.mjs --checkout <path> [--base <revision>] [--term <text>]... (at least one --base or --term; --base HEAD traces the uncommitted and untracked change)";
 
 class ConsumerTraceInputError extends Error {}
 
@@ -42,24 +35,6 @@ function checkoutRoot(checkout) {
   } catch {
     throw new ConsumerTraceInputError(`not a Git checkout: ${checkout}`);
   }
-}
-
-function canonical(path) {
-  let existing = path;
-  const rest = [];
-  while (!existsSync(existing) && dirname(existing) !== existing) {
-    rest.unshift(basename(existing));
-    existing = dirname(existing);
-  }
-  return resolve(realpathSync(existing), ...rest);
-}
-
-function repositoryPath(root, path) {
-  const absolute = canonical(isAbsolute(path) ? path : resolve(root, path));
-  const inside = relative(root, absolute);
-  if (!inside || inside.startsWith("..") || isAbsolute(inside))
-    throw new ConsumerTraceInputError(`path outside the checkout: ${path}`);
-  return inside.split(sep).join("/");
 }
 
 function revisionOf(root) {
@@ -137,19 +112,12 @@ function firstMatch(content, needles) {
   return { terms, line: index + 1, text: lines[index].trim() };
 }
 
-function traceConsumers({ checkout, base, paths = [], terms = [] }) {
-  if (!base && !paths.length && !terms.length)
-    throw new ConsumerTraceInputError(
-      "supply at least one --base, --path or --term",
-    );
+function traceConsumers({ checkout, base, terms = [] }) {
+  if (!base && !terms.length)
+    throw new ConsumerTraceInputError("supply at least one --base or --term");
   const root = checkoutRoot(checkout);
   const changes = base ? changeAgainstBase(root, base) : [];
-  const changed = [
-    ...new Set([
-      ...changes.map(({ path }) => path),
-      ...paths.map((path) => repositoryPath(root, path)),
-    ]),
-  ].sort();
+  const changed = [...new Set(changes.map(({ path }) => path))].sort();
   const searched = effectTerms(changed, terms, derivedTerms(changes));
   const needles = searched.map((item) => ({
     item,
@@ -193,7 +161,6 @@ function traceConsumers({ checkout, base, paths = [], terms = [] }) {
 const OPTIONS = {
   checkout: { type: "string" },
   base: { type: "string" },
-  path: { type: "string", multiple: true },
   term: { type: "string", multiple: true },
 };
 
@@ -204,11 +171,11 @@ function readConsumerTraceArgs(argv) {
   } catch (error) {
     throw new ConsumerTraceInputError(error.message);
   }
-  const { checkout, base, path = [], term = [] } = parsed.values;
+  const { checkout, base, term = [] } = parsed.values;
   if (!checkout) throw new ConsumerTraceInputError("--checkout is required");
-  if ([base ?? "x", ...path, ...term].some((value) => !value.trim()))
-    throw new ConsumerTraceInputError("--base, --path and --term need a value");
-  return { checkout, base, paths: path, terms: term };
+  if ([base ?? "HEAD", ...term].some((value) => !value.trim()))
+    throw new ConsumerTraceInputError("--base and --term need a value");
+  return { checkout, base, terms: term };
 }
 
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {

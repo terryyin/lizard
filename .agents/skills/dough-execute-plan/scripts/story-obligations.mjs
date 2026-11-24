@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
+import { parseArgs } from "node:util";
 import { readHome } from "../../dough-product-backlog/scripts/product-backlog-home-reader.mjs";
 import { splitHref } from "../../dough-product-backlog/scripts/product-backlog-identity.mjs";
 import { readPlanSlices } from "../../dough-product-backlog/scripts/product-backlog-plan-reader.mjs";
@@ -8,19 +9,8 @@ import {
   normalizeStoryQuote,
   readStoryObligations,
 } from "./story-obligation-reader.mjs";
-import {
-  commitmentProblems,
-  obligationCommitments,
-  pendingLifecycle,
-  readLinkedSourceReview,
-} from "./story-obligation-source-review.mjs";
-import {
-  digest,
-  recordStoryCommitment,
-} from "./story-obligation-source-review-record.mjs";
 
 export { readStoryObligations } from "./story-obligation-reader.mjs";
-export { digest, recordStoryCommitment };
 
 async function readStoryText(planPath, sourceHref) {
   const storySource = await readFile(
@@ -41,20 +31,13 @@ async function inspectStoryObligations(
   const source = await readFile(planPath, "utf8");
   const record = readStoryObligations(source);
   const problems = [...record.problems];
-  const review = await readLinkedSourceReview(planPath, source);
-  const { linked, commitments } = review;
-  problems.push(...review.problems);
-  const lifecycle = pendingLifecycle(commitments);
   const result = () => ({
     result: {
       ok: problems.length === 0,
       entryCount: record.entries.length,
-      ...(linked && { commitmentCount: commitments.length }),
-      ...(lifecycle.length && { pendingLifecycle: lifecycle }),
       ...(problems.length && { problems }),
     },
     entries: record.entries,
-    commitments,
   });
   // The caller resolves the execution plan. This checks recorded progress,
   // never whether the checkout is an execution workspace or its proof is valid.
@@ -75,13 +58,13 @@ async function inspectStoryObligations(
     }
   }
   const slices = new Map((read.slices ?? []).map((item) => [item.index, item]));
-  if (plannedCompletion || record.entries.length || linked) {
+  if (plannedCompletion || record.entries.length) {
     for (const item of read.slices ?? []) {
       if (slices.get(item.index) !== item)
         problems.push({ reason: "ambiguous-slice", slice: item.index });
     }
   }
-  if (!record.entries.length && !linked) return result();
+  if (!record.entries.length) return result();
   if (read.status !== "interpreted" && !plannedCompletion)
     problems.push({ reason: "unreadable-slices", message: read.problem });
   const isDoneOrCommitting = (index) =>
@@ -89,10 +72,8 @@ async function inspectStoryObligations(
   if (slice !== undefined && !slices.has(slice))
     problems.push({ reason: "unknown-slice", slice });
   let story;
-  // Only obligation quotes need the story; commitment rows carry their text.
-  if (record.entries.length && !record.sourceHref)
-    problems.push({ reason: "missing-story-source" });
-  else if (record.entries.length)
+  if (!record.sourceHref) problems.push({ reason: "missing-story-source" });
+  else
     story = await readStoryText(planPath, record.sourceHref).catch((error) => {
       problems.push({
         reason: "unreadable-story-source",
@@ -100,15 +81,8 @@ async function inspectStoryObligations(
       });
     });
   for (const entry of record.entries) {
-    const linked = obligationCommitments(entry, commitments);
     const problem = (reason, fields = {}) =>
-      problems.push({
-        entry: entry.id,
-        ...(linked.disposed.length && { commitments: linked.disposed }),
-        reason,
-        ...fields,
-      });
-    for (const [reason, fields] of linked.problems) problem(reason, fields);
+      problems.push({ entry: entry.id, reason, ...fields });
     if (story !== undefined) {
       for (const [field, quote] of [
         ["Story clause", entry.storyClause],
@@ -159,15 +133,6 @@ async function inspectStoryObligations(
     if (disposition.type === "proved" && !slices.has(disposition.slice))
       problem("dangling-proof-slice", { slice: disposition.slice });
   }
-  if (read.status === "interpreted")
-    problems.push(
-      ...commitmentProblems(commitments, {
-        slices,
-        entryIds: new Set(record.entries.map((entry) => entry.id)),
-        completion,
-        isDoneOrCommitting,
-      }),
-    );
   return result();
 }
 
@@ -186,10 +151,9 @@ export async function checkStoryObligations(
 }
 
 export async function listStoryObligations(planPath, slice) {
-  const { result, entries, commitments } = await inspectStoryObligations(
-    planPath,
-    { slice },
-  );
+  const { result, entries } = await inspectStoryObligations(planPath, {
+    slice,
+  });
   const receives = (entry) => {
     const disposition = entry.disposition;
     if (!disposition?.open) return false;
@@ -201,21 +165,51 @@ export async function listStoryObligations(planPath, slice) {
     ok: result.ok,
     slice,
     entries: result.ok ? entries.filter(receives) : [],
-    ...(result.commitmentCount !== undefined && {
-      commitments: result.ok
-        ? commitments.filter((item) => item.slice === slice)
-        : [],
-    }),
     ...(result.problems && { problems: result.problems }),
   };
 }
 
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {
-  const { runStoryObligationsCli } =
-    await import("./story-obligations-cli.mjs");
-  await runStoryObligationsCli({
-    checkStoryObligations,
-    listStoryObligations,
-    recordStoryCommitment,
-  });
+  let result;
+  try {
+    const { values, positionals } = parseArgs({
+      options: {
+        plan: { type: "string" },
+        slice: { type: "string" },
+        completion: { type: "boolean" },
+        "planned-completion": { type: "boolean" },
+      },
+      allowPositionals: true,
+    });
+    if (
+      positionals.length !== 1 ||
+      !["check", "list"].includes(positionals[0]) ||
+      !values.plan ||
+      (values.slice !== undefined && !/^[1-9]\d*$/.test(values.slice)) ||
+      (values["planned-completion"] &&
+        (values.slice !== undefined || values.completion)) ||
+      (positionals[0] === "list" &&
+        (!values.slice || values.completion || values["planned-completion"]))
+    ) {
+      throw new Error(
+        "usage: story-obligations.mjs check --plan <PLAN.md> [--slice <N>] [--completion] | --planned-completion; or list --plan <PLAN.md> --slice <N>",
+      );
+    }
+    const slice = values.slice === undefined ? undefined : Number(values.slice);
+    result =
+      positionals[0] === "list"
+        ? await listStoryObligations(resolve(values.plan), slice)
+        : await checkStoryObligations(resolve(values.plan), {
+            slice,
+            completion: values.completion,
+            plannedCompletion: values["planned-completion"],
+          });
+  } catch (error) {
+    result = {
+      ok: false,
+      problems: [{ reason: "invalid-input", message: error.message }],
+    };
+  }
+  process.stdout.write(`${JSON.stringify(result)}\n`);
+  if (!result.ok) process.exitCode = 1;
 }

@@ -1,7 +1,10 @@
 import unittest
 
+from lizard import FileAnalyzer, get_extensions
+from lizard_ext.lizardoutside import LizardExtension as OutsideCounter
 from lizard_ext.lizardstatementcount import LizardExtension as StatementCounter
-from .testHelpers import get_cpp_function_list_with_extension, get_python_function_list_with_extension
+from .testHelpers import get_cpp_function_list_with_extension, get_python_function_list_with_extension, \
+    get_js_function_list_with_extension
 
 
 class TestFunctionStatementCount(unittest.TestCase):
@@ -15,6 +18,21 @@ class TestFunctionStatementCount(unittest.TestCase):
         """
         result = get_python_function_list_with_extension(code, StatementCounter())
         self.assertEqual(None, result[0].statement_count)
+
+    def test_unsupported_language_function_without_a_token_of_its_own(self):
+        code = """
+        request.then(
+            (response) => response.json(),
+            () => fallback
+        );
+        """
+        result = get_js_function_list_with_extension(code, StatementCounter())
+        self.assertEqual([None, None], [f.statement_count for f in result])
+
+    def test_global_code_of_an_empty_c_file_counts_as_0(self):
+        extensions = get_extensions([StatementCounter(), OutsideCounter()])
+        result = FileAnalyzer(extensions).analyze_source_code("a.c", "").function_list
+        self.assertEqual([("*global*", 0)], [(f.name, f.statement_count) for f in result])
 
     def test_empty_function_should_count_as_0(self):
         code = """

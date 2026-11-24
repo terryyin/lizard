@@ -40,14 +40,6 @@ export async function configureAgentAuthorship(workspace, { agent, email }) {
   return authorship;
 }
 
-// A roster name or published display label applied as that workspace's
-// author through configureAgentAuthorship. Throws when the label is unknown.
-export async function configureDeclaredAgentAuthorship(workspace, agent) {
-  const name = agentNameOf(agent);
-  if (name === undefined) throw new Error(`${agent} is no known agent.`);
-  return configureAgentAuthorship(workspace, agentIdentity(name));
-}
-
 // The rotation agent this workspace's own Git config names as author, or
 // undefined when it names none (another checkout, or a workspace whose
 // authorship could not be configured). Reads what configureAgentAuthorship

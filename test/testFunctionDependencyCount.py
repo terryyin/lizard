@@ -1,5 +1,5 @@
 import unittest
-from .testHelpers import get_cpp_function_list_with_extension
+from .testHelpers import get_cpp_function_list_with_extension, get_js_function_list_with_extension
 from lizard_ext.lizarddependencycount import LizardExtension as DependencyCounter
 
 
@@ -10,6 +10,16 @@ class TestFunctionDependencyCount(unittest.TestCase):
             "int fun(){}",
             DependencyCounter())
         self.assertEqual(0, result[0].dependency_count)
+
+    def test_function_without_a_token_of_its_own(self):
+        code = """
+        request.then(
+            (response) => response.json(),
+            () => fallback
+        );
+        """
+        result = get_js_function_list_with_extension(code, DependencyCounter())
+        self.assertEqual([0, 0], [f.dependency_count for f in result])
 
     def test_import_dependency(self):
         result = get_cpp_function_list_with_extension(

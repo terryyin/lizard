@@ -583,7 +583,8 @@ class TestOtherBraceLanguages(unittest.TestCase):
         self.assertEqual([0], cogc("a.js", "function f(a) { return a?.b ?? c; }"))
 
     def test_svelte_script(self):
-        self.assertEqual([3], cogc("a.svelte", """
+        # The function, then the component with the code outside it.
+        self.assertEqual([3, 0], cogc("a.svelte", """
             <script>
               function next(node) {
                 do {                          // +1
@@ -965,12 +966,14 @@ sub catch {
               router?.goto(url);
               goto(url);
             }"""
-        for filename, source in (('a.js', code), ('a.ts', code),
-                                 ('a.jsx', code), ('a.tsx', code),
-                                 ('a.vue', '<script>' + code + '</script>'),
-                                 ('a.svelte', '<script>' + code + '</script>')):
+        for filename, source, expected in (
+                ('a.js', code, [0]), ('a.ts', code, [0]),
+                ('a.jsx', code, [0]), ('a.tsx', code, [0]),
+                ('a.vue', '<script>' + code + '</script>', [0]),
+                # A .svelte file also reports its component.
+                ('a.svelte', '<script>' + code + '</script>', [0, 0])):
             with self.subTest(filename=filename):
-                self.assertEqual([0], cogc(filename, source))
+                self.assertEqual(expected, cogc(filename, source))
 
 
 class TestJavaScriptGroupedExpressions(unittest.TestCase):

@@ -1,5 +1,5 @@
 // Git mechanics for a validated execution increment or owned repair: owned
-// workspace/suffix, authorized target, and acceptance registration. Resolves
+// workspace/suffix, authorized target, and acceptance receipt. Resolves
 // the previously published base after fetch; refuses unresolvable or
 // unpublished bases; accepts an already-held candidate; reconciles an owned
 // suffix once on a racing tip with applicable proof; transport timeouts stop
@@ -22,13 +22,11 @@ export async function publishExecutionIncrement({
   branch,
   previouslyPublishedBase: suppliedBase,
   targetRef,
-  register,
   remote = "origin",
   validate,
   validatedCandidate,
   defaultCheckout,
   backlogPath = defaultBacklogPath,
-  beforeRetryPush,
   beforePush,
   landingContext: suppliedLandingContext,
   onFetchedTarget,
@@ -55,7 +53,6 @@ export async function publishExecutionIncrement({
     targetRef,
     remote,
     landingContext,
-    register,
     defaultCheckout,
     preRebaseSha,
     attempt,
@@ -215,9 +212,6 @@ export async function publishExecutionIncrement({
     );
     if (stop) return stop;
 
-    if (beforeRetryPush) {
-      await beforeRetryPush();
-    }
     const retryStop = await preparePush(1);
     if (retryStop) return retryStop;
     pushed = await push("retry-push");

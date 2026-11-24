@@ -18,22 +18,17 @@ import {
   revParse,
 } from "./publication-git.mjs";
 import {
-  appendIdentity,
   assertOwnedCommitsPreserved,
   atStage,
-  hasReceipt,
   ownedCommitIdentity,
-  registerIfBound,
-  remainingAfter,
 } from "./publication-resume-support.mjs";
 import { doneRecordsStop } from "./publication-backlog-validation.mjs";
 
 const defaultTargetRef = "refs/heads/main";
 
-// Classifies the retained candidate and completes the first unfinished
-// publication obligation. Does not commit, refresh the default checkout,
-// or remove a workspace. `candidateSha` is the SHA retained immediately
-// before the push; after a rewrite that is the rewritten SHA.
+// Confirms publication of the retained candidate. The caller owns CI
+// registration, checkout maintenance and cleanup. `candidateSha` is the SHA
+// retained immediately before the push, including after a rewrite.
 // `suffixBase`, when retained with it, is returned unchanged even when the
 // accepted candidate is an ancestor of a newer remote tip. Its absence leaves
 // the comparison unavailable; publication recovery still works as before.
@@ -48,8 +43,6 @@ export async function resumeInterruptedPublication({
   candidateSha,
   suffixBase,
   supersededShas = [],
-  publishedRevisions,
-  observer = null,
   targetRef = defaultTargetRef,
   remote = "origin",
   onFetchedTarget,
@@ -146,67 +139,21 @@ export async function resumeInterruptedPublication({
     preserved,
     await ownedCommitIdentity(ownedWorkspace),
   );
-  const identityAppended = appendIdentity(publishedRevisions, candidateSha);
-  const pushedRegistration = accepted
-    ? undefined
-    : registerIfBound(observer, candidateSha, targetRef);
   const maintenance = await inspectDefaultCheckoutMaintenance(
     ownedWorkspace,
     defaultCheckout,
     remote,
     targetRef,
   );
-  const published = {
+  return {
     ...(landing === undefined ? {} : { landing }),
     classification: accepted ? "already-published" : "not-on-remote",
     pushCount: accepted ? 0 : 1,
     acceptedSha: candidateSha,
     ...comparison,
-    acceptedPublicationCount: publishedRevisions.length,
     maintenance,
     cleanup: "not-performed",
     preservedHead: preserved.head,
     preservedCommitCount: preserved.count,
-  };
-
-  if (pushedRegistration) {
-    return {
-      ...published,
-      completedObligation: "publish",
-      registration: pushedRegistration,
-      remaining: remainingAfter(observer, candidateSha, targetRef, maintenance),
-    };
-  }
-
-  if (identityAppended) {
-    return {
-      ...published,
-      completedObligation: "record-published-identity",
-      registration: observer?.bound
-        ? { attempted: false, reason: "not-this-obligation" }
-        : { attempted: false, reason: "no-observer" },
-      remaining: remainingAfter(observer, candidateSha, targetRef, maintenance),
-    };
-  }
-
-  if (
-    observer?.bound === true &&
-    !hasReceipt(observer, candidateSha, targetRef)
-  ) {
-    return {
-      ...published,
-      completedObligation: "register",
-      registration: registerIfBound(observer, candidateSha, targetRef),
-      remaining: remainingAfter(observer, candidateSha, targetRef, maintenance),
-    };
-  }
-
-  return {
-    ...published,
-    completedObligation: "none",
-    registration: observer?.bound
-      ? { attempted: false, reason: "already-recorded" }
-      : { attempted: false, reason: "no-observer" },
-    remaining: remainingAfter(observer, candidateSha, targetRef, maintenance),
   };
 }

@@ -32,12 +32,14 @@ export async function runMailboxCli([command, ...args]) {
   if (command === "worker") {
     await runMailboxWorker(args[0]);
   } else if (["start", "stream"].includes(command)) {
-    const [, repo, branch, budget] = args;
+    const [mode, repo, branch] = args;
+    if (mode !== "--execution" || args.length !== 3)
+      throw new Error("Expected --execution OWNER/REPO BRANCH");
     const request = {
-      mode: args[0] === "--execution" ? "execution" : undefined,
+      mode: "execution",
       repo,
       branch,
-      maxDurationMs: budget ? Number(budget) : executionBudgetMs,
+      maxDurationMs: executionBudgetMs,
     };
     if (command === "stream") {
       const directory = await streamMailboxWorker(request, {
@@ -87,7 +89,7 @@ export async function runMailboxCli([command, ...args]) {
     );
   } else {
     throw new Error(
-      "Usage: ci-mailbox.mjs probe | start --execution OWNER/REPO BRANCH [BUDGET_MS] | stream --execution OWNER/REPO BRANCH [BUDGET_MS] [--coordinator VALUE] | register-push DIRECTORY SHA | acknowledge DIRECTORY SEQUENCE | await-revision DIRECTORY SHA | complete-revision DIRECTORY SHA | stop DIRECTORY",
+      "Usage: ci-mailbox.mjs probe | start --execution OWNER/REPO BRANCH | stream --execution OWNER/REPO BRANCH [--coordinator VALUE] | register-push DIRECTORY SHA | acknowledge DIRECTORY SEQUENCE | await-revision DIRECTORY SHA | complete-revision DIRECTORY SHA | stop DIRECTORY",
     );
   }
 }

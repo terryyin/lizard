@@ -80,7 +80,6 @@ export async function finishTrunkClosure({
   session,
   coordinator,
   observerDirectory,
-  preferredAlias,
   defaultCheckout,
   supplierIdentity,
   visitSettled,
@@ -122,7 +121,6 @@ export async function finishTrunkClosure({
     session,
     coordinator,
     observerDirectory,
-    preferredAlias,
     root,
     storage,
     env,
@@ -169,7 +167,6 @@ export async function finishTrunkClosure({
       session,
       coordinator,
       observerDirectory,
-      preferredAlias,
       env,
       storage,
     }));

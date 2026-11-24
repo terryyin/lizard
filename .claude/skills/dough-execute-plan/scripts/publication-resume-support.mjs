@@ -1,5 +1,4 @@
-// Helpers for resumeInterruptedPublication: transport staging, owned-commit
-// identity checks, observer registration, and remaining-obligation reporting.
+// Transport staging and owned-commit identity checks for publication resume.
 import { git, revParse } from "./publication-git.mjs";
 
 // Runs one remote transport step. A step that outlasts the transport bound
@@ -15,15 +14,6 @@ export async function atStage(stage, facts, operation) {
     }
     throw error;
   }
-}
-
-export function hasReceipt(observer, sha, targetRef) {
-  return (
-    observer?.bound === true &&
-    observer.receipts.some(
-      (receipt) => receipt.sha === sha && receipt.target === targetRef,
-    )
-  );
 }
 
 // A repository management context without a checked-out commit (a Git
@@ -43,37 +33,8 @@ export async function ownedCommitIdentity(workspace) {
   };
 }
 
-export function appendIdentity(publishedRevisions, sha) {
-  if (!publishedRevisions.includes(sha)) {
-    publishedRevisions.push(sha);
-    return true;
-  }
-  return false;
-}
-
 export function assertOwnedCommitsPreserved(before, after) {
   if (after.head !== before.head || after.count !== before.count) {
     throw new Error("resume duplicated or moved the owned commit");
   }
-}
-
-export function registerIfBound(observer, sha, targetRef) {
-  if (!observer?.bound) {
-    return { attempted: false, reason: "no-observer" };
-  }
-  observer.register(sha, targetRef);
-  return { attempted: true, sha, target: targetRef };
-}
-
-export function remainingAfter(observer, sha, targetRef, maintenance) {
-  return {
-    registration: !observer?.bound
-      ? "not-applicable"
-      : hasReceipt(observer, sha, targetRef)
-        ? "satisfied"
-        : "remaining",
-    maintenance,
-    maintenancePerformed: false,
-    cleanup: "not-performed",
-  };
 }

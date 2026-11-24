@@ -30,8 +30,6 @@ export const usage = `Usage: product-backlog.mjs add --identity <id> --title <ti
        product-backlog.mjs direction (--text <text> | --clear)
                              (--expect <text> | --expect-none) [--file <path>]
        product-backlog.mjs adopt --all [--file <path>]
-       product-backlog.mjs merge --ancestor <path>
-                             --branch <path> --branch <path> [--file <path>]
        product-backlog.mjs record-state --identity <id> --link <href>
                              --refinement not-refined|refined
                              --approach unselected|planned|planless
@@ -124,15 +122,6 @@ direction someone else has since changed is never overwritten unknowingly.
 adopt records one identity for every active entry in the canonical homes its
 links name, reusing the ID each home already carries. It changes no membership,
 order, or direction, and never runs implicitly: --all is required.
-
-merge reconciles three supplied versions of one backlog — the ancestor both
-branches started from, and each branch's version of it — and writes the whole
-result to --file, which is read only as the destination. A value a branch left
-as the ancestor wrote it accepts the other branch's change, a change both made
-the same way is applied once, and two different changes to one meaning are
-reported with nothing written, for a human to decide. It prefers neither
-branch, unions no lines, and is not Git-aware: establishing which files hold
-the three versions stays with the caller.
 
 record-state writes one versioned story-state block into the canonical home
 --link names: refinement, approach, and optional readiness assessment. A

@@ -182,16 +182,11 @@ domain knowledge applies only when that adapter is unavailable.
 
 ## Resume an interrupted publication
 
-After interruption during a claim's publication or an increment or repair
-publication, apply
+For an interrupted claim, increment or repair, use the execution resources
+and authorized target of that publication. Follow
 [publish the candidate's resume](publish-the-candidate.md#resume-an-interrupted-publication)
-against that publication's authorized remote target. The owned suffix is a
-claim or an increment, using whichever execution resources actually exist for
-this publication. Continue only the first unfinished obligation that resume
-names. Do not duplicate the commit, push an already-published candidate, or
-replace the execution worktree. After that publication obligation is accepted,
-apply the refresh rule in [Publish the candidate](#publish-the-candidate). The
-resume classification itself still only inspects the checkout.
+to recover the exact accepted SHA. Continue the work this caller owns and
+apply the refresh rule in [Publish the candidate](#publish-the-candidate).
 
 After fresh commit success, use its `recovery.candidateSha` and
 `recovery.suffixBase` with retained owner context; see [fresh recovery](fresh-increment.md)

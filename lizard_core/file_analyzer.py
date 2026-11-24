@@ -95,13 +95,33 @@ class FileAnalyzer(object):  # pylint: disable=R0903
         context = FileInfoBuilder(filename)
         reader = (get_reader_for(filename) or CLikeReader)(context)
         tokens = reader.generate_tokens(code)
+        defaults = []
         try:
             for processor in self.processors:
                 tokens = processor(tokens, reader)
+                defaults.extend(_default_values(processor))
             for _ in reader(tokens, reader):
                 pass
         except RecursionError as e:
             sys.stderr.write(
                 "[skip] fail to process '%s' with RecursionError - %s\n" %
                 (filename, e))
+        _add_default_values(context.fileinfo.function_list, defaults)
         return context.fileinfo
+
+
+def _default_values(processor):
+    return [(name, info["default"])
+            for name, info in getattr(processor, "FUNCTION_INFO", {}).items()
+            if "default" in info]
+
+
+def _add_default_values(functions, defaults):
+    """An extension sets its value on the function that is current when
+    a token passes. A reader can start and end a function between two
+    tokens, such as a last arrow function argument before a line break,
+    and the extension never sees that function."""
+    for name, value in defaults:
+        for function in functions:
+            if not hasattr(function, name):
+                setattr(function, name, value)

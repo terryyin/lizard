@@ -20,6 +20,8 @@ class OutputScheme(object):
                 'average_caption': 'if defined, will add average function
                                     to FileInformation and show in the
                                     end result.
+                'default': 'if defined, the value for a function that
+                            the extension did not set it on.'
             }
         }
     '''

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Maria-chan",
+  "email": "maria-chan@example.org",
+  "identity": "SEED-072#process-open-prs-past-30h",
+  "mode": "story-branch",
+  "branch": "cursor/process-open-prs-past-30h",
+  "host": "cursor",
+  "model": "auto"
+}

@@ -132,7 +132,7 @@ node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs' \
   start --execution OWNER/REPO BRANCH
 ```
 
-The optional final budget argument is milliseconds; default is eight hours.
+The observation budget is eight hours.
 Requests time out after 20 seconds, and three consecutive observation errors
 end coverage. A wait GitHub directs for a rate limit, met by this observer or
 by another process sharing its request owner, is not an observation error: the observer emits one `CI_MONITOR_THROTTLED` record, asks GitHub

@@ -125,16 +125,17 @@ use one plan for the work, avoiding deprecated locations.
 
 Keep execution, proof, review, and resume information:
 
-1. **Source** — selected story, remaining-work instruction, or decision link;
-   or retrospective findings and execution provenance for a correction. Carry
+1. **Source** — link the complete selected story, remaining-work instruction,
+   or decision under `**Source:**`. For a correction, identify its findings
+   and execution provenance. Carry
    the work item's recorded identity into the plan under
    [work item identity](../../dough-product-backlog/references/identity.md): the
    link says where the story or plan is now, and renaming or moving either does
    not change the recorded value.
 2. **Goal and scope** — one selected outcome, material exclusions, and
    assumptions.
-3. **Outside-in proof** — key examples and their observable test or
-   demonstration signals.
+3. **Outside-in proof** — choose observable tests or demonstrations from the
+   complete story and approved amendments, including its key examples.
 4. **Ordered slices** — capability-named heading, Behavior or Structure type,
    status, and proof.
 5. **Current decisions** — only choices constraining remaining work.
@@ -142,12 +143,6 @@ Keep execution, proof, review, and resume information:
 7. **Story obligations** — during planned execution, every reported gap, loss,
    limitation, or interim behavior uses the `## Story obligations` section and
    [entry format and dispositions](../../dough-execute-plan/references/story-obligations.md#record-format).
-   Its `**Source:**` link names the selected story section. Plans without the
-   section have no obligations; no migration is required. Planned execution
-   requires a `**Source review:**` link under `**Source:**` to the
-   [source review](../../dough-execute-plan/references/story-obligations.md#record-the-source-review)
-   once the first planned delegation [obtains and allocates it](../../dough-execute-plan/references/obtain-source-review.md#before-planned-delegation);
-   planning does not write it.
 
 At execution completion, the executing agent adds one more element after the
 ordered slices: the
@@ -203,7 +198,7 @@ replace obsolete planned detail rather than appending a competing breakdown,
 and record only learnings that affect remaining work. Apply
 [story-obligation ownership](../../dough-execute-plan/references/story-obligations.md)
 when removing or renumbering slices: move receiving and interim obligations
-and source-review allocations to their remaining owners,
+to their remaining owners,
 preserve reported text and provenance, and update slice references.
 Replanning never drops an obligation; the check refuses dangling references.
 Apply

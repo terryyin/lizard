@@ -42,7 +42,7 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         )
 
 
-class KotlinStates(GoLikeStates):  # pylint: disable=R0903
+class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
 
     FUNC_KEYWORD = 'fun'
     _ACCESSORS = {'get', 'set'}
@@ -51,6 +51,15 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
         'fun', 'class', 'interface', 'val', 'var',
     }
     _TYPE_PUNCTUATION = {'.', '?', '<', '>', ',', '(', ')', '->', '*'}
+    # Words that start a declaration when they begin a line.
+    _DECLARATION_STARTS = {
+        '@', 'fun', 'val', 'var', 'class', 'interface', 'object', 'typealias',
+        'init', 'constructor', 'companion', 'enum', 'data', 'sealed', 'annotation',
+        'inner', 'value', 'open', 'abstract', 'final', 'override', 'lateinit',
+        'const', 'suspend', 'inline', 'operator', 'infix', 'tailrec', 'expect',
+        'actual', 'context', 'import', 'package',
+    } | _ACCESSORS | _ACCESSOR_MODIFIERS
+    _HEADER_OPERATORS = {':', 'where', '.', '->', ',', '<', '(', '&', 'suspend'}
 
     def __init__(self, context, in_when_cases=False, accessor_declaration_scope=None):
         super().__init__(context)
@@ -61,10 +70,12 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
             accessor_declaration_scope or context.global_pseudo_function
         )
         self._when_return_state = self._state_global
+        self._start_header()
 
     def _state_global(self, token):
         if (token in self._ACCESSORS and self.last_token not in ('.', '::')
                 and self.context.current_function is self._accessor_declaration_scope):
+            self._start_header()
             self._accessor_name = token
             self.context.push_new_function(token)
             self._state = self._expect_function_impl
@@ -79,11 +90,13 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
         elif token in ('val', 'var', ','):
             self._state = self._expect_declaration_name
         elif token == 'interface':
+            self._start_header()
             self._state = self._interface
         elif token == 'when':
             self._start_when(self._state_global)
         else:
             if token == self.FUNC_KEYWORD:
+                self._start_header()
                 self._accessor_name = None
             super(KotlinStates, self)._state_global(token)
 
@@ -104,7 +117,14 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
         pass
 
     def _expect_declaration_name(self, token):
-        self._state = self._state_global
+        # A name after `val`, `var` or `,` is not a keyword: `val type`,
+        # `(name, set)`. A lambda or a `when` argument, a parameter
+        # (`, val x`) and the `->` of a `when` branch keep their role.
+        if token in ('{', 'when', 'val', 'var') or (
+                token == '->' and self._in_when_cases):
+            self.next(self._state_global, token)
+        else:
+            self._state = self._state_global
 
     def _function_type_result(self, token):
         # Only a function type with a lambda initializer starts a function:
@@ -128,6 +148,49 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
             self._state = self._expression_body
         elif token == '{':
             self.next(self._function_impl, token)
+        elif self._ends_declaration(token):
+            # `abstract fun f(): Int` or `private set` has no body. Its first
+            # line and token were already counted in the enclosing scope.
+            self.fold_into_enclosing_function()
+            self.context.current_function.nloc -= 1
+            self.context.current_function.token_count -= 1
+            self.next(self._state_global, token)
+
+    def _ends_declaration(self, token):
+        # Kotlin semicolons are optional, so a declaration without a body
+        # also ends where the next declaration starts a line, or where the
+        # other accessor follows it: `private set public get() { }`.
+        ends = token in (';', '}') or (not self._type_is_open() and (
+            (self.context.newline and token in self._DECLARATION_STARTS)
+            or (token in self._ACCESSORS and token != self._accessor_name
+                and (self.last_token == self._accessor_name
+                     or self.last_token in self._ACCESSOR_MODIFIERS))))
+        self._track_type(token)
+        return ends
+
+    def _start_header(self):
+        self._type_depth = 0
+        self._type_annotated = False
+
+    def _type_is_open(self):
+        # The next token continues a type that has an open `<` or `(`, that
+        # follows an operator, or that follows an annotation or a context
+        # receiver: `List<out`, `T &`, `@A`, `context(String)`.
+        return (self._type_depth > 0 or self._type_annotated
+                or self.last_token in self._HEADER_OPERATORS)
+
+    def _track_type(self, token):
+        # An annotation keeps its role through a qualified name and its
+        # arguments: `@a.B(1)`.
+        if token in ('<', '('):
+            if self._type_depth == 0 and self.last_token == 'context':
+                self._type_annotated = True
+            self._type_depth += 1
+        elif token in ('>', ')'):
+            self._type_depth = max(0, self._type_depth - 1)
+        elif self._type_depth == 0:
+            self._type_annotated = self.last_token == '@' or (
+                self._type_annotated and '.' in (token, self.last_token))
 
     def _start_when(self, return_state):
         self._when_return_state = return_state
@@ -173,16 +236,41 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
         if self._state == self._expression_body:
             self.context.end_of_function()
 
+    def _interface(self, token):
+        if token == '{':
+            self.next(self._interface_body, token)
+        elif self.last_token != 'interface' and self._ends_declaration(token):
+            self.next(self._state_global, token)
+
     @CodeStateMachine.read_inside_brackets_then("{}")
-    def _interface(self, end_token):
+    def _interface_body(self, end_token):
         if end_token == "}":
             self._state = self._state_global
 
     def _function_name(self, token):
         if token == "<":
             self.next(self._template, token)
-        else:
+        elif token == "@":
+            self._state = self._receiver_annotation
+        elif not self._receiver_type_end(token):
             return super(KotlinStates, self)._function_name(token)
+
+    def _receiver_annotation(self, _):
+        self._state = self._function_name
+
+    def _expect_function_dec(self, token):
+        if not self._receiver_type_end(token):
+            super()._expect_function_dec(token)
+
+    def _receiver_type_end(self, token):
+        # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
+        # is the receiver type. The function name comes after the dot.
+        # A type argument list with a `?`, such as `<T?>`, is one token.
+        if token == '.':
+            self.context.current_function.name = ''
+            self.context.current_function.long_name = ''
+            self._state = self._function_name
+        return token in ('.', '?') or token[:1] == '<' and token[-1:] == '>' and len(token) > 1
 
     @CodeStateMachine.read_inside_brackets_then("<>", "_function_name")
     def _template(self, tokens):

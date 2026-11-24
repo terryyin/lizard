@@ -11,7 +11,8 @@ DEFAULT_WHITELIST = "whitelizard.txt"
 def exceeds_thresholds(option, fun):
     violated_metrics = [
         attr for attr, limit in option.thresholds.items()
-        if getattr(fun, attr) > limit
+        # An extension reports None for a language that it does not measure.
+        if (value := getattr(fun, attr)) is not None and value > limit
     ]
     forgiven = getattr(fun, 'forgiven_metrics', set())
     return any(metric not in forgiven for metric in violated_metrics)
@@ -78,6 +79,14 @@ def get_warnings(code_infos, option, is_warning=None):
     is_warning = is_warning or warning_policy(option)
     warnings = _functions_matching(code_infos, is_warning)
     if isinstance(option.sorting, list) and option.sorting:
-        warnings = sorted(warnings, reverse=True, key=lambda x: getattr(
-            x, option.sorting[0]))
+        warnings = _sorted_by(list(warnings), option.sorting[0])
     return warnings
+
+
+def _sorted_by(warnings, attr):
+    try:
+        return sorted(warnings, reverse=True, key=lambda x: getattr(x, attr))
+    except TypeError:
+        # Functions without a value go after all the others.
+        return sorted(warnings, reverse=True, key=lambda x: (
+            getattr(x, attr) is not None, getattr(x, attr)))

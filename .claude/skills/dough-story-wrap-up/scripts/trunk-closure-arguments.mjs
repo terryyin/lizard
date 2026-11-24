@@ -1,7 +1,10 @@
 // The `trunk-closure.mjs finish` command line: its flags as camel-cased
 // `finishTrunkClosure` inputs, with the session made explicit. A usage error
 // throws with the usage text.
-import { withExplicitSession } from "../../dough-execute-plan/scripts/ci-host-bridge.mjs";
+import {
+  rejectRetiredObserverFlags,
+  withExplicitSession,
+} from "../../dough-execute-plan/scripts/ci-host-bridge.mjs";
 import { targetBranchName } from "../../dough-execute-plan/scripts/publication-git.mjs";
 
 const required = [
@@ -15,7 +18,7 @@ const required = [
   "host",
 ];
 const usage =
-  "usage: trunk-closure.mjs finish --workspace PATH --branch NAME --before-cleanup SHA --final SHA --previously-published-base SHA --target-ref REF --repo OWNER/REPO --host cursor|claude|codex [--remote NAME] [--repository PATH] [--identity WORK] [--created-for-work] [--session-json JSON] [--coordinator VALUE --observer-directory PATH] [--preferred-alias .agents|.claude] [--default-checkout PATH] [--supplier-identity IDENTITY [--visit-settled SHA] [--backlog-path PATH]]";
+  "usage: trunk-closure.mjs finish --workspace PATH --branch NAME --before-cleanup SHA --final SHA --previously-published-base SHA --target-ref REF --repo OWNER/REPO --host cursor|claude|codex [--remote NAME] [--repository PATH] [--identity WORK] [--created-for-work] [--session-json JSON] [--coordinator VALUE --observer-directory PATH] [--default-checkout PATH] [--supplier-identity IDENTITY [--visit-settled SHA] [--backlog-path PATH]]";
 
 export function finishArguments(argv) {
   if (argv[0] !== "finish") {
@@ -36,6 +39,7 @@ export function finishArguments(argv) {
       .replace(/-[a-z]/g, (match) => match[1].toUpperCase());
     result[key] = argv[++index];
   }
+  rejectRetiredObserverFlags(result, `\n${usage}`);
   for (const field of required) {
     if (!result[field]) {
       throw new Error(`missing ${field}\n${usage}`);

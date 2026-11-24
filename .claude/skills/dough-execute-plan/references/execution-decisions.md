@@ -104,9 +104,8 @@ stops that step. Resume the remaining work in the same workspace.
 
 This go-ahead covers only the checkpoint it answers. A Story Branch Mode slice
 that needs trunk without such a named landing stops for that checkpoint decision
-under [human judgment](#stop-for-human-judgment). The retained landing does not
-observe a `landing` lifecycle commitment; closure still integrates the story
-branch. The trunk step's own procedure, CI and release gates apply unchanged.
+under [human judgment](#stop-for-human-judgment). Closure still integrates the story branch. The trunk
+step follows its own procedure, CI and release gates.
 
 ## Resolve conflicting recorded direction
 

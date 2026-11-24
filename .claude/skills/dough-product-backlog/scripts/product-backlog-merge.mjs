@@ -10,8 +10,7 @@
 // reconciliation that cannot be made is handed to a human whole rather than
 // applied in part.
 //
-// This reconciles supplied files. It is not Git-aware: which files hold the
-// ancestor and the two branch versions is the caller's to establish.
+// The caller supplies text for the ancestor and both branch versions.
 import {
   mergeValue,
   mergeWork,
@@ -21,7 +20,7 @@ import {
 import { directionHeading } from "./product-backlog-direction.mjs";
 import { queueHeading, takenHeading } from "./product-backlog-document.mjs";
 import { listOrder } from "./product-backlog-order.mjs";
-import { BacklogError, requireField } from "./product-backlog-refusal.mjs";
+import { BacklogError } from "./product-backlog-refusal.mjs";
 import {
   publishableCandidate,
   readVersion,
@@ -29,35 +28,11 @@ import {
 } from "./product-backlog-version.mjs";
 import { groupWork } from "./product-backlog-work.mjs";
 
-const ancestorLabel = "the ancestor version";
-const branchLabels = ["the first branch version", "the second branch version"];
-
-function requestedVersions(request) {
-  requireField(
-    request.ancestor,
-    "ancestor",
-    ` It names the version both branches started from, which is what makes ` +
-      `each branch's change readable as a change.`,
-  );
-  const branches = request.branches ?? [];
-  if (branches.length !== 2) {
-    throw new BacklogError(
-      `Supply --branch <path> exactly twice, once for each branch's version ` +
-        `of the backlog; found ${branches.length}.`,
-    );
-  }
-  return [
-    readVersion(request.ancestor, ancestorLabel),
-    ...branches.map((path, at) => readVersion(path, branchLabels[at])),
-  ];
-}
-
-function refuse(versions, conflicts) {
+function refuse(conflicts) {
   throw new BacklogError(
     [
       `The two branch versions make different changes to the same meaning, ` +
         `so nothing was merged and no part of the result was written.`,
-      ...versions.map((version) => `  ${version.label}: ${version.path}`),
       ...conflicts,
       `Decide what each of these should say, repair the versions by hand, ` +
         `and merge them again.`,
@@ -94,8 +69,12 @@ const wholeValues = {
 
 // Reconciles the three versions and returns the backlog to publish alongside
 // the transitions both branches turned out to have made.
-export function mergeBacklogs(request) {
-  const versions = requestedVersions(request);
+export function mergeBacklogs(ancestorText, firstBranchText, secondBranchText) {
+  const versions = [
+    readVersion(ancestorText, "the ancestor version"),
+    readVersion(firstBranchText, "the first branch version"),
+    readVersion(secondBranchText, "the second branch version"),
+  ];
   const [ancestor, one, other] = versions;
   const { groups, keyOf } = groupWork(versions);
 
@@ -144,7 +123,7 @@ export function mergeBacklogs(request) {
       versions.map((version) => orderIn(version, list)),
       held,
       {
-        labels: branchLabels,
+        labels: [one.label, other.label],
         identityOf: (key) => merged.get(key).identity,
       },
     );
@@ -167,7 +146,7 @@ export function mergeBacklogs(request) {
   }
 
   if (conflicts.length > 0) {
-    refuse(versions, conflicts);
+    refuse(conflicts);
   }
 
   const candidate = publishableCandidate(ancestor, {
@@ -184,7 +163,6 @@ export function mergeBacklogs(request) {
       // queue about to be published rather than of either branch's.
       reprioritized: reprioritizedBy(listed[queueHeading]),
     }),
-    entries: [...merged.values()].filter((state) => state !== null).length,
   };
 }
 
