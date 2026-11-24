@@ -127,7 +127,10 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
         - Assignment operator: :=
         """
         # Add PL/SQL-specific patterns
-        addition = r"|--[^\n]*" + addition  # Single-line comment starting with --
+        addition = (
+            r"|[qQ]'(?:\[.*?\]'|\{.*?\}'|\(.*?\)'|<.*?>'|"
+            r"(?P<sql_quote>[^\s\[({<]).*?(?P=sql_quote)')"
+            r"|--[^\n]*" + addition)  # Single-line comment starting with --
         return CodeReader.generate_tokens(source_code, addition, token_class)
 
     def get_comment_from_token(self, token):
