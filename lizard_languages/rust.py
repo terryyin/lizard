@@ -86,6 +86,14 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
             return
         super()._state_global(token)
 
+    def _function_name(self, token):
+        if token == '(':
+            # A bare function type has no name between `fn` and `(`.
+            self._fold_signature()
+            self.next(self._state_global, token)
+        else:
+            super()._function_name(token)
+
     def _expect_function_impl(self, token):
         if token == '{':
             # Bracket depth guards semicolons. A brace still starts the body.
@@ -101,13 +109,16 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
             self.br_count = 0
             self.next(super()._expect_function_impl)
         elif token == ';' and not self.br_count:
-            self.fold_into_enclosing_function()
-            # The enclosing scope already counted the opening `fn` token.
-            self.context.current_function.nloc -= 1
-            self.context.current_function.token_count -= 1
+            self._fold_signature()
             if not self._forgive_enclosing:
                 self.context.forgive = False
             self.next(self._state_global)
+
+    def _fold_signature(self):
+        self.fold_into_enclosing_function()
+        # The enclosing scope already counted the opening `fn` token.
+        self.context.current_function.nloc -= 1
+        self.context.current_function.token_count -= 1
 
     def _function_impl(self, token):
         # A full function body consumes the pending forgiveness.
