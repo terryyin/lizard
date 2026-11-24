@@ -73,7 +73,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         self._start_header()
 
     def _state_global(self, token):
-        if (token in self._ACCESSORS and self.last_token not in ('.', '::')
+        if (token in self._ACCESSORS and self.last_token not in ('.', '::', '@')
                 and self.context.current_function is self._accessor_declaration_scope):
             self._start_header()
             self._accessor_name = token
