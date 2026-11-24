@@ -49,7 +49,8 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
     def _python_function_name(self, token):
         context = self.context
         previous = context.current_function
-        self.next(self._function, token)
+        # Keep the Python state through an explicit line join after def.
+        self._function(token)
         function = context.current_function
         if function is not previous and function.name.count('.') > 1:
             # The enclosing function's name already includes its parents.
