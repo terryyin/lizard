@@ -133,6 +133,8 @@ class RubyReader(RubylikeReader):
                 r"|\$\w+" +
                 r"|\.+" +
                 r"|:?\@{0,2}\w+\??\!?" +
+                # Keep the colon in ?:, ?\: and $: separate from multiplication.
+                r"|:(?<!\?:)(?<!\?\\:)(?<!\$:)\*\*?" +
                 r"|" + _PERCENT_LITERAL +
                 _, matcher)
         matcher = MyToken
