@@ -96,6 +96,16 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         if token == '{':
             self._state_dec_to_imp(token)
 
+    def _state_dec(self, token):
+        if token[0] == '<' and '\n' in token:
+            lines = [line.strip() for line in token.split('\n')]
+            blank_lines = lines.count('')
+            if blank_lines and self.context.current_line:
+                # The line counter counts every line inside a grouped token.
+                self.context.add_nloc(-blank_lines)
+            token = ' '.join(filter(None, lines)).replace('< ', '<').replace(' >', '>')
+        super()._state_dec(token)
+
     def _state_dec_to_imp(self, token):
         if token == 'default':
             # Annotation type element, e.g. `String value() default "m";`, has no body
