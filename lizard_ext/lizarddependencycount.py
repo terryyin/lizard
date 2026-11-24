@@ -5,7 +5,8 @@ within the code.
 
 
 class LizardExtension(object):  # pylint: disable=R0903
-    FUNCTION_INFO = {"dependency_count": {"caption": " dep cnt "}}
+    FUNCTION_INFO = {"dependency_count": {
+        "caption": " dep cnt ", "default": 0}}
 
     def __call__(self, tokens, reader):
         ignored_list = {','}

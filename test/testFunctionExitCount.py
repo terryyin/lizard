@@ -1,5 +1,7 @@
 import unittest
-from .testHelpers import get_cpp_function_list_with_extension
+from .testHelpers import get_cpp_function_list_with_extension, get_js_function_list_with_extension
+from lizard import FileAnalyzer, get_extensions
+from lizard_ext.lizardoutside import LizardExtension as OutsideCounter
 from lizard_ext.lizardexitcount import LizardExtension as ExitCounter
 
 class TestFunctionExitCount(unittest.TestCase):
@@ -29,3 +31,29 @@ void f( int a )
 }"""
         result = get_cpp_function_list_with_extension(code, ExitCounter())
         self.assertEqual(3, result[0].exit_count)
+
+    def test_function_without_a_token_of_its_own_counts_as_1(self):
+        code = """
+        request.then(
+            (response) => response.json(),
+            () => fallback
+        );
+        """
+        result = get_js_function_list_with_extension(code, ExitCounter())
+        self.assertEqual([1, 1], [f.exit_count for f in result])
+
+    def test_perl_forward_declaration_counts_as_1(self):
+        code = """
+        sub parse;
+
+        sub run {
+            my ($self) = @_;
+            return parse($self);
+        }
+        """
+        result = FileAnalyzer(get_extensions([ExitCounter()])).analyze_source_code("a.pl", code).function_list
+        self.assertEqual([("parse", 1), ("run", 1)], [(f.name, f.exit_count) for f in result])
+
+    def test_global_code_of_an_empty_file_counts_as_1(self):
+        result = FileAnalyzer(get_extensions([ExitCounter(), OutsideCounter()])).analyze_source_code("a.js", "").function_list
+        self.assertEqual([("*global*", 1)], [(f.name, f.exit_count) for f in result])

@@ -5,13 +5,17 @@ This is an extension of lizard, that counts the statements in a function
 
 class LizardExtension:  # pylint: disable=R0903
 
-    FUNCTION_INFO = {"statement_count": {"caption": "statements"}}
+    FUNCTION_INFO = {"statement_count": {
+        "caption": "statements", "default": None}}
 
     def __call__(self, tokens, reader):
         c_family = 'c' in reader.language_names or \
                    'cpp' in reader.language_names
 
         block_count = 0
+        if c_family:
+            # the global code of an empty file gets no token
+            reader.context.current_function.statement_count = 0
         for token in tokens:
             if c_family:
                 if not hasattr(reader.context.current_function,
