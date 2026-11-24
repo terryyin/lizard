@@ -40,6 +40,13 @@ INTERPOLATION_OPEN = _InterpolationBrace('{')
 INTERPOLATION_CLOSE = _InterpolationBrace('}')
 
 
+class _NullableQuestion(str):
+    is_optional = True
+
+
+_NULLABLE_QUESTION = _NullableQuestion('?')
+
+
 def string_tokens(source, addition):
     """Keep literal text opaque and tokenize code inside string templates."""
     pattern = compiled_token_pattern(addition)
@@ -88,7 +95,7 @@ def _string_tokens(source, opening, token_pattern):
                 if count:
                     stack[-1] = marks, count, literal_start
                 else:
-                    yield from tokens_in_span(token_pattern, source, start, match.start())
+                    yield from tokens_in_span(token_pattern, source, start, match.start(), _expression_token)
                     yield INTERPOLATION_CLOSE
                     stack.pop()
                     start = pos
@@ -96,12 +103,12 @@ def _string_tokens(source, opening, token_pattern):
                     # Mark it as text, even if it starts with // or /*.
                     prefix = '"'
             elif mark == '/*' or mark.startswith('`'):
-                yield from tokens_in_span(token_pattern, source, start, match.start())
+                yield from tokens_in_span(token_pattern, source, start, match.start(), _expression_token)
                 pos = _block_comment_end(source, pos) if mark == '/*' else pos
                 yield source[match.start():pos]
                 start = pos
             elif mark.startswith(('"', '$')):
-                yield from tokens_in_span(token_pattern, source, start, match.start())
+                yield from tokens_in_span(token_pattern, source, start, match.start(), _expression_token)
                 stack.append(_string_mode(mark, match.start()))
                 start = match.start()
                 prefix = ''
@@ -120,6 +127,12 @@ def _string_tokens(source, opening, token_pattern):
             elif (name := _BACKTICK_NAME.match(source, pos)) is not None:
                 pos = name.end()
     return pos
+
+
+def _expression_token(match):
+    # A standalone question mark qualifies a type in Kotlin.
+    token = match.group()
+    return _NULLABLE_QUESTION if token == '?' else token
 
 
 def _block_comment_end(source, pos):
