@@ -1022,6 +1022,44 @@ class TestJavaScriptControlHeaders(unittest.TestCase):
             }
         """))
 
+    def test_object_comma_keeps_enclosing_conditional_open(self):
+        self.assertEqual([4], cogc("a.js", """
+            function accepts(client, input, useDefault, defaults, generated) {
+              if (client.accepts(
+                input ? { name: input.name, id: input.id } : useDefault ? defaults : generated
+              )) return true;
+            }
+        """))
+
+    def test_template_interpolation_keeps_enclosing_conditional_open(self):
+        self.assertEqual([4], cogc("a.js", """
+            function verify(check, prefix, route, useDefault, fallback) {
+              if (check(prefix ? `${prefix}/${route}` : useDefault ? fallback : route)) return true;
+            }
+        """))
+
+    def test_class_field_initializers_are_siblings(self):
+        self.assertEqual([5], cogc("a.js", """
+            function register(registry, enabled, read, write, admin) {
+              if (registry.add(class {
+                static canRead = enabled ? read : false;
+                static canWrite = enabled ? write : false;
+                static canDelete = enabled ? admin : false;
+                static canInvite = enabled ? admin : false;
+              })) return true;
+            }
+        """))
+
+    def test_conditionals_inside_object_properties_are_siblings(self):
+        self.assertEqual([6], cogc("a.js", """
+            function accepts(client, input, name, id, fallback) {
+              if (client.accepts(input ? {
+                name: name ? name : fallback.name,
+                id: id ? id : fallback.id
+              } : fallback)) return true;
+            }
+        """))
+
     def test_jsx_attribute_separator_inside_if_header(self):
         self.assertEqual([1], cogc("a.jsx", """
             function render(visible, compact, title) {
