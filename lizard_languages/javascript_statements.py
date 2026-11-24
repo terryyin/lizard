@@ -64,6 +64,7 @@ class ImpliedSemicolons:
         head = None             # the groups around an open structure head
         open_loops = 0          # "do" bodies that wait for their "while"
         loop_ends = False       # the open head is the "while" of a "do"
+        loop_body = False       # the latest structure in this scope is a loop
         is_object = False       # the "{" opened an object literal
         previous = before_previous = ';'
         last_line = 0
@@ -109,6 +110,9 @@ class ImpliedSemicolons:
                                     previous, before_previous, postfix)
                                 and starts_statement(token)
                                 and _starts_line(token, line, last_line))
+                    elif token == 'else' and object_ended and loop_body:
+                        # The loop body ends before the enclosing if's else.
+                        found = _starts_line(token, line, last_line)
                     if found:
                         self.before_token = True
                 was_busy = busy
@@ -137,12 +141,12 @@ class ImpliedSemicolons:
                         object_ended = bool(blocks) and is_object
                         if blocks:
                             (groups, head, open_loops, loop_ends,
-                             is_object) = blocks.pop()
+                             is_object, loop_body) = blocks.pop()
                         if not (groups or object_ended):
                             closing_function = context.current_function
                     elif token in ('{', '${'):
                         blocks.append(
-                            (groups, head, open_loops, loop_ends, is_object))
+                            (groups, head, open_loops, loop_ends, is_object, loop_body))
                         is_object = _object_starts(
                             token, previous, before_previous, groups,
                             line == last_line)
@@ -154,7 +158,7 @@ class ImpliedSemicolons:
                             or isinstance(token, JSXChildBrace)) else 0
                         head = None
                         open_loops = 0
-                        loop_ends = False
+                        loop_ends = loop_body = False
                     elif token in POSTFIX:
                         postfix = (
                             line == last_line
@@ -164,6 +168,8 @@ class ImpliedSemicolons:
                     elif tracked and previous not in MEMBER_ACCESS:
                         if token in HEADED:
                             head_starts = busy = True
+                            if not groups:
+                                loop_body = token in ('for', 'while')
                             # In `do while (a) run(); while (b)` the first
                             # "while" is the body.
                             if (token == 'while' and open_loops
@@ -172,6 +178,8 @@ class ImpliedSemicolons:
                                 loop_ends = True
                         elif token in UNHEADED:
                             body_starts = busy = True
+                            if not groups:
+                                loop_body = False
                             if token == 'do':
                                 open_loops += 1
                         elif head_started:          # for await (…)
