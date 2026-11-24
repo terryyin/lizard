@@ -32,7 +32,7 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _state_global(self, token):
         if token == 'def':
-            self._state = self._function
+            self._state = self._python_function_name
 
     def _function(self, token):
         if token == '[':
@@ -41,20 +41,21 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
             self.br_count = 0
             self.next(self._state_type_parameters, token)
         elif token != '(':
-            self._start_function(token)
+            self.context.restart_new_function(token)
         else:
             self.context.add_to_long_function_name("(")
             self._state = self._dec
 
-    def _start_function(self, name):
+    def _python_function_name(self, token):
         context = self.context
-        context.restart_new_function(name)
+        previous = context.current_function
+        self.next(self._function, token)
         function = context.current_function
-        if function.name.count('.') > 1:
+        if function is not previous and function.name.count('.') > 1:
             # The enclosing function's name already includes its parents.
             enclosing = context.last_function
             if enclosing is not None:
-                function.name = function.long_name = enclosing.name + '.' + name
+                function.name = function.long_name = enclosing.name_in_space + token
 
     def _state_type_parameters(self, token):
         # Consume a type param list, tracking nesting so bounds like
