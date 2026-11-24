@@ -5,6 +5,29 @@ understandable after chat history is lost, with evidence locators where availabl
 Preserve findings and occurrences beyond story closure, subject to bounded
 retention below or a separately authorized disposition.
 
+## Classify the finding
+
+Give each supported process finding one category. Use the first category its
+evidence supports, and include the basis in its concise description.
+
+1. **Engineering principle conflict or challenge.** Name the principle, cite
+   the specific decision in the applicable Accepted ADR, and identify the
+   observed choice that conflicts with it or the evidence that calls it into
+   question. Follow [ADR awareness](../../dough-adr-awareness/SKILL.md) for
+   supersession and human-approved exceptions.
+2. **Concrete defect.** Cite the established guidance, accepted requirement,
+   test or other evidence of the agreed behavior. State what should have
+   happened and what actually happened, with evidence of the mismatch.
+3. **Other.** Use this for everything else, including useful practices,
+   friction without an established expectation, and observations whose cause
+   is unclear. Describe what happened and its effect. The feedback cycle
+   assesses possible model capability limits and the case for intervention.
+
+Record the category once per finding. Reuse it on recurrence while the
+evidence still supports it. An identical reread requires no edit.
+
+## Record the evidence
+
 Use the explicit user/project `DearDough.md` location or `<project-root>/DearDough.md` for enabled
 process findings, resolved in the checkout chosen under
 [write only in an owned checkout](../SKILL.md#write-only-in-an-owned-checkout).
@@ -37,7 +60,7 @@ floor, using:
 # DearDough Process Findings
 
 ## DD-001 — <descriptive issue title>
-<concise concrete description>
+<category> — <concise description and its basis>
 
 ### Occurrences
 - Execution: <stable execution identity>

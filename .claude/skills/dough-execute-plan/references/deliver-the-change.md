@@ -43,14 +43,16 @@ and owned repairs (steps 3–8). Resolve project operations and publication cont
 first. Failure permits neither a separate commit nor older-HEAD delivery.
 Without publication authority, select local-only and retain its receipt.
 
-1. Classify the uncommitted change once. Record `records-only` for changes only to
-   planning, execution, finding or research records (plans, seeds, backlog, source
-   reviews, agent records, DearDough and maintainer findings). An owned repair or small change wholly
-   within an accepted refactor return's paths and consumer trace, adding no
-   representation, helper, dependency or path, may instead name that return as
-   already traced. Retain either disposition beside the slice or quick delivery
+1. Classify the uncommitted change once. Skip the fresh refactor pass if it
+   edits only planning, execution, finding or research records (plans, seeds,
+   backlog, source reviews, agent records, DearDough and maintainer findings),
+   or only an accepted refactor return's traced paths or the slice's subject
+   specs when your acceptance read, with a product search for existing
+   representations of what it adds, finds no [refactor-check](../../dough-post-change-refactor/references/refactor-checks.md)
+   candidate. Retain the disposition and reason at the slice or quick delivery
    boundary. Otherwise, or when unsure, spawn a fresh agent for
-   [dough-post-change-refactor](../../dough-post-change-refactor/SKILL.md).
+   [dough-post-change-refactor](../../dough-post-change-refactor/SKILL.md),
+   naming any candidate.
    Supply source, checkout/branch, slice/plan, project context, owned changed paths
    and boundaries, accepted proof/consumer trace and inspected setup/observations,
    plus dispositions since the last pass and the expensive-proof decision with
@@ -60,7 +62,7 @@ Without publication authority, select local-only and retain its receipt.
    Keep formatting and hook-owned lint with the coordinator. Uphold
    decide-before-testing, explicit human verification authority and
    whole-product reach beyond the story's files.
-2. Require `## REFACTOR COMPLETE` unless one of those two dispositions applies,
+2. Require `## REFACTOR COMPLETE` unless a retained disposition skips the pass,
    and recheck [execution decisions](execution-decisions.md). Inspect newly affected
    implementation and observation locations using its paths, boundaries and proof
    effects. Reuse confirmed unchanged inspection; accept invalidated proof's rerun
