@@ -23,6 +23,7 @@ class PHPLanguageStates(CodeStateMachine):
         self.in_trait = False
         self.bracket_level = 0
         self.brace_level = 0
+        self.type_brace_level = 0
         self.function_brace_level = 0
         self.started_function = False
         self.last_token = ''
@@ -74,7 +75,7 @@ class PHPLanguageStates(CodeStateMachine):
             self.brace_level += 1
         elif token == '}':
             self.brace_level -= 1
-            if self.brace_level == 0:
+            if self.brace_level == self.type_brace_level:
                 if self.in_class:
                     self.in_class = False
                     self.class_name = None
@@ -109,6 +110,7 @@ class PHPLanguageStates(CodeStateMachine):
         if token and not token.isspace() and token not in ['{', '(']:
             self.trait_name = token
             self.in_trait = True
+            self.type_brace_level = self.brace_level
             self._state = self._state_global
         elif token == '{':
             self.brace_level += 1
@@ -118,6 +120,7 @@ class PHPLanguageStates(CodeStateMachine):
         if token and not token.isspace() and token not in ['{', '(', 'extends', 'implements']:
             self.class_name = token
             self.in_class = True
+            self.type_brace_level = self.brace_level
             self._state = self._state_global
         elif token == '{':
             self.brace_level += 1
