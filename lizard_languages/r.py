@@ -70,7 +70,7 @@ class RStates(CodeStateMachine):
                 self.recent_tokens.pop(0)
 
         # Look for function keyword after assignment operators
-        if token == 'function':
+        if token in ('function', '\\'):
             # Check if we have recent tokens: [name, assignment_op, 'function']
             if len(self.recent_tokens) >= 2:
                 # recent_tokens now contains [..., assignment_op, 'function']
@@ -187,7 +187,7 @@ class RStates(CodeStateMachine):
                 return
 
         # Handle nested functions - treat them as separate functions
-        if token == 'function':
+        if token in ('function', '\\'):
             # Check if this is a nested function assignment
             if len(self.recent_tokens) >= 2:
                 assignment_op = self.recent_tokens[-2]  # The token before 'function'
