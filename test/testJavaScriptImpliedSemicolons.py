@@ -59,15 +59,33 @@ class TestImpliedSemicolonsOfOneFile(unittest.TestCase):
                              setup.max_nested_structures))
 
     def test_else_after_an_object_literal(self):
+        for clause in ("else", "else if (hooks.length)"):
+            code = f"""
+            function configure(useDefaults, settings, hooks) {{
+              if (useDefaults) settings.logging = {{ enabled: true }}
+              {clause} for (const hook of hooks) hook(settings)
+            }}
+            """
+            for filename in ("a.js", "a.ts"):
+                with self.subTest(filename=filename, clause=clause):
+                    configure = FileAnalyzer(get_extensions(['ns'])) \
+                        .analyze_source_code(filename, code).function_list[0]
+                    self.assertEqual(2, configure.max_nested_structures)
+
+    def test_else_after_a_loop_with_an_object_literal_assignment(self):
         code = """
-        function configure(useDefaults, settings, hooks) {
-          if (useDefaults) settings.logging = { enabled: true }
-          else for (const hook of hooks) hook(settings)
+        function setup(retry, queue) {
+          if (retry)
+            for (const job of queue) job.options = {}
+          else
+            for (const job of queue) job.run()
         }
         """
-        configure = FileAnalyzer(get_extensions(['ns'])) \
-            .analyze_source_code("a.js", code).function_list[0]
-        self.assertEqual(2, configure.max_nested_structures)
+        for filename in ("a.js", "a.ts"):
+            with self.subTest(filename=filename):
+                setup = FileAnalyzer(get_extensions(['ns'])) \
+                    .analyze_source_code(filename, code).function_list[0]
+                self.assertEqual(2, setup.max_nested_structures)
 
     def test_trailing_while_after_a_function_expression(self):
         code = """
