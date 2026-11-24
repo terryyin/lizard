@@ -175,7 +175,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                     # A buffered name on the header line cannot start another match.
                     self._keyword_match = False
                     for t in lookahead:
-                        if t == '\n':
+                        if t == '\n' or (t.isspace() and '\r' in t):
                             self._keyword_match = True
                         yield t
                     self._keyword_match = True
