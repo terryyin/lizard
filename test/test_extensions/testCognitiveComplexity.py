@@ -950,6 +950,24 @@ class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
                       static %s() { return this?.%s(); }   // +1 recursion
                     }""" % (name, name)))
 
+    def test_constructor_operator_does_not_recurse_into_new_method(self):
+        self.assertEqual([0, 1, 2, 2, 2], cogc("factory.js", """
+            class Factory {
+              static new(Ctor) { return new (Ctor)(); }
+            }
+            class Collection {
+              static new(useSet) { return new (useSet ? Set : Map)(); }
+            }
+            class Direct {
+              static new(n) { if (n === 0) return []; return this.new(n - 1); }
+            }
+            class Optional {
+              static new(n) { if (n === 0) return []; return this?.new(n - 1); }
+            }
+            class Grouped {
+              static new(n) { if (n === 0) return []; return (this)?.new(n - 1); }
+            }"""))
+
     def test_other_languages_can_call_a_structure_word(self):
         self.assertEqual([4], cogc("a.pl", """
 sub catch {

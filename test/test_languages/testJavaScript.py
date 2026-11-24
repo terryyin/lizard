@@ -421,6 +421,17 @@ class Registry {
             [('new', 2, ['ok']), ('dispose', 1, [])],
             [(f.name, f.cyclomatic_complexity, f.full_parameters) for f in functions])
 
+    def test_new_method_after_a_field_with_optional_new_property(self):
+        code = '''
+class Factory {
+  cached = this.options?.new
+  new(x) { return x ? 1 : 0; }
+}
+'''
+        functions = analyze_file.analyze_source_code('factory.js', code).function_list
+        self.assertEqual([('new', 2, ['x'])],
+                         [(f.name, f.cyclomatic_complexity, f.full_parameters) for f in functions])
+
     def test_key_named_like_a_keyword_is_no_structure(self):
         code = '''
 function options(a) {
