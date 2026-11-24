@@ -1,5 +1,6 @@
 import unittest
 
+from lizard import FileAnalyzer, get_extensions
 from lizard_languages import KotlinReader
 from .kotlin_helpers import get_kotlin_function_list
 
@@ -54,7 +55,33 @@ fun count(names: List<String>) { println(names.size) }
             [("render", 1, 6, 6), ("count", 7, 7, 1)],
             [(f.name, f.start_line, f.end_line, f.nloc) for f in functions],
         )
-        self.assertEqual(20, functions[0].token_count)
+        self.assertEqual(29, functions[0].token_count)
+
+    def test_raw_template_counts_code_and_skips_literal_text(self):
+        analyzer = FileAnalyzer(get_extensions(["cognitive", "nd", "ns"]))
+        result = analyzer.analyze_source_code("status.kt", '''\
+fun statusLabel(active: Boolean): String {
+    return """if (active) code="${if (active) 200 else 503}""""
+}
+''')
+        function, = result.function_list
+        self.assertEqual(
+            (2, 2, 1, 2),
+            (function.cyclomatic_complexity, function.cognitive_complexity,
+             function.max_nesting_depth, function.max_nested_structures),
+        )
+
+    def test_nested_string_templates_count_code_at_each_level(self):
+        functions = get_kotlin_function_list('''\
+fun statusLabel(active: Boolean, delayed: Boolean): String {
+    return "Status: ${if (active) "Ready: ${if (delayed) "late" else "on time"}" else "Unavailable"}"
+}
+fun fallback() = "No status"
+''')
+        self.assertEqual(
+            [("statusLabel", 1, 3, 3), ("fallback", 4, 4, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in functions],
+        )
 
     def test_raw_string_after_a_nested_comment_keeps_function_boundaries(self):
         functions = get_kotlin_function_list('''\
