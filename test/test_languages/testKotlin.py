@@ -14,6 +14,81 @@ class Test_tokenizing_Kotlin(unittest.TestCase):
         self.check_tokens(['`a`'], '`a`')
 
 
+class TestKotlinStringLiterals(unittest.TestCase):
+
+    def test_raw_string_with_an_unpaired_quote_keeps_the_next_function(self):
+        functions = get_kotlin_function_list('''\
+fun quoteFragment(): String {
+    return """The "description field is missing."""
+}
+
+fun defaultField(): String {
+    return "description"
+}
+''')
+        self.assertEqual(
+            [("quoteFragment", 1, 3, 10), ("defaultField", 5, 7, 10)],
+            [(f.name, f.start_line, f.end_line, f.token_count) for f in functions],
+        )
+
+    def test_template_does_not_count_a_quoted_map_key_as_code(self):
+        function, = get_kotlin_function_list('''\
+fun localeLabel(labels: Map<String, String>): String {
+    if (labels.isEmpty()) return "Default"
+    return "Locale: ${labels["if"]}"
+}
+''')
+        self.assertEqual(2, function.cyclomatic_complexity)
+
+    def test_raw_template_with_quoted_delimiters_keeps_its_lines(self):
+        functions = get_kotlin_function_list('''\
+fun render(names: List<String>): String {
+    return """
+        Results: ${names.joinToString { """name: "$it"""" }}
+        End of results.
+    """.trimIndent()
+}
+fun count(names: List<String>) { println(names.size) }
+''')
+        self.assertEqual(
+            [("render", 1, 6, 6), ("count", 7, 7, 1)],
+            [(f.name, f.start_line, f.end_line, f.nloc) for f in functions],
+        )
+        self.assertEqual(20, functions[0].token_count)
+
+    def test_raw_string_after_a_nested_comment_keeps_function_boundaries(self):
+        functions = get_kotlin_function_list('''\
+fun render(): String {
+    /*
+    if (debug) { /* Log old text. */ println("""Missing "quote""") }
+    */
+    return """Result "ok"""
+}
+fun afterRender() = "next"
+''')
+        self.assertEqual(
+            [("render", 1, 6), ("afterRender", 7, 7)],
+            [(f.name, f.start_line, f.end_line) for f in functions],
+        )
+
+    def test_quotes_in_backtick_template_names_stay_inside_the_string(self):
+        for identifier, string in (
+                ('`display"name`', '"Label: $`display"name` ${1}"'),
+                ('`display"""name`', '"""Label: $`display"""name`"""')):
+            with self.subTest(string=string):
+                functions = get_kotlin_function_list(f'''\
+fun label(): String {{
+    val {identifier} = "value"
+    return {string}
+}}
+fun fallback() = "next"
+''')
+                self.assertEqual(
+                    [("label", 1, 4), ("fallback", 5, 5)],
+                    [(f.name, f.start_line, f.end_line) for f in functions],
+                )
+
+
 class Test_parser_for_Kotlin(unittest.TestCase):
 
     def test_empty(self):
