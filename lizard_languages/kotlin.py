@@ -5,6 +5,7 @@ Language parser for Apple Swift
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine
 from .golike import GoLikeStates
+from .kotlin_literals import string_tokens
 from .swift import SwiftReplaceLabel
 
 
@@ -31,8 +32,7 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        return CodeReader.generate_tokens(
-            source_code,
+        addition = (
             r"|`\w+`" +
             r"|\w+\?" +
             r"|\w+\!!" +
@@ -40,6 +40,9 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
             r"|\?:" +
             addition
         )
+        if '"""' in source_code or '${' in source_code or '$$"' in source_code:
+            return string_tokens(source_code, addition)
+        return CodeReader.generate_tokens(source_code, addition)
 
 
 class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
