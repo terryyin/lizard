@@ -68,6 +68,13 @@ class LuaStateMachine(RubylikeStateMachine):
             return
         self.next(self._state_global, token)
 
+    def _def_continue(self, token):
+        if token == ":" and self.last_token != ")":
+            self.context.add_to_function_name(token)
+            self.next(self._def_class_method)
+        else:
+            super()._def_continue(token)
+
     def _anonymous_def(self, token):
         if token != '(':
             self.next(self._def, token)
