@@ -303,3 +303,45 @@ class TestNestedStructuresAcrossFiles(unittest.TestCase):
         analyzer.analyze_source_code(*first)
         functions = analyzer.analyze_source_code(*second).function_list
         return [f.max_nested_structures for f in functions]
+
+
+class TestReaderNestedStructureKeywords(unittest.TestCase):
+
+    def setUp(self):
+        self.analyzer = FileAnalyzer(get_extensions([NestedStructure()]))
+
+    def test_php_with_helper_is_a_function_call(self):
+        result = self.nested_structures('billing.php', """<?php
+        function setupFee($account) {
+            return with($account->plan, fn ($plan) => $plan->setupFee);
+        }
+        """)
+        self.assertEqual([('setupFee', 0)], result)
+
+    def test_java_with_method_reference_is_an_expression(self):
+        result = self.nested_structures('Schedule.java', """
+        import java.time.LocalDate;
+        import java.time.temporal.TemporalAdjuster;
+        import java.util.function.Function;
+
+        final class Schedule {
+            static Function<TemporalAdjuster, LocalDate> adjuster(LocalDate date) {
+                return date::with;
+            }
+        }
+        """)
+        self.assertEqual([('Schedule::adjuster', 0)], result)
+
+    def test_reader_structure_words_do_not_leak_between_files(self):
+        self.nested_structures('billing.php', '<?php function amount() { return 10; }')
+        result = self.nested_structures('billing.py', """
+        def read_receipt(path):
+            with open(path) as receipt:
+                return receipt.read()
+        """)
+        self.assertEqual([('read_receipt', 1)], result)
+
+    def nested_structures(self, filename, source):
+        result = self.analyzer.analyze_source_code(filename, source)
+        return [(function.name, function.max_nested_structures)
+                for function in result.function_list]
