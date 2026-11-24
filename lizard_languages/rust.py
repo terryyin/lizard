@@ -33,6 +33,7 @@ class RustReader(CodeReader, CCppCommentsMixin):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         addition = (
+            r"|(?:r#\w+)"  # raw identifiers, before '#' can start a macro
             # char literals, before lifetimes, which also start with `'`
             r"|(?:'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])')"
             r"|(?:'\w+\b)")  # lifetimes, labels
