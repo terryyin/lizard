@@ -976,6 +976,71 @@ sub catch {
                 self.assertEqual(expected, cogc(filename, source))
 
 
+class TestJavaScriptControlHeaders(unittest.TestCase):
+
+    def test_conditional_in_if_header(self):
+        self.assertEqual([2, 4], cogc("a.js", """
+            function serialize(options) {
+              if (options ? options.flattenMaps : true) {
+                return 'plain';
+              }
+              return 'map';
+            }
+            function enabled(options, fallback) {
+              if (options ? (options.exact ? options.enabled : fallback) : fallback) {
+                return true;
+              }
+              return false;
+            }
+        """))
+
+    def test_conditionals_in_loop_headers(self):
+        self.assertEqual([2, 3], cogc("a.js", """
+            function drain(queue, flush) {
+              while (flush ? queue.hasPending() : queue.hasReady()) {
+                queue.processNext();
+              }
+            }
+            function retry(queue, urgent) {
+              for (let i = urgent ? 0 : 1; i < (urgent ? 10 : 5); i++) {
+                queue.next();
+              }
+            }
+        """))
+
+    def test_class_field_semicolon_inside_for_header(self):
+        self.assertEqual([4], cogc("a.js", """
+            function chooseQueue(preferred, fresh, fallback) {
+              for (
+                let Queue = preferred ? class { static drained = false; } : fresh ? fresh : fallback;
+                Queue;
+                Queue = null
+              ) {
+                return Queue;
+              }
+              return fallback;
+            }
+        """))
+
+    def test_jsx_attribute_separator_inside_if_header(self):
+        self.assertEqual([1], cogc("a.jsx", """
+            function render(visible, compact, title) {
+              if (layoutFits(visible ? <Card title={title} /> : compact ? <Compact /> : null)) return true;
+              return false;
+            }
+        """))
+
+    def test_conditional_type_in_if_header(self):
+        self.assertEqual([1], cogc("a.ts", """
+            function check<T>(input: unknown) {
+              if (input as (T extends string ? boolean : number)) {
+                return true;
+              }
+              return false;
+            }
+        """))
+
+
 class TestJavaScriptGroupedExpressions(unittest.TestCase):
     """The reader takes ``x = (`` as the possible start of an arrow function
     and discards that function when no ``=>`` follows.  The expression then
