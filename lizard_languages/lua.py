@@ -15,8 +15,8 @@ class LuaReader(RubylikeReader):
     def generate_tokens(source_code, addition='', token_class=None):
         return RubylikeReader.generate_tokens(
             source_code,
-            r"|\-\-\[\[.*?\]\]" +
-            r"|\[\=*\[.*?\]\=*\]" +
+            r"|--\[(?P<lua_comment_equals>=*)\[.*?\](?P=lua_comment_equals)\]" +
+            r"|\[(?P<lua_string_equals>=*)\[.*?\](?P=lua_string_equals)\]" +
             r"|\-\-.*?$" +
             addition)
 
