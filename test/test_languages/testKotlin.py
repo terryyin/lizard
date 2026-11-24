@@ -152,6 +152,25 @@ fun jobReport(active: Boolean, priority: Boolean, jobId: Int): String {
 ''')
         self.assertEqual([5, 5], [f.cognitive_complexity for f in result.function_list])
 
+    def test_interpolation_closes_pending_cognitive_checks(self):
+        analyzer = FileAnalyzer(get_extensions(["cognitive"]))
+        result = analyzer.analyze_source_code("jobs.kt", '''\
+fun logUntilMissing(jobIds: List<String?>) {
+    for (jobId in jobIds) {
+        println("Job: ${jobId ?: break}")
+    }
+}
+fun logKnownJobs(jobIds: List<String?>) {
+    for (jobId in jobIds) {
+        println("Job: ${jobId ?: continue}")
+    }
+}
+fun jobLabel(active: Boolean, priority: Boolean, value: Any?): String {
+    return if (active) "${value as String ?}" + (if (priority) ":urgent" else ":normal") else "paused"
+}
+''')
+        self.assertEqual([1, 1, 5], [f.cognitive_complexity for f in result.function_list])
+
     def test_nested_string_templates_count_code_at_each_level(self):
         functions = get_kotlin_function_list('''\
 fun statusLabel(active: Boolean, delayed: Boolean): String {
