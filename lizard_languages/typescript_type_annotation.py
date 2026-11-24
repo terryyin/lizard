@@ -5,6 +5,7 @@ from .javascript_expression import starts_statement
 
 
 class TypeScriptTypeAnnotationStates(CodeStateMachine):
+    abstract_constructor_prefix = False
     NON_GENERIC_TYPES = frozenset((
         'any', 'unknown', 'never', 'number', 'bigint', 'boolean', 'string',
         'symbol', 'object', 'void', 'undefined', 'null', 'this', 'true', 'false'))
@@ -85,6 +86,9 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
             self._parenthesis_first = None if token == '(' else token
             self._function_arrow = False
         else:
+            if token == 'abstract':
+                self.abstract_constructor_prefix = (
+                    self._expect_type and self.last_token not in ('typeof', 'keyof', 'readonly', 'unique', 'infer'))
             first = token[:1]
             self._closed_type = not self._qualified_type and (
                 token in self.NON_GENERIC_TYPES

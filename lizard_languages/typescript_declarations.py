@@ -180,9 +180,18 @@ class TypeScriptDeclarationsMixin:
 
         def callback():
             token = typeStates.saved_token
-            if class_field and token == 'new' and self.context.newline:
-                self._read_class_new(token, after_field_type=True)
-            elif token:
+            if token == 'new' and self.context.newline:
+                if (self.as_class and self.last_token == 'abstract'
+                        and typeStates.abstract_constructor_prefix):
+                    # Keep the constructor operator when a type can continue
+                    # with "abstract new" across a line break.
+                    self.next(self._state_global)
+                    self._prev_token = token
+                    return
+                if class_field:
+                    self._read_class_new(token, after_field_type=True)
+                    return
+            if token:
                 self._replay_token(token)
         self.sub_state(typeStates, callback)
 
