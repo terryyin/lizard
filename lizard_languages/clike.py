@@ -76,17 +76,29 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 class CppRValueRefStates(CodeStateMachine):
     # pylint: disable=R0903
 
+    parenthesized_operand = False
+    reference_attribute = False
+
     def _state_global(self, token):
         if token == "&&":
-            self.next(self._r_value_ref)
+            self.parenthesized_operand = False
+            self.reference_attribute = False
+            self._state = self._r_value_ref
         elif token == "typedef":
             self.next(self._typedef)
 
-    @CodeStateMachine.read_until_then('=;{})')
-    def _r_value_ref(self, token, _):
-        if token == "=":
-            self.context.add_condition(-1)
-        self.next(self._state_global)
+    def _r_value_ref(self, token):
+        if token in "=;{})":
+            if token == "=" and (not self.parenthesized_operand or
+                                 self.reference_attribute or self.last_token == "operator"):
+                self.context.add_condition(-1)
+            self._state = self._state_global
+        elif token == "(":
+            self.parenthesized_operand = (self.last_token == "&&" or
+                                          (self.last_token == "(" and self.parenthesized_operand))
+        elif token == "[" and self.last_token == "[":
+            # A parenthesized reference declarator may contain an attribute.
+            self.reference_attribute = True
 
     @CodeStateMachine.read_until_then(';')
     def _typedef(self, _, tokens):
