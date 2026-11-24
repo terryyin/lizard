@@ -350,6 +350,54 @@ class Test_c_cpp_lizard(unittest.TestCase):
         result = get_cpp_function_list("void fun(t<const int&>&b){} ")
         self.assertEqual(1, len(result))
 
+    def test_function_after_left_shift_in_global_initializer(self):
+        result = get_cpp_function_list("""namespace table {
+constexpr unsigned index_bits = 4;
+constexpr unsigned mask = index_bits << 3;
+
+unsigned capacity_mask() { return mask; }
+}
+""")
+
+        self.assertEqual(
+            [("table::capacity_mask", 5, 5)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_template_argument_starting_with_lambda_digraph(self):
+        source = """template <auto F>
+int compute() { return F(); }
+
+template <>
+int compute< CAPTURE { return 7; } >() { return 8; }
+
+int after() { return 9; }
+"""
+        for capture in ("<: :>", "<::>"):
+            with self.subTest(capture=capture):
+                result = get_cpp_function_list(source.replace("CAPTURE", capture))
+                self.assertEqual(
+                    [("compute", 2, 2), ("compute<<::>{return7;}>", 5, 5), ("after", 7, 7)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_template_argument_starting_with_digraph_capture_default(self):
+        result = get_cpp_function_list("""template <auto N>
+constexpr unsigned value() { return N; }
+
+struct Slot {
+    unsigned capacity = value< <:=:> {
+        if (sizeof(int) >= 4) { return 32; }
+        return 16;
+    }() >();
+    unsigned get() const { return capacity; }
+};
+
+unsigned after() { return Slot{}.get(); }
+""")
+
+        self.assertEqual(
+            [("value", 2, 2), ("Slot::get", 9, 9), ("after", 12, 12)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
     def test_template_as_part_of_function_name(self):
         result = get_cpp_function_list("void fun<a,b<c>>(){} ")
         self.assertEqual('fun<a,b<c>>', result[0].name)
