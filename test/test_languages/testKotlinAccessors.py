@@ -47,6 +47,30 @@ class TestKotlinAccessors(unittest.TestCase):
                 ''')
         self.assertEqual("get", result[0].name)
 
+    def test_annotation_use_site_targets_do_not_start_accessors(self):
+        result = get_kotlin_function_list('''\
+class Position(
+    @get:JvmName("row") val row: Int,
+    @set:JvmName("setColumnNumber") var column: Int,
+) {
+    val description: String
+        get() {
+            return "$row:$column"
+        }
+
+    fun move(columns: Int) {
+        column += columns
+    }
+}
+fun origin(): Position {
+    return Position(0, 0)
+}
+        ''')
+        self.assertEqual(
+            [("get", 6, 8), ("move", 10, 12), ("origin", 14, 16)],
+            [(f.name, f.start_line, f.end_line) for f in result],
+        )
+
     def test_getter_setter(self):
         result = get_kotlin_function_list('''
             class Time
