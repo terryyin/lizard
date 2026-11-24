@@ -147,6 +147,8 @@ class RStates(CodeStateMachine):
         """Expecting function parameters."""
         if token == '(':
             self.context.add_to_long_function_name("(")
+            self._parameter_depth = 0
+            self._parameter_tokens = []
             self._state = self._read_params
         else:
             # Single expression function without parentheses - rare in R
@@ -155,13 +157,26 @@ class RStates(CodeStateMachine):
 
     def _read_params(self, token):
         """Read function parameters until closing parenthesis."""
-        if token == ')':
+        if token.isspace():
+            return
+        if token == ')' and self._parameter_depth == 0:
+            self._finish_parameter()
             self.context.add_to_long_function_name(")")
             self._state = self._function_body
-        elif token not in ['\n'] and not token.isspace():
-            self.context.parameter(token)
-            if token != '(':
-                self.context.add_to_long_function_name(" " + token)
+        elif token == ',' and self._parameter_depth == 0:
+            self._finish_parameter()
+            self.context.parameter(',')
+        else:
+            self._parameter_tokens.append(token)
+            if token in ('(', '[', '{'):
+                self._parameter_depth += 1
+            elif token in (')', ']', '}'):
+                self._parameter_depth -= 1
+
+    def _finish_parameter(self):
+        if self._parameter_tokens:
+            self.context.parameter(' '.join(self._parameter_tokens))
+            self._parameter_tokens = []
 
     def _function_body(self, token):
         """In function body - track complexity and nested functions."""
