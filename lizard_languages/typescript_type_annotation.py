@@ -63,8 +63,9 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                             '%', '**', '==', '===', '!=', '!==', '>', '>=', '<=',
                             'instanceof', 'in', '^'))
 
-    def __init__(self, context):
+    def __init__(self, context, runtime_assertion=False):
         super().__init__(context)
+        self.runtime_assertion = runtime_assertion
         self.saved_token = None
         self._brackets = []
         self._expect_type = True
@@ -154,6 +155,41 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                 and token != self._brackets[-1])
 
 
+class TypeAliasContext(TypeScriptTypeAnnotationStates):
+    """Recognize an alias in the stream without changing function parsing."""
+
+    def __init__(self):
+        super().__init__(None)
+        self.next(self._name)
+
+    def _name(self, token):
+        if token.isspace():
+            if '\n' in token:
+                self.statemachine_return()
+        elif token.replace('$', '_').isidentifier():
+            self.next(self._after_name)
+        else:
+            self.statemachine_return()
+
+    def _after_name(self, token):
+        if token == '=':
+            self.next(self._state_global)
+        elif token == '<':
+            self.br_count = 1
+            self.next(self._type_parameters)
+        elif not token.isspace() and not (
+                token[0] == '<' and packed_type_arguments(token)):
+            self.statemachine_return()
+
+    def _type_parameters(self, token):
+        if token == '<':
+            self.br_count += 1
+        elif token == '>':
+            self.br_count -= 1
+            if not self.br_count:
+                self.next(self._after_name)
+
+
 class TypeArguments:  # pylint: disable=too-few-public-methods
     """Follow a possible '<...>' while its tokens pass through the reader."""
 
@@ -188,6 +224,8 @@ class TypeArguments:  # pylint: disable=too-few-public-methods
 
 def _simple_type_token(previous, token):
     """Recognize reference types without ambiguous expression groups."""
+    if token == 'super':
+        return False
     if previous == '[':
         return token == ']'  # An array suffix, but not a value subscript.
     if token in _TYPE_SEPARATORS or token == '[':
@@ -199,7 +237,7 @@ def _simple_type_token(previous, token):
     if first == '<' and packed_type_arguments(token):
         return True
     if previous == 'typeof':
-        return token.replace('$', '_').isidentifier()
+        return token not in _EXPRESSION_PREFIXES and token.replace('$', '_').isidentifier()
     # TSX keeps a whole template in one token, including any expressions.
     return (previous == '-' and first.isdigit()
             or previous in _TYPE_PREFIXES

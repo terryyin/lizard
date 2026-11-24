@@ -9,7 +9,7 @@ from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import (
-    TypeArguments, TypeScriptTypeAnnotationStates, followed_by_new_statement,
+    TypeAliasContext, TypeArguments, TypeScriptTypeAnnotationStates, followed_by_new_statement,
     packed_type_arguments)
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
@@ -128,6 +128,14 @@ def _read_type_arguments(arguments, token, state):
     if token == '<':
         return (TypeArguments() if state.type_argument_context() else None), False, False
     return None, packed_type_arguments(token) and state.type_argument_context(), True
+
+
+def _read_type_alias(alias, token):
+    if token.startswith(_COMMENT_STARTS):
+        if '\n' not in token:
+            return alias
+        token = '\n'
+    return None if alias(token) else alias
 
 
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
@@ -271,9 +279,15 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         filename = self.context.fileinfo.filename.lower()
         track_angles = filename.endswith(('.ts', '.tsx'))
         packed_angles = filename.endswith('.tsx')
+        type_alias = None
         type_arguments = None
         while True:
             for token in tokens:
+                if type_alias is not None:
+                    # Keep type-only angles out of statement detection even
+                    # when the runtime reader has left a multiline alias.
+                    type_alias = _read_type_alias(type_alias, token)
+                    type_arguments = None
                 if not token.isspace():
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
@@ -288,17 +302,19 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
-                    if track_angles and (type_arguments is not None or token == '<'
-                                         or packed_angles and token[0] == '<'):
-                        type_arguments, closes_arguments, simple_arguments = _read_type_arguments(
-                            type_arguments, token, state)
-                        if closes_arguments:
-                            tokens, lookahead = tee(tokens)
-                            line_start = followed_by_new_statement(lookahead, simple_arguments)
-                            del lookahead
-                            member_access = False
-                            yield TypeArgumentEnd(token) if line_start else token
-                            break
+                    if track_angles and type_alias is None:
+                        if token == 'type':
+                            type_alias = TypeAliasContext()
+                        elif type_arguments is not None or token == '<' or packed_angles and token[0] == '<':
+                            type_arguments, closes_arguments, simple_arguments = _read_type_arguments(
+                                type_arguments, token, state)
+                            if closes_arguments:
+                                tokens, lookahead = tee(tokens)
+                                line_start = followed_by_new_statement(lookahead, simple_arguments)
+                                del lookahead
+                                member_access = False
+                                yield TypeArgumentEnd(token) if line_start else token
+                                break
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False

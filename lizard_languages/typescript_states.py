@@ -8,7 +8,7 @@ from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
-from .typescript_type_annotation import can_take_type_arguments
+from .typescript_type_annotation import TypeScriptTypeAnnotationStates, can_take_type_arguments
 
 # Ordinary tokens skip declaration and marker dispatch together.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
@@ -83,9 +83,13 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if isinstance(self._state, TypeScriptStates):
             return self._state.type_argument_context()
         previous = self.last_token
-        if (self._class_body_pending
-                or self.started_function and not self._expression_body
-                or self._state == self._expecting_statement_or_block):
+        if self._class_body_pending or self.started_function and not self._expression_body:
+            return False
+        if self.as_object and not self.holds_members:
+            return False
+        if self._state != self._state_global and not (
+                isinstance(self._state, TypeScriptTypeAnnotationStates)
+                and self._state.runtime_assertion):
             return False
         if previous == '!':
             return getattr(self, '_postfix_operand', False)
