@@ -5,6 +5,34 @@ from .testTypeScript import get_ts_function_list
 
 
 class Test_TypeScript_declared_functions(unittest.TestCase):
+    def test_ambient_and_overload_signatures_for_new_methods(self):
+        code = '''
+declare class ExistingRegistry {
+  new(key: string): object;
+}
+
+class Registry {
+  static new(key: string): Registry;
+  static new(key: string, fresh: boolean): Registry;
+  static new(key: string, fresh = false): Registry {
+    return key || fresh ? new Registry() : new Registry();
+  }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('new', 9, 4)],
+                         [(f.name, f.start_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_generic_field_type_before_a_method_named_new(self):
+        code = '''
+class Registry {
+  cache!: Map<string, number>
+  new(ready: boolean) { return ready && this.cache }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('new', 2)], [(f.name, f.cyclomatic_complexity) for f in functions])
+
     def test_function_declare(self):
         functions = get_ts_function_list("""
             declare function create(o): void;

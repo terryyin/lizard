@@ -338,6 +338,89 @@ function wrap(promise) {
                                  [(f.name, f.cyclomatic_complexity)
                                   for f in functions])
 
+    def test_class_members_named_new(self):
+        code = '''
+class Point {
+  x = 0;
+  constructor(x) { this.x = x; }
+
+  static new(x) {
+    if (!Number.isFinite(x)) return null;
+    return new Point(x);
+  }
+
+  xOffset = 1
+  new(x) { return new (Point)(x + this.xOffset); }
+}
+
+class PointFactory {
+  get new() { return Point.new; }
+}
+'''
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(filename, code).function_list
+                self.assertEqual(
+                    [('constructor', 1), ('new', 2), ('new', 1), ('get new', 1)],
+                    [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_constructor_calls_in_multiline_field_values(self):
+        code = '''
+const async = 2;
+
+class Formatter {
+  constructor(normalize) { this.normalize = normalize; }
+  valueOf() { return this.normalize(0); }
+}
+
+class Dashboard {
+  enabled = true;
+  seed = 4;
+  formatter = this.cachedFormatter
+    ?? new Formatter(value => value || "unknown");
+  cache = this.enabled
+    ? new (Map)
+    : null;
+  score = this.seed
+    + async * new Formatter(value => value || 3);
+
+  render(value) { return this.formatter.normalize(value); }
+}
+'''
+        functions = analyze_file.analyze_source_code('dashboard.js', code).function_list
+        self.assertEqual(
+            [('constructor', 1), ('valueOf', 1), ('(anonymous)', 2),
+             ('(anonymous)', 2), ('render', 1)],
+            [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_generator_methods_named_new(self):
+        code = '''
+class EventStream {
+  static *new(events) { for (const event of events) yield event; }
+  async *new(events) { for await (const event of events) yield event; }
+  dispose() { return true; }
+}
+'''
+        functions = analyze_file.analyze_source_code('events.js', code).function_list
+        self.assertEqual(
+            [('new', 2), ('new', 2), ('dispose', 1)],
+            [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_new_method_after_a_ternary_field_keeps_its_own_parameters(self):
+        code = '''
+class Registry {
+  value = true
+    ? Object()
+    : null
+  new(ok) { return ok && this.value; }
+  dispose() { return true; }
+}
+'''
+        functions = analyze_file.analyze_source_code('registry.js', code).function_list
+        self.assertEqual(
+            [('new', 2, ['ok']), ('dispose', 1, [])],
+            [(f.name, f.cyclomatic_complexity, f.full_parameters) for f in functions])
+
     def test_key_named_like_a_keyword_is_no_structure(self):
         code = '''
 function options(a) {
