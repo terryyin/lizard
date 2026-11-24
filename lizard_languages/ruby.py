@@ -26,9 +26,9 @@ class _MethodName(str):
     is_member_name = True
 
 
-# The words that the reader or a metric reads as a structure.
+# The words that the reader or a metric reads as a keyword.
 _KEYWORDS = frozenset((
-    'begin', 'end', 'do', 'then', 'def', 'class', 'module', 'it',
+    'begin', 'end', 'do', 'then', 'def', 'class', 'module', 'it', 'not', 'in',
     'if', 'unless', 'else', 'elsif', 'elseif', 'elif', 'case', 'when',
     'while', 'until', 'for', 'foreach', 'and', 'or', 'rescue', 'ensure',
     'try', 'catch', 'finally', 'except', 'switch', 'with', 'return',
@@ -71,21 +71,56 @@ class RubyReader(RubylikeReader):
     ext = ['rb']
     language_names = ['ruby']
 
-    @staticmethod
-    def preprocess(tokens):
+    def preprocess(self, tokens):
         """Drop spaces, and mark a keyword right after '.', '&.' or 'def'
-        on the same line as the name of a method."""
+        on the same line as the name of a method.  At the end of a line,
+        call `context.at_line_end` once if the state machine set it."""
         keywords, name_before = _KEYWORDS, _NAME_BEFORE
+        context = self.context
+        context.at_line_end = None
         name_follows = False
         for token in tokens:
-            if token.isspace() and token != '\n':
-                continue
+            if token.isspace():
+                if token != '\n':
+                    continue
+                if context.at_line_end is not None:
+                    # The state machine has read the last token of the
+                    # line.  The next line decides if the expression ends.
+                    yield token
+                    token = yield from self._after_line_end(tokens)
+                    if token is None:
+                        return
             if name_follows and token in keywords:
                 name_follows = False
                 yield _MethodName(token)
                 continue
             name_follows = token in name_before
             yield token
+        if context.at_line_end is not None:
+            context.at_line_end()
+
+    def _after_line_end(self, tokens):
+        """Find the next token after blank and comment lines.  Unless it
+        goes on with the expression, `.map` or `&.map`, call
+        `context.at_line_end` first.  Then pass on the skipped lines, so
+        that a comment such as `#lizard forgive` comes after the end."""
+        context = self.context
+        skipped = []
+        token = None
+        for token in tokens:
+            if token.isspace() and token != '\n':
+                continue
+            if token == '\n' or self.get_comment_from_token(token) is not None:
+                skipped.append(token)
+                continue
+            break
+        else:
+            token = None
+        if token not in ('.', '&'):
+            at_line_end, context.at_line_end = context.at_line_end, None
+            at_line_end()
+        yield from skipped
+        return token
 
     @staticmethod
     @js_style_regex_expression(language='ruby')

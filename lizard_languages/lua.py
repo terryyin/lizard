@@ -31,6 +31,10 @@ class LuaReader(RubylikeReader):
 
 class LuaStateMachine(RubylikeStateMachine):
     FUNC_KEYWORD = 'function'
+    PARAMETERS_ON_DEF_LINE = False
+    # Lua has no `case`, and its `until` ends a `repeat` loop.
+    BLOCK_KEYWORDS = ("begin", "do", "class", "module", "{", "${")
+    LOOP_KEYWORDS = ("while", "for")
 
     def __init__(self, context):
         super(LuaStateMachine, self).__init__(context)
@@ -42,6 +46,17 @@ class LuaStateMachine(RubylikeStateMachine):
             return
         self.probable_function_name = token
         super(LuaStateMachine, self)._state_global(token)
+
+    def _for_while(self, token):
+        # A Lua loop always has `do`.  The reader only misses it when `#`,
+        # the length operator, starts a comment: `for i = 1, #t do`.  Then
+        # it skips the first token of the body, as it did before.
+        if self.is_newline() or (
+                token == "do" and
+                not getattr(token, 'is_member_name', False)):
+            self.next(self._state_global)
+            if token != "end":
+                self.sub_state(self.statemachine_clone())
 
     def _assigning(self, token):
         if token == self.FUNC_KEYWORD:

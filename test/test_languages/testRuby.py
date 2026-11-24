@@ -286,6 +286,426 @@ end
         self.assertEqual([1], [f.cognitive_complexity for f in result])
 
 
+class Test_Ruby_blocks_that_end_a_function_early(unittest.TestCase):
+    """Each block keyword pairs with its own `end`, so that `end` must not
+    close the function."""
+
+    def test_case_and_until_blocks_do_not_end_the_function(self):
+        result = get_ruby_function_list('''
+class Shape
+  def area(kind, size)
+    case kind
+    when :square then size * size
+    else 0
+    end
+    size
+  end
+
+  def grade(score)
+    case
+    when score > 90 then "A"
+    end
+  end
+
+  def unpack(config)
+    case config
+    in { name: String => name }
+      name
+    end
+    config
+  end
+
+  def label(kind)
+    text = case kind
+           when :a then "A"
+           end
+    return case kind
+           when :b then text
+           end
+  end
+
+  def grow(size)
+    until size > 10
+      size += 1
+    end
+    size += 1 until size > 20
+    begin
+      size -= 1
+    end until size < 15
+    size
+  end
+
+  def finish
+    1
+  end
+end
+''')
+        self.assertEqual(
+            [('area', 3, 9), ('grade', 11, 15), ('unpack', 17, 23),
+             ('label', 25, 32), ('grow', 34, 43), ('finish', 45, 47)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_loop_body_that_starts_with_a_block(self):
+        result = get_ruby_function_list('''
+def drain(x)
+  while x
+    if x > 1
+      x -= 1
+    end
+  end
+  for y in [x]
+    begin
+      x += y
+    end
+  end
+  x
+end
+
+def last
+  1
+end
+''')
+        self.assertEqual(
+            [('drain', 2, 14), ('last', 16, 18)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_loop_condition_with_a_block_on_more_lines(self):
+        result = get_ruby_function_list('''
+def wait(jobs)
+  while jobs.any? { |job|
+    job.busy?
+  }
+    tick
+  end
+  jobs
+end
+
+def drain = until jobs.none? { |job|
+  job.busy?
+}
+  tick
+end
+
+def last
+  1
+end
+''')
+        self.assertEqual(
+            [('wait', 2, 9), ('drain', 11, 15), ('last', 17, 19)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_case_and_until_add_the_same_metrics_as_before(self):
+        code = '''
+def route(kind, n)
+  case kind
+  when :a then n += 1
+  when :b then n += 2
+  end
+  until n > 10
+    n += 1
+  end
+  n
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['cognitive', 'nd', 'ns']))
+        result = analyzer.analyze_source_code('a.rb', code).function_list
+        self.assertEqual(
+            [('route', 2, 11, 4, 2, 1, 0)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity,
+              f.cognitive_complexity, f.max_nesting_depth,
+              f.max_nested_structures) for f in result])
+
+    def test_if_expression_is_a_block_and_a_modifier_is_not(self):
+        result = get_ruby_function_list('''
+class Pick
+  def choose(c)
+    x = if c
+          1
+        else
+          2
+        end
+    y = unless c
+          3
+        end
+    x + y
+  end
+
+  def first(c)
+    return if c
+    return (if c then 1 else 2 end)
+  end
+
+  def call(c)
+    foo(if c then 1 else 2 end)
+    bar(key: if c
+               1
+             end)
+    1
+  end
+
+  def drain(queue)
+    n = while queue.any?
+          queue.pop
+        end
+    cache ||= begin
+      queue.size
+    end
+    n + cache
+  end
+
+  def last
+    1
+  end
+end
+''')
+        self.assertEqual(
+            [('choose', 3, 13), ('first', 15, 18), ('call', 20, 26),
+             ('drain', 28, 36), ('last', 38, 40)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_modifier_if_inside_a_one_line_block(self):
+        result = get_ruby_function_list('''
+def find(items)
+  items.each { |x| return x if x }
+  nil
+end
+
+def names(items)
+  items.map { |i| i.name unless i.nil? }
+end
+
+def title(item)
+  "#{item.name if item}"
+end
+
+def last
+  1
+end
+''')
+        self.assertEqual(
+            [('find', 2, 5), ('names', 7, 9), ('title', 11, 13),
+             ('last', 15, 17)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_endless_method_ends_with_its_expression(self):
+        result = get_ruby_function_list('''
+class Clock
+  def usec = time.usec
+  def plus(x) = x + 1
+  def ==(other) = other.is_a?(Clock) && usec == other.usec
+  def self.zero = new(0)
+  def sign = if usec > 0
+               1
+             else
+               -1
+             end
+  def parts =
+    [usec, sign]
+
+  def wday
+    1
+  end
+end
+''')
+        self.assertEqual(
+            [('usec', 3, 3, 1, 1), ('plus', 4, 4, 1, 1),
+             ('==', 5, 5, 1, 2), ('self.zero', 6, 6, 1, 1),
+             ('sign', 7, 11, 5, 2), ('parts', 12, 13, 2, 1),
+             ('wday', 15, 17, 3, 1)],
+            [(f.name, f.start_line, f.end_line, f.nloc,
+              f.cyclomatic_complexity) for f in result])
+
+    def test_endless_method_body_on_more_lines(self):
+        result = get_ruby_function_list('''
+class Feed
+  def drain = while ready?
+    tick
+  end
+
+  def names = items
+    .map { |item| item.name if item }
+    .compact
+
+  def wday
+    1
+  end
+end
+''')
+        self.assertEqual(
+            [('drain', 3, 5, 2), ('names', 7, 9, 2), ('wday', 11, 13, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_parenthesized_first_statement_is_no_parameter_list(self):
+        result = get_ruby_function_list('''
+def check
+  (a || b) if ready?
+  (a || b).compact
+end
+
+def last
+  1
+end
+''')
+        self.assertEqual(
+            [('check', 2, 5, 0), ('last', 7, 9, 0)],
+            [(f.name, f.start_line, f.end_line, f.parameter_count)
+             for f in result])
+
+    def test_modifier_if_after_a_percent_literal(self):
+        result = get_ruby_function_list('''
+def label(ready)
+  %q<value> if ready
+end
+
+def last
+  1
+end
+''')
+        self.assertEqual(
+            [('label', 2, 4), ('last', 6, 8)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_modifier_if_after_a_method_named_like_a_keyword(self):
+        result = get_ruby_function_list('''
+def check(x)
+  x.not if ready?
+  x.in unless done?
+  x
+end
+
+def last
+  1
+end
+''')
+        self.assertEqual(
+            [('check', 2, 6), ('last', 8, 10)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_forgive_comment_after_an_endless_method(self):
+        result = get_ruby_function_list('''
+def first = 1
+#lizard forgive
+def second = 2
+''')
+        self.assertEqual(
+            [('first', 2, 2)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_setter_and_operator_methods_keep_their_body(self):
+        result = get_ruby_function_list('''
+class Box
+  def x=(value)
+    @x = value
+  end
+
+  def ==(other)
+    other.x == @x
+  end
+
+  def []=(key, value)
+    @h[key] = value
+  end
+
+  def size
+    1
+  end
+end
+''')
+        self.assertEqual(
+            [(3, 5), (7, 9), (11, 13), (15, 17)],
+            [(f.start_line, f.end_line) for f in result])
+
+    def test_generated_methods_in_a_heredoc_keep_the_method(self):
+        result = get_ruby_function_list('''
+def define_writer(name)
+  class_eval <<-RUBY
+    def #{name}=(value)
+      @value = value
+    end
+  RUBY
+end
+
+def define_reader(name)
+  class_eval <<-RUBY
+    def self.#{name}
+      value = @value
+      value
+    end
+  RUBY
+end
+
+def last
+  1
+end
+''')
+        self.assertEqual(
+            [('define_writer', 2, 8), ('define_reader', 10, 17),
+             ('last', 19, 21)],
+            [(f.name, f.start_line, f.end_line) for f in result
+             if f.name in ('define_writer', 'define_reader', 'last')])
+
+    def test_rspec_example_with_a_description_on_two_lines(self):
+        result = get_ruby_function_list('''
+describe Clock do
+  it "ticks once
+      a second" do
+    1
+  end
+end
+
+def last
+  1
+end
+''')
+        self.assertEqual(
+            [(4, 6), (9, 11)],
+            [(f.start_line, f.end_line) for f in result])
+
+    def test_rspec_example_with_a_percent_string(self):
+        result = get_ruby_function_list('''
+describe Clock do
+  it %q(ticks) do
+    1
+  end
+end
+''')
+        self.assertEqual(
+            [('%q(ticks)', 3, 5)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_it_block_parameter_is_no_rspec_example(self):
+        result = get_ruby_function_list('''
+def doubled(items)
+  items.map { it * 2 }
+end
+
+def save_all(users)
+  users.each do
+    it.save
+  end
+  users.map { it.name }
+  users.each { it(1) }
+end
+
+describe Clock do
+  it "doubles" do
+    expect([1].map { it * 2 }).to eq([2])
+  end
+  context("now") { it "ticks #{1}" do
+    1
+  end }
+end
+
+def last
+  1
+end
+''')
+        self.assertEqual(
+            [('doubled', 2, 4), ('save_all', 6, 12), ('"doubles"', 15, 17),
+             ('""', 18, 20), ('last', 23, 25)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
 class Test_Ruby_percent_literal(unittest.TestCase):
     """A % literal ends at its own closing delimiter. A nested pair of the
     same delimiter or an interpolation inside it does not end it."""
