@@ -81,6 +81,49 @@ fun reportStatus(active: Boolean, audit: Boolean) {
         function, = result.function_list
         self.assertEqual((3, 1), (function.cyclomatic_complexity, function.max_nesting_depth))
 
+    def test_template_keeps_the_surrounding_if_and_else(self):
+        analyzer = FileAnalyzer(get_extensions(["ns"]))
+        result = analyzer.analyze_source_code("cookies.kt", '''\
+fun cookiePart(name: String, value: String?): String {
+    return if (value != null) "$name=${value.trim()}" else ""
+}
+''')
+        function, = result.function_list
+        self.assertEqual(2, function.max_nested_structures)
+
+    def test_template_in_a_get_call_does_not_start_an_accessor(self):
+        analyzer = FileAnalyzer(get_extensions([]))
+        result = analyzer.analyze_source_code("sourceSets.kts", '''\
+val sourceSets = mapOf("iosMain" to "commonMain")
+val target = "ios"
+with(sourceSets) {
+    get("${target}Main")
+}
+''')
+        self.assertEqual([], result.function_list)
+
+    def test_template_default_keeps_one_parameter(self):
+        _, function = get_kotlin_function_list('''\
+private const val CLIENT = "client"
+private const val TIMEOUT = "timeout"
+
+fun format(kind: String, detail: String) = "$kind-$detail"
+fun failureLabel(prefix: String = "${format(CLIENT, detail = TIMEOUT)}") = prefix
+''')
+        self.assertEqual(["prefix"], function.parameters)
+
+    def test_when_subject_with_a_template_keeps_the_branches(self):
+        function, = get_kotlin_function_list('''\
+fun protocolVersion(major: Int, minor: Int): Int {
+    return when ("v${major}.${minor}") {
+        "v1.0" -> 10
+        "v1.1" -> 11
+        else -> 0
+    }
+}
+''')
+        self.assertEqual(3, function.cyclomatic_complexity)
+
     def test_nested_string_templates_count_code_at_each_level(self):
         functions = get_kotlin_function_list('''\
 fun statusLabel(active: Boolean, delayed: Boolean): String {
