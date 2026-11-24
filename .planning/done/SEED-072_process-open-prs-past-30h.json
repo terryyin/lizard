@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-072#process-open-prs-past-30h",
+  "title": "Process open PRs (past 30 hours)",
+  "completedAt": "2026-11-24T03:25:19.601Z",
+  "developer": "Terry Yin",
+  "agent": "Maria-chan",
+  "host": "cursor",
+  "model": "auto",
+  "intentCoverage": {
+    "unavailable": "No protection risk: SEED-072 merged contributor PRs and retained existing tests on both sides of conflict resolutions; no tests were removed, relocated, or rewritten by this owner."
+  }
+}

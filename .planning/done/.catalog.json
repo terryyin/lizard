@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-072_process-open-prs-past-30h.json",
+      "identity": "SEED-072#process-open-prs-past-30h",
+      "completedAt": "2026-11-24T03:25:19.601Z",
+      "blob": "6e36359e57bc6cbc8221f1051f444b1d16e1dba2"
+    },
+    {
       "fileName": "SEED-071_process-hafez-prs-nov21-23.json",
       "identity": "SEED-071#process-hafez-prs-nov21-23",
       "completedAt": "2026-11-23T01:48:35.243Z",
@@ -450,24 +456,6 @@
       "identity": "SEED-006#ci-verified-python-support",
       "completedAt": "2026-10-27T04:14:39.002Z",
       "blob": "1fa7f46c1c13e680a5dc8b94c05604d3a720ed23"
-    },
-    {
-      "fileName": "SEED-009_balanced-template-scanning.json",
-      "identity": "SEED-009#balanced-template-scanning",
-      "completedAt": "2026-10-24T09:15:39.597Z",
-      "blob": "ac490381eae72d00bf095dba71487276ba5e91b7"
-    },
-    {
-      "fileName": "SEED-008_review-issue-521.json",
-      "identity": "SEED-008#review-issue-521",
-      "completedAt": "2026-10-24T02:09:57.638Z",
-      "blob": "f991dcd9abf6aef299472a41785b5b6ddd62c432"
-    },
-    {
-      "fileName": "SEED-007_js-ts-function-boundaries.json",
-      "identity": "SEED-007#js-ts-function-boundaries",
-      "completedAt": "2026-10-24T01:53:17.643Z",
-      "blob": "70312125f0f13d5aed9aa0a2e5e6fec411f566d6"
     }
   ],
   "unreadable": []
