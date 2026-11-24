@@ -41,10 +41,20 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
             self.br_count = 0
             self.next(self._state_type_parameters, token)
         elif token != '(':
-            self.context.restart_new_function(token)
+            self._start_function(token)
         else:
             self.context.add_to_long_function_name("(")
             self._state = self._dec
+
+    def _start_function(self, name):
+        context = self.context
+        context.restart_new_function(name)
+        function = context.current_function
+        if function.name.count('.') > 1:
+            # The enclosing function's name already includes its parents.
+            enclosing = context.last_function
+            if enclosing is not None:
+                function.name = function.long_name = enclosing.name + '.' + name
 
     def _state_type_parameters(self, token):
         # Consume a type param list, tracking nesting so bounds like
