@@ -109,6 +109,32 @@ def test_arrow_ends_before_call_statement(suffix, factory):
     assert (arrow.name, arrow.start_line, arrow.end_line) == ('empty', 2, 2)
 
 
+@pytest.mark.parametrize('suffix,params', [('ts', '<T>'), ('tsx', '<T,>')])
+def test_generic_function_type_alias_has_no_function_body(suffix, params):
+    source = """type Result<T> = { value: T }
+type Factory = %s(
+  initializer: T,
+) => Result<T>
+const factory: Factory = (value) => ({ value })
+""" % params
+    functions = analyze(suffix, source)
+    assert [(f.start_line, f.end_line, f.parameters) for f in functions] == [
+        (5, 5, ['value'])]
+
+
+def test_adjacent_function_type_aliases_do_not_add_functions():
+    source = """type Make<Input, Output> = (input: Input) => Output
+type MakeAsync<Input, Output> = (
+  input: Input,
+  options?: { debug?: boolean },
+) => Promise<Output>
+
+const make = <T>(value: T): T => value
+"""
+    function, = analyze('ts', source)
+    assert (function.start_line, function.end_line, function.cyclomatic_complexity) == (7, 7, 1)
+
+
 @pytest.mark.parametrize('suffix', ['ts', 'tsx'])
 @pytest.mark.parametrize('value', [
     'Array<string>',
@@ -221,6 +247,7 @@ def test_comparison_retains_condition_in_arrow(suffix, operand):
     '`build-${revision + 1}`',
     'typeof "build"',
     'typeof 1',
+    'typeof typeof ready',
 ])
 def test_comparison_with_string_operand_preserves_arrow(suffix, operand):
     source = """function build(lower: string, revision: number, enabled: boolean, ready: boolean) {
@@ -232,6 +259,25 @@ def test_comparison_with_string_operand_preserves_arrow(suffix, operand):
     functions = analyze(suffix, source)
     assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in functions] == [
         ('passes', 2, 3, 2), ('build', 1, 5, 1)]
+
+
+@pytest.mark.parametrize('suffix', ['ts', 'tsx'])
+def test_super_property_is_a_comparison_operand(suffix):
+    source = """class Base {
+  get minimum() { return true }
+}
+class Derived extends Base {
+  check(failed: boolean, enabled: boolean, ready: boolean) {
+    const allowed = () => failed < super.minimum >
+      !(enabled && ready)
+    return allowed
+  }
+}
+"""
+    functions = analyze(suffix, source)
+    assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+            for f in functions if f.name in ('allowed', 'check')] == [
+                ('allowed', 6, 7, 2), ('check', 5, 9, 1)]
 
 
 @pytest.mark.parametrize('suffix', ['ts', 'tsx'])
