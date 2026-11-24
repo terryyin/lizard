@@ -66,6 +66,36 @@ class TestScala(unittest.TestCase):
         self.assertEqual(1, result[0].parameter_count)
         self.assertEqual(5, result[0].cyclomatic_complexity)
 
+    def test_question_marks_do_not_count_as_conditions(self):
+        analyzer = FileAnalyzer(get_extensions(['ND', 'cognitive']))
+        result = analyzer.analyze_source_code("requests.scala", '''
+            object Requests {
+              final class Worker {
+                def ?(message: String): String = message
+              }
+              def ask(worker: Worker, message: String): String = worker ? message
+              def planned(): String = ???
+              def size(items: List[?]): Int = items.size
+            }
+            ''').function_list
+        self.assertEqual([('?', 1, 0, 0), ('ask', 1, 0, 0),
+                          ('planned', 1, 0, 0), ('size', 1, 0, 0)],
+                         [(f.name, f.cyclomatic_complexity,
+                           f.max_nesting_depth, f.cognitive_complexity) for f in result])
+
+    def test_placeholder_is_the_body_of_an_if(self):
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        result = analyzer.analyze_source_code("guard.scala", '''
+            object Guard {
+              def check(requireSetup: Boolean, notify: Boolean): Unit = {
+                if (requireSetup) ???
+                if (notify) println("ready")
+              }
+            }
+            ''').function_list
+        self.assertEqual([('check', 3, 2)],
+                         [(f.name, f.cyclomatic_complexity, f.cognitive_complexity) for f in result])
+
     def test_comments(self):
         result = get_scala_function_list('''
             object HelloWorld {
