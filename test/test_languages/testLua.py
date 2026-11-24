@@ -178,6 +178,31 @@ end
         self.assertEqual(1, len(result))
         self.assertEqual('V.f', result[0].name)
 
+    def test_colon_method_keeps_its_qualified_name_and_parameters(self):
+        result = get_function_list('''
+function storage.pool:checkout(timeout, observer)
+  return self:allocate(timeout, observer)
+end
+''')
+        self.assertEqual(
+            [('storage.pool:checkout', ['timeout', 'observer'])],
+            [(f.name, f.parameters) for f in result])
+
+    def test_colon_method_preserves_a_parenthesized_first_statement(self):
+        result = get_function_list('''
+function writer:write(message)
+  (self.output or io.stdout):write(message)
+end
+function writer:with_callback()
+  (function() print(self.output) end)()
+end
+''')
+        self.assertEqual(
+            [('writer:write', 2, 4, ['message']),
+             ('(anonymous)', 6, 6, []),
+             ('writer:with_callback', 5, 7, [])],
+            [(f.name, f.start_line, f.end_line, f.parameters) for f in result])
+
     def test_anonymous(self):
         result = get_function_list('''
             function(self, neigh, id)
