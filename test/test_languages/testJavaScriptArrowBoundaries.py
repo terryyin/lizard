@@ -137,6 +137,16 @@ class TestStatementAfterExpressionArrow(unittest.TestCase):
         self.assert_in_all_readers(code, [
             ('set', 2, 2, 1, 1, 7), ('bind', 1, 7, 2, 7, 26)])
 
+    def test_computed_method_in_a_multiline_default_export(self):
+        code = """export default
+{
+  ['='](left, right) {
+    return left === right || left.equals(right)
+  }
+}
+"""
+        self.assert_in_all_readers(code, [('(anonymous)', 3, 5, 2, 3, 18)])
+
     def test_assignment_in_parentheses_in_an_arrow_body(self):
         code = ('function bind(model, ready) {\n'
                 '  const set = value => model.value = (last = value) && ready\n'
