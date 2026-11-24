@@ -2,6 +2,8 @@
 Language parser for Perl
 '''
 
+import re
+
 from .code_reader import CodeReader, CodeStateMachine
 from .script_language import ScriptLanguageMixIn
 
@@ -56,6 +58,9 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
     @staticmethod
     def get_comment_from_token(token):
+        if re.match(r"__(?:DATA|END)__\b", token) or (
+                len(token) > 1 and token[0] == '=' and token[1].isalpha()):
+            return token
         if token.startswith('#'):
             # For forgiveness comments, return the entire comment
             stripped = token.lstrip('#').strip()
@@ -66,6 +71,8 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        addition += (r"|^=[A-Za-z]\w*\b.*?(?:^=cut\b[^\n]*|\Z)"
+                     r"|^__(?:DATA|END)__\b.*\Z")
         return ScriptLanguageMixIn.generate_common_tokens(source_code, addition, token_class)
 
 
