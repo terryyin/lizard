@@ -64,7 +64,6 @@ class ImpliedSemicolons:
         head = None             # the groups around an open structure head
         open_loops = 0          # "do" bodies that wait for their "while"
         loop_ends = False       # the open head is the "while" of a "do"
-        loop_body = False       # the latest structure in this scope is a loop
         is_object = False       # the "{" opened an object literal
         previous = before_previous = ';'
         last_line = 0
@@ -73,7 +72,7 @@ class ImpliedSemicolons:
         label_starts = False    # the body may start with a label
         postfix = False         # the last "!", "++" or "--" is postfix
         object_ended = False    # the last "}" closed an object literal
-        closing_function = None  # the function that read the last "}"
+        last_closed_body = context.last_closed_function_body = None
         loop_ended = False      # the ")" of "do … while (…)"
         found = False
         busy = False            # found, or one of the four flags above
@@ -90,8 +89,8 @@ class ImpliedSemicolons:
                         found = token != ';'
                     elif groups or head_starts or body_starts:
                         pass
-                    elif (previous != '}' or (
-                            (object_ended or _function_closed(context, closing_function))
+                    elif (previous != '}' or object_ended or (
+                            _function_closed(context, last_closed_body)
                             # A matching clause continues the structure.
                             and token != 'else'
                             and not (token == 'while' and open_loops))):
@@ -110,9 +109,6 @@ class ImpliedSemicolons:
                                     previous, before_previous, postfix)
                                 and starts_statement(token)
                                 and _starts_line(token, line, last_line))
-                    elif token == 'else' and object_ended and loop_body:
-                        # The loop body ends before the enclosing if's else.
-                        found = _starts_line(token, line, last_line)
                     if found:
                         self.before_token = True
                 was_busy = busy
@@ -141,12 +137,12 @@ class ImpliedSemicolons:
                         object_ended = bool(blocks) and is_object
                         if blocks:
                             (groups, head, open_loops, loop_ends,
-                             is_object, loop_body) = blocks.pop()
+                             is_object) = blocks.pop()
                         if not (groups or object_ended):
-                            closing_function = context.current_function
+                            last_closed_body = context.last_closed_function_body
                     elif token in ('{', '${'):
                         blocks.append(
-                            (groups, head, open_loops, loop_ends, is_object, loop_body))
+                            (groups, head, open_loops, loop_ends, is_object))
                         is_object = _object_starts(
                             token, previous, before_previous, groups,
                             line == last_line)
@@ -158,7 +154,7 @@ class ImpliedSemicolons:
                             or isinstance(token, JSXChildBrace)) else 0
                         head = None
                         open_loops = 0
-                        loop_ends = loop_body = False
+                        loop_ends = False
                     elif token in POSTFIX:
                         postfix = (
                             line == last_line
@@ -168,8 +164,6 @@ class ImpliedSemicolons:
                     elif tracked and previous not in MEMBER_ACCESS:
                         if token in HEADED:
                             head_starts = busy = True
-                            if not groups:
-                                loop_body = token in ('for', 'while')
                             # In `do while (a) run(); while (b)` the first
                             # "while" is the body.
                             if (token == 'while' and open_loops
@@ -178,8 +172,6 @@ class ImpliedSemicolons:
                                 loop_ends = True
                         elif token in UNHEADED:
                             body_starts = busy = True
-                            if not groups:
-                                loop_body = False
                             if token == 'do':
                                 open_loops += 1
                         elif head_started:          # for await (…)
@@ -205,10 +197,10 @@ def _starts_line(token, line, last_line):
             and not isinstance(token, JSXChildBrace))
 
 
-def _function_closed(context, function):
-    """A closing function brace can also end a surrounding expression.
-    A declaration used as a braceless if body leaves its else attached."""
-    return (context.current_function is not function
+def _function_closed(context, last_closed_body):
+    """Whether the reader closed a function body while reading the brace."""
+    function = context.last_closed_function_body
+    return (function is not last_closed_body
             and not getattr(function, 'is_braceless_declaration', False))
 
 

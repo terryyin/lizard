@@ -198,7 +198,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             if self.started_function and not self._expression_body:
                 self.sub_state(
                     self.__class__(self.context),
-                    self._pop_function_from_stack)
+                    self._end_function_body)
             elif self._statement_block_start():
                 # A block statement, `{ const r = f(() => 1); }`, holds
                 # statements rather than object members.
@@ -247,6 +247,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         # Don't overwrite _prev_token if it's 'new' (preserve for next token)
         if self._prev_token != 'new':
             self._prev_token = token
+
+    def _end_function_body(self):
+        self.context.last_closed_function_body = self.context.current_function
+        self._pop_function_from_stack()
 
     def _statement_block_start(self):
         """Whether a '{' here starts a statement: right after a ';' or at
