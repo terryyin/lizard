@@ -47,6 +47,10 @@ class LuaStateMachine(RubylikeStateMachine):
         self.probable_function_name = token
         super(LuaStateMachine, self)._state_global(token)
 
+    def _it(self, token):
+        # Lua treats `it` as a name.
+        self.next(self._state_global, token)
+
     def _for_while(self, token):
         # A Lua loop always has `do`.  The reader only misses it when `#`,
         # the length operator, starts a comment: `for i = 1, #t do`.  Then
