@@ -98,7 +98,7 @@ class StReader(CodeReader, StCommentsMixin):
             else:
                 # ST normalization: collapse END_* into END
                 upper_tok = token.upper()
-                if upper_tok.startswith("END_"):
+                if upper_tok.startswith("END_") and upper_tok != "END_VAR":
                     yield "END"
                     continue
 
