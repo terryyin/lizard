@@ -114,31 +114,6 @@ class Test_parser_for_Lua(unittest.TestCase):
         self.assertEqual(2, len(result))
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
-    def test_repeat_until(self):
-        result = get_function_list('''
-        function f(n)
-            repeat
-              --statements
-            until condition
-        end
-                ''')
-        self.assertEqual(1, len(result))
-        self.assertEqual(2, result[0].cyclomatic_complexity)
-
-    def test_if(self):
-        result = get_function_list('''
-        function a(n)
-            if a then
-            elseif b then
-            else
-            end
-        end
-        function a(n)
-        end
-                ''')
-        self.assertEqual(2, len(result))
-        self.assertEqual(3, result[0].cyclomatic_complexity)
-
     def test_ruby_block_words_are_lua_identifiers(self):
         result = get_function_list('''
 local function page_count(record_count, module)
@@ -169,6 +144,31 @@ end
         self.assertEqual(
             [('(anonymous)', 3, 5), ('register_dns_tests', 2, 7)],
             [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_repeat_until(self):
+        result = get_function_list('''
+        function f(n)
+            repeat
+              --statements
+            until condition
+        end
+                ''')
+        self.assertEqual(1, len(result))
+        self.assertEqual(2, result[0].cyclomatic_complexity)
+
+    def test_if(self):
+        result = get_function_list('''
+        function a(n)
+            if a then
+            elseif b then
+            else
+            end
+        end
+        function a(n)
+        end
+                ''')
+        self.assertEqual(2, len(result))
+        self.assertEqual(3, result[0].cyclomatic_complexity)
 
     def test_class_method(self):
         result = get_function_list('''
