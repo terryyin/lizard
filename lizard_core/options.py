@@ -113,6 +113,10 @@ def arg_parser(prog=None):
                         action="store_const",
                         const=print_msvs_style_warning,
                         dest="printer")
+    parser.add_argument("--warnings-to-stderr",
+                        help='''Print text warnings to stderr, keeping the
+                        regular report on stdout or in the output file.''',
+                        action="store_true")
     parser.add_argument("--compact",
                         help='''Leave out of the default report's function
                         table the anonymous functions defined inside another

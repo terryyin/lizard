@@ -176,6 +176,79 @@ function second() {
             )
 
 
+class TestWarningsToStderrCli(unittest.TestCase):
+
+    def setUp(self):
+        self.directory = TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.root = Path(self.directory.name)
+        self.source = self.root / 'warning.c'
+        self.source.write_text('int branch(int x) { if (x) return 1; return 0; }\n')
+        self.lizard_py = Path(__file__).resolve().parents[1] / 'lizard.py'
+
+    def run_lizard(self, *options):
+        return subprocess.run(
+            [sys.executable, str(self.lizard_py), '-C1', *options,
+             str(self.source)],
+            capture_output=True, text=True, cwd=self.root)
+
+    def test_default_report_routes_only_warning_section(self):
+        default = self.run_lizard()
+        self.assertEqual(default.returncode, 1, default.stderr)
+        self.assertEqual(default.stderr, '')
+        self.assertIn('!!!! Warnings', default.stdout)
+
+        redirected = self.run_lizard('--warnings-to-stderr')
+        self.assertEqual(redirected.returncode, 1, redirected.stderr)
+        self.assertIn('!!!! Warnings', redirected.stderr)
+        self.assertIn('branch@1-1@' + str(self.source), redirected.stderr)
+        self.assertNotIn('!!!! Warnings', redirected.stdout)
+        self.assertIn('1 file analyzed.', redirected.stdout)
+        self.assertIn('Total nloc', redirected.stdout)
+
+    def test_warning_section_remains_visible_with_output_file(self):
+        report = self.root / 'report.txt'
+        result = self.run_lizard('--warnings-to-stderr', '-o', str(report))
+        self.assertEqual(result.returncode, 1, result.stderr)
+        self.assertEqual(result.stdout, '')
+        self.assertIn('!!!! Warnings', result.stderr)
+        self.assertIn('branch@1-1@' + str(self.source), result.stderr)
+        self.assertIn('1 file analyzed.', report.read_text())
+        self.assertIn('Total nloc', report.read_text())
+        self.assertNotIn('!!!! Warnings', report.read_text())
+
+    def test_success_without_warnings_leaves_stderr_empty(self):
+        result = self.run_lizard('--warnings-to-stderr', '-C2')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stderr, '')
+        self.assertIn('No thresholds exceeded', result.stdout)
+
+    def test_ignored_warnings_keep_the_success_exit_code(self):
+        result = self.run_lizard('--warnings-to-stderr', '-i1')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('!!!! Warnings', result.stderr)
+
+    def test_warning_only_formats_use_stderr(self):
+        for option in ('-w', '--warning-msvs'):
+            with self.subTest(option=option):
+                default = self.run_lizard(option)
+                result = self.run_lizard(option, '--warnings-to-stderr')
+                self.assertEqual(default.returncode, 1, default.stderr)
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertEqual(default.stderr, '')
+                self.assertEqual(result.stdout, '')
+                self.assertIn('branch', result.stderr)
+                self.assertEqual(result.stderr, default.stdout)
+
+    def test_structured_report_keeps_its_output_stream(self):
+        default = self.run_lizard('--csv')
+        result = self.run_lizard('--csv', '--warnings-to-stderr')
+        self.assertEqual(result.returncode, default.returncode)
+        self.assertEqual(result.stderr, '')
+        self.assertEqual(result.stdout, default.stdout)
+        self.assertIn('branch', result.stdout)
+
+
 class TestHeaderDiscovery(unittest.TestCase):
 
     def test_directory_analysis_includes_hh_header_functions(self):

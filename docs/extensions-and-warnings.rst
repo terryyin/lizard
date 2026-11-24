@@ -3,6 +3,21 @@ Extensions and warning controls
 
 `Back to the README <../README.rst>`_
 
+Warnings on standard error
+--------------------------
+
+Use ``--warnings-to-stderr`` when a build tool captures standard output but
+displays standard error on failure::
+
+   lizard --warnings-to-stderr src > complexity-report.txt
+
+The default report's warning heading and failing functions go to standard
+error. The function tables, totals, and successful "No thresholds exceeded"
+message stay in the regular report, including when ``-o`` selects a file.
+The option also applies to ``-w`` and ``--warning-msvs``; structured formats
+such as CSV, XML, and HTML keep their normal output. Warning thresholds and
+the exit-code behavior of ``-i`` are unchanged.
+
 Generated code
 -----------------------------
 

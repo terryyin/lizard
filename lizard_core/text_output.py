@@ -1,10 +1,17 @@
 """
 The default text printers and the clang/MSVS style warning printers.
 """
+import sys
 from lizard_core.warning_filter import get_warnings, warning_policy
 
 
+def _warning_output(option):
+    return sys.stderr if getattr(option, 'warnings_to_stderr', False) \
+        else sys.stdout
+
+
 def print_warnings(option, scheme, warnings):
+    output = _warning_output(option)
     warning_count = 0
     warning_nloc = 0
     warn_str = "!!!! Warnings ({0}) !!!!".format(
@@ -12,11 +19,11 @@ def print_warnings(option, scheme, warnings):
             k, val) for k, val in option.thresholds.items()))
     for warning in warnings:
         if warning_count == 0:
-            print("\n" + "=" * len(warn_str) + "\n" + warn_str)
-            print(scheme.function_info_head())
+            print("\n" + "=" * len(warn_str) + "\n" + warn_str, file=output)
+            print(scheme.function_info_head(), file=output)
         warning_count += 1
         warning_nloc += warning.nloc
-        print(scheme.function_info(warning))
+        print(scheme.function_info(warning), file=output)
     if warning_count == 0:
         print_no_warnings(option)
     return warning_count, warning_nloc
@@ -103,15 +110,17 @@ def silent_printer(result, *_):
 
 def print_clang_style_warning(code_infos, option, scheme, _):
     count = 0
+    output = _warning_output(option)
     for warning in get_warnings(code_infos, option):
-        print(scheme.clang_warning_format().format(f=warning))
+        print(scheme.clang_warning_format().format(f=warning), file=output)
         count += 1
     return count
 
 
 def print_msvs_style_warning(code_infos, option, scheme, _):
     count = 0
+    output = _warning_output(option)
     for warning in get_warnings(code_infos, option):
-        print(scheme.msvs_warning_format().format(f=warning))
+        print(scheme.msvs_warning_format().format(f=warning), file=output)
         count += 1
     return count
