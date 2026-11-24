@@ -89,6 +89,41 @@ fun fallback() = "next"
                 )
 
 
+class TestKotlinBlockComments(unittest.TestCase):
+
+    def test_nested_comment_does_not_count_disabled_code(self):
+        functions = get_kotlin_function_list('''\
+fun statusCode(active: Boolean): Int {
+    /*
+    /** Old policy. */
+    if (!active) return 204
+    */
+    return if (active) 200 else 503
+}
+
+fun healthCode(): Int { return 200 }
+''')
+        self.assertEqual(
+            [("statusCode", 1, 7, 2, 3, 19), ("healthCode", 9, 9, 1, 1, 10)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity, f.nloc, f.token_count)
+             for f in functions],
+        )
+
+    def test_nested_kdoc_does_not_expose_a_commented_out_function(self):
+        functions = get_kotlin_function_list('''\
+/*
+/** Checks the old broker. /* Retry once. */ */
+fun legacyHealthCode(): Int { return 504 }
+*/
+
+fun healthCode(): Int { return 200 }
+''')
+        self.assertEqual(
+            [("healthCode", 6, 6)],
+            [(f.name, f.start_line, f.end_line) for f in functions],
+        )
+
+
 class Test_parser_for_Kotlin(unittest.TestCase):
 
     def test_empty(self):
