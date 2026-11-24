@@ -8,6 +8,7 @@ from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
+from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 
 # Ordinary tokens skip declaration and marker dispatch together.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
@@ -23,7 +24,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self.last_tokens = ''
         self.function_name = ''
         self.started_function = None
-        self._signature = False     # the "(" of _function can't open a group
+        # False for an optimistic signature, 'function' after the keyword.
+        self._signature = False
         self.as_object = False
         self.as_class = False
         self._class_body_pending = False
@@ -76,7 +78,34 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
     def statemachine_before_return(self):
         if self.started_function:
-            self._pop_function_from_stack()
+            if (isinstance(self._state, TypeScriptTypeAnnotationStates)
+                    and self.saved_state == self._expecting_body_after_return_type):
+                self._discard_bodyless_signature()
+            else:
+                self._pop_function_from_stack()
+
+    def _consume_type_annotation(self):
+        # A signature stays tentative while its return type is read.
+        declaration = self._signature == 'function' or (
+            self.as_class and self._signature and not self._in_prop_value)
+        return_type = (declaration and self.started_function
+                       and not self._expression_body and self.last_token == ')')
+        if return_type:
+            self.next(self._expecting_body_after_return_type)
+        super()._consume_type_annotation(return_type=return_type, class_member=return_type and self.as_class)
+
+    def _expecting_body_after_return_type(self, token):
+        # Later child states resume ordinary parsing.
+        self.saved_state = self._state_global
+        if token not in ('{', '=>'):
+            self._discard_bodyless_signature()
+        self.next(self._state_global, token)
+
+    def _discard_bodyless_signature(self):
+        # Unlike an expression, a declaration adds no enclosing decisions.
+        self.context.current_function.abandoned = True
+        self.context.forgive = True
+        self._pop_function_from_stack()
 
     def _state_global(self, token):
         if self._pending_bindings:
@@ -134,7 +163,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if token == 'function' and not getattr(token, 'is_member_name', False):
             if self.started_function and not self.as_object:
                 self._pop_function_from_stack()
-            self._signature = True
+            self._signature = token
             self._state = self._function
         elif (token in ('if', 'switch', 'for', 'while', 'catch')
               and not getattr(token, 'is_member_name', False)):
