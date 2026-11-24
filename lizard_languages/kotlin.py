@@ -190,9 +190,9 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
 
     def _expect_declaration_name(self, token):
         # A name after `val`, `var` or `,` is not a keyword: `val type`,
-        # `(name, set)`. A lambda or a `when` argument, a parameter
-        # (`, val x`) and the `->` of a `when` branch keep their role.
-        if token in ('{', 'when', 'val', 'var') or (
+        # `(name, set)`. Lambda, anonymous function and `when` arguments,
+        # parameters (`, val x`), and `when` branch arrows keep their role.
+        if token in ('{', 'when', 'val', 'var', 'fun') or (
                 token == '->' and self._in_when_cases):
             self.next(self._state_global, token)
         else:
