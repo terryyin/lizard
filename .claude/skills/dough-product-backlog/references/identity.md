@@ -1,22 +1,23 @@
 # Work item identity
 
-One contract for what identifies a queued or taken work item. Every backlog
-operation, every reference to a story or correction, and every reconciliation
-uses it. Do not restate a competing allocation rule elsewhere.
+One contract for what identifies a work item. Every backlog operation, every
+reference to a story or correction, and every reconciliation uses it. Do not
+restate a competing allocation rule elsewhere.
 
 ## The contract
 
 1. **A work item has exactly one identity, allocated once.** Take it from the
    work item's canonical home: a story's seed ID with the story's anchor,
    including a new correction's story. A correction whose plan was already its
-   home keeps the plan-path identity it recorded. Never give new work a
-   plan-path identity to replace later, invent a number, keep a registry, or
-   renumber. A story's plan records that story's identity and is never listed
-   as work of its own.
+   home keeps the plan-path identity it recorded. A completed ad hoc story
+   takes its identity from its [originating session](#completed-ad-hoc-work).
+   Never give new work a plan-path identity to replace later, invent a number,
+   keep a registry, or renumber. A story's plan records that story's identity
+   and is never listed as work of its own.
 2. **The identity is recorded, not derived.** Record it in the canonical home
-   and write it in the backlog entry in full, beside the link. An entry that
-   records nothing is still identified by the link it carries, until its
-   identity is recorded.
+   and, when listed in the backlog, in the entry beside the link. An entry
+   that records nothing is still identified by the link it carries, until
+   its identity is recorded.
 3. **The link is navigation, not identity.** It says where the canonical home
    is now. Renaming the file, moving it to another directory, or changing the
    story anchor is a reference change: the recorded identity carries across
@@ -31,6 +32,16 @@ uses it. Do not restate a competing allocation rule elsewhere.
    that claims work another entry already claims, and an identity that cannot
    be read back from the entry it would be written into are refusals, not
    guesses. Report them and change nothing.
+
+## Completed ad hoc work
+
+A completed ad hoc session with no story has identity `ad-hoc#<session UUID>`.
+Record it in the local Done attachment or in the published close and done
+record. The done record beside the backlog is the published story's home.
+Reuse the recorded identity on repeated close and give follow-ups separate
+session UUIDs under the same story. Preserve a session's existing association
+and older standalone records. Allocate seed-based identities for planned work
+through the usual backlog rules.
 
 ## In the backlog entry
 
