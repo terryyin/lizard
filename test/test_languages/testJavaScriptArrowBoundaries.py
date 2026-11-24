@@ -105,6 +105,38 @@ class TestStatementAfterExpressionArrow(unittest.TestCase):
         self.assert_in_all_readers(code, [
             ('set', 2, 2, 1, 1, 7), ('bind', 1, 4, 1, 4, 13)])
 
+    def test_block_after_a_parenthesized_initializer(self):
+        code = """function select(value, fallback) {
+  const selected = (value || fallback)
+  {
+    const value = decorate(selected)
+    if (value) log(value)
+  }
+  return selected
+}"""
+        self.assert_in_all_readers(code, [('select', 1, 8, 3, 8, 34)])
+
+    def test_block_after_a_call_to_async(self):
+        code = """function schedule(value) {
+  const task = async(value)
+  {
+    if (task) track(task)
+  }
+  return task
+}"""
+        self.assert_in_all_readers(code, [('schedule', 1, 7, 2, 7, 24)])
+
+    def test_block_after_an_arrow_body_with_a_grouped_assignment(self):
+        code = """function bind(model, fallback) {
+  const set = value => model.value = (value)
+  {
+    if (fallback) model.reset()
+  }
+  return set
+}"""
+        self.assert_in_all_readers(code, [
+            ('set', 2, 2, 1, 1, 7), ('bind', 1, 7, 2, 7, 26)])
+
     def test_assignment_in_parentheses_in_an_arrow_body(self):
         code = ('function bind(model, ready) {\n'
                 '  const set = value => model.value = (last = value) && ready\n'
