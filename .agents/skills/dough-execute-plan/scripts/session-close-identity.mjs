@@ -1,6 +1,7 @@
 // Resolve the close's session before any push. Native evidence is a fallback
 // only when the checkout has no competing Dashboard launches.
 import { readFile } from "node:fs/promises";
+import { sessionTitlePathBeside } from "./dashboard-landing.mjs";
 import { readSessionEvidence } from "./execution-session-evidence.mjs";
 import {
   resolvePublicationLandingContext,
@@ -25,12 +26,24 @@ async function sharedCheckoutNote(landingContext) {
   }
 }
 
+async function launchTitle(landingContext) {
+  try {
+    return JSON.parse(
+      await readFile(sessionTitlePathBeside(landingContext), "utf8"),
+    );
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+    return undefined;
+  }
+}
+
 async function namedSession(retained, landingContext, checkout) {
   if (landingContext) {
     const launch = JSON.parse(await readFile(landingContext, "utf8"));
     return {
       sessionId: launch.reference,
       story: launch.identity,
+      title: await launchTitle(landingContext),
       sharedCheckout: await sharedCheckoutNote(landingContext),
     };
   }
@@ -42,7 +55,7 @@ async function namedSession(retained, landingContext, checkout) {
 }
 
 export async function closeTarget({
-  session: { sessionId: retained, story },
+  session: { sessionId: retained, story, title },
   backlogPath,
   ...request
 }) {
@@ -66,6 +79,7 @@ export async function closeTarget({
   return {
     sessionId,
     story: story ?? named.story,
+    title: named.title ?? title,
     native: named.native === true,
     landingContext,
     sharedCheckout: named.sharedCheckout,
