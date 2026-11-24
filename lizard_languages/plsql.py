@@ -105,7 +105,9 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
                 pending_tokens = []
 
                 # Update tracking
-                last_nonwhitespace_token = token
+                last_nonwhitespace_token = (
+                    token.lower() if token.lower() in self.conditions
+                    else token)
             else:
                 # Accumulate whitespace
                 pending_tokens.append(token)
