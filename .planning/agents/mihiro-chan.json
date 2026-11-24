@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Mihiro-chan",
+  "email": "mihiro-chan@example.org",
+  "identity": "SEED-073#fix-svelte-implied-semicolons-ci",
+  "mode": "trunk",
+  "branch": "origin/master",
+  "host": "cursor",
+  "model": "composer"
+}
