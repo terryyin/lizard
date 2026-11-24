@@ -364,6 +364,20 @@ function reset() {
                          function_summaries(info.function_list))
         self.assertEqual(script.nloc, info.nloc)
 
+    def test_script_end_in_line_comment(self):
+        info = get_vue_file_info('''\
+<script setup>
+function format(value) {
+  return value ?? ''
+}
+// end</script>
+<template>
+  <textarea>Use </script> to close the script block.</textarea>
+</template>
+''')
+        self.assertEqual(3, info.nloc)
+        self.assertEqual(11, info.token_count)
+
     def test_lang_text_in_another_attribute_value(self):
         functions = get_vue_function_list('''\
 <script data-help=" lang='js' " lang="ts">
