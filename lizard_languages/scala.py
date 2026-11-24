@@ -1,7 +1,7 @@
 '''
 Language parser for Scala
 '''
-from .code_reader import CodeReader
+from .code_reader import CodeReader, MemberName
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
 __author__ = 'David Baum'
@@ -18,6 +18,15 @@ _CONTINUES_AT_LINE_END = frozenset((
 _CONDITION_KEYWORDS = frozenset(('if', 'while', 'for'))
 
 
+# Keep the operator or wildcard in the expression while skipping its increment.
+_QUESTION_MARK = MemberName('?')
+
+
+def _scala_token(match):
+    token = match.group()
+    return _QUESTION_MARK if token == '?' else token
+
+
 class ScalaReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -28,11 +37,17 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
     _control_flow_keywords = {'if', 'for', 'while', 'catch', 'do'}
     _logical_operators = {'&&', '||'}
     _case_keywords = {'case'}  # Pattern matching
-    _ternary_operators = {'?'}
+    _ternary_operators = set()
 
     def __init__(self, context):
         super(ScalaReader, self).__init__(context)
         self.parallel_states = [ScalaStates(context)]
+
+    @staticmethod
+    def generate_tokens(source_code, addition='', token_class=None):
+        if token_class is None and '?' in source_code:
+            token_class = _scala_token
+        return CodeReader.generate_tokens(source_code, addition, token_class)
 
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
