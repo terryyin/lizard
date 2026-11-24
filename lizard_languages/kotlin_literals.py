@@ -1,4 +1,4 @@
-"""Find the boundaries of Kotlin raw strings and string templates."""
+"""Find the boundaries of Kotlin strings and block comments."""
 
 import re
 
@@ -18,8 +18,21 @@ _LINE_MARK = re.compile(r'\\.|"|\$+', re.S)
 _COMMENT_MARK = re.compile(r'/\*|\*/')
 
 
-def string_tokens(source, addition):
-    """Keep strings as one token and use the shared tokenizer for code."""
+def may_have_nested_comment(source):
+    """Look for consecutive comment openers with no closer between them."""
+    start = source.find('/*')
+    while start >= 0:
+        next_open = source.find('/*', start + 2)
+        if next_open < 0:
+            break
+        if source.find('*/', start + 2, next_open + 1) < 0:
+            return True
+        start = next_open
+    return False
+
+
+def literal_tokens(source, addition):
+    """Keep strings and block comments whole and reuse the code tokenizer."""
     pattern = compiled_token_pattern(addition)
     code_start = pos = 0
     while True:
