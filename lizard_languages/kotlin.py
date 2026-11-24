@@ -87,11 +87,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                 self.context.add_condition()
             else:
                 self._state = self._function_type_result
-        elif token in ('val', 'var', ','):
+        elif token in ('val', 'var', ',', 'interface'):
             self._state = self._expect_declaration_name
-        elif token == 'interface':
-            self._start_header()
-            self._state = self._interface
         elif token == 'when':
             self._start_when(self._state_global)
         else:
@@ -235,17 +232,6 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def statemachine_before_return(self):
         if self._state == self._expression_body:
             self.context.end_of_function()
-
-    def _interface(self, token):
-        if token == '{':
-            self.next(self._interface_body, token)
-        elif self.last_token != 'interface' and self._ends_declaration(token):
-            self.next(self._state_global, token)
-
-    @CodeStateMachine.read_inside_brackets_then("{}")
-    def _interface_body(self, end_token):
-        if end_token == "}":
-            self._state = self._state_global
 
     def _function_name(self, token):
         if token == "<":
