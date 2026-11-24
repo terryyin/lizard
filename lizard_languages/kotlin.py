@@ -267,17 +267,50 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _function_name(self, token):
         if token == "<":
             self.next(self._template, token)
+        elif token == "(":
+            self.next(self._anonymous_parameters, token)
         elif token == "@":
             self._state = self._receiver_annotation
         elif not self._receiver_type_end(token):
             return super(KotlinStates, self)._function_name(token)
 
-    def _receiver_annotation(self, _):
-        self._state = self._function_name
+    def _receiver_annotation(self, token):
+        if token == "[":
+            self.next(self._receiver_annotation_group, token)
+        else:
+            self._state = self._after_receiver_annotation_name
+
+    def _after_receiver_annotation_name(self, token):
+        if token == ".":
+            self._state = self._receiver_annotation
+        elif token == "(":
+            self.next(self._receiver_annotation_arguments, token)
+        else:
+            self.next(self._function_name, token)
+
+    @CodeStateMachine.read_inside_brackets_then("()", "_function_name")
+    def _receiver_annotation_arguments(self, _):
+        pass
+
+    @CodeStateMachine.read_inside_brackets_then("[]", "_function_name")
+    def _receiver_annotation_group(self, _):
+        pass
 
     def _expect_function_dec(self, token):
         if not self._receiver_type_end(token):
             super()._expect_function_dec(token)
+
+    @CodeStateMachine.read_inside_brackets_then("()", "_after_anonymous_parameters")
+    def _anonymous_parameters(self, token):
+        if token not in "()":
+            self.context.parameter(token)
+
+    def _after_anonymous_parameters(self, token):
+        if token == ".":
+            # `fun (() -> Int).runTwice()` has a parenthesized receiver.
+            self.context.current_function.full_parameters.clear()
+        if not self._receiver_type_end(token):
+            self.next(self._expect_function_impl, token)
 
     def _receiver_type_end(self, token):
         # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
