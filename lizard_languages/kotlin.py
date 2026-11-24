@@ -104,7 +104,14 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0903
         pass
 
     def _expect_declaration_name(self, token):
-        self._state = self._state_global
+        # A name after `val`, `var` or `,` is not a keyword: `val type`,
+        # `(name, set)`. A lambda or a `when` argument, a parameter
+        # (`, val x`) and the `->` of a `when` branch keep their role.
+        if token in ('{', 'when', 'val', 'var') or (
+                token == '->' and self._in_when_cases):
+            self.next(self._state_global, token)
+        else:
+            self._state = self._state_global
 
     def _function_type_result(self, token):
         # Only a function type with a lambda initializer starts a function:
