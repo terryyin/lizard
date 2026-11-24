@@ -124,6 +124,20 @@ fun protocolVersion(major: Int, minor: Int): Int {
 ''')
         self.assertEqual(3, function.cyclomatic_complexity)
 
+    def test_interpolation_keeps_the_surrounding_logical_sequence(self):
+        analyzer = FileAnalyzer(get_extensions(["cognitive"]))
+        result = analyzer.analyze_source_code("sessions.kt", '''\
+fun mayOpenSession(authenticated: Boolean, userId: Int, sessions: Set<String>, quotaAvailable: Boolean): Boolean {
+    return authenticated && "user:${userId}" in sessions && quotaAvailable
+}
+fun mayOpenSharedSession(
+    authenticated: Boolean, staff: Boolean, optedIn: Boolean, sessions: Set<String>, quotaAvailable: Boolean
+): Boolean {
+    return authenticated && "staff:${staff && optedIn}" in sessions && quotaAvailable
+}
+''')
+        self.assertEqual([1, 2], [f.cognitive_complexity for f in result.function_list])
+
     def test_nested_string_templates_count_code_at_each_level(self):
         functions = get_kotlin_function_list('''\
 fun statusLabel(active: Boolean, delayed: Boolean): String {
