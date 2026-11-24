@@ -59,14 +59,6 @@ class PHPLanguageStates(CodeStateMachine):
         elif token == '=>' and self.in_match:
             # Count each case in a match expression
             self.match_case_count += 1
-        elif token == '}' and self.in_match:
-            # End of match expression
-            self.in_match = False
-            # Add the match cases to complexity (subtract 1 because the 'match' keyword is already counted)
-            if self.match_case_count > 0:
-                for _ in range(self.match_case_count - 1):
-                    self.context.add_condition()
-            self.match_case_count = 0
         elif token == '=':
             # Handle function assignment
             self.function_name = self.last_tokens.strip()
@@ -74,6 +66,12 @@ class PHPLanguageStates(CodeStateMachine):
         elif token == '{':
             self.brace_level += 1
         elif token == '}':
+            if self.in_match:
+                self.in_match = False
+                # The 'match' keyword already counted the first case.
+                for _ in range(self.match_case_count - 1):
+                    self.context.add_condition()
+                self.match_case_count = 0
             self.brace_level -= 1
             if self.brace_level == self.type_brace_level:
                 if self.in_class:
