@@ -53,16 +53,18 @@ class JavaScriptObjectsMixin:
 
     def _read_class_new(self, token, after_field_type=False):
         """Whether "new" names a class member outside a field value."""
-        after_non_null = (self.context.newline and self.last_token == '!'
-                          and getattr(self, '_postfix_operand', False))
+        previous = self.last_token
+        after_field_value = self.context.newline and (
+            previous == '!' and getattr(self, '_postfix_operand', False)
+            or previous == 'new' and self._prev_token == '.')
         if self._in_prop_value:
-            if after_non_null:
+            if after_field_value:
                 self._end_statement()
             else:
                 self._end_field_before_modifier()
             if self._in_prop_value:
                 return False
-        elif not (after_field_type or after_non_null or self._starts_class_member()):
+        elif not (after_field_type or after_field_value or self._starts_class_member()):
             # A multiline initializer may already have cleared the field flag.
             if not (self.last_token == '*' and (
                     self._static_seen or self._async_seen and self._class_async_modifier)):
