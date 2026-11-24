@@ -171,6 +171,16 @@ fun jobLabel(active: Boolean, priority: Boolean, value: Any?): String {
 ''')
         self.assertEqual([1, 1, 5], [f.cognitive_complexity for f in result.function_list])
 
+    def test_nullable_cast_in_a_template_has_no_nesting(self):
+        analyzer = FileAnalyzer(get_extensions(["nd"]))
+        result = analyzer.analyze_source_code("jobs.kt", '''\
+fun nullableLabel(value: Any?): String {
+    return "Job: ${value as String ?}"
+}
+''')
+        function, = result.function_list
+        self.assertEqual(0, function.max_nesting_depth)
+
     def test_nested_string_templates_count_code_at_each_level(self):
         functions = get_kotlin_function_list('''\
 fun statusLabel(active: Boolean, delayed: Boolean): String {
