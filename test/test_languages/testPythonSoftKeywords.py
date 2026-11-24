@@ -158,6 +158,32 @@ def f(x):
         # Modified CCN: 1 base + 1 for the whole match block (like switch/case)
         self.assertEqual(2, modified[0].cyclomatic_complexity)
 
+    def test_match_subject_name_does_not_add_a_modified_branch(self):
+        from lizard_ext.lizardmodified import LizardExtension as Modified
+        code = '''
+def summarize_match(match):
+    match match:
+        case {"score": score} if score > 0:
+            return score
+        case _:
+            return 0
+'''
+        functions = self._get_funcs(code, Modified())
+        self.assertEqual(3, functions[0].cyclomatic_complexity)
+
+    def test_match_capture_name_does_not_add_a_modified_branch(self):
+        from lizard_ext.lizardmodified import LizardExtension as Modified
+        code = '''
+def read_result(result):
+    match result:
+        case ("ok", match):
+            return match
+        case _:
+            return None
+'''
+        functions = self._get_funcs(code, Modified())
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
     def test_case_variable_not_penalised_by_modified_extension(self):
         """'case = 5' must not drive complexity negative under lizardmodified."""
         from lizard_ext.lizardnd import LizardExtension as NestDepth
