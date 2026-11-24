@@ -6,7 +6,5 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
-- [Fix Svelte implied-semicolon CI failure](seeds/SEED-073-fix-svelte-implied-semicolons-ci.md#fix-svelte-implied-semicolons-ci) — SEED-073#fix-svelte-implied-semicolons-ci
-
 ## Backlog list
 
