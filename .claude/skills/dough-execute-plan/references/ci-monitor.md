@@ -1,10 +1,6 @@
 # Asynchronous CI observation and repair
 Read [runtime setup](runtime-setup.md) to resolve this project's CI source,
 repository, branch, runtime, and host-bridge readiness before launching.
-Projects may opt in to [exact-commit CI reuse](../manuals/reuse-ci.md) in their
-provider's scheduling decision. Continue observing the real target attempt at
-the accepted SHA; its evidence page identifies the distinct source validation.
-Reuse preserves publication confirmation and completion/shutdown gates.
 ## Own one observer
 Managed ordinary increments and authorized repairs use
 [managed delivery](trunk-publication.md#publish-an-execution-increment-or-repair)
