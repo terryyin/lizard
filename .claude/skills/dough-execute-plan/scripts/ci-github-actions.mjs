@@ -85,7 +85,7 @@ async function answered(args, signal) {
 }
 
 // The body of one `gh api` answer, as `answered` asks it.
-export async function askGitHub(args, signal = new AbortController().signal) {
+async function askGitHub(args, signal = new AbortController().signal) {
   return (await answered(args, signal)).body;
 }
 

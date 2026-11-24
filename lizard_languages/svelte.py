@@ -173,17 +173,25 @@ class _Statements(ImpliedSemicolons):
     continue it."""
     # pylint: disable=R0903
 
-    def __init__(self, context):
-        super().__init__(context)
+    __slots__ = ('_script_ends',)
+
+    def __init__(self):
+        super().__init__()
         self._script_ends = 0   # the script ends read so far
 
-    def before(self, token):
-        script_ends = self._context.script_ends
-        if self._script_ends == script_ends:
-            return super().before(token)
-        self._script_ends = script_ends
-        super().before(token)
-        return True
+    def read(self, tokens, context):
+        for token in super().read(tokens, context):
+            # A new script end forces one statement end before this token.
+            # Clear it after the yield: the parent only resets before_token
+            # when its own scan found an end, so a forced True would stick.
+            script_ends = context.script_ends
+            forced = self._script_ends != script_ends
+            if forced:
+                self._script_ends = script_ends
+                self.before_token = True
+            yield token
+            if forced:
+                self.before_token = False
 
 
 def _marks(code):
@@ -582,7 +590,14 @@ class SvelteReader(VueReader):
 
     ext = ['svelte']
     language_names = ['svelte']
-    implied_semicolons = _Statements
+
+    def implied_semicolons(self, tokens):
+        """As TypeScriptReader.implied_semicolons, with script ends ending
+        the last statement of a script."""
+        if self._implied_semicolons is None:
+            self._implied_semicolons = _Statements()
+            tokens = self._implied_semicolons.read(tokens, self.context)
+        return tokens, self._implied_semicolons
 
     @staticmethod
     def markup_tokens(source_code, start, end):
