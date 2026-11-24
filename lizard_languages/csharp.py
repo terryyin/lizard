@@ -22,6 +22,30 @@ _KEYWORDS = (
 _VERBATIM_KEYWORD = r"|@(?:" + "|".join(_KEYWORDS) + r")\b"
 
 
+_INTERPOLATION_ATOM = (
+    r"/(?![/*])|//[^\n]*(?=\n|\Z)|/\*(?:[^*]|\*(?!/))*\*/"
+    r"|\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'"
+)
+
+
+def _interpolation_contents(nesting, top_level=False):
+    excluded = r"{}()\[\]\"'/" + (":" if top_level else "")
+    choices = "[^" + excluded + "]|" + _INTERPOLATION_ATOM
+    if nesting:
+        inner = _interpolation_contents(nesting - 1)
+        choices += r"|\{" + inner + r"\}|\(" + inner + r"\)|\[" + inner + r"\]"
+    return "(?:" + choices + ")*"
+
+
+# Match the string after its separate dollar token. Exclude raw and
+# verbatim prefixes. A colon outside brackets starts literal format text.
+_INTERPOLATION_ITEM = r"\{(?!\{)" + _interpolation_contents(3, top_level=True) + r'(?::(?:\\.|[^"\\{}\r\n])*)?\}'
+_REGULAR_INTERPOLATION = (
+    r'|"(?<=\$")(?<!@\$")(?!")(?:\\.|[^"\\{}\r\n]|\{\{|\}\}|'
+    + _INTERPOLATION_ITEM + r')*"'
+)
+
+
 class CSharpReader(CLikeReader):
     # pylint: disable=R0903
 
@@ -45,8 +69,10 @@ class CSharpReader(CLikeReader):
     def generate_tokens(source_code, addition='', token_class=None):
         # A verbatim identifier, `@if`, is one name and never a keyword.
         # // comments end on the same line (not C/C++ line continuation).
-        return clike_tokens(
-                source_code, r"|(?:\?\?)" + _VERBATIM_KEYWORD, token_class)
+        patterns = r"|(?:\?\?)" + _VERBATIM_KEYWORD
+        if '$"' in source_code:
+            patterns += _REGULAR_INTERPOLATION
+        return clike_tokens(source_code, patterns, token_class)
 
 
 def _name(token):
