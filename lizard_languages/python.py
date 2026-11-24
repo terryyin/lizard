@@ -171,8 +171,16 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                     self._keyword_match = is_keyword
                 at_line_start = False
                 yield token
-                for t in lookahead:
-                    yield t
+                if is_keyword and self._keyword_match and 'python' in self.language_names:
+                    # A buffered name on the header line cannot start another match.
+                    self._keyword_match = False
+                    for t in lookahead:
+                        if t == '\n':
+                            self._keyword_match = True
+                        yield t
+                    self._keyword_match = True
+                else:
+                    yield from lookahead
             else:
                 # Not a soft keyword at line start — clear stale flags.
                 if token == 'case':
