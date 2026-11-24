@@ -56,9 +56,15 @@ def _delimited(opening, closing, one_line):
 
 
 def _any_delimited(one_line):
-    return "(?:" + "|".join(
-        _delimited(pair[0], pair[-1], one_line)
-        for pair in ('{}', '()', '[]', '<>', '!', '|', '/', '"', "'")) + ")"
+    name = 'ruby_delimiter' if one_line else 'ruby_regex_delimiter'
+    delimiter = '(?P=' + name + ')'
+    line_end = r"\n" if one_line else ""
+    arbitrary = (r"(?P<" + name + r">[^\w\s({\[<])" +
+                 r"(?:\\.|(?!" + delimiter + r")[^\\" + line_end + r"])*" +
+                 delimiter)
+    paired = (_delimited(pair[0], pair[1], one_line)
+              for pair in ('{}', '()', '[]', '<>'))
+    return "(?:" + "|".join(paired) + "|" + arbitrary + ")"
 
 
 _PERCENT_LITERAL = (r"\%(?:[qQwWiIsx]?" + _any_delimited(True) +
