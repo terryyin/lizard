@@ -1,16 +1,20 @@
 # Custom CI rebuild trigger
 
 Use this manual when implementing this project's custom CI trigger for the
-production dashboard's automatic landed-CI timing follow-up. First provide the
-read-only [command adapter](custom-ci.md) and [proof reads](custom-ci-proof.md).
-The execution CI observer never runs a rebuild. Triggering and retrying remain
-part of this project's delivery process; `ciRebuild` exposes one bounded request
-to the production dashboard. Development dashboards send no requests.
+production dashboard's automatic landed-CI timing follow-up. The trigger is a
+separate permission and request beside the read-only
+[command adapter contract](custom-ci.md#request-and-response-contract) and its
+[proof reads](custom-ci-proof.md), which it relies on. The execution CI observer
+never runs a rebuild. Triggering and retrying remain part of this project's
+delivery process; `ciRebuild` exposes one bounded request to the production
+dashboard. Development dashboards send no requests.
 
 ## Declare the trigger
 
 Declare an argument array beside `ciAdapter` in this project's
-`.planning/open-dough.json`:
+`.planning/open-dough.json`. It is
+[launched like `ciAdapter`](custom-ci.md#configure-the-command), from this
+project's folder:
 
 ```json
 {
@@ -27,11 +31,11 @@ records a qualifying new landing receipt follows it up automatically.
 
 ## Handle one request
 
-The command launches from the project checkout without a shell. Read one JSON
-request from stdin, emit one JSON value on stdout, and send diagnostics only to
-stderr. The bound is 20 seconds and 64 KiB of stdout. Bound the CI API call and
-handle termination promptly. Keep credentials in this project's normal
-environment or credential store.
+The command follows the shared
+[request and response contract](custom-ci.md#request-and-response-contract) and
+its [call limits](custom-ci.md#limits-and-failures). Bound the CI API call and
+handle termination promptly. The request has the
+[`diagnose`](custom-ci.md#diagnose) shape with `"operation": "rebuild"`:
 
 ```json
 {
@@ -74,19 +78,20 @@ When no new attempt was admitted, answer with a nonempty reason:
 ```
 
 The provider owns admission and queueing. Refuse when the revision already has
-queued or running work. Do not answer `accepted` with an existing reused attempt.
-If admission could not be settled, answer:
+queued or running work. Do not answer `accepted` with an existing reused
+attempt. If admission could not be settled, answer:
 
 ```json
 { "result": "uncertain", "reason": "The service did not confirm admission" }
 ```
 
 A nonzero exit, timeout, oversized stdout, invalid JSON or invalid answer shape
-also counts as uncertain. The dashboard spends its one-request allowance before
-invoking the command. It never resends after refusal, uncertainty or interruption,
-including an interruption before the command ran. Another request could start a
-duplicate build whose attribution cannot be established. These outcomes remain
-unverified; a later discovered attempt does not establish acceptance.
+also counts as uncertain and, unlike observer reads, is never retried. The
+dashboard spends its one-request allowance before invoking the command. It never
+resends after refusal, uncertainty or interruption, including an interruption
+before the command ran. Another request could start a duplicate build whose
+attribution cannot be established. These outcomes remain unverified; a later
+discovered attempt does not establish acceptance.
 
 ## Expose the comparable repeat
 
@@ -105,8 +110,8 @@ For a full comparable repeat, that attempt must:
   proof declarations of the original. Additional complete proof is allowed.
 
 Return the provider's attempt URL when one is available. The review keeps that
-link with each attempt's identity, check/context, revision, bounds, wall time and
-proof completeness. Both attempts use the same saved prior-build average and
+link with each attempt's identity, check/context, revision, bounds, wall time
+and proof completeness. Both attempts use the same saved prior-build average and
 provisional 5% rule. The repeat never becomes a second reference sample.
 
 ## Check with a fixture provider
