@@ -137,6 +137,25 @@ class TestStatementAfterExpressionArrow(unittest.TestCase):
         self.assert_in_all_readers(code, [
             ('set', 2, 2, 1, 1, 7), ('bind', 1, 7, 2, 7, 26)])
 
+    def test_class_heritage_call_inside_an_arrow_assignment(self):
+        code = """function update(Base, mixin) {
+  const create = () => mixin = class extends mixin(Base) {
+    pick(x) { return x ? 1 : 0 }
+  }
+  return create
+}"""
+        for ext in EXTENSIONS:
+            with self.subTest(ext=ext):
+                functions = analyze_file.analyze_source_code(
+                    'a.' + ext, code).function_list
+                self.assertEqual(
+                    [('pick', 3, 3, 2, 1, 11, 1),
+                     ('create', 2, 4, 1, 3, 15, 0),
+                     ('update', 1, 6, 1, 4, 13, 2)],
+                    [(f.name, f.start_line, f.end_line,
+                      f.cyclomatic_complexity, f.nloc, f.token_count,
+                      f.parameter_count) for f in functions])
+
     def test_computed_method_in_a_multiline_default_export(self):
         code = """export default
 {
