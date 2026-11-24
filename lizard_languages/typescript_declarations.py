@@ -9,7 +9,7 @@ from .js_style_regex_context import _EXPRESSION_KEYWORDS
 # it also handles the next token.
 DECLARATION_WORDS = frozenset((
     'declare', 'type', 'interface', 'abstract', 'class', 'const', 'let', 'var',
-    'as', 'satisfies'))
+    'as', 'satisfies', 'namespace'))
 # Type-only contextual words can be identifiers in runtime operand position.
 _EXPRESSION_PREFIXES = (
     _EXPRESSION_KEYWORDS | OPERAND_WORDS | {'default'}
@@ -22,7 +22,9 @@ class TypeScriptDeclarationsMixin:
             self._declaration_binding = True
             self.last_tokens = self._prev_token = token
             return True
-        elif token == 'class' and (not self.as_object or self._in_prop_value):
+        elif token == 'class' and (
+                not self.as_object or self._in_prop_value
+                or self.as_namespace and not self._ts_declare):
             self._class_body_pending = True
         elif (token in ('as', 'satisfies')
               and (not self.as_object or self._in_prop_value)
@@ -32,6 +34,11 @@ class TypeScriptDeclarationsMixin:
         if token == 'declare':
             self._ts_declare = True
             return True
+        if token == 'namespace':
+            if not self._ts_declare:
+                self._maybe_read_namespace()
+            self._ts_declare = False
+            return False
         if token == 'function' and getattr(self, '_ts_declare', False):
             # Skip declared function
             self._ts_declare = False
@@ -137,6 +144,38 @@ class TypeScriptDeclarationsMixin:
             self._in_abstract_context = True
             return True
         return False
+
+    def _maybe_read_namespace(self):
+        if (not self.context.class_field_annotations
+                or self.context.fileinfo.filename.lower().endswith('.d.ts')):
+            return
+        if (self.as_object or self._binding_candidate) and not self.as_namespace:
+            return
+        if self._call_group or self._in_condition or self._open_groups:
+            return
+        previous = self.last_token
+        if previous in (None, ';', '}', 'export') or (
+                self.context.newline and ends_expression(previous)):
+            self.next(self._read_namespace_name)
+
+    def _read_namespace_name(self, token):
+        first = token[0]
+        if (token in ('in', 'instanceof')
+                or self.context.newline and self.last_token != '.'
+                or first.isascii() and not (first.isalpha() or first in '_$\\')):
+            self.next(self._state_global, token)
+        else:
+            self.next(lambda follower: self._read_namespace_body(token, follower))
+
+    def _read_namespace_body(self, name, token):
+        if token == '{':
+            self.read_object().as_namespace = True
+            self.last_tokens = self._prev_token = token
+        elif token == '.':
+            self.next(self._read_namespace_name)
+        else:
+            self.next(self._state_global, name)
+            self._replay_token(token)
 
     def _assertion_operand(self):
         """Assertions follow consumed operands, not expression/statement starts."""
