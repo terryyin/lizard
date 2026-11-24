@@ -1,6 +1,7 @@
 """Find the boundaries of Kotlin raw strings and string templates."""
 
 import re
+from itertools import chain
 
 from .token_pattern import compiled_token_pattern, tokens_in_span
 
@@ -16,6 +17,19 @@ _EXPRESSION_MARK = re.compile(_CODE_MARKS + r'|[{}]', re.S)
 _RAW_MARK = re.compile(r'"{3,}|\$+')
 _LINE_MARK = re.compile(r'\\.|"|\$+', re.S)
 _COMMENT_MARK = re.compile(r'/\*|\*/')
+
+
+class TemplateTokens(chain):  # pylint: disable=R0903
+    """A stream that can contain both parts of a Kotlin template."""
+
+
+class TemplateText(str):
+    """A literal fragment for metrics, with the full value on the final fragment."""
+
+    def __new__(cls, text, literal=None):
+        token = super().__new__(cls, text)
+        token.literal = literal
+        return token
 
 
 class _InterpolationBrace(str):
@@ -48,20 +62,20 @@ def string_tokens(source, addition):
     yield from tokens_in_span(pattern, source, code_start, len(source))
 
 
-def _string_mode(opening):
+def _string_mode(opening, start):
     pattern = _RAW_MARK if opening.endswith('"""') else _LINE_MARK
-    return pattern, opening.count('$') or 1
+    return pattern, opening.count('$') or 1, start
 
 
 def _string_tokens(source, opening, token_pattern):
     # A string frame holds a dollar threshold. A code frame holds the
     # brace depth in the interpolation. Both forms can nest.
-    stack = [_string_mode(opening.group())]
+    stack = [_string_mode(opening.group(), opening.start())]
     start = opening.start()
     pos = opening.end()
     prefix = ''
     while stack:
-        marks, count = stack[-1]
+        marks, count, literal_start = stack[-1]
         match = marks.search(source, pos)
         if match is None:
             yield prefix + source[start:]
@@ -72,7 +86,7 @@ def _string_tokens(source, opening, token_pattern):
             if mark in ('{', '}'):
                 count += 1 if mark == '{' else -1
                 if count:
-                    stack[-1] = marks, count
+                    stack[-1] = marks, count, literal_start
                 else:
                     yield from tokens_in_span(token_pattern, source, start, match.start())
                     yield INTERPOLATION_CLOSE
@@ -88,17 +102,18 @@ def _string_tokens(source, opening, token_pattern):
                 start = pos
             elif mark.startswith(('"', '$')):
                 yield from tokens_in_span(token_pattern, source, start, match.start())
-                stack.append(_string_mode(mark))
+                stack.append(_string_mode(mark, match.start()))
                 start = match.start()
                 prefix = ''
         elif mark.startswith('"'):
-            yield prefix + source[start:pos]
+            fragment = prefix + source[start:pos]
+            yield fragment if start == literal_start else TemplateText(fragment, source[literal_start:pos])
             stack.pop()
             start = pos
         elif mark.startswith('$') and len(mark) >= count:
             if source.startswith('{', pos):
-                yield prefix + source[start:pos]
-                stack.append((_EXPRESSION_MARK, 1))
+                yield TemplateText(prefix + source[start:pos])
+                stack.append((_EXPRESSION_MARK, 1, None))
                 yield INTERPOLATION_OPEN
                 pos += 1
                 start = pos
