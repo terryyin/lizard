@@ -44,7 +44,7 @@ export function seedIdentityFromFileName(fileName) {
 
 // Context documents allocate nothing. Preserve every explicit identity and
 // numeric filename reservation without requiring today's canonical-home layout.
-export function seedDocumentEvidence(source, fileName, evidence) {
+function seedDocumentEvidence(source, fileName, evidence) {
   const named = [];
   const gaps = [];
   const seeds = new Set([

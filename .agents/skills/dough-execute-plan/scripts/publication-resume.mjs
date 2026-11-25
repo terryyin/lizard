@@ -13,25 +13,26 @@ import { resolvePublicationLandingContext } from "./resolve-publication-landing-
 import {
   git,
   inspectDefaultCheckoutMaintenance,
-  originTrackingRef,
-  pushExactRef,
-  revParse,
+  verifyRef,
 } from "./publication-git.mjs";
-import {
-  assertOwnedCommitsPreserved,
-  atStage,
-  ownedCommitIdentity,
-} from "./publication-resume-support.mjs";
+import { publishExactCandidate } from "./publication-loop.mjs";
 import { doneRecordsStop } from "./publication-backlog-validation.mjs";
 
 const defaultTargetRef = "refs/heads/main";
 
+// A management repository without HEAD has no owned commits to preserve.
+async function ownedCommitIdentity(workspace) {
+  const head = await verifyRef(workspace, "HEAD");
+  if (!head.verified) return { head: null, count: 0 };
+  const { stdout } = await git(workspace, "rev-list", "--count", "HEAD");
+  return { head: head.stdout.trim(), count: Number(stdout.trim()) };
+}
+
 // Confirms publication of the retained candidate. The caller owns CI
 // registration, checkout maintenance and cleanup. `candidateSha` is the SHA
 // retained immediately before the push, including after a rewrite.
-// `suffixBase`, when retained with it, is returned unchanged even when the
-// accepted candidate is an ancestor of a newer remote tip. Its absence leaves
-// the comparison unavailable; publication recovery still works as before.
+// `suffixBase` is required and is returned unchanged when the accepted
+// candidate is an ancestor of a newer remote tip.
 // `supersededShas` are pre-rebase identities and are never pushed. Before a
 // push, an `onFetchedTarget` stop (see applicable-candidate-proof.mjs) for
 // the fetched target tip is reported as `held` instead. A fetch or push that
@@ -56,6 +57,7 @@ export async function resumeInterruptedPublication({
     );
   }
 
+  await validateRetainedComparison(ownedWorkspace, candidateSha, suffixBase);
   const landingContext = await resolvePublicationLandingContext({
     landingContext: suppliedLandingContext,
     workspace: ownedWorkspace,
@@ -63,8 +65,6 @@ export async function resumeInterruptedPublication({
     remote,
     targetRef,
   });
-  await validateRetainedComparison(ownedWorkspace, candidateSha, suffixBase);
-  const comparison = suffixBase === undefined ? {} : { suffixBase };
   const captureLanding = () =>
     landingContext
       ? captureAcceptedLanding(landingContext, {
@@ -75,70 +75,68 @@ export async function resumeInterruptedPublication({
         })
       : undefined;
 
-  const remoteTarget = originTrackingRef(targetRef, remote);
   const preserved = await ownedCommitIdentity(ownedWorkspace);
-  await atStage(
-    "fetch",
-    { classification: null, pushIssued: false, pushCount: 0, remoteTip: null },
-    () => git(ownedWorkspace, "fetch", remote),
-  );
-  const accepted = await isAncestor(ownedWorkspace, candidateSha, remoteTarget);
-
-  if (!accepted) {
-    const remoteTip = await revParse(ownedWorkspace, remoteTarget).catch(
-      () => null,
-    );
-    const held =
-      (await onFetchedTarget?.({
-        attempt: 0,
-        candidate: candidateSha,
-        remoteTip,
-      })) ||
-      (await doneRecordsStop({
-        workspace: ownedWorkspace,
-        candidate: candidateSha,
-        backlogPath,
-      }));
-    if (held)
-      return {
-        classification: "not-on-remote",
-        pushCount: 0,
-        ...comparison,
-        held,
-      };
-    if (landingContext)
-      await retainLandingComparison(
-        landingContext,
-        { candidate: candidateSha, suffixBase },
-        { remote, targetRef },
-      );
-    const pushAttempt = { classification: "not-on-remote", pushIssued: true };
-    // An unanswered push leaves acceptance unknown; nothing is counted as
-    // pushed until the push answers.
-    await atStage("push", { ...pushAttempt, pushCount: 0, remoteTip }, () =>
-      pushExactRef(ownedWorkspace, candidateSha, remote, targetRef),
-    );
-    await atStage(
-      "confirmation-fetch",
-      { ...pushAttempt, pushCount: 1, remoteTip },
-      () => git(ownedWorkspace, "fetch", remote),
-    );
-    if (!(await isAncestor(ownedWorkspace, candidateSha, remoteTarget))) {
-      throw new Error("push did not accept the retained candidate");
-    }
-  } else {
-    for (const stale of supersededShas) {
-      if (await isAncestor(ownedWorkspace, stale, remoteTarget)) {
-        throw new Error("a pre-rebase SHA must not be the published candidate");
+  const accepts = (candidate, tip) =>
+    isAncestor(ownedWorkspace, candidate, tip);
+  const classification = "not-on-remote";
+  const {
+    acceptedTip,
+    pushCount,
+    stop: held,
+    timeout,
+  } = await publishExactCandidate({
+    workspace: ownedWorkspace,
+    remote,
+    targetRef,
+    acceptsFetchedCandidate: accepts,
+    prepareCandidate: async ({ remoteTip }) => {
+      if (remoteTip && (await accepts(candidateSha, remoteTip))) {
+        for (const stale of supersededShas) {
+          if (await accepts(stale, remoteTip)) {
+            throw new Error(
+              "a pre-rebase SHA must not be the published candidate",
+            );
+          }
+        }
+        return { alreadyPublished: true };
       }
-    }
+
+      const stop =
+        (await onFetchedTarget?.({
+          attempt: 0,
+          candidate: candidateSha,
+          remoteTip,
+        })) ||
+        (await doneRecordsStop({
+          workspace: ownedWorkspace,
+          candidate: candidateSha,
+          backlogPath,
+        }));
+      if (stop) return { stop };
+      if (landingContext)
+        await retainLandingComparison(
+          landingContext,
+          { candidate: candidateSha, suffixBase },
+          { remote, targetRef },
+        );
+      return { candidate: candidateSha };
+    },
+  });
+  if (timeout) {
+    const { error, ...facts } = timeout;
+    throw Object.assign(error, facts, {
+      classification: facts.pushIssued ? classification : null,
+    });
   }
+  if (held) return { classification, pushCount, suffixBase, held };
+  if (!acceptedTip)
+    throw new Error("push did not accept the retained candidate");
 
   const landing = await captureLanding();
-  assertOwnedCommitsPreserved(
-    preserved,
-    await ownedCommitIdentity(ownedWorkspace),
-  );
+  const current = await ownedCommitIdentity(ownedWorkspace);
+  if (current.head !== preserved.head || current.count !== preserved.count) {
+    throw new Error("resume duplicated or moved the owned commit");
+  }
   const maintenance = await inspectDefaultCheckoutMaintenance(
     ownedWorkspace,
     defaultCheckout,
@@ -147,10 +145,10 @@ export async function resumeInterruptedPublication({
   );
   return {
     ...(landing === undefined ? {} : { landing }),
-    classification: accepted ? "already-published" : "not-on-remote",
-    pushCount: accepted ? 0 : 1,
+    classification: pushCount ? classification : "already-published",
+    pushCount,
     acceptedSha: candidateSha,
-    ...comparison,
+    suffixBase,
     maintenance,
     cleanup: "not-performed",
     preservedHead: preserved.head,

@@ -18,8 +18,8 @@ and pending state. After review — or with `--skip-retro` or another explicit
 review omission — publish the plan's [execution-complete record](finish-or-stop.md#record-execution-completion),
 then invoke exactly one completion action. Wrap-up uses it after registering the
 final accepted SHA: the closure or integrated SHA, or the last consumer
-publication. Follow [completion mechanics](#completion-command-and-receipt-mechanics),
-including its live-Claude Story Branch background handoff; handle delivered failures at safe boundaries.
+publication. Follow [completion mechanics](#completion-command-and-receipt-mechanics);
+handle delivered failures at safe boundaries.
 
 Success with confirmed shutdown ends observation; report `integrated_state` under
 completion mechanics.
@@ -38,11 +38,6 @@ complete its new accepted revision at a later boundary. The retrospective gains
 no repair, commit, push, backlog or observer authority.
 
 ## Completion command and receipt mechanics
-
-At a final managed Story Branch execution/review handoff, the same live
-interactive Claude coordinator may choose the bounded
-[background handoff](ci-background-handoff.md). All other completion paths
-below retain this operation.
 
 Invoke the completion action with the exact retained mailbox and accepted
 revision:
