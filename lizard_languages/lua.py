@@ -13,11 +13,13 @@ class LuaReader(RubylikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        return RubylikeReader.generate_tokens(
-            source_code,
-            r"|(?:--)?\[(?P<lua_level>=*)\[.*?\](?P=lua_level)\]" +
-            r"|\-\-.*?$" +
-            addition)
+        # Most files can use a tokenizer pattern without capture groups.
+        lua_patterns = r"|--(?:\[\[.*?\]\]|[^\n]*)|\[\[.*?\]\]"
+        if addition or "[=" in source_code:
+            lua_patterns = (
+                r"|(?:--\[=|\[=)(?P<lua_level>=*)\[.*?\]=(?P=lua_level)\]" +
+                lua_patterns)
+        return RubylikeReader.generate_tokens(source_code, lua_patterns + addition)
 
     def get_comment_from_token(self, token):
         if token.startswith("--"):
