@@ -41,14 +41,29 @@ frozen master `6ff51711d14d7aebca1d72690130fab6e1889fe8`.
 
 **Identity:** SEED-075#source-documentation-directives
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/037-source-documentation-directives/PLAN.md"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/037-source-documentation-directives/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"e7a52546cfd11df35302a668517242fc6b31026bda2c60d015577f2a4b236f93","plan":"f05b561eac0c25f579086939b1dff08e54565d73a63c8f8bdd0e8e05bd2a8828"}}
 ```
 
-**Goal:** Perl and Ruby users keep correct function lists and source locations when embedded documentation contains text that resembles analyzer directives.
+**Goal:** Perl and Ruby users get metrics for executable code only: embedded documentation and trailing data sections add no phantom functions, decisions or code lines, and text in them that resembles an analyzer directive never hides, ends or forgives the real code around it.
 
-**Scope:** Correct the specific language reader behavior reproduced during review of [#636](https://github.com/terryyin/lizard/pull/636) at `7e89c51a83bdc2254ac832872e01acf5d97c4430`, [#642](https://github.com/terryyin/lizard/pull/642) at `0bf972c66cce3e4b6cb44d8fa450ca2b5a303ddb`.
+**Scope:** Deliver the intent of [#636](https://github.com/terryyin/lizard/pull/636) at `7e89c51a83bdc2254ac832872e01acf5d97c4430` and [#642](https://github.com/terryyin/lizard/pull/642) at `0bf972c66cce3e4b6cb44d8fa450ca2b5a303ddb`, correcting the behavior reproduced in their review.
+
+- Required: Perl POD (a column-zero `=word` command through `=cut`, or to end of file when unterminated) and text after a line-level `__DATA__` or `__END__` are documentation or data, not code. Ruby `=begin`…`=end` blocks and text after a column-zero `__END__` line are the same. Following code keeps its original line numbers.
+- Required: Lizard directives (`GENERATED CODE`, `#lizard forgive…`) take effect only from actual language comments, as they do today. Documentation and data text carries no directive.
+- Limits: Perl and Ruby only. No new directive syntax and no change to how actual comments are recognized. Heredocs and other string forms stay as they are.
+- Assumption: Identifiers that merely start with `__DATA__` or `__END__` are ordinary code.
 
 **Finding:** With GENERATED CODE between a Perl =head1 and =cut or a Ruby =begin and =end, the proposed reader stops before the later executable function. The same sources retain that function on master. Both proposals route opaque documentation through the shared comment directive handler.
+
+**Key examples:**
+
+- Perl `=head1 NOTES` / `GENERATED CODE` / `=cut`, then `sub real { if ($x) { 1 } }` → `real` is reported at its source line with CCN 2. (#636 stops before it.)
+- Ruby `=begin` / `GENERATED CODE` / `=end`, then a `def real` containing an `if` → `real` is reported at its line with CCN 2. (#642 stops before it.)
+- A POD or `=begin` section containing `#lizard forgive`, followed by a function over the CCN threshold → that function still warns.
+- `=pod` / `sub fake { if ($x) {} }` / `=cut` / `sub real { return 1; }` → only `real`, starting at line 4, with file NLOC 1. The same holds for `=head1` and `=over`, for unterminated POD, and for `sub fake` after `__DATA__` or `__END__`.
+- Ruby `=begin example` with a fake `def` inside, or a fake `def` after `__END__` → only the real method. `=begin` / `if fake` / `=end` inside a method adds no decision.
+- An actual `# GENERATED CODE` comment or `#lizard forgive` comment in Perl or Ruby source → it behaves as on master.
+- `sub __DATA__value { 1; }` in Perl, or `__END__value` inside a Ruby method → ordinary code.
 
 **Plan:** [Keep Perl and Ruby documentation from acting as Lizard directives](../slice-plans/037-source-documentation-directives/PLAN.md)
 
