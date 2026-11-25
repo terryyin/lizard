@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Eimi-chan",
+  "email": "eimi-chan@example.org",
+  "identity": "SEED-075#source-documentation-directives",
+  "mode": "story-branch",
+  "branch": "codex/keep-perl-and-ruby-documentation-from-acting-as",
+  "host": "codex",
+  "model": "gpt-6.2-sol"
+}
