@@ -30,6 +30,8 @@ Add `and` and `or` to Perl `_logical_operators`, following #634. Reuse `MemberNa
 
 No North Star topic bears on this reader correction beyond that ADR.
 
+Chose the shared `mark_member_names` extension (include `logical_operators`) over a Perl-only wrap. Keep `code_reader.py` without a split for this correction: the one-line keyword-set change stays inside that helper's existing responsibility. Plan-settled no reader-file split for `perl.py`; keep `TestPerlWordOperators` in `testPerl.py`.
+
 ## Outside-in proof
 
 | Promise | Owning slice | Proof |
@@ -47,13 +49,15 @@ No North Star topic bears on this reader correction beyond that ADR.
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 Proof: `analyze_file.analyze_source_code` on the key-example sources reports the promised CCN values; nonstrict checks use `FileAnalyzer` with that extension; focused Perl reader tests stay green. Before merge, run full `nix develop -c python -m pytest` and `nix develop -c make`, and require green hosted checks on the published revision.
 
 Behavior: Given Perl sources that use word-form `and` / `or` as operators, as method or package-qualified names, inside quotes, or alongside symbol-form `&&` / `\|\|`, when the corrected reader analyzes them (default and nonstrict), then only real operator uses add CCN and member names do not.
 
 Bring in #634's word-operator regressions and add the member-name / package-qualified / nonstrict cases. Compare master, the exact proposal, and the corrected revision.
+
+Accepted proof (coordinator): `TestPerlWordOperators` via `analyze_file.analyze_source_code` / `FileAnalyzer`+nonstrict covers promises 1–5; focused `testPerl.py` + `test_perl_func_names.py` 46 passed; PHP/Swift member-name + nonstrict consumers 17 passed after shared helper change. Evidence: `open-dough/evidence/SEED-075-perl-word-operator-context-slice1-report.md`. Refactor: none — already clean (`## REFACTOR COMPLETE`). Full `pytest` and `make` green after repairing flaky Svelte absolute-1s linear-time bounds (contention under full-suite load; unified `_LINEAR_TIME_SECONDS = 2` in `testSvelte.py` — attribution unrelated to Perl reader; failure policy required repair).
 
 ## Preparation review
 
