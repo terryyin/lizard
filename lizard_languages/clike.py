@@ -76,29 +76,69 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 class CppRValueRefStates(CodeStateMachine):
     # pylint: disable=R0903
 
-    parenthesized_operand = False
-    reference_attribute = False
+    _UNARY_EXPRESSION_KEYWORDS = {
+        "sizeof", "alignof", "_Alignof", "__alignof", "__alignof__",
+        "__extension__", "delete", "not", "throw", "co_await", "co_yield",
+    }
+
+    def __init__(self, context):
+        super().__init__(context)
+        # None keeps the old count for a body with an ambiguous &&.
+        self.restored_conditions = {}
+        self.scan_function = None
+        self.parenthesized_operand = False
+        self.reference_attribute = False
+        self.simple_prefix = True
+        self.ambiguous_chain = False
 
     def _state_global(self, token):
         if token == "&&":
+            function = self.context.current_function
+            # The function body's opening brace resets the counts from its signature.
+            self.scan_function = (function if self.context.current_nesting_level > function.top_nesting_level
+                                  else None)
             self.parenthesized_operand = False
             self.reference_attribute = False
+            self.simple_prefix = True
+            self.ambiguous_chain = False
             self._state = self._r_value_ref
         elif token == "typedef":
             self.next(self._typedef)
 
     def _r_value_ref(self, token):
         if token in "=;{})":
-            if token == "=" and (not self.parenthesized_operand or
-                                 self.reference_attribute or self.last_token == "operator"):
-                self.context.add_condition(-1)
+            self._finish_reference_scan(token)
             self._state = self._state_global
         elif token == "(":
             self.parenthesized_operand = (self.last_token == "&&" or
                                           (self.last_token == "(" and self.parenthesized_operand))
+        elif token == "&&":
+            # A later && can only continue a simple chain in the initial operand.
+            if not (self.parenthesized_operand and self.simple_prefix and self.last_token.isidentifier() and
+                    self.last_token not in self._UNARY_EXPRESSION_KEYWORDS):
+                self.ambiguous_chain = True
         elif token == "[" and self.last_token == "[":
             # A parenthesized reference declarator may contain an attribute.
             self.reference_attribute = True
+        elif self.simple_prefix and not token.isidentifier():
+            self.simple_prefix = False
+
+    def _finish_reference_scan(self, token):
+        function = self.context.current_function
+        restored = None
+        if function is self.scan_function:
+            restored = self.restored_conditions.get(function, 0)
+            if restored is not None and (token != "=" or self.ambiguous_chain):
+                # An ambiguous && can already account for a decision restored in this body.
+                if restored:
+                    self.context.add_condition(-restored)
+                self.restored_conditions[function] = restored = None
+        if token == "=":
+            if (restored is not None and self.parenthesized_operand and
+                    not self.reference_attribute and self.last_token != "operator"):
+                self.restored_conditions[function] = restored + 1
+            else:
+                self.context.add_condition(-1)
 
     @CodeStateMachine.read_until_then(';')
     def _typedef(self, _, tokens):
