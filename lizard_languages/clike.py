@@ -87,12 +87,15 @@ class CppRValueRefStates(CodeStateMachine):
     _LAMBDA_GROUP_TOKENS = set("[](){}<>;=")
     _LAMBDA_IDLE_TOKENS = _LAMBDA_GROUP_TOKENS | _IDLE_TOKENS
     _LAMBDA_SCAN_TOKENS = _LAMBDA_GROUP_TOKENS | _REFERENCE_SCAN_TOKENS
+    _LABEL_ADDRESS_PREFIX = {"(", "==", "!=", "not_eq", "!", "not", "sizeof", "__extension__"}
+    _NON_LOGICAL_AND = "operator or label"
+    _GROUPED_OPERAND = "grouped operand"
 
     def __init__(self, context, conditions):
         super().__init__(context)
         self._conditions = conditions
         self._recognize_references = context is not None and not context.fileinfo.filename.lower().endswith(".c")
-        # None until a counted &&, then True until a deduction in this scan.
+        # Track whether a counted && can still be deducted at an initializer.
         self._initializer_deduction = None
         self._type_before_paren = False
         self._lambda = None
@@ -125,15 +128,19 @@ class CppRValueRefStates(CodeStateMachine):
         self._set_state(self._r_value_ref, self._REFERENCE_SCAN_TOKENS)
         if not self._counts_and(token):
             return
+        previous = self.last_token
         if self._initializer_deduction is None:
             self._initializer_deduction = True
+        if (self._initializer_deduction is not False and
+                (previous in self._LABEL_ADDRESS_PREFIX or (previous == "operator" and self._recognize_references))):
+            self._initializer_deduction = self._NON_LOGICAL_AND
         # A stand-alone && can be a macro argument. An operator name is also separate.
-        if not self._recognize_references or self.last_token in ("operator", ","):
+        if not self._recognize_references or previous in ("operator", ","):
             return
-        if self.last_token == "(":
+        if previous == "(":
             if self._type_before_paren:
                 self._set_state(self._read_unnamed_reference_end)
-        elif self.last_token in self._REFERENCE_TYPE_KEYWORDS:
+        elif previous in self._REFERENCE_TYPE_KEYWORDS:
             self.context.add_condition(-1)
             self._initializer_deduction = False
         else:
@@ -165,9 +172,16 @@ class CppRValueRefStates(CodeStateMachine):
             self._read_reference(token)
             return
         if token in ("[", "("):
+            if token == "(" and self.last_token == "&&" and self._initializer_deduction is True:
+                self._initializer_deduction = self._GROUPED_OPERAND
+            elif (self._initializer_deduction == self._GROUPED_OPERAND and
+                  self._recognize_references and self.last_token not in ("&&", "(")):
+                # In C++ this inner group can belong to a declarator.
+                self._initializer_deduction = True
             self._state_global(token)
             return
-        if token == "=" and self._initializer_deduction:
+        if (token == "=" and self._initializer_deduction and
+                (self._initializer_deduction != self._GROUPED_OPERAND or self.last_token == "operator")):
             self.context.add_condition(-1)
         self._set_state(self._state_global, self._IDLE_TOKENS)
 
