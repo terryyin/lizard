@@ -101,14 +101,22 @@ frozen master `6ff51711d14d7aebca1d72690130fab6e1889fe8`.
 
 **Identity:** SEED-075#kotlin-adjacent-nested-comments
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/039-kotlin-adjacent-nested-comments/PLAN.md"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/039-kotlin-adjacent-nested-comments/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"6442bac3c44d29c69c5f1ded186902878caa1ad18dfe20771669b45d174dc5b3","plan":"9b7bd0708e0934516ed5152bd8406503aceff9dc2b30d928afe20370e3c15dc3"}}
 ```
 
 **Goal:** Kotlin users get accurate function metrics when consecutive nested comments contain quotes or apparent executable code.
 
-**Scope:** Correct the specific language reader behavior reproduced during review of [#647](https://github.com/terryyin/lizard/pull/647) at `a30a5c63f1e7b2e2b2bdc8cf7dbf282beeceb2f1`.
+**Scope:** Correct the specific language reader behavior reproduced during review of [#647](https://github.com/terryyin/lizard/pull/647) at `a30a5c63f1e7b2e2b2bdc8cf7dbf282beeceb2f1`. Follow #647's direction: Kotlin block comments nest, and the text a whole comment covers adds no tokens. Resume scanning for strings, line comments and comments right after each complete block comment, so a quote or backtick inside one comment cannot hide the next comment's opener. Preserve #647's nested-comment and comment-marker-in-literal behavior and unrelated reader behavior. Out of scope: other SEED-075 reader corrections, non-Kotlin languages, Kotlin string templates, and unterminated block comments.
 
-**Finding:** Put `/* " */` before `/* outer /* inner */ if (hidden) {} */` followed by `val s = "x"` and one real if. #647 still reports CCN 3 instead of 2. A trivia match that starts inside an already consumed comment can skip the following nested comment.
+**Finding:** Put `/* " */` before `/* outer /* inner */ if (hidden) {} */` followed by `val s = "x"` and one real if. #647 still reports CCN 3 instead of 2. A trivia match that starts inside an already consumed comment can skip the following nested comment. Master reports CCN 3 for the same input because it lacks nested-comment support.
+
+**Key examples:**
+
+- Adjacent comments: `fun f() {` / `/* " */` / `/* outer /* inner */ if (hidden) {} */` / `val s = "x"` / `if (real) {}` / `}` / `fun g() {}` → f has CCN 2 and NLOC 4; g starts at line 7 with CCN 1; file NLOC 5. (#647 and master: f CCN 3.)
+- The same shape with `"""` or `'` inside the first comment and a following raw string or character literal → f CCN 2.
+- A backtick inside the first comment and a backtick identifier after the nested comment → f CCN 2 (already true on #647).
+- #647's nested cases, `/* outer /* inner */ if (fake) {} */` and deeper or multi-line nesting, before a real if → f CCN 2, and the following function keeps its start line.
+- `/*` inside an ordinary string, raw string, backtick identifier or line comment opens no comment (#647's literal cases).
 
 **Plan:** [Resume Kotlin tokenization after each complete block comment](../slice-plans/039-kotlin-adjacent-nested-comments/PLAN.md)
 
