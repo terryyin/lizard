@@ -36,7 +36,7 @@ Type: Behavior
 
 Status: planned
 
-Proof: The key examples through `analyze_file.analyze_source_code` with real source fixtures, plus a CLI warning check for the forgiveness example. Each new GENERATED CODE and forgiveness assertion fails on its proposal and passes on the corrected revision. Each phantom and NLOC assertion fails on master.
+Proof: The key examples through `analyze_file.analyze_source_code` with real source fixtures, plus CLI warning checks for forgiveness. The GENERATED CODE examples lose the following function on the respective proposals. Ruby's documentation forgiveness case fails on master and already passes on #642. Perl warns on master, #636 and the corrected revision, as recorded in the decisive premises. The phantom function and NLOC checks detect the missing behavior on master.
 
 Behavior: Perl or Ruby source with documentation or a data section, followed or surrounded by real code → analysis reports only the real functions, with their original lines and CCN. Directive-like text inside the documentation has no effect. Actual comments behave as on master.
 
@@ -45,3 +45,12 @@ Bring in both proposals' tests and their non-code recognition. Compare master, t
 ## Plan review
 
 Refinement was not needed. There is one cohesive Behavior slice: the two readers share one defect, one rule and one proof route, and each proposal already supplies its reader's recognition. No slice-specific concern remains.
+
+## Execution evidence
+
+- The story branch `codex/keep-perl-and-ruby-documentation-from-acting-as` runs from claim `aff3ebadba4657d0ca4737b3fadcc6f38b3ac138` with remote `origin` and integration target `master`.
+- The 25 public analyzer and CLI examples run against master `2d196509` and both exact proposal heads. The new tests reported 15 failures on master, three on #636 and four on #642. The corrected reader passed all examples, including the actual comment controls. The focused reader and shared regex suite passed 333 tests and full pytest passed 3,754 with seven skipped.
+- The readers reuse their compiled token pattern on ordinary files and files with documentation. The paired affected API interval was −10.91% to +1.41%. The broad CLI wall-clock measurement averaged −1.75% with an interval of −8.33% to +5.30% under rising host load. The same 160-file CLI workload used 3.32% less CPU time across 20 alternating pairs, with an interval of −5.79% to −0.79%.
+- The five Svelte timing assertions that failed under the coverage-enabled `make` run also failed under coverage on the frozen baseline. The production style check passed, and ordinary full pytest passed all five.
+- A trial integration with `79c020ef3871508e8093a1cb8e174b51ee5a27c6`, including the landed Ruby percent-literal change, passed 154 focused tests and the production style check. The Ruby regex prescan uses the same percent-literal grammar as the tokenizer.
+- The remaining gates are a passing coverage-enabled `make` run and the hosted CI completion receipt. The original story-branch observer finished when GitHub CLI authentication failed. The published candidate and evidence remain available for resuming.
