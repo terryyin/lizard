@@ -6,7 +6,6 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
-- [Preserve Ruby modulo alongside percent literals](seeds/SEED-075-reader-corrections.md#ruby-percent-literal-context) — SEED-075#ruby-percent-literal-context ([plan](slice-plans/036-ruby-percent-literal-context/PLAN.md))
 - [Keep Perl and Ruby documentation from acting as Lizard directives](seeds/SEED-075-reader-corrections.md#source-documentation-directives) — SEED-075#source-documentation-directives ([plan](slice-plans/037-source-documentation-directives/PLAN.md))
 - [Count Perl word operators only in operator positions](seeds/SEED-075-reader-corrections.md#perl-word-operator-context) — SEED-075#perl-word-operator-context ([plan](slice-plans/038-perl-word-operator-context/PLAN.md))
 
@@ -18,3 +17,4 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 - [Count R variadic and quoted formals with nested defaults](seeds/SEED-075-reader-corrections.md#r-formal-parameter-boundaries) — SEED-075#r-formal-parameter-boundaries
 - [Preserve quoted PL/SQL formals and their declarations](seeds/SEED-075-reader-corrections.md#plsql-formal-parameter-boundaries) — SEED-075#plsql-formal-parameter-boundaries
 - [Keep PL/SQL Boolean operator casing equivalent in nonstrict mode](seeds/SEED-075-reader-corrections.md#plsql-nonstrict-case) — SEED-075#plsql-nonstrict-case
+- [Split the Ruby reader tests by topic](seeds/SEED-076-ruby-reader-test-topics.md#ruby-reader-test-topics) — SEED-076#ruby-reader-test-topics
