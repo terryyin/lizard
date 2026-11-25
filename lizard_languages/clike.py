@@ -81,8 +81,12 @@ class CppRValueRefStates(CodeStateMachine):
         "auto", "char", "short", "int", "long", "signed", "unsigned", "float", "double", "const", "volatile",
     }
     _REFERENCE_END = {">", ")", ",", ";"}
+    _IDLE_TOKENS = {"&&", "typedef", "(", "["}
     _REFERENCE_SCAN_TOKENS = {"=", ";", "{", "}", ")", "&&", "[", "("}
     _LAMBDA_BEFORE = {"=", "(", "return", "co_return", "?", "&&", "||", "!", "+", "{", ",", ":"}
+    _LAMBDA_GROUP_TOKENS = set("[](){}<>;=")
+    _LAMBDA_IDLE_TOKENS = _LAMBDA_GROUP_TOKENS | _IDLE_TOKENS
+    _LAMBDA_SCAN_TOKENS = _LAMBDA_GROUP_TOKENS | _REFERENCE_SCAN_TOKENS
 
     def __init__(self, context, conditions):
         super().__init__(context)
@@ -92,22 +96,33 @@ class CppRValueRefStates(CodeStateMachine):
         self._initializer_deduction = None
         self._type_before_paren = False
         self._lambda = None
+        self._events = self._IDLE_TOKENS
+
+    def __call__(self, token, reader=None):
+        events = self._events
+        if events is None or token in events:
+            self._state(token)
+        self.last_token = token
+
+    def _set_state(self, state, events=None):
+        self._state = state
+        self._events = events
 
     def _state_global(self, token):
         if token == "&&":
             self._initializer_deduction = None
             self._read_reference(token)
         elif token == "typedef":
-            self.next(self._typedef)
+            self._set_state(self._typedef)
         elif token == "(" and self._recognize_references:
             self._type_before_paren = self.last_token in self._REFERENCE_TYPE_KEYWORDS
         elif (token == "[" and self.last_token in self._LAMBDA_BEFORE and
               self._recognize_references and self._lambda is None):
-            self._lambda = _LambdaHeader(self._state)
-            self._state = self._lambda_head
+            self._lambda = _LambdaHeader()
+            self._track_lambda(self._lambda)
 
     def _read_reference(self, token):
-        self._state = self._r_value_ref
+        self._set_state(self._r_value_ref, self._REFERENCE_SCAN_TOKENS)
         if not self._counts_and(token):
             return
         if self._initializer_deduction is None:
@@ -117,18 +132,17 @@ class CppRValueRefStates(CodeStateMachine):
             return
         if self.last_token == "(":
             if self._type_before_paren:
-                self._state = self._read_unnamed_reference_end
+                self._set_state(self._read_unnamed_reference_end)
         elif self.last_token in self._REFERENCE_TYPE_KEYWORDS:
             self.context.add_condition(-1)
             self._initializer_deduction = False
         else:
-            self._state = self._read_reference_end
+            self._set_state(self._read_reference_end)
 
     def _read_unnamed_reference_end(self, token):
         if token == ")":
             self.context.add_condition(-1)
-        self._state = self._r_value_ref
-        self._state(token)
+        self._continue_reference(token)
 
     def _read_reference_end(self, token):
         if token == "...":
@@ -139,12 +153,14 @@ class CppRValueRefStates(CodeStateMachine):
             self._initializer_deduction = False
         elif self._lambda is not None and self._lambda.in_parameter and token.isidentifier():
             self._lambda.references += 1
-        self._state = self._r_value_ref
-        self._state(token)
+        self._continue_reference(token)
+
+    def _continue_reference(self, token):
+        self._set_state(self._r_value_ref, self._REFERENCE_SCAN_TOKENS)
+        if token in self._REFERENCE_SCAN_TOKENS:
+            self._r_value_ref(token)
 
     def _r_value_ref(self, token):
-        if token not in self._REFERENCE_SCAN_TOKENS:
-            return
         if token == "&&":
             self._read_reference(token)
             return
@@ -153,27 +169,39 @@ class CppRValueRefStates(CodeStateMachine):
             return
         if token == "=" and self._initializer_deduction:
             self.context.add_condition(-1)
-        self._state = self._state_global
+        self._set_state(self._state_global, self._IDLE_TOKENS)
 
     def _lambda_head(self, token):
         # Keep the reference scan active in captures and parameter types.
         header = self._lambda
-        adjustment = header.advance(token, self.last_token)
-        self._state = header.resume
-        self._state(token)
+        adjustment = None
+        if not header.in_group or token in self._LAMBDA_GROUP_TOKENS:
+            adjustment = header.advance(token, self.last_token)
+        self._state, self._events = header.resume
+        if self._events is None or token in self._events:
+            self._state(token)
         if adjustment is None:
-            header.resume = self._state
-            self._state = self._lambda_head
+            self._track_lambda(header)
         else:
             self._lambda = None
             if adjustment:
                 self.context.add_condition(-adjustment)
 
+    def _track_lambda(self, header):
+        header.resume = self._state, self._events
+        events = None
+        if header.in_group:
+            if self._events is self._IDLE_TOKENS:
+                events = self._LAMBDA_IDLE_TOKENS
+            elif self._events is self._REFERENCE_SCAN_TOKENS:
+                events = self._LAMBDA_SCAN_TOKENS
+        self._set_state(self._lambda_head, events)
+
     @CodeStateMachine.read_until_then(';')
     def _typedef(self, _, tokens):
         if "&&" in self._conditions and "&&" in tokens:
             self.context.add_condition(-sum(self._counts_and(token) for token in tokens if token == "&&"))
-        self.next(self._state_global)
+        self._set_state(self._state_global, self._IDLE_TOKENS)
 
     def _counts_and(self, token):
         if "&&" not in self._conditions:
@@ -189,8 +217,8 @@ class _LambdaHeader:
     _SUFFIX_SECTIONS = {"->", "requires", "requires-expression"}
     _SUFFIX_TOKENS = {"::", "*", "&", "&&", "||", "!", "..."}
 
-    def __init__(self, resume):
-        self.resume = resume
+    def __init__(self):
+        self.resume = None
         self.references = 0
         self._section = "["
         self._groups = ["]"]
@@ -198,6 +226,10 @@ class _LambdaHeader:
     @property
     def in_parameter(self):
         return self._section == "(" and len(self._groups) == 1
+
+    @property
+    def in_group(self):
+        return bool(self._groups)
 
     def advance(self, token, previous):
         """Return None while tracking, or the deduction when tracking ends."""

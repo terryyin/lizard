@@ -2,8 +2,6 @@
 This is an extension of lizard, that ignores the CCN within
 the assertion.
 '''
-from lizard_languages.code_reader import CodeStateMachine
-from .extension_base import ExtensionBase
 
 
 class _IgnoredAnd(str):
@@ -13,31 +11,27 @@ class _IgnoredAnd(str):
 _IGNORED_AND = _IgnoredAnd("&&")
 
 
-class LizardExtension(ExtensionBase):  # pylint: disable=R0903
-
-    def __init__(self):
-        super(LizardExtension, self).__init__(None)
-        self.conditions = set()
-        self._ignored_and = False
+class LizardExtension:  # pylint: disable=R0903
+    _PARENTHESES = {"(": 1, ")": -1}
+    _ASSERTION_CONDITIONS = {"&&", "||", "?", "??"}
 
     def __call__(self, tokens, reader=None):
-        self._start_file(reader)
-        self.conditions = reader.conditions
-        self._ignored_and = False
+        tokens = iter(tokens)
         for token in tokens:
-            self._state(token)
-            if self._ignored_and:
-                self._ignored_and = False
-                token = _IGNORED_AND
             yield token
+            if token in ("assert", "static_assert"):
+                yield from self._assertion(tokens, reader)
 
-    def _state_global(self, token):
-        if token in ("assert", "static_assert"):
-            self._state = self.in_assertion
-
-    @CodeStateMachine.read_inside_brackets_then("()", "_state_global")
-    def in_assertion(self, token):
-        if token in ("&&", "||", "?", "??") and token in self.conditions \
-                and not getattr(token, 'is_optional', False):
-            self.context.add_condition(-1)
-            self._ignored_and = token == "&&"
+    def _assertion(self, tokens, reader):
+        depth = 0
+        conditions = reader.conditions
+        context = reader.context
+        for token in tokens:
+            depth += self._PARENTHESES.get(token, 0)
+            if token in self._ASSERTION_CONDITIONS and token in conditions and not getattr(token, 'is_optional', False):
+                context.add_condition(-1)
+                if token == "&&":
+                    token = _IGNORED_AND
+            yield token
+            if depth == 0:
+                return
