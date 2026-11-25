@@ -3,7 +3,7 @@
 from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
 from .python_structure import PythonIndents, PythonStates, count_spaces
-from .python_tokens import FStringLiteralToken, PrefixedStringToken, \
+from .python_tokens import FStringExpressionToken, FStringLiteralToken, PrefixedStringToken, \
     generate_tokens as generate_python_tokens
 
 
@@ -122,6 +122,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
           (function call or subscript).
         - Any other following token → keyword.
         """
+        python_keywords = 'python' in self.language_names
         at_line_start = True
         tokens_iter = iter(tokens)
         for token in tokens_iter:
@@ -134,11 +135,15 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                 # Buffer this token; peek at next non-whitespace.
                 lookahead = []
                 next_real = None
+                on_header_line = python_keywords
                 for t in tokens_iter:
                     lookahead.append(t)
                     if t != '\n' and not t.isspace():
                         next_real = t
                         break
+                    if on_header_line and ('\n' in t or '\r' in t):
+                        on_header_line = False
+                wrapped_header = False
                 if next_real in self._SOFT_KW_VARIABLE_NEXT:
                     is_keyword = False
                 elif next_real in ('(', '['):
@@ -151,6 +156,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                     # ('case (x, y) if cond:') are handled naturally because
                     # the scan continues until it finds the ':'.
                     is_keyword = False
+                    wrapped_header = on_header_line
                     depth = 1  # the opening bracket is already in lookahead
                     for t in tokens_iter:
                         lookahead.append(t)
@@ -158,11 +164,21 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                             depth += 1
                         elif t in (')', ']', '}'):
                             depth -= 1
+                            if depth < 0:
+                                wrapped_header = False
                         elif t == ':' and depth == 0:
                             is_keyword = True
                             break
                         elif t == '\n' and depth == 0:
                             break  # end of statement — no pattern colon found
+                        # Interpolated strings can expose delimiters from their text.
+                        # A comment can hide a line break on a bare CR.
+                        if wrapped_header and (
+                                isinstance(t, (FStringExpressionToken, FStringLiteralToken)) or
+                                (isinstance(t, PrefixedStringToken) and
+                                 lookahead[-2].lower() in ('f', 'fr', 'rf', 't', 'tr', 'rt')) or
+                                ((depth == 0 and t.isspace() or t.startswith('#')) and '\r' in t)):
+                            wrapped_header = False
                 else:
                     is_keyword = True
                 if token == 'case':
@@ -171,13 +187,16 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                     self._keyword_match = is_keyword
                 at_line_start = False
                 yield token
-                if is_keyword and self._keyword_match and 'python' in self.language_names:
-                    # A buffered name on the header line cannot start another match.
+                if python_keywords and is_keyword and self._keyword_match:
+                    # A buffered name in the header cannot start another match.
                     self._keyword_match = False
-                    for t in lookahead:
-                        if t == '\n' or (t.isspace() and '\r' in t):
-                            self._keyword_match = True
-                        yield t
+                    if wrapped_header:
+                        yield from lookahead
+                    else:
+                        for t in lookahead:
+                            if t == '\n' or (t.isspace() and '\r' in t):
+                                self._keyword_match = True
+                            yield t
                     self._keyword_match = True
                 else:
                     yield from lookahead
