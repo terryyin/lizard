@@ -405,18 +405,28 @@ int read_if_accepted(int active, int ready, int input) {
 
     def test_logical_and_before_assignment_under_extensions(self):
         source = """#include <cassert>
-bool accepted(bool active, int input) {
-    int value = 0;
-    assert(active && (value = input));
-    return active && (value = input);
+bool accepted(bool active, int (&slots)[4], int index, int input) {
+    assert(active && (slots[index] = input));
+    return active && (slots[index] = input);
 }
 """
 
-        for extension, expected in [("ignoreassert", 2), ("nonstrict", 1)]:
+        for extension, expected in [(None, 3), ("ignoreassert", 2), ("nonstrict", 1)]:
             with self.subTest(extension=extension):
-                result = get_cpp_function_list_with_extension(source, extension)
+                result = (get_cpp_function_list_with_extension(source, extension) if extension
+                          else get_cpp_function_list(source))
 
                 self.assertEqual([("accepted", expected)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_before_assignment_in_call_argument(self):
+        result = get_cpp_function_list("""bool valid(int value);
+bool read_if_ready(bool ready, int input) {
+    int value;
+    return ready && (valid(value = input));
+}
+""")
+
+        self.assertEqual([("read_if_ready", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
     def test_operator_and_call_with_assignment_argument(self):
         result = get_cpp_function_list("""struct Flag { bool operator&&(int) const; };
@@ -545,6 +555,19 @@ done:
 """)
 
         self.assertEqual([("step", 4)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_before_assigning_label_address_in_c(self):
+        source = """int step(int ready) {
+    void *target;
+    return ready && (target = &&done);
+done:
+    return 0;
+}
+"""
+
+        result = analyze_file.analyze_source_code("step.c", source).function_list
+
+        self.assertEqual([("step", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
     def test_rvalue_reference_with_parenthesized_initializer(self):
         result = get_cpp_function_list("""int read_at(int index);
