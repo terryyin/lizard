@@ -383,6 +383,52 @@ int constrained_weight() {
 
         self.assertEqual([("read_batch", 3)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
+    def test_c_logical_and_chain_before_parenthesized_assignment(self):
+        source = """int read_if_ready(int active, int ready, int input) {
+    int value;
+    if (active && ready && (value = input)) return value;
+    return 0;
+}
+
+int read_if_accepted(int active, int ready, int input) {
+    int value;
+    int accepted = active && (value = input);
+    return accepted && ready;
+}
+"""
+
+        result = analyze_file.analyze_source_code("read.c", source).function_list
+
+        self.assertEqual(
+            [("read_if_ready", 4), ("read_if_accepted", 3)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_before_assignment_under_extensions(self):
+        source = """#include <cassert>
+bool accepted(bool active, int input) {
+    int value = 0;
+    assert(active && (value = input));
+    return active && (value = input);
+}
+"""
+
+        for extension, expected in [("ignoreassert", 2), ("nonstrict", 1)]:
+            with self.subTest(extension=extension):
+                result = get_cpp_function_list_with_extension(source, extension)
+
+                self.assertEqual([("accepted", expected)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_operator_and_call_with_assignment_argument(self):
+        result = get_cpp_function_list("""struct Flag { bool operator&&(int) const; };
+int fetch();
+bool direct(const Flag& flag) {
+    int value;
+    return flag.operator&&(value = fetch());
+}
+""")
+
+        self.assertEqual([("direct", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
     def test_rvalue_reference_with_initializer(self):
         result = get_cpp_function_list("""int read();
 int update() {
@@ -520,13 +566,19 @@ int reset() {
             [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
     def test_parenthesized_function_declarator_returning_rvalue_reference(self):
-        result = get_cpp_function_list("""int update() {
+        result = get_cpp_function_list("""struct Entry {};
+int update() {
     int &&(read_next(int index = 1));
     return read_next();
 }
+
+int process() {
+    Entry &&(read_next(int index = 1));
+    return 0;
+}
 """)
 
-        self.assertEqual([("update", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+        self.assertEqual([("update", 1), ("process", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
     def test_parenthesized_assignment_operator_declaration(self):
         result = get_cpp_function_list("""int process_slot() {
