@@ -129,7 +129,7 @@ When slice planning names an already-oversized suite as the only proof home and 
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: 0.3.114
-  - Evidence: the plan's proof names `test/test_languages/testRuby.py` (796 lines before the slice, 822 after) and supplies no seam or exception; the refactor pass returned `REFACTOR JIDOKA STOP`; the developer chose defer; the follow-up is recorded in plan 036; increment `8efebf80`
+  - Evidence: the plan's proof names `test/test_languages/testRuby.py` (796 lines before the slice, 822 after) and supplies no seam or exception; the refactor pass returned `REFACTOR JIDOKA STOP`; the developer chose defer; the follow-up is queued as `SEED-076#ruby-reader-test-topics`; increment `8efebf80`
   - Observed effect: delivery paused for a developer question after proof was accepted; the slice published with the split deferred
   - Inference: same as before. Planning could have settled the decision for a 26-line addition to a suite already oversized
 
