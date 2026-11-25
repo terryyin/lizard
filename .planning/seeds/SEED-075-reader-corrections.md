@@ -15,14 +15,22 @@ frozen master `6ff51711d14d7aebca1d72690130fab6e1889fe8`.
 
 **Identity:** SEED-075#ruby-percent-literal-context
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/036-ruby-percent-literal-context/PLAN.md"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/036-ruby-percent-literal-context/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"d57acec91adaff4fc979c0c35e180e7fa0a99ec8d7890087c76e9177e6fea035","plan":"31add876ffd0aa0ff279142def245256c6dbd10c99559493561acc7363b225ad"}}
 ```
 
 **Goal:** Ruby users can count decisions after modulo or modulo assignment while literal punctuation still protects text.
 
-**Scope:** Correct the specific language reader behavior reproduced during review of [#646](https://github.com/terryyin/lizard/pull/646) at `50e9f92334eede41a4287b8ab12ae90cda23bb27`.
+**Scope:** Correct the Ruby percent-literal reader so punctuation delimiters stay opaque without treating operator `%` or `%=` as literals. Follow the direction of [#646](https://github.com/terryyin/lizard/pull/646) at `50e9f92334eede41a4287b8ab12ae90cda23bb27`. Preserve existing paired-delimiter nesting and unrelated reader behavior. Out of scope: other SEED-075 reader corrections and non-Ruby languages.
 
 **Finding:** On #646, `def f(a); a%=2; if a==0 then a else 0 end; end` reports CCN 1. Master reports 2 and Ruby accepts the source. The broad delimiter rule consumes the assignment and part of the condition as a percent literal.
+
+**Key examples:**
+
+- Modulo assignment without spaces: `def f(a); a%=2; if a==0 then a else 0 end; end` → CCN 2 (the `if` counts; `%`/`=` stay operators).
+- Modulo with spaces or an adjacent expression: `a %= 2` or `value % divisor` before a real `if` → CCN 2.
+- Punctuation-delimited literal: `def f; value = %q@ if fake end @; if real then 1 end; end` plus a following `def g` → `f` CCN 2 and `g` retained.
+- Hash delimiter: the same shape with `%q#…#` → `f` CCN 2 and `g` retained (the `#` form must not hide following code as a comment).
+- Nested paired delimiters: `%q{ literal { if fake end } }` before a real `if` → CCN 2; nesting stays inside the literal.
 
 **Plan:** [Preserve Ruby modulo alongside percent literals](../slice-plans/036-ruby-percent-literal-context/PLAN.md)
 
