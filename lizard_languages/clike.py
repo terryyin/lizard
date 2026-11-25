@@ -45,7 +45,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         self.parallel_states = (
                 CLikeStates(context),
                 CLikeNestingStackStates(context),
-                CppRValueRefStates(context))
+                CppRValueRefStates(context, self.conditions))
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
@@ -81,19 +81,22 @@ class CppRValueRefStates(CodeStateMachine):
         "auto", "char", "short", "int", "long", "signed", "unsigned", "float", "double", "const", "volatile",
     }
     _REFERENCE_END = {">", ")", ",", ";"}
+    _REFERENCE_SCAN_TOKENS = {"=", ";", "{", "}", ")", "&&", "[", "("}
     _LAMBDA_BEFORE = {"=", "(", "return", "co_return", "?", "&&", "||", "!", "+", "{", ",", ":"}
 
-    def __init__(self, context):
+    def __init__(self, context, conditions):
         super().__init__(context)
+        self._conditions = conditions
         self._recognize_references = context is not None and not context.fileinfo.filename.lower().endswith(".c")
-        self._reference_adjusted = False
+        # None until a counted &&, then True until a deduction in this scan.
+        self._initializer_deduction = None
         self._type_before_paren = False
         self._lambda = None
 
     def _state_global(self, token):
         if token == "&&":
-            self._reference_adjusted = False
-            self._read_reference()
+            self._initializer_deduction = None
+            self._read_reference(token)
         elif token == "typedef":
             self.next(self._typedef)
         elif token == "(" and self._recognize_references:
@@ -103,8 +106,12 @@ class CppRValueRefStates(CodeStateMachine):
             self._lambda = _LambdaHeader(self._state)
             self._state = self._lambda_head
 
-    def _read_reference(self):
+    def _read_reference(self, token):
         self._state = self._r_value_ref
+        if not self._counts_and(token):
+            return
+        if self._initializer_deduction is None:
+            self._initializer_deduction = True
         # A stand-alone && can be a macro argument. An operator name is also separate.
         if not self._recognize_references or self.last_token in ("operator", ","):
             return
@@ -113,7 +120,7 @@ class CppRValueRefStates(CodeStateMachine):
                 self._state = self._read_unnamed_reference_end
         elif self.last_token in self._REFERENCE_TYPE_KEYWORDS:
             self.context.add_condition(-1)
-            self._reference_adjusted = True
+            self._initializer_deduction = False
         else:
             self._state = self._read_reference_end
 
@@ -129,21 +136,22 @@ class CppRValueRefStates(CodeStateMachine):
         # The ellipsis before a closing parenthesis can belong to a logical fold.
         if token in self._REFERENCE_END and (self.last_token != "..." or token in (">", ",")):
             self.context.add_condition(-1)
-            self._reference_adjusted = True
+            self._initializer_deduction = False
         elif self._lambda is not None and self._lambda.in_parameter and token.isidentifier():
             self._lambda.references += 1
         self._state = self._r_value_ref
         self._state(token)
 
-    @CodeStateMachine.read_until_then({"=", ";", "{", "}", ")", "&&", "[", "("})
-    def _r_value_ref(self, token, _):
+    def _r_value_ref(self, token):
+        if token not in self._REFERENCE_SCAN_TOKENS:
+            return
         if token == "&&":
-            self._read_reference()
+            self._read_reference(token)
             return
         if token in ("[", "("):
             self._state_global(token)
             return
-        if token == "=" and not self._reference_adjusted:
+        if token == "=" and self._initializer_deduction:
             self.context.add_condition(-1)
         self._state = self._state_global
 
@@ -163,8 +171,16 @@ class CppRValueRefStates(CodeStateMachine):
 
     @CodeStateMachine.read_until_then(';')
     def _typedef(self, _, tokens):
-        self.context.add_condition(-tokens.count("&&"))
+        if "&&" in self._conditions and "&&" in tokens:
+            self.context.add_condition(-sum(self._counts_and(token) for token in tokens if token == "&&"))
         self.next(self._state_global)
+
+    def _counts_and(self, token):
+        if "&&" not in self._conditions:
+            return False
+        # Plain tokens have no extension metadata.
+        return token.__class__ is str or not (
+            getattr(token, 'is_ignored_condition', False) or getattr(token, 'is_member_name', False))
 
 
 class _LambdaHeader:

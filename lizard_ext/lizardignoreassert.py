@@ -6,15 +6,30 @@ from lizard_languages.code_reader import CodeStateMachine
 from .extension_base import ExtensionBase
 
 
+class _IgnoredAnd(str):
+    is_ignored_condition = True
+
+
+_IGNORED_AND = _IgnoredAnd("&&")
+
+
 class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def __init__(self):
         super(LizardExtension, self).__init__(None)
         self.conditions = set()
+        self._ignored_and = False
 
     def __call__(self, tokens, reader=None):
+        self._start_file(reader)
         self.conditions = reader.conditions
-        return super(LizardExtension, self).__call__(tokens, reader)
+        self._ignored_and = False
+        for token in tokens:
+            self._state(token)
+            if self._ignored_and:
+                self._ignored_and = False
+                token = _IGNORED_AND
+            yield token
 
     def _state_global(self, token):
         if token in ("assert", "static_assert"):
@@ -25,3 +40,4 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         if token in ("&&", "||", "?", "??") and token in self.conditions \
                 and not getattr(token, 'is_optional', False):
             self.context.add_condition(-1)
+            self._ignored_and = token == "&&"
