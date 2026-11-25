@@ -36,18 +36,11 @@ _KEYWORDS = frozenset((
 _NAME_BEFORE = frozenset(('.', 'def'))
 
 
-def _delimited(opening, closing, one_line):
-    '''A % literal from its opening to its closing delimiter. A pair of
-    the same delimiters nests, as in `%w(a (b) c)` and `%r{#{a}}`. Real code
-    nests at most two levels deep; this allows three. Another delimiter,
-    as in `%w|a b|`, ends the literal on its line, so a `%` in a regex that
-    the reader misses, such as `/^%w/`, cannot run far. Only a `%r` regex
-    with such a delimiter can span lines, as an `x` flag regex often does.'''
+def _paired(opening, closing):
+    '''A % literal from its opening to its closing bracket. A pair of
+    the same brackets nests, as in `%w(a (b) c)` and `%r{#{a}}`. Real code
+    nests at most two levels deep; this allows three.'''
     opening, closing = re.escape(opening), re.escape(closing)
-    if opening == closing:
-        line_end = r"\n" if one_line else ""
-        return (opening + r"(?:\\.|[^" + closing + r"\\" + line_end +
-                r"])*" + closing)
     body = r"(?:\\.|[^" + opening + closing + r"\\])*"
     for _ in range(3):
         body = (r"(?:\\.|[^" + opening + closing + r"\\]|" +
@@ -55,14 +48,29 @@ def _delimited(opening, closing, one_line):
     return opening + body + closing
 
 
-def _any_delimited(one_line):
-    return "(?:" + "|".join(
-        _delimited(pair[0], pair[-1], one_line)
-        for pair in ('{}', '()', '[]', '<>', '!', '|', '/', '"', "'")) + ")"
+def _any_delimited(one_line, name, excluded=''):
+    '''A bracket pair, or any other punctuation that closes itself, such
+    as `%q@a@` or `%q#a#`, except the `excluded`. Such a delimiter ends
+    the literal on its line, so a `%` in a regex that the reader misses,
+    such as `/^%w/`, cannot run far. Only a `%r` regex with such a
+    delimiter can span lines, as an `x` flag regex often does.'''
+    pairs = "|".join(_paired(pair[0], pair[1])
+                     for pair in ('{}', '()', '[]', '<>'))
+    line_end = r"\n" if one_line else ""
+    delimiter = "(?P=" + name + ")"
+    other = ("(?P<" + name + r">[^\w\s(){}\[\]<>" + excluded + "])" +
+             r"(?:\\.|(?!" + delimiter + r")[^\\" + line_end + "])*" +
+             delimiter)
+    return "(?:" + pairs + "|" + other + ")"
 
 
-_PERCENT_LITERAL = (r"\%(?:[qQwWiIsx]?" + _any_delimited(True) +
-                    r"|r" + _any_delimited(False) + r"[a-z]*)")
+# A `%` right after an operand, as in `n%i==0`, is modulo. So is a bare
+# `%=`, as in `a %= 2`.
+_PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
+                    _any_delimited(True, 'percent_typed') +
+                    r"|" + _any_delimited(True, 'percent_bare', '=') +
+                    r"|r" + _any_delimited(False, 'percent_regex') +
+                    r"[a-z]*)")
 
 
 class RubyReader(RubylikeReader):

@@ -40,11 +40,25 @@ No North Star topic bears on this reader correction beyond that ADR.
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 Proof: `analyze_file.analyze_source_code` on the key-example sources reports the promised CCN and following-method retention; `nix develop -c python -m pytest test/test_languages/testRuby.py` stays green. Before merge, run full `nix develop -c python -m pytest` and `nix develop -c make`, and require green hosted checks on the published revision.
 
 Behavior: Given Ruby sources that mix modulo / `%=` with a real decision, and percent literals delimited by `@`, `#`, or nested paired braces that contain apparent keywords, when the corrected reader analyzes them, then each real decision counts in CCN, literal text does not, and a following method remains in the function list.
+
+## Execution evidence
+
+Slice 1, 2026-11-26, published base `98908ecd`, trunk `df576222` (freshness `unchanged`):
+
+- Reader: `_any_delimited` takes bracket pairs (nesting via `_paired`) or any other self-closing punctuation. A bare `%` cannot open with `=`. A `%` right after an operand character (`\w ) ] }`) is never a literal, so `n%i==0` stays modulo.
+- Proof: `Test_Ruby_percent_literal` in `test/test_languages/testRuby.py` runs every key example through `analyze_file.analyze_source_code`. Modulo forms (`a%=2`, `a %= 2`, `a = a % 2`, `a%i==0`) give CCN 2. `%q` with `@ # = ^ -` gives `f` CCN 2 with `g` retained. A nested `%q{…{…}…}` gives CCN 2. `testRuby.py`: 54 passed. Full `python -m pytest`: 3732 passed, 7 skipped. pycodestyle is clean.
+- `make` under coverage failed only Svelte linear-time wall-clock assertions at load average ~29. They pass alone, and Svelte does not use the Ruby reader.
+
+Learning: a bare `%` after a space-separated name, followed by punctuation that recurs on the line (`n %-2 - 1`), still reads as a literal. Ruby resolves this only by knowing whether the name is a local variable. Master already had this ambiguity for `| ! / " '`.
+
+Refactor pass: moved the new `check_ccn` helper beside `check_tokens` (`testRuby.py` + `testRubyRegex.py`: 61 passed). The pass stopped at the file-size gate: `test/test_languages/testRuby.py` is 822 lines (796 before this slice). The developer chose to defer it on 2026-11-26.
+
+Follow-up: split `test/test_languages/testRuby.py` (822 lines, limit 250) by Ruby reader topic: tokenizing, def/CCN, comment continuation, keyword method names, early-ending blocks, percent literals.
 
 ## Preparation review
 
