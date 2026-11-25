@@ -64,3 +64,7 @@ Accepted proof (coordinator): `TestPerlWordOperators` via `analyze_file.analyze_
 Slice-plan refinement: not needed — one Behavior slice, settled premises, mapped outside-in proof, no cumulative design or sizing concern.
 
 Remaining slice-specific concerns: none.
+
+## Execution complete
+
+Product advice: Key-example scope (`->` / `::`) is delivered; wrap-up may accept that scope or queue a separate story for other non-operator `and`/`or` forms (hash keys, `=>`, `&name()`, `qw`) that now add CCN. Optional follow-up: replace Svelte absolute linear-time budgets with relative scaling. Process review deferred to wrap-up (intent-coverage likely). Hosted CI on `cb1ffa22` was pending at review.
