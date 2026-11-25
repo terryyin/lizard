@@ -46,6 +46,12 @@ Proof: `analyze_file.analyze_source_code` on the key-example sources reports the
 
 Behavior: Given Ruby sources that mix modulo / `%=` with a real decision, and percent literals delimited by `@`, `#`, or nested paired braces that contain apparent keywords, when the corrected reader analyzes them, then each real decision counts in CCN, literal text does not, and a following method remains in the function list.
 
+## Execution complete
+
+Product advice: no product change for this story. The fix keeps every key example and existing Ruby test green. Two follow-ups are left for wrap-up:
+- Split `test/test_languages/testRuby.py` (822 lines) by Ruby reader topic. The developer deferred this.
+- Consider a bounded test correction so the Svelte linear-time tests stop asserting an absolute 1 s wall-clock bound, which fails `make` under host load (DearDough DD-493). This is pre-existing and not caused by this execution.
+
 ## Execution evidence
 
 Slice 1, 2026-11-26, published base `98908ecd`, trunk `df576222` (freshness `unchanged`):
