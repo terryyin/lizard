@@ -122,6 +122,104 @@ int update() {
 
         self.assertEqual([("read_batch", 4)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
+    def test_logical_and_with_template_reference(self):
+        result = get_cpp_function_list("""#include <type_traits>
+#include <utility>
+
+int fetch();
+template <typename T> int take(T&& item, bool ok);
+
+template <typename T>
+bool check_reference(int& value) {
+    return std::is_rvalue_reference_v<T&&> && (value = fetch());
+}
+
+template <typename T>
+bool check_when_ready(bool ready, int& value) {
+    return ready && (std::is_rvalue_reference_v<T&&> && (value = fetch()));
+}
+
+template <typename T>
+bool forward_and_read(T&& item, bool ok, int& value) {
+    return take(std::forward<T&&>(item), ok) && (value = fetch());
+}
+""")
+
+        self.assertEqual(
+            [("check_reference", 2), ("check_when_ready", 3), ("forward_and_read", 2)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_in_range_for_with_reference(self):
+        result = get_cpp_function_list("""#include <vector>
+
+int scan(const std::vector<int>& items, bool ok) {
+    int value;
+    for (auto&& item : items) {
+        if (ok && (value = item)) return value;
+    }
+    return 0;
+}
+""")
+
+        self.assertEqual([("scan", 4)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_with_lambda_reference_parameter(self):
+        result = get_cpp_function_list("""bool read(bool ok) {
+    int value;
+    auto get = [](int&& item) { return item; };
+    return ok && (value = get(1));
+}
+
+bool read_first(bool ok) {
+    int value = 0;
+    bool accepted = ok && (value = 1);
+    auto get = [](int&& item) { return item; };
+    return accepted && get(int(value));
+}
+""")
+
+        self.assertEqual(
+            [("read", 2), ("read_first", 3)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_after_label_address(self):
+        result = get_cpp_function_list("""int step(void *target, int ready) {
+    int result;
+    if (target == &&done && (result = ready)) return result;
+done:
+    return 0;
+}
+
+int step_when_active(int active, void *target, int ready) {
+    int result;
+    if (active && (target == &&done && (result = ready))) return result;
+done:
+    return 0;
+}
+
+int read_if_label_has_size(int active, int ready) {
+    int result;
+    if (active && (sizeof &&done && (result = ready))) return result;
+done:
+    return 0;
+}
+""")
+
+        self.assertEqual(
+            [("step", 3), ("step_when_active", 4), ("read_if_label_has_size", 4)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_with_negated_label_address(self):
+        result = get_cpp_function_list("""bool step(bool active, int ready) {
+    int result;
+    if (active && (not &&done && (result = ready))) return result != 0;
+done:
+    return false;
+}
+""")
+
+        self.assertEqual([("step", 4)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
     def test_rvalue_reference_with_parenthesized_initializer(self):
         result = get_cpp_function_list("""int read_at(int index);
 
