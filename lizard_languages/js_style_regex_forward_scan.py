@@ -1,7 +1,9 @@
 '''Full forward regex-context scan when of/await/for/async structure matters.'''
 
 from .js_style_regex_context import (
+    _BASIC_WHITESPACE,
     _EXPRESSION_KEYWORDS,
+    _JS_WHITESPACE,
     _LINE_ENDS,
     _REGEX_LITERAL_RE,
     _RUBY_EXPRESSION_KEYWORDS,
@@ -10,7 +12,7 @@ from .js_style_regex_context import (
 )
 
 
-def mark_forward(source, js_family):
+def mark_forward(source, js_family, *, jsx=False):
     """Full forward context when of/await/for/async structure matters."""
     n = len(source)
     i = 0
@@ -24,6 +26,7 @@ def mark_forward(source, js_family):
     marks = []
     match_literal = _REGEX_LITERAL_RE.match
     keywords = _EXPRESSION_KEYWORDS if js_family else _RUBY_EXPRESSION_KEYWORDS
+    whitespace = _JS_WHITESPACE if js_family and not jsx else _BASIC_WHITESPACE
     line_ends = _LINE_ENDS
 
     def after_operand(next_can_regex=False, next_expect_property=False):
@@ -123,7 +126,7 @@ def mark_forward(source, js_family):
         nonlocal paren_depth, async_nesting
         ch = source[i]
 
-        if ch in ' \t\v\f' or ch in line_ends:
+        if ch in whitespace:
             i += 1
             return
         if js_family and ch == '/' and i + 1 < n and source[i + 1] == '/':

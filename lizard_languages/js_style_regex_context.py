@@ -9,7 +9,8 @@ REGEX_LITERAL = (r"/(?![/*])(?:\\[^\r\n]|\[(?:\\[^\r\n]|[^\\\]\r\n])*\]"
 # Pre-token marker so REGEX_TOKEN needs no keyword lookbehind (tokens_in_span).
 REGEX_START_MARKER = "\ue000"
 # Trunk punctuation lookbehind plus marker form for pre-scanned opens.
-_PUNCT_OPEN = r"(?:\A|(?<=[=,({[?:!&|;]))"
+_EXPRESSION_PUNCTUATION = '=,({[?:!&|;'
+_PUNCT_OPEN = rf"(?:\A|(?<=[{_EXPRESSION_PUNCTUATION}]))"
 REGEX_TOKEN = (
     _PUNCT_OPEN + r"\s*" + REGEX_LITERAL
     + r"|" + r"\s*" + REGEX_START_MARKER + REGEX_LITERAL[1:]
@@ -45,12 +46,20 @@ _MAYBE_KEYWORD_OPEN = re.compile(
     r'(?<![$\w])(?:'
     + '|'.join(sorted(_EXPRESSION_KEYWORDS, key=len, reverse=True))
     + r')\b|=>')
-_LINE_ENDS = frozenset('\r\n\u2028\u2029')
+_LINE_TERMINATORS = '\r\n\u2028\u2029'
+_LINE_ENDS = frozenset(_LINE_TERMINATORS)
+_JS_SPACES = (' \t\v\f\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005'
+              '\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff')
+_JS_WHITESPACE = _LINE_ENDS | frozenset(_JS_SPACES)
+_BASIC_WHITESPACE = _LINE_ENDS | frozenset(' \t\v\f')
+# A slash after a block comment, or at the start of a line after a line comment.
+_MAYBE_COMMENT_OPEN = re.compile(
+    rf'\*/[{_JS_SPACES}{_LINE_TERMINATORS}]*/|[{_LINE_TERMINATORS}][{_JS_SPACES}]*/(?![/*])')
 # A string can hold U+2028 and U+2029, so only these end one that does not close.
 _STRING_LINE_ENDS = frozenset('\r\n')
-_WS = frozenset(' \t\v\f\r\n\u2028\u2029')
 _WORD_CONT = frozenset(
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$')
+_HEX = frozenset('0123456789abcdefABCDEF')
 # Pure-function memo for reused source objects (warmed analyzer batches).
 _MARK_CACHE = {}
 
@@ -78,13 +87,15 @@ def _mark_regex_literal_starts(source, language):
     if language == 'ruby':
         from .js_style_regex_forward_scan import mark_forward
         return mark_forward(source, js_family=False)
+    jsx = language == 'jsx'
     if _NEEDS_FORWARD.search(source):
         from .js_style_regex_forward_scan import mark_forward
-        return mark_forward(source, js_family=True)
-    if _MAYBE_KEYWORD_OPEN.search(source) is None:
+        return mark_forward(source, js_family=True, jsx=jsx)
+    if (_MAYBE_KEYWORD_OPEN.search(source) is None
+            and (jsx or _MAYBE_COMMENT_OPEN.search(source) is None)):
         return source
     from .js_style_regex_keyword_scan import mark_keyword_slashes
-    return mark_keyword_slashes(source)
+    return mark_keyword_slashes(source, jsx=jsx)
 
 
 def _apply_marks(source, marks):
@@ -101,33 +112,27 @@ def _apply_marks(source, marks):
     return ''.join(parts)
 
 
-def _skip_ws_and_comments_back(source, i):
-    while i >= 0:
-        ch = source[i]
-        if ch in _WS:
-            i -= 1
-            continue
-        if ch == '/' and i >= 1 and source[i - 1] == '*':
-            i -= 2
-            while i >= 1:
-                if source[i - 1] == '/' and source[i] == '*':
-                    i -= 2
-                    break
-                i -= 1
-            continue
-        return i
+def _skip_ws_back(source, i):
+    while i >= 0 and source[i] in _JS_WHITESPACE:
+        i -= 1
     return i
 
 
-def _word_before(source, i):
+def _word_before(source, i, *, unicode_names=True):
     if i < 0 or source[i] not in _WORD_CONT:
         return None, i
     end = i + 1
     while i >= 0 and source[i] in _WORD_CONT:
         i -= 1
+    if unicode_names and i >= 0:
+        prefix = source[i]
+        # A keyword spelling must not be the suffix of a Unicode name.
+        if not prefix.isascii() and not prefix.isspace() and prefix != '\ufeff':
+            return None, i
+        if prefix == '}':
+            opening = i - 1
+            while opening >= 2 and source[opening] in _HEX:
+                opening -= 1
+            if opening >= 2 and source.startswith(r'\u{', opening - 2):
+                return None, i
     return source[i + 1:end], i
-
-
-def _is_property_before(source, i):
-    j = _skip_ws_and_comments_back(source, i)
-    return j >= 0 and source[j] == '.'
