@@ -1,7 +1,7 @@
 import unittest
 from lizard import analyze_file
 from lizard_languages import CLikeReader
-from ..testHelpers import get_cpp_fileinfo, get_cpp_function_list
+from ..testHelpers import get_cpp_fileinfo, get_cpp_function_list, get_cpp_function_list_with_extension
 
 class Test_C_Token_extension(unittest.TestCase):
 
@@ -237,6 +237,62 @@ int scan() {
 """)
 
         self.assertEqual([("scan", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_rvalue_reference_in_ignored_assertion(self):
+        result = get_cpp_function_list_with_extension("""int checked() {
+    static_assert(sizeof(int&&) == sizeof(int));
+    return 0;
+}
+""", "ignoreassert")
+
+        self.assertEqual([("checked", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_reference_and_logical_and_in_assertion(self):
+        source = """int checked() {
+    static_assert(sizeof(int&&) == sizeof(int) && true);
+    return 0;
+}
+"""
+
+        for functions, expected in (
+            (get_cpp_function_list(source), 2),
+            (get_cpp_function_list_with_extension(source, "ignoreassert"), 1),
+        ):
+            with self.subTest(expected=expected):
+                self.assertEqual([("checked", expected)], [(fn.name, fn.cyclomatic_complexity) for fn in functions])
+
+    def test_nonstrict_does_not_deduct_uncounted_references(self):
+        result = get_cpp_function_list_with_extension("""int list_initialized() {
+    int&& value{0};
+    return value;
+}
+
+int copy_initialized() {
+    int&& value = 0;
+    return value;
+}
+
+int alias_size() {
+    typedef int&& Ref;
+    return sizeof(Ref);
+}
+""", "nonstrict")
+
+        self.assertEqual(
+            [("list_initialized", 1), ("copy_initialized", 1), ("alias_size", 1)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_extension_counts_logical_and_outside_assertion(self):
+        source = """bool can_run(bool active, bool ready) {
+    static_assert(sizeof(int&&) == sizeof(int));
+    return active && ready;
+}
+"""
+
+        for extension, expected in [("ignoreassert", 2), ("nonstrict", 1)]:
+            with self.subTest(extension=extension):
+                result = get_cpp_function_list_with_extension(source, extension)
+                self.assertEqual([("can_run", expected)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
     def test_logical_and_with_identifier_in_c_header(self):
         result = analyze_file.analyze_source_code("flags.h", """static int scan(int bool, int ready) {
