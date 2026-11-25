@@ -184,6 +184,48 @@ def read_result(result):
         functions = self._get_funcs(code, Modified())
         self.assertEqual(2, functions[0].cyclomatic_complexity)
 
+    def test_wrapped_match_subject_does_not_add_a_modified_branch(self):
+        from lizard_ext.lizardmodified import LizardExtension as Modified
+        from lizard_ext.lizardnd import LizardExtension as NestDepth
+        code = '''
+def classify(match):
+    match (
+        match,
+    ):
+        case (value,):
+            return value
+'''
+        function, = self._get_funcs(code, Modified(), NestDepth())
+        self.assertEqual((2, 1), (function.cyclomatic_complexity, function.max_nesting_depth))
+
+    def test_wrapped_match_capture_does_not_add_a_modified_branch(self):
+        from lizard_ext.lizardmodified import LizardExtension as Modified
+        from lizard_ext.lizardnd import LizardExtension as NestDepth
+        code = '''
+def read_result(result):
+    match result:
+        case (
+            "ok",
+            match,
+        ):
+            return match
+'''
+        function, = self._get_funcs(code, Modified(), NestDepth())
+        self.assertEqual((2, 1), (function.cyclomatic_complexity, function.max_nesting_depth))
+
+    def test_nested_match_after_fstring_parenthesis_fills(self):
+        from lizard_ext.lizardmodified import LizardExtension as Modified
+        code = '''
+def classify(value):
+    match (f"{value:(>2}"):
+        case _:
+            match (f"{value:)>2}"):
+                case _:
+                    return True
+'''
+        function, = self._get_funcs(code, Modified())
+        self.assertEqual(3, function.cyclomatic_complexity)
+
     def test_nested_match_after_bare_carriage_return(self):
         from lizard_ext.lizardmodified import LizardExtension as Modified
         code = '''
