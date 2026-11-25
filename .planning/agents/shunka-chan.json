@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Shunka-chan",
-  "email": "shunka-chan@example.org",
-  "identity": "SEED-075#ruby-percent-literal-context",
-  "mode": "story-branch",
-  "branch": "claude/preserve-ruby-modulo-alongside-percent-literals",
-  "host": "claude"
-}

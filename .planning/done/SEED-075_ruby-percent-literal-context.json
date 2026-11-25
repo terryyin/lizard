@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-075#ruby-percent-literal-context",
+  "title": "Preserve Ruby modulo alongside percent literals",
+  "completedAt": "2026-11-25T23:33:27.770Z",
+  "developer": "Terry Yin",
+  "agent": "Shunka-chan",
+  "host": "claude"
+}
