@@ -34,7 +34,7 @@ Preserve the shared comment counter and an explicit distinction between language
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 Proof: The key examples through `analyze_file.analyze_source_code` with real source fixtures, plus CLI warning checks for forgiveness. The GENERATED CODE examples lose the following function on the respective proposals. Ruby's documentation forgiveness case fails on master and already passes on #642. Perl warns on master, #636 and the corrected revision, as recorded in the decisive premises. The phantom function and NLOC checks detect the missing behavior on master.
 
@@ -53,4 +53,5 @@ Refinement was not needed. There is one cohesive Behavior slice: the two readers
 - The readers reuse their compiled token pattern on ordinary files and files with documentation. The paired affected API interval was −10.91% to +1.41%. The broad CLI wall-clock measurement averaged −1.75% with an interval of −8.33% to +5.30% under rising host load. The same 160-file CLI workload used 3.32% less CPU time across 20 alternating pairs, with an interval of −5.79% to −0.79%.
 - The five Svelte timing assertions that failed under the coverage-enabled `make` run also failed under coverage on the frozen baseline. The production style check passed, and ordinary full pytest passed all five.
 - A trial integration with `79c020ef3871508e8093a1cb8e174b51ee5a27c6`, including the landed Ruby percent-literal change, passed 154 focused tests and the production style check. The Ruby regex prescan uses the same percent-literal grammar as the tokenizer.
-- The remaining gates are a passing coverage-enabled `make` run and the hosted CI completion receipt. The original story-branch observer finished when GitHub CLI authentication failed. The published candidate and evidence remain available for resuming.
+- At the developer's direction, removed all nine wall-clock limits from the Svelte reader tests. The tests retain their sources and expected function names, line positions and complexity. Full pytest and the coverage-enabled `make` both passed with 3,754 tests and seven skipped.
+- CI observation recovered on the story branch through GitHub Actions workflow `python-app.yml`. The hosted completion gate applies to the published revision.
