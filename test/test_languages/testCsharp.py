@@ -528,6 +528,16 @@ class Labels
             read.name, read.cyclomatic_complexity, read.max_nesting_depth,
             read.cognitive_complexity, read.complex_tags))
 
+    def test_generic_type_arguments_do_not_end_a_ternary(self):
+        source = '''using System;
+class Labels
+{
+    object Read(bool ready) { return ready ? new Tuple<int, int>(1, 2) : null; }
+}'''
+        analyzer = FileAnalyzer(get_extensions(['complextags']))
+        read, = analyzer.analyze_source_code('labels.cs', source).function_list
+        self.assertEqual((2, [['?', 4]]), (read.cyclomatic_complexity, read.complex_tags))
+
     def test_nullable_generic_local_return_type_is_not_a_condition(self):
         source = """
 #nullable enable
