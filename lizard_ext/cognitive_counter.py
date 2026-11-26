@@ -126,6 +126,10 @@ class _Counter(object):  # pylint: disable=R0902
                 read = token
                 if token in _BRACKETS:
                     function, token = self._route(function, token)
+                    if read == '${' and not _is_markup(read):
+                        token = '('
+                    elif read == '}' and token == ',':
+                        token = ')'
                 held = candidates and self._involved(function)
                 if held:
                     self._hold(function, token)
@@ -172,13 +176,11 @@ class _Counter(object):  # pylint: disable=R0902
         if token in _CLOSER_OF:
             if not _is_markup(token):
                 openers.append((token, function))
-                if token == '${':
-                    token = '('
         elif openers and _CLOSER_OF[openers[-1][0]] == token and \
                 not _is_markup(token):
             opener, function = openers.pop()
             if opener == '${':
-                token = ')'
+                token = ','
         return function, token
 
     # -- functions the reader abandons ----------------------------------------
