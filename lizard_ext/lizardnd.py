@@ -43,6 +43,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         block_ends = getattr(reader, "block_ends", ('}',))
         standalone_chains = (isinstance(implied_semicolons, ImpliedSemicolons)
                              or not {'cpp', 'java'}.isdisjoint(getattr(reader, 'language_names', ())))
+        previous_token = None
         if 'cpp' in getattr(reader, 'language_names', ()):
             tokens = _cpp_grouped_commas(tokens, reader.context)
         block_starts = getattr(reader, "block_starts", ('{',))
@@ -53,7 +54,6 @@ class LizardExtension(object):  # pylint: disable=R0903
             + (tuple(_STANDALONE_BOUNDARIES) if standalone_chains else ())
         ).union(block_ends, block_starts, loops)
         context = reader.context
-        previous_token = None
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
