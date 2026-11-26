@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "sessionId": "909205c3-5a57-47ee-9172-d8d7ad38c062",
+  "workflow": "dough-story-refinement",
+  "closedAt": "2026-11-25T23:21:46.912Z",
+  "story": "SEED-075#kotlin-adjacent-nested-comments",
+  "ranges": [
+    {
+      "base": "00728da3f293e9cce3dba03da0c6eeb3cc95a6f0",
+      "candidate": "57b807b4fdd7e1c155a70084c0602493f6ede679"
+    }
+  ]
+}

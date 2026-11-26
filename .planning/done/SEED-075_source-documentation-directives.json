@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-075#source-documentation-directives",
+  "title": "Keep Perl and Ruby documentation from acting as Lizard directives",
+  "completedAt": "2026-11-26T00:04:41.026Z",
+  "developer": "Terry Yin",
+  "agent": "Eimi-chan",
+  "host": "codex",
+  "model": "gpt-6.2-sol",
+  "intentCoverage": {
+    "report": "**Caught.** Checked `SEED-075#source-documentation-directives` at `bb63f1cba407e7540716d85d9b021a008cc08f42`. A Ruby `=begin` block containing `GENERATED CODE` must leave the following function visible at its original line and complexity.\n\nIn an isolated export, I changed `lizard_languages/source_documentation.py::_replace_documentation` to yield the recognized documentation token with a `#` prefix. The fixture places `GENERATED CODE` between `=begin` and `=end` before a function with one `if`. An independent `analyze_source_code` call reported `[('real', 4, 2)]` with NLOC 5 before the fault and no functions with NLOC 0 after it. The maintained test `test/test_languages/test_lizard_ruby_noncode.py::test_generated_code_text_in_documentation_does_not_end_analysis` passed at baseline and failed at line 33 on the function names, source positions, and CCN assertion. I restored the source, compared it and the test fixture byte-for-byte with the pristine export, and observed the same green result and original function metrics.\n\n**Next proof action.** Retain the existing assertion. This check covers the Ruby generated-code documentation path.\n\n- **Test runtime.** Measured 1.73 seconds across the three pytest runs (0.39 seconds baseline, 0.67 seconds faulted, 0.67 seconds restored).\n- **Human effort.** Unavailable. The scratch check had no separately timed human activity.\n- **Agent effort.** Unavailable. Active preparation and reasoning were not timed separately from command waits.\n\n\n- **Invocation-to-report elapsed.** 101949 ms (measured), from 1795651208041 to 1795651309990 in Unix epoch ms. The end clock was sampled after writing the prepared report body.\n\nWrap-up disposition for `bb63f1cba407e7540716d85d9b021a008cc08f42`. Caught. Retain the maintained assertion and close without a follow-up.\n"
+  }
+}

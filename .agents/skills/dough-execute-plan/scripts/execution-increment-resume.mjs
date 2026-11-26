@@ -4,7 +4,10 @@
 // coverage cannot be restored. A fetch or push that outlasts the transport
 // bound stops as held stops do.
 import { resolve } from "node:path";
-import { resolveCheckoutRuntime } from "./ci-checkout-runtime.mjs";
+import {
+  checkoutRuntimeReceipt,
+  resolveCheckoutRuntime,
+} from "./ci-checkout-runtime.mjs";
 import {
   rejectRetiredObserverFlags,
   withExplicitSession,
@@ -41,7 +44,13 @@ export async function resumeManagedExecutionIncrement(request) {
     branch,
   } = request;
 
-  for (const field of ["workspace", "candidateSha", "targetRef", "repo"]) {
+  for (const field of [
+    "workspace",
+    "candidateSha",
+    "suffixBase",
+    "targetRef",
+    "repo",
+  ]) {
     if (!request[field]) {
       return {
         ok: false,
@@ -119,28 +128,22 @@ export async function resumeManagedExecutionIncrement(request) {
       observation,
     });
   }
-  const comparison =
-    published.suffixBase === undefined
-      ? {}
-      : { suffixBase: published.suffixBase };
   if (published.held)
     return stopped(published.held.status, {
       candidate: candidateSha,
       pushCount: 0,
       classification: published.classification,
-      ...comparison,
+      suffixBase: published.suffixBase,
       ...published.held.fields,
       observation,
     });
 
-  // An accepted resume with a known base joins the session evidence; a repeat
-  // of an already recorded pair adds nothing.
-  if (published.suffixBase !== undefined)
-    recordAcceptedIncrement(workspace, {
-      base: published.suffixBase,
-      candidate: published.acceptedSha,
-      reference,
-    });
+  // A repeat of an already recorded pair adds nothing.
+  recordAcceptedIncrement(workspace, {
+    base: published.suffixBase,
+    candidate: published.acceptedSha,
+    reference,
+  });
 
   // Register on the recovered owner after remote acceptance.
   if (liveDirectory)
@@ -159,13 +162,9 @@ export async function resumeManagedExecutionIncrement(request) {
       sha: published.acceptedSha,
       target: targetRef,
     },
-    ...comparison,
+    suffixBase: published.suffixBase,
     observation,
-    runtime: {
-      alias: runtime.alias,
-      skillRoot: runtime.skillRoot,
-      entrypoint: runtime.entrypoint,
-    },
+    runtime: checkoutRuntimeReceipt(runtime),
     maintenance: published.maintenance ?? null,
   };
 }
@@ -173,7 +172,7 @@ export async function resumeManagedExecutionIncrement(request) {
 function argumentsOf(argv) {
   if (argv[0] !== "resume") {
     throw new Error(
-      "usage: execution-increment-resume.mjs resume --workspace PATH --candidate-sha SHA --target-ref REF --repo OWNER/REPO [--suffix-base SHA] [--remote NAME] [--host cursor|claude|codex] [--session-json JSON] [--coordinator VALUE --observer-directory PATH] [--default-checkout PATH] [--superseded-sha SHA]... [--one-shot-identity ID] [--landing-context PATH]",
+      "usage: execution-increment-resume.mjs resume --workspace PATH --candidate-sha SHA --suffix-base SHA --target-ref REF --repo OWNER/REPO [--remote NAME] [--host cursor|claude|codex] [--session-json JSON] [--coordinator VALUE --observer-directory PATH] [--default-checkout PATH] [--superseded-sha SHA]... [--one-shot-identity ID] [--landing-context PATH]",
     );
   }
   const result = { supersededShas: [] };

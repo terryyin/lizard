@@ -1,6 +1,6 @@
 ---
 name: dough-product-backlog
-description: Maintains and reprioritizes this project's product backlog of story and correction references and records blocking story dependencies. Use to add, take, reorder or complete backlog items, check used story identities, repair the done catalog, record prerequisites, or resolve backlog merge conflicts; not for exercise backlogs.
+description: Maintains this project's product backlog of stories and corrections. Use to add, take, reorder, refresh or complete entries, update near-future direction, check identities, repair the done catalog, record prerequisites, or resolve backlog merge conflicts. Excludes exercise backlogs.
 ---
 
 # Product backlog
@@ -29,6 +29,9 @@ identified, ask for the missing context and stop before editing. Do not require
 seed conventions when every affected entry is a plan-homed correction. If a
 required workflow is unavailable, stop that activity and ask for its guidance.
 
+Run the installed `scripts/product-backlog.mjs` with Node from the repository
+root. Supply `--file <path>` if the backlog differs from `.planning/PRODUCT-BACKLOG.md`.
+
 ## File layout
 
 - Place **Near-future direction** immediately after the title when it exists,
@@ -48,15 +51,14 @@ required workflow is unavailable, stop that activity and ask for its guidance.
 
 ## Near-future direction
 
-- Treat the direction as the short-term vision: focus effort on one customer
-  value or goal.
-- Use it as the most important input when deciding story scope. Include the
-  outcomes needed to advance that value or goal; exclude unrelated expansion.
-- Add or change the direction only on an explicit human instruction to do so.
-- Otherwise preserve it exactly. If absent, leave it absent; do not infer or
-  generate a direction during backlog maintenance.
-- Use the direction to guide ordering. Most items should align with it; urgent
-  fixes and urgent architecture changes may take priority.
+- Use the direction as the primary input for story scope. Order most work to
+  advance its customer value or goal. Urgent fixes and urgent architecture
+  changes may take priority.
+- Change direction only on explicit human instruction. Read the section body,
+  then run `direction --expect <exact body> --text <chosen text>`. Use
+  `--expect-none` when there is no direction or `--clear` to remove it. Pass each
+  text as one argument without the heading or surrounding blank lines. If the
+  expectation is stale, reread before trying again.
 
 ## Canonical active homes
 
@@ -73,23 +75,10 @@ required workflow is unavailable, stop that activity and ask for its guidance.
 
 ## Choose a new identity
 
-Before writing or adding a new story or seed, read the installed
-`scripts/product-backlog.mjs identity-evidence [--identity <candidate>]
-[--seeds <path>] [--file <path>]` report and choose under
-[allocate a new identity](references/identity.md#allocate-a-new-identity). The
-read-only JSON names each source's highest seed number with the file, record,
-or adding commit behind it: the seed directory, both backlog lists, the done
-records, the done catalog, and Git history reachable from the checkout at its
-`revision`. It gives `highest` and `next` across them, the candidate's status
-(`active`, `completed`, `in-history`, or `unlisted`) with what history shows of
-it, and `gaps` naming each source or file it could not read. `--seeds` names a
-seed directory other than `seeds/` beside the backlog; `--file`, a backlog
-other than the default.
-
-`add` and startup admission (`--admit`, which reads the done records on fetched
-trunk) refuse an identity a done record names, or whose record cannot be read,
-and write nothing; the refusal cites the record's title and completion time.
-Handle it under the same rule.
+Before writing or adding a story or seed, use `identity-evidence` with
+`--identity <candidate>` to check a candidate and `--seeds <path>` if seeds are
+outside `seeds/` beside the backlog. Read the report using the
+[allocation procedure](references/identity.md#allocate-a-new-identity).
 
 ## Maintain the backlog list
 
@@ -100,17 +89,18 @@ Handle it under the same rule.
   unrelated order. Do not derive priority from seed IDs or order within a seed.
 - Link from related documents; do not duplicate work details or list the same
   story or correction twice within or across **Taken** and **Backlog list**.
-- When a story or correction is renamed or moved, update the entry's link and
-  carry its recorded identity across unchanged, under
-  [work item identity](references/identity.md). Update incoming links.
+- [Refresh the reference](references/identity.md#when-the-canonical-home-moves)
+  after a story, correction, or linked plan is renamed or moved.
 - Add a feature story only with a named beneficiary and evaluable outcome. If
   either is unresolved, use this project's decomposition workflow and route
   selected-story detail to refinement, then slice planning. Add a bounded
   correction only when its story and plan, or its plan-homed record, satisfy the
   correction-input contract above; otherwise name the missing field and leave
-  the story, plan, and queue unchanged. Do
-  not use decomposition to fabricate a story. Carry the direction into
-  applicable workflows as the primary input for scope decisions.
+  the story, plan, and queue unchanged. Carry the direction into applicable workflows.
+- Use `add --identity <id> --title <title> --link <home>` to queue established
+  work and `place --identity <id>` to reprioritize it. With either, choose one
+  of `--before <id>`, `--after <id>`, `--position first`, or `--position last`.
+  For an explicitly authorized return from **Taken**, add `--return` to `place`.
 - Place unfinished prerequisites before dependent work. If this conflicts with
   explicit human ordering, cite the affected entries and ask the human to resolve
   the conflict before changing their order. Do not invent technical preparation
@@ -119,22 +109,21 @@ Handle it under the same rule.
 
 ## Take queued work for execution
 
-Invoke the installed `scripts/product-backlog.mjs take` operation only as
-execution of the selected authorized plan or explicitly planless quick story
-starts. Refinement, planning, intent, or missing execution context or authority
-leaves the entry queued. Follow
+Invoke `take --identity <id>` only as execution of the selected authorized plan
+or explicitly planless quick story starts. Refinement, planning, intent, or
+missing execution context or authority leaves the entry queued. Follow
 [execution and resume](references/record-preparation.md#execution-and-resume)
 for readiness; Take and resume neither record nor infer it.
 
-Preserve the title, canonical link, and identity. A planned story requires a
-resolvable link to its slice plan or a section of it, including on resume.
-Quick stories need no plan; plan-homed corrections need no duplicate plan link.
+Supply `--plan <link>` for a planned story, including on resume. The link must
+resolve to its slice plan or a section of it. Supply `--no-plan` for an explicitly
+planless quick story or a correction whose canonical home is its plan.
 
 Move the entry to the end of **Taken** once. On resume, do not duplicate or
 reorder it. Refuse an absent or ambiguous entry instead of fabricating one.
 
 Leave started work in **Taken** across pauses, failures, resume, completion, and
-retrospective; returning cancelled work requires an explicit backlog decision.
+retrospective. Follow [queue placement](#maintain-the-backlog-list) for returns.
 
 ## Record a necessary blocking dependency
 
@@ -189,7 +178,7 @@ requires a developer decision; it does not interrupt that execution automaticall
 - Use `complete --dropped` to remove human-dropped work and release its profiles.
   Done records are for finished work.
 
-Use the installed `scripts/product-backlog.mjs complete`. It removes the entry
+Use `complete --identity <id>`. It removes the entry
 and readable matching profiles in `agents/` beside the backlog, releasing their
 agent names. The record in `done/` beside the backlog holds identity, title,
 completion time, the workspace's Git developer, and agent, host, and model from
@@ -221,9 +210,9 @@ invoke the installed `scripts/product-backlog.mjs` operation instead of a
 direct hand-edit. Reads, edits to other files, and shell-run commands (including
 shell redirection into the backlog file) are unaffected.
 
-## Merge, rebase, or cherry-pick the backlog across branches
+## Merge or rebase the backlog across branches
 
-An authorized merge, rebase, or cherry-pick that combines two sides of the
+An authorized merge or rebase that combines two sides of the
 product backlog (often `PRODUCT-BACKLOG.md`) — not an ordinary same-branch
 add/take/place/complete — is run through this project's installed product
 backlog Git adapters from the start, before Git ever reports a conflict; a

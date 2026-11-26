@@ -1,12 +1,7 @@
-// What a command line says a request is: every option the tool accepts, and
-// the readings that turn a parsed command line into one request. A reading
-// here refuses a command line that does not state a decision the operation
-// needs; what that decision means to the backlog belongs with the operation.
+// Shared option grammar and project-relative path resolution for the CLI.
 
 import { resolve } from "node:path";
-import { intentCoverageError } from "./product-backlog-done-record.mjs";
-import { BacklogError } from "./product-backlog-refusal.mjs";
-import { defaultBacklogPath, readFile } from "./product-backlog-store.mjs";
+import { defaultBacklogPath } from "./product-backlog-store.mjs";
 
 export const options = {
   identity: { type: "string" },
@@ -37,7 +32,6 @@ export const options = {
   expect: { type: "string" },
   "expect-none": { type: "boolean", default: false },
   return: { type: "boolean", default: false },
-  all: { type: "boolean", default: false },
   dropped: { type: "boolean", default: false },
   "intent-coverage": { type: "string" },
   "intent-coverage-unavailable": { type: "string" },
@@ -50,91 +44,4 @@ export const options = {
 // the directory the command was run in.
 export function resolvePath(path) {
   return path === undefined ? undefined : resolve(process.cwd(), path);
-}
-
-export function readPlacement(values) {
-  const chosen = ["after", "before", "position"].filter(
-    (name) => values[name] !== undefined,
-  );
-  if (chosen.length !== 1) {
-    throw new BacklogError(
-      `Supply exactly one of --after, --before, or --position; found ${chosen.length}.`,
-    );
-  }
-  if (
-    values.position !== undefined &&
-    !["first", "last"].includes(values.position)
-  ) {
-    throw new BacklogError(
-      `--position accepts "first" or "last"; found "${values.position}".`,
-    );
-  }
-  return {
-    after: values.after,
-    before: values.before,
-    position: values.position,
-  };
-}
-
-// The caller always states whether the work has an active plan, so a planned
-// story can never be taken without its link by leaving an option out.
-export function readPlan(values) {
-  if ((values.plan !== undefined) === values["no-plan"]) {
-    throw new BacklogError(
-      `Supply exactly one of --plan <path> or --no-plan, so that taking work ` +
-        `always states whether it has an active plan.`,
-    );
-  }
-  return values.plan;
-}
-
-// When a `complete` request runs. DOUGH_BACKLOG_COMPLETION_TIME, an ISO time,
-// stands in for the clock so a check can place completions in time.
-export function readCompletionTime() {
-  const supplied = process.env.DOUGH_BACKLOG_COMPLETION_TIME;
-  if (supplied === undefined || supplied === "") return new Date();
-  const time = new Date(supplied);
-  if (Number.isNaN(time.getTime())) {
-    throw new BacklogError(
-      `DOUGH_BACKLOG_COMPLETION_TIME must be an ISO time: ${supplied}`,
-    );
-  }
-  return time;
-}
-
-// Resolve and validate completion input before applying any backlog change.
-export function readIntentCoverage(values) {
-  const path = resolvePath(values["intent-coverage"]);
-  const reason = values["intent-coverage-unavailable"];
-  if (path === undefined && reason === undefined) return undefined;
-  if (path !== undefined && reason !== undefined) {
-    throw new BacklogError(
-      "Supply only one of --intent-coverage or --intent-coverage-unavailable.",
-    );
-  }
-  if (values.dropped) {
-    throw new BacklogError("Intent Coverage requires finished work.");
-  }
-  const result =
-    path === undefined
-      ? { unavailable: reason }
-      : {
-          report: readFile(
-            path,
-            `Could not find the Intent Coverage report file at ${path}.`,
-          ),
-        };
-  const error = intentCoverageError(result);
-  if (error) throw new BacklogError(error);
-  return result;
-}
-
-// The basis a preparation record was read from, when the caller states one.
-export function readExpectedBasis(values) {
-  if (
-    values["expect-document"] === undefined &&
-    values["expect-plan"] === undefined
-  )
-    return undefined;
-  return { document: values["expect-document"], plan: values["expect-plan"] };
 }

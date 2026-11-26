@@ -6,9 +6,9 @@
 // spelled belongs beside it, and so do the operations that change a backlog.
 
 import {
-  adoptionHint,
   ambiguousHome,
   identityFor,
+  identityHint,
   recordedFor,
   recordsIdentityInFull,
 } from "./product-backlog-identity.mjs";
@@ -22,7 +22,7 @@ export const queueHeading = "Backlog list";
 const separator = " — ";
 const entryPattern = /^- \[(?<title>[^[\]]+)\]\((?<href>[^)\s]+)\)(?<rest>.*)$/;
 // The recorded identity and the active-plan link are each optional, so an
-// entry written before its identity was adopted, and one whose link already
+// entry written without a recorded identity, and one whose link already
 // spells its identity, both still read as the same work item.
 const detailPattern =
   /^(?: — (?<recorded>[^\s()[\]]+))?(?: \(\[(?<label>[^[\]]+)\]\((?<target>[^)\s]+)\)\))?$/;
@@ -223,7 +223,7 @@ export function renderBacklog(document) {
  * @param {{ identity: string, title: string, href: string, plan?: { label: string, target: string } }} entry
  */
 export function renderEntry({ identity, title, href, plan }) {
-  requireField(identity, "identity", ` ${adoptionHint}`);
+  requireField(identity, "identity", ` ${identityHint}`);
   requireField(title, "title");
   requireField(href, "link");
   if (/[[\]]/.test(title)) {

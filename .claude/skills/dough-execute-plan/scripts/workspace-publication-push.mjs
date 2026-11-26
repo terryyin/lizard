@@ -1,6 +1,4 @@
-// Publish one claim SHA from the owned workspace. A rejected push rechecks
-// remote membership before any replay. Another publisher, or missing
-// provenance, stays a conflict. Implementation is not started here.
+// Apply startup claim ownership and replay rules to exact publication.
 import { execFile } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -10,6 +8,7 @@ import {
   pushExactRef,
   revParse,
 } from "./publication-git.mjs";
+import { publishExactCandidate } from "./publication-loop.mjs";
 import {
   claimProvenance,
   classifyOwnership,
@@ -58,18 +57,25 @@ async function replaySuffix(request, onto) {
 
 export async function claimMembership(request) {
   await git(request.workspace, "fetch", remoteOf(request));
-  const ref = remoteRef(request);
+  return claimMembershipAt(
+    request,
+    await revParse(request.workspace, remoteRef(request)),
+  );
+}
+
+async function claimMembershipAt(request, tip) {
   const provenance = await claimProvenance(
     request.workspace,
-    ref,
+    tip,
     request.identity,
     pathOf(request),
   );
   const candidateSha = request.candidateSha;
   const candidateIsAncestor = candidateSha
-    ? await isAncestor(request.workspace, candidateSha, ref)
+    ? await isAncestor(request.workspace, candidateSha, tip)
     : false;
   return {
+    tip,
     provenance,
     candidateIsAncestor,
     ownership: classifyOwnership({
@@ -100,134 +106,126 @@ export function conflictResult(request, ownership, provenance, candidateSha) {
 export async function publishClaimSha(request) {
   let sha = request.candidateSha;
   // Every stop leaves the current candidate in this workspace for resume.
-  const recoveryAt = (details) => ({
+  const currentClaim = () => ({
     workspace: request.workspace,
     branch: request.branch,
     candidateSha: sha,
-    ...details,
   });
-  let pushError;
-  try {
-    await pushExactRef(
-      request.workspace,
-      sha,
-      remoteOf(request),
-      `refs/heads/${targetOf(request)}`,
-    );
-  } catch (error) {
-    pushError = error;
-  }
-  if (pushError) {
-    let checked;
-    try {
-      checked = await claimMembership({ ...request, candidateSha: sha });
-    } catch (error) {
-      return stopped("unpublished", {
-        recovery: recoveryAt({
-          error: `push and verification failed: ${pushError.message}; ${error.message}`,
-        }),
-      });
-    }
-    if (checked.ownership === "owned") {
-      return {
-        ok: true,
-        status: "resumed",
-        ownership: checked.ownership,
-        publishedSha: checked.provenance.sha,
-        candidateSha: sha,
-        workspace: request.workspace,
-        branch: request.branch,
-      };
-    }
-    if (checked.ownership !== "absent") {
-      return conflictResult(
-        request,
-        checked.ownership,
-        checked.provenance,
-        sha,
-      );
-    }
-    const text = `${pushError.message}\n${pushError.stderr ?? ""}`;
-    if (!/rejected|non-fast-forward/.test(text)) {
-      return stopped("unpublished", {
-        recovery: recoveryAt({ error: text }),
-      });
-    }
-    if (request.recheckSource) {
+  const unpublished = (error) =>
+    stopped("unpublished", {
+      recovery: {
+        ...currentClaim(),
+        ...(error === undefined ? {} : { error }),
+      },
+    });
+  const gitErrorText = (error) => `${error.message}\n${error.stderr ?? ""}`;
+  let resumed;
+  const result = await publishExactCandidate({
+    workspace: request.workspace,
+    remote: remoteOf(request),
+    targetRef: `refs/heads/${targetOf(request)}`,
+    initialCandidate: sha,
+    confirmationRemote: request.origin,
+    acceptsLiveCandidate: (candidate, tip) =>
+      candidate === tip || isAncestor(request.workspace, candidate, tip),
+    async recoverPushFailure({
+      candidate,
+      pushError,
+      remoteTip,
+      verificationError,
+    }) {
+      let checked;
       try {
-        await request.recheckSource({ candidateSha: sha });
+        if (verificationError) throw verificationError;
+        checked = await claimMembershipAt(
+          { ...request, candidateSha: candidate },
+          remoteTip ?? (await revParse(request.workspace, remoteRef(request))),
+        );
       } catch (error) {
-        return sourceStopped(error, {
-          recovery: recoveryAt({ error: error.stderr || error.message }),
-        });
+        return {
+          stop: unpublished(
+            `push and verification failed: ${pushError.message}; ${error.message}`,
+          ),
+        };
       }
-    }
-    const onto = await revParse(request.workspace, remoteRef(request));
-    // Startup may rebuild its Take on newer trunk instead of replaying it,
-    // for example when a rival now holds the agent name it selected.
-    let reselected;
-    if (request.reselectClaim) {
+      if (checked.ownership === "owned") {
+        resumed = checked.provenance.sha;
+        return { alreadyPublished: true };
+      }
+      if (checked.ownership !== "absent") {
+        return {
+          stop: conflictResult(
+            request,
+            checked.ownership,
+            checked.provenance,
+            candidate,
+          ),
+        };
+      }
+      const text = gitErrorText(pushError);
+      if (!/rejected|non-fast-forward/.test(text))
+        return { stop: unpublished(text) };
       try {
-        reselected = await request.reselectClaim({ onto, candidateSha: sha });
+        if (request.recheckSource)
+          await request.recheckSource({ candidateSha: candidate });
       } catch (error) {
-        reselected = stopped("unpublished", {
-          recovery: { error: error.stderr || error.message },
-        });
+        return {
+          stop: sourceStopped(error, {
+            recovery: {
+              ...currentClaim(),
+              error: error.stderr || error.message,
+            },
+          }),
+        };
+      }
+      // Source recheck can fetch again before rebuilding or replaying the Take.
+      const onto = await revParse(request.workspace, remoteRef(request));
+      let reselected;
+      try {
+        if (request.reselectClaim)
+          reselected = await request.reselectClaim({
+            onto,
+            candidateSha: candidate,
+          });
+      } catch (error) {
+        return { stop: unpublished(error.stderr || error.message) };
       }
       if (reselected && !reselected.ok) {
-        return { ...reselected, recovery: recoveryAt(reselected.recovery) };
+        return {
+          stop: {
+            ...reselected,
+            recovery: { ...currentClaim(), ...reselected.recovery },
+          },
+        };
       }
-    }
-    const replay = reselected ? { code: 0 } : await replaySuffix(request, onto);
-    if (replay.code !== 0) {
-      return stopped("conflict", {
-        ownership: "replay-failed",
-        recovery: recoveryAt({ replay }),
-      });
-    }
-    sha = await revParse(request.workspace, "HEAD");
-    try {
-      await pushExactRef(
-        request.workspace,
-        sha,
-        remoteOf(request),
-        `refs/heads/${targetOf(request)}`,
-      );
-    } catch (error) {
-      // A second race is outside the one-retry bound. The rewritten candidate
-      // stays in this workspace for a later explicit resume.
-      return stopped("unpublished", {
-        recovery: recoveryAt({
-          error: `${error.message}\n${error.stderr ?? ""}`,
-        }),
-      });
-    }
-  }
-  let present;
-  try {
-    await git(request.workspace, "fetch", remoteOf(request));
-    const tip = await lsRemoteSha(
-      request.origin,
-      `refs/heads/${targetOf(request)}`,
+      if (!reselected) {
+        const replay = await replaySuffix(request, onto);
+        if (replay.code !== 0) {
+          return {
+            stop: stopped("conflict", {
+              ownership: "replay-failed",
+              recovery: { ...currentClaim(), replay },
+            }),
+          };
+        }
+      }
+      sha = await revParse(request.workspace, "HEAD");
+      return { candidate: sha };
+    },
+  });
+  if (result.stop) return result.stop;
+  if (result.pushError) return unpublished(gitErrorText(result.pushError));
+  if (result.confirmationError)
+    return unpublished(
+      `push result could not be verified: ${result.confirmationError.message}`,
     );
-    present = sha === tip || (await isAncestor(request.workspace, sha, tip));
-  } catch (error) {
-    return stopped("unpublished", {
-      recovery: recoveryAt({
-        error: `push result could not be verified: ${error.message}`,
-      }),
-    });
-  }
-  if (!present) {
-    return stopped("unpublished", { recovery: recoveryAt() });
-  }
+  if (!resumed && !result.acceptedTip) return unpublished();
   return {
     ok: true,
-    status: "published",
-    publishedSha: sha,
-    workspace: request.workspace,
-    branch: request.branch,
-    candidateSha: sha,
+    status: resumed ? "resumed" : "published",
+    ...(resumed ? { ownership: "owned" } : {}),
+    publishedSha: resumed ?? sha,
+    ...currentClaim(),
   };
 }
 
