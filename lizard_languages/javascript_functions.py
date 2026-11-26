@@ -234,6 +234,15 @@ class JavaScriptFunctionsMixin:
             return
         self.context.add_to_long_function_name(" " + token)
 
+    def _expression_operand(self, token):
+        bindings = self._parameter_bindings
+        name = self.last_token
+        return (token in ('.', '?.', '(') and not self._decorated_parameters
+                and bindings.at_root and not bindings.in_expression
+                and not bindings._in_parameter_type
+                and name == bindings.previous and name not in ('this', 'new')
+                and (name[0].isalpha() or name[0] in ('_', '$')))
+
     def _read_grouped_object_method(self, token):
         """A method signature proves that this brace holds an object."""
         def complete(_):
@@ -244,15 +253,6 @@ class JavaScriptFunctionsMixin:
         reader.holds_members = True
         reader.last_tokens = reader.last_token = self._grouped_object_member
         reader(token)
-
-    def _expression_operand(self, token):
-        bindings = self._parameter_bindings
-        name = self.last_token
-        return (token in ('.', '?.', '(') and not self._decorated_parameters
-                and bindings.at_root and not bindings.in_expression
-                and not bindings._in_parameter_type
-                and name == bindings.previous and name not in ('this', 'new')
-                and (name[0].isalpha() or name[0] in ('_', '$')))
 
     def _expecting_func_opening_bracket(self, token):
         # Do not reset started_function for arrow functions (=>)
