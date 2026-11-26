@@ -120,6 +120,9 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.add_to_long_name(" " + token)
         self._append_parameter(self.full_parameters, token)
 
+    def mark_last_formal_parameter(self, name=None):
+        self.full_parameters[-1] = FormalParameter(self.full_parameters[-1], name)
+
     @staticmethod
     def _append_parameter(parameters, token):
         if not parameters:
