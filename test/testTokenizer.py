@@ -2,6 +2,7 @@ import unittest
 from lizard import analyze_file
 from lizard_languages.clike import CLikeReader
 from lizard_languages.code_reader import CodeReader
+from lizard_languages.token_pattern import compiled_token_pattern, tokens_in_span
 def generate_tokens(source):
     return [t for t in CodeReader.generate_tokens(source)]
 
@@ -56,6 +57,12 @@ class Test_generate_token(unittest.TestCase):
 
 
 class Test_generate_token_for_macros(unittest.TestCase):
+
+    def test_truthy_macro_flag_keeps_directive_together(self):
+        source = '#define max_size 32\n'
+        tokens = list(tokens_in_span(
+            compiled_token_pattern(), source, 0, len(source), macros=1))
+        self.assertEqual(['#define max_size 32', '\n'], tokens)
 
     def test_define(self):
         define =  '''#define xx()\
