@@ -18,6 +18,7 @@ class CLikeStates(CodeStateMachine):
         self.bracket_stack = []
         self._saved_tokens = []
         self._return_branches = []
+        self._return_groups = ()
 
     def try_new_function(self, name):
         self.context.try_new_function(name)
@@ -91,7 +92,7 @@ class CLikeStates(CodeStateMachine):
         elif token == 'throws':
             self._state = self._state_throws
         elif token == '->':
-            self.br_count = 0
+            self._return_groups = ()
             self._state = self._state_trailing_return
         elif token == 'noexcept':
             self._state = self._state_noexcept
@@ -129,19 +130,29 @@ class CLikeStates(CodeStateMachine):
             self._state = self._state_dec_to_imp
         self._state(token)
 
+    _RETURN_GROUP_END = {"(": ")", "[": "]", "{": "}", "<": ">"}
+
     def _state_trailing_return(self, token):
-        if token == '(':
-            self.br_count += 1
-        elif token == ')' and self.br_count:
-            self.br_count -= 1
-        elif not self.br_count and token in (';', '{'):
+        groups = self._return_groups
+        if (not groups and token == '{') or (token == ';' and all(group == '>' for group in groups)):
             self._state = self._state_dec_to_imp
             self._state(token)
+        elif groups and token == groups[-1]:
+            self._return_groups = groups[:-1]
+        elif token in self._RETURN_GROUP_END and (token != "<" or not groups or groups[-1] == ">"):
+            self._return_groups += (self._RETURN_GROUP_END[token],)
+
+    def return_brace_needs_check(self):
+        return (self._state == self._state_trailing_return and
+                self._return_groups[-1:] == (">",))
+
+    def clear_trailing_return_groups(self):
+        self._return_groups = ()
 
     def read_preprocessor_branch(self, directive):
         if directive in CPP_CONDITIONAL_START:
             if self._state in (self._state_dec_to_imp, self._state_trailing_return):
-                self._return_branches.append((self.context.current_function, self._state, self.br_count))
+                self._return_branches.append((self.context.current_function, self._state, self._return_groups))
             elif self._return_branches:
                 self._return_branches.append(None)
         elif self._return_branches:
@@ -151,7 +162,7 @@ class CLikeStates(CodeStateMachine):
                 start = self._return_branches[-1]
                 if start and start[0] is self.context.current_function:
                     # The alternative can start before the arrow or inside its type.
-                    _, self._state, self.br_count = start
+                    _, self._state, self._return_groups = start
 
     def _state_old_c_params(self, token):
         self._saved_tokens.append(token)
