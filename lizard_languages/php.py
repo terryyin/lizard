@@ -180,12 +180,16 @@ class PHPReader(CodeReader, CCppCommentsMixin):
         self.parallel_states = [PHPLanguageStates(context)]
 
     def preprocess(self, tokens):
-        # `$promise->catch($f)` and `function catch()` name a member.
-        tokens = self.mark_member_names(tokens, _BEFORE_MEMBER_NAME)
+        tokens = [token for token in tokens if not token.isspace() or token == '\n']
         keywords = _STRUCTURE_KEYWORDS | _DECLARATION_KEYWORDS | self.control_flow_keywords | self.case_keywords
         for index in compress(range(len(tokens)), map(keywords.__contains__, tokens)):
             before = _adjacent_php_code(tokens, index, -1)
-            if before >= 0 and tokens[before] in ('(', ','):
+            if before < 0:
+                continue
+            prefix = tokens[before]
+            if prefix in _BEFORE_MEMBER_NAME:
+                tokens[index] = MemberName(tokens[index])
+            elif prefix in ('(', ','):
                 after = _adjacent_php_code(tokens, index, 1)
                 if after < len(tokens) and tokens[after] == ':':
                     tokens[index] = MemberName(tokens[index])
