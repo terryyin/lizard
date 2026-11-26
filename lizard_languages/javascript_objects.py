@@ -12,9 +12,9 @@ class JavaScriptObjectsMixin:
     # A class body or an object literal: braces that hold members.  The
     # reader also reads blocks such as `catch {` or `case 1: {` as objects.
     holds_members = False
-    _next_property_key = 0
     # In an object: a default value is open, `{ a = async function () {} }`.
     _default_value = False
+    _next_property_key = 0
 
     def _typed_class_member(self):
         return (self.as_class and not self._in_prop_value
@@ -199,12 +199,6 @@ class JavaScriptObjectsMixin:
         # The token of a regular expression starts with a space.
         return opens_object(previous.lstrip())
 
-    def _record_property_start(self, key_offset):
-        """A key followed by a colon, or a spread, confirms the comma's role."""
-        position = self.context.fileinfo.token_count
-        if position == self._next_property_key + key_offset:
-            self.context.js_object_property = position
-
     def _collect_computed_name(self):
         # Collect tokens between [ and its ]
         tokens = []
@@ -237,3 +231,9 @@ class JavaScriptObjectsMixin:
         if not parts:
             return s
         return parts[0][0].lower() + parts[0][1:] + ''.join(p.capitalize() for p in parts[1:])
+
+    def _record_property_start(self, key_offset):
+        """A key followed by a colon, or a spread, confirms the comma's role."""
+        position = self.context.fileinfo.token_count
+        if position == self._next_property_key + key_offset:
+            self.context.js_object_property = position

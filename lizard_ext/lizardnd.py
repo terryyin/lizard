@@ -2,7 +2,6 @@
 This is an extension of lizard, that counts the 'Nesting Depth'
 in every function.
 """
-from lizard_languages.typescript import TypeScriptReader
 from lizard import FileInfoBuilder, FunctionInfo
 
 DEFAULT_ND_THRESHOLD = 7
@@ -28,8 +27,6 @@ class LizardExtension(object):  # pylint: disable=R0903
             default=DEFAULT_ND_THRESHOLD)
 
     def __call__(self, tokens, reader, l_depth=0):
-        if isinstance(reader, TypeScriptReader):
-            tokens = _record_logical_levels(tokens, reader.context)
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
@@ -42,6 +39,9 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
+        from lizard_languages.typescript import TypeScriptReader
+
+        tracks_properties = isinstance(reader, TypeScriptReader)
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
         if hasattr(reader, "indent_indicator"):
@@ -83,8 +83,11 @@ class LizardExtension(object):  # pylint: disable=R0903
                         # Only add nesting depth for the first logical operator in a condition
                         # Subsequent && or || operators in the same condition don't add depth
                         if not context.get_logical_operator_added():
-                            l_depth = context.open_level()
+                            l_depth = (context.open_logical_level() if tracks_properties
+                                       else context.open_level())
                             context.set_logical_operator_added(True)
+                    elif tracks_properties:
+                        l_depth = context.open_logical_level()
                     else:
                         # Not in a condition, treat as regular nesting
                         l_depth = context.open_level()
@@ -107,19 +110,6 @@ class LizardExtension(object):  # pylint: disable=R0903
             if (token in (':', '...')
                     and context.__dict__.get('js_object_property') == context.fileinfo.token_count):
                 l_depth = _end_object_property(context)
-
-
-def _record_logical_levels(tokens, context):
-    """Remember the pending levels that come from logical operators."""
-    for token in tokens:
-        if token in ('&&', '||'):
-            function = context.current_function
-            before = function.levels_awaiting_body
-            yield token
-            if function.levels_awaiting_body > before:
-                function.logical_levels.append(function.levels_awaiting_body)
-        else:
-            yield token
 
 
 def _end_object_property(context):
@@ -159,6 +149,13 @@ class NDFileInfoAddition(FileInfoBuilder):
             pending.pop()
         function.levels_awaiting_body += 1
         return self.add_nd_condition()
+
+    def open_logical_level(self):
+        """Remember a level that an object property can release."""
+        depth = self.open_level()
+        function = self.current_function
+        function.logical_levels.append(function.levels_awaiting_body)
+        return depth
 
     def open_block(self):
         """The block takes over the levels awaiting their body."""
@@ -268,9 +265,9 @@ def patch_append_method(frm, accept_class, method_name):
 def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
     self.max_nesting_depth = 0
-    self.logical_levels = []
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
+    self.logical_levels = []
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
