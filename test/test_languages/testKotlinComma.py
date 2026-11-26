@@ -81,6 +81,20 @@ fun check(flag: Boolean) = Triple(0, fun(n: Int) = n < LIMIT, {next_argument})
                     [(f.name, f.cyclomatic_complexity) for f in result],
                 )
 
+    def test_call_comparison_after_a_callback_keeps_the_caller_decision(self):
+        result = get_kotlin_function_list('''\
+private const val LIMIT = 4
+fun third(flag: Boolean, value: Int) = Triple(
+    0,
+    fun(n: Int) = n < LIMIT,
+    kotlin.math.abs(value) > (if (flag) 1 else 0),
+)
+        ''')
+        self.assertEqual(
+            [("", 4, 4, 1), ("third", 2, 6, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in result],
+        )
+
     def test_anonymous_function_argument_after_a_comma(self):
         result = get_kotlin_function_list('''
 fun outer() {
