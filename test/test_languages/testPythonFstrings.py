@@ -86,3 +86,41 @@ class Test_Python_fstring_complexity(unittest.TestCase):
         functions = get_python_function_list(
             'def f(items):\n    return bf"{b\'x\' if items else b\'\'}"\n')
         self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_reused_quotes_keep_nested_fstring_decision(self):
+        functions = get_python_function_list(
+            "def render(decorator):\n"
+            "    return f'{f'@{decorator}\\n' if decorator else ''}def run()'\n"
+            "\n"
+            "def next_step():\n"
+            "    return 1\n")
+        self.assertEqual(
+            [('render', 2, 2), ('next_step', 5, 1)],
+            [(f.name, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_hash_flag_before_dynamic_width_keeps_decision(self):
+        functions = get_python_function_list(
+            'def render(value, padded):\n'
+            '    return f"{value:#{8 if padded else 4}x}"\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_comment_inside_dynamic_width_hides_braces(self):
+        functions = get_python_function_list(
+            'def render(value, padded):\n'
+            '    return f"""{value:#{(8 if padded else 4)  # } if ignored\n'
+            '    }x}"""\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_quote_fill_before_dynamic_width_keeps_decision(self):
+        functions = get_python_function_list(
+            'def render(value, padded):\n'
+            '    return f"{value:\'>{8 if padded else 4}x}"\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_triple_quoted_format_text_counts_its_code_line(self):
+        functions = get_python_function_list(
+            'def message(value):\n'
+            '    return f"""The value is\n'
+            '    {value:x}\n'
+            '    """\n')
+        self.assertEqual(4, functions[0].nloc)
