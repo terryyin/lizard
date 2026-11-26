@@ -1322,6 +1322,16 @@ class TestCognitiveConditionalContinuations(unittest.TestCase):
                     """ % (parameter, comparison)
                     self.assertEqual([3], cogc(filename, source))
 
+    def test_wrapped_logical_condition_keeps_its_ternary_parent(self):
+        for condition in ('quoted ||\n                apostrophe',
+                          'quoted\n                || apostrophe'):
+            with self.subTest(condition=condition):
+                source = """
+                    const attrEnd = (missing, quoted, apostrophe, end) =>
+                      missing ? end : %s ? end + 1 : end;
+                """ % condition
+                self.assertEqual([4], cogc('attribute.js', source))
+
     def test_asi_ends_a_conditional_before_the_next_statement(self):
         source = """
             function edition(v: number, available: number | undefined) {
