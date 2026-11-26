@@ -59,7 +59,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     l_depth = context.end_statement()
             if token in depth_tokens:
                 if token in block_ends:
-                    l_depth = context.close_go_block() if go_if else context.close_block()
+                    l_depth = _close_go_block(context) if go_if else context.close_block()
                 if token in block_starts or token == indent_indicator:
                     context.clear_prev_was_else()
                 # Don't add nesting for "if" when it immediately follows "else" (else if)
@@ -81,14 +81,14 @@ class LizardExtension(object):  # pylint: disable=R0903
                         # Only add nesting depth for the first logical operator in a condition
                         # Subsequent && or || operators in the same condition don't add depth
                         if not context.get_logical_operator_added():
-                            l_depth = context.open_logical_level(go_if)
+                            l_depth = _open_logical_level(context, go_if)
                             context.set_logical_operator_added(True)
                     else:
                         # Not in a condition, treat as regular nesting
-                        l_depth = context.open_logical_level(go_if)
+                        l_depth = _open_logical_level(context, go_if)
 
                 elif go_if and token in ('=', ':='):
-                    context.mark_go_initializer()
+                    _mark_go_initializer(context)
 
                 # Handle other loop keywords (if, for, while, etc.)
                 elif token in loops and token not in ('&&', '||') \
@@ -131,12 +131,6 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.levels_awaiting_body += 1
         return self.add_nd_condition()
 
-    def open_logical_level(self, go_if):
-        function = self.current_function
-        if go_if and function.go_if_levels is None:
-            function.go_statement_logical_levels += 1
-        return self.open_level()
-
     def open_block(self):
         """The block takes over the levels awaiting their body."""
         function = self.current_function
@@ -155,13 +149,6 @@ class NDFileInfoAddition(FileInfoBuilder):
         """A block end releases the levels its block took over."""
         levels = self.current_function.block_levels
         return self.add_nd_condition(-(levels.pop() if levels else 1))
-
-    def close_go_block(self):
-        function = self.current_function
-        if function.go_if_levels is None and function.condition_depth == 0:
-            # A case or a statement can end at a brace without a semicolon.
-            self.end_statement()
-        return self.close_block()
 
     def end_statement(self):
         """A statement ends the levels of a braceless body."""
@@ -189,11 +176,6 @@ class NDFileInfoAddition(FileInfoBuilder):
         function.go_if_levels = function.levels_awaiting_body
         function.logical_operator_added = False
         return depth
-
-    def mark_go_initializer(self):
-        function = self.current_function
-        if function.go_if_levels is not None and function.condition_depth == 0:
-            function.go_initializer = True
 
     def set_in_condition(self, in_condition):
         self.current_function.in_condition = in_condition
@@ -256,6 +238,27 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def clear_prev_was_else(self):
         self.current_function.prev_was_else = False
+
+
+def _open_logical_level(context, go_if):
+    function = context.current_function
+    if go_if and function.go_if_levels is None:
+        function.go_statement_logical_levels += 1
+    return context.open_level()
+
+
+def _close_go_block(context):
+    function = context.current_function
+    if function.go_if_levels is None and function.condition_depth == 0:
+        # A case or a statement can end at a brace without a semicolon.
+        context.end_statement()
+    return context.close_block()
+
+
+def _mark_go_initializer(context):
+    function = context.current_function
+    if function.go_if_levels is not None and function.condition_depth == 0:
+        function.go_initializer = True
 
 
 def get_method(cls, name):
