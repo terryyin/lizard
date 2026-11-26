@@ -59,7 +59,9 @@ class RustReader(CodeReader, CCppCommentsMixin):
 class RustStates(GoLikeStates):  # pylint: disable=R0903
     FUNC_KEYWORD = 'fn'
     _SIGNATURE_CLOSERS = {'(': ')', '[': ']', '{': '}', '<': '>'}
-    _COMPLETE_ATTRIBUTE = re.compile(r"""#\s*!?\s*\[[^\[\]{}'"/\n]*\]\s*(?://[^\n]*)?""")
+    # A cooked string can contain delimiters without closing the attribute.
+    _COMPLETE_ATTRIBUTE = re.compile(
+        r"""#\s*!?\s*\[(?:[^\[\]{}'"#/\\\n]|(?<!r)"(?:[^"\\\n]|\\.)*")*\]\s*(?://[^\n]*)?""")
 
     def __init__(self, context, in_match_arms=False):
         super().__init__(context)
