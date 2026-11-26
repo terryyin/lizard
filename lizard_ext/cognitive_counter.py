@@ -3,8 +3,7 @@
 from itertools import chain
 from weakref import WeakKeyDictionary
 
-from .cognitive_profile import (
-    _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
+from .cognitive_profile import _UNARY_OR_COALESCING
 
 HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY = range(5)
 
@@ -301,8 +300,9 @@ class _Counter(object):  # pylint: disable=R0902
         # The reader may still be appending to the name (``A`` -> ``A::f``),
         # so it is compared on every candidate token.
         if token in function.name and token == function.unqualified_name:
-            if state.prev in _MEMBER_ACCESS:
-                calls = state.prev != '::' and state.prev2 in _SELF_REFERENCES
+            receivers = self.profile.member_receivers.get(state.prev)
+            if receivers is not None:
+                calls = state.prev2 in receivers
             else:
                 # `this?.catch()` names a member, as `this?.run()` does.
                 calls = getattr(token, 'is_member_name', False) or not (
