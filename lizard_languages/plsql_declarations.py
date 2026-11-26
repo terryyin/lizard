@@ -26,7 +26,7 @@ class PLSQLDeclarationStates:
         if token.isspace() or token == "\n":
             return
         if token == "(":
-            self.next(self._parameters, "(")
+            self._start_parameters()
         elif token.lower() in ("is", "as"):
             self.context.confirm_new_function()
             self.next(self._state_before_begin)
@@ -46,7 +46,7 @@ class PLSQLDeclarationStates:
             # next non-whitespace token will be the actual procedure name
             self.next(self._procedure_name_after_dot)
         elif token == "(":
-            self.next(self._parameters, "(")
+            self._start_parameters()
         elif token.lower() in ("is", "as"):
             self.context.confirm_new_function()
             self.next(self._state_before_begin)
@@ -65,7 +65,7 @@ class PLSQLDeclarationStates:
         if token.isspace() or token == "\n":
             return
         if token == "(":
-            self.next(self._parameters, "(")
+            self._start_parameters()
         elif token.lower() == "return":
             self.next(self._return_type)
         elif token.lower() in ("is", "as"):
@@ -87,7 +87,7 @@ class PLSQLDeclarationStates:
             # next non-whitespace token will be the actual function name
             self.next(self._function_name_after_dot)
         elif token == "(":
-            self.next(self._parameters, "(")
+            self._start_parameters()
         elif token.lower() == "return":
             self.next(self._return_type)
         elif token.lower() in ("is", "as"):
@@ -110,16 +110,41 @@ class PLSQLDeclarationStates:
             self.next(self._state_before_begin)
         # Skip everything else (return type tokens)
 
+    def _start_parameters(self):
+        """Begin reading a formal parameter list."""
+        self._param_paren_depth = 0
+        self._param_tokens = []
+        self.context.add_to_long_function_name("(")
+        self.next(self._parameters)
+
+    def _commit_parameter(self):
+        """Record the buffered formal parameter declaration, if any."""
+        if not self._param_tokens:
+            return
+        name = self._param_tokens[0]
+        declaration = " ".join(self._param_tokens)
+        self.context.add_parameter_declaration(name, declaration)
+        self._param_tokens = []
+
     def _parameters(self, token):
-        """Read parameters."""
-        if token == ")":
-            self.next(self._after_parameters)
-        elif token == ",":
-            # Each comma separates parameters
-            self.context.parameter(token)
-        elif not token.isspace() and token != "\n":
-            # Track non-whitespace tokens as potential parameters
-            self.context.parameter(token)
+        """Read parameters, keeping nested parentheses inside one formal."""
+        if token.isspace():
+            return
+        if token == "(":
+            self._param_paren_depth += 1
+            self._param_tokens.append(token)
+        elif token == ")":
+            if self._param_paren_depth > 0:
+                self._param_paren_depth -= 1
+                self._param_tokens.append(token)
+            else:
+                self._commit_parameter()
+                self.context.add_to_long_function_name(")")
+                self.next(self._after_parameters)
+        elif token == "," and self._param_paren_depth == 0:
+            self._commit_parameter()
+        else:
+            self._param_tokens.append(token)
 
     def _after_parameters(self, token):
         """After parameters, look for IS/AS or RETURN."""

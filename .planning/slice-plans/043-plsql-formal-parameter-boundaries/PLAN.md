@@ -46,7 +46,7 @@ Run the existing PL/SQL reader tests, including `testPLSQL.py` (751 lines, run a
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 When a procedure or function header has a formal list, consume each complete formal with one depth rule. Only a comma at the formal-list level starts another declaration. Use the same path for nested procedures and standalone functions. Commit each declaration and its name once, keeping its full type, mode, and default in both public declaration output and the long name.
 
@@ -57,6 +57,9 @@ When a procedure or function header has a formal list, consume each complete for
 | CLI and duplicate-list consumer | Analyze three real SQL files using the observed CSV command with two workers. Two files share the five names `"x name"`, `b`, `c`, `d`, and `e`, with different defaults. One uses `"y name"`. Assert `PARAM` 5, the complete long-name tokens with the CSV formatter's quoting, and both duplicate counts of `2, 2, 1` by function name. |
 
 Compare the discriminating proof on trunk, the exact proposal, and the corrected revision. Run the affected language and extension tests and full pytest through Nix under [AGENTS.md](../../../AGENTS.md). Run `nix develop -c make` for the planned format check. Retain the existing PR qualification on the exact corrected production bytes using the [paired runner](../../../.agents/skills/lizard-process-pr/references/performance.md) for PL/SQL `api-parameters` and a broad frozen `cli` corpus. Require green hosted checks on the final implementation head before any merge.
+
+- Delivered proof: added `FunctionInfo.add_parameter_declaration` / `FileInfoBuilder.add_parameter_declaration` (preserving generic `add_parameter` inference for other readers) and signature-local depth tracking in `PLSQLDeclarationStates` (`lizard_core/function_info.py` 172 lines, `lizard_core/file_info_builder.py` 138 lines, `lizard_languages/plsql_declarations.py` 230 lines). Added 5 focused tests in `test/test_languages/test_lizard_plsql_nested_parameters.py` covering nested `DEFAULT` / `:=` calls, empty `g()`, quoted identifiers (`"x name"`, `"a,)"`), nested procedure boundaries, and 3-file CLI `--csv --verbose -t 2 -E duplicated_param_list` (`PARAM` 5, duplicate counts `2, 2, 1`). Verified focused suite (60 passed), full pytest (3782 passed, 7 skipped), `nix develop -c make` (tests + `pep8` + `pylint`, exit 0), and paired performance qualification on exact final production bytes vs base `79b4d85c`: PL/SQL `api-parameters` 95% CI `[-17.95%, -5.41%]` (`passes: true`); broad frozen `cli` (128 files, `--pairs 40` after noisy 20-pair runs under host load >22, prior runs retained) 95% CI `[-5.57%, +1.78%]` (`passes: true`).
+- Minor non-blocking follow-up from refactor pass: `lizard_languages/plsql.py` lines 30–32 docstring still describes old parameter-counting behavior.
 
 ## Readiness review
 
