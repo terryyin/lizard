@@ -79,6 +79,11 @@ class _ObjectExpressionBrace(str):
 
 
 _OBJECT_EXPRESSION = _ObjectExpressionBrace('{')
+_OBJECT_EXPRESSION_END = _ObjectExpressionBrace(']')
+
+
+class _LogicalAfterObject(str):
+    """A sequence that continues through an object operand."""
 
 
 # ---------------------------------------------------------------------------
@@ -175,7 +180,7 @@ class _Counter(object):  # pylint: disable=R0902
                 not _is_markup(token):
             opener, function = openers.pop()
             if opener is _OBJECT_EXPRESSION:
-                return function, ']'
+                return function, _OBJECT_EXPRESSION_END
             if opener == '${':
                 token = ','
         return function, token
