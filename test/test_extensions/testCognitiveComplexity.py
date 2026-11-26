@@ -905,6 +905,23 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
             with self.subTest(filename=filename):
                 self.assertEqual([1, 1, 0], cogc(filename, source))
 
+    def test_template_literal_types_in_call_arguments_are_not_runtime(self):
+        source = """
+            function empty<T>(value: string) { return value; }
+            function genericType<T extends boolean>() {
+              return empty<`${T extends true ? 'yes' : 'no'}`>('no');
+            }
+            function nestedType<T extends boolean>() {
+              return empty<Readonly<`${T extends true ? 'yes' : 'no'}`>>('no');
+            }
+            function compare(lower: string, flag: boolean) {
+              return lower < `${flag ? 'yes' : 'no'}`;
+            }
+        """
+        for filename in ('labels.ts', 'labels.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 0, 0, 1], cogc(filename, source))
+
     def test_runtime_ternary_and_conditional_type_inside_interpolation(self):
         self.assertEqual([0, 1], cogc("status.ts", """
             function label(value: unknown) {
