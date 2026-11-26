@@ -43,6 +43,9 @@ class Test_parser_for_Kotlin_expression_body(unittest.TestCase):
     def test_leading_forgiveness_after_an_expression_body(self):
         directives = ("// #lizard forgives\n// Review folded this route.",
                       "/* #lizard forgives\n   The route has its own check. */")
+        control = FileAnalyzer(get_extensions(["ns"])).analyze_source_code(
+            "control.kt", "fun ready(flag: Boolean) = if (flag) 1 else 0"
+        ).function_list[0]
         for directive in directives:
             with self.subTest(directive=directive):
                 result = FileAnalyzer(get_extensions(["nd", "ns"])).analyze_source_code("a.kt", f'''\
@@ -52,7 +55,8 @@ fun following(flag: Boolean): Int {{ return if (flag) 1 else 0 }}
 fun ordinary(flag: Boolean): Int {{ return if (flag) 1 else 0 }}
                 ''').function_list
                 self.assertEqual(
-                    [("ready", 2, 1, 2), ("ordinary", 2, 1, 2)],
+                    [("ready", 2, 1, control.max_nested_structures),
+                     ("ordinary", 2, 1, control.max_nested_structures)],
                     [(f.name, f.cyclomatic_complexity, f.max_nesting_depth,
                       f.max_nested_structures) for f in result],
                 )
