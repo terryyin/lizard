@@ -95,6 +95,28 @@ function averageWords(length, label, fallback) {
                     [('isInPrefix', 2, 27), ('exceedsPrefix', 1, 23), ('averageWords', 2, 27)],
                     [(f.name, f.cyclomatic_complexity, f.token_count) for f in functions])
 
+    def test_regex_operands_keep_only_real_decisions(self):
+        cases = (
+            ('"" + /colou?r/.source', 1, 12, 0),
+            ('n < /colou?r/.source.length', 1, 14, 0),
+            ('n > /colou?r/.source.length', 1, 14, 0),
+            ('n / /colou?r/.source.length', 1, 14, 0),
+            ('n > /colou?r/.source.length ? n : 0', 2, 18, 1),
+            ('n < 10 && n > /colou?r/.source.length', 2, 18, 1),
+            ('n++ / (n || 1) / 100', 2, 17, 1),
+            ('n > 1 && n < 4 ? n / 2 : 0', 3, 20, 2),
+        )
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        for prefix in ('', 'async function ready() { return true; }\n'):
+            for expression, ccn, tokens, cognitive in cases:
+                for suffix in self.script_extensions:
+                    with self.subTest(expression=expression, suffix=suffix, prefix=prefix):
+                        source = prefix + f'function sample(n){{return {expression};}}'
+                        function = analyzer.analyze_source_code('sample.' + suffix, source).function_list[-1]
+                        self.assertEqual(('sample', ccn, tokens, cognitive), (
+                            function.name, function.cyclomatic_complexity,
+                            function.token_count, function.cognitive_complexity))
+
     def test_top_level_await_does_not_turn_regex_end_into_a_divisor(self):
         source = '''
 const active = await / /g.test(format(() => enabled ? primary : fallback)) / divider;
@@ -130,14 +152,23 @@ function average(text, total) {{
                                           extensions=('js', 'cjs', 'mjs'))
 
     def test_division_after_a_generic_type_assertion(self):
-        source = '''\
+        cases = (
+            ('(scale || 1) / 100', 2, 27),
+            ('"text/?".length / 100', 1, 25),
+            ('/colou?r/.source.length', 1, 25),
+        )
+        for prefix in ('', 'async function ready() { return true; }\n'):
+            for divisor, ccn, tokens in cases:
+                with self.subTest(divisor=divisor, prefix=prefix):
+                    source = prefix + f'''\
 type Unit<T> = number;
-function proportion(total: number, scale: number) {
-  return total as Unit<'cent'> / (scale || 1) / 100;
-}
+function proportion(total: number, scale: number) {{
+  return total as Unit<'cent'> / {divisor};
+}}
 '''
-        function, = analyze_file.analyze_source_code('amount.ts', source).function_list
-        self.assertEqual((2, 27), (function.cyclomatic_complexity, function.token_count))
+                    function = analyze_file.analyze_source_code('amount.ts', source).function_list[-1]
+                    self.assertEqual(('proportion', ccn, tokens), (
+                        function.name, function.cyclomatic_complexity, function.token_count))
 
     def test_whitespace_before_regex_preserves_lines(self):
         source = (
