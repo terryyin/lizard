@@ -85,7 +85,7 @@ class LizardExtension(object):  # pylint: disable=R0903
 
                 # Handle logical operators && and || within conditions
                 elif token in ('&&', '||'):
-                    if context.get_in_condition():
+                    if context.get_in_condition() or (keep_condition and context.in_condition_lambda()):
                         # Only add nesting depth for the first logical operator in a condition
                         # Subsequent && or || operators in the same condition don't add depth
                         if not context.get_logical_operator_added():
@@ -173,7 +173,12 @@ class NDFileInfoAddition(FileInfoBuilder):
         levels = self.current_function.levels_awaiting_body
         self.current_function.levels_awaiting_body = 0
         self.current_function.control_header_depth = None
+        self.current_function.logical_operator_added = False
         return self.add_nd_condition(-levels)
+
+    def in_condition_lambda(self):
+        levels = self.current_function.block_levels
+        return bool(levels and isinstance(levels[-1], _ConditionBrace))
 
     def set_in_condition(self, in_condition):
         self.current_function.in_condition = in_condition
@@ -250,37 +255,66 @@ class _ConditionBrace:  # pylint: disable=R0903
 class _ConditionLambdaBrace:  # pylint: disable=R0903
     """Find lambda body braces while a C++ or Java control header is open."""
 
-    _OPERAND_STARTS = frozenset(('(', ',', '=', '&&', '||', '!', '?', ':', '{'))
+    _OPERAND_STARTS = frozenset((
+        '(', '[', '{', ',', ';', '?', ':', '=', 'return', 'co_return',
+        '&&', '||', '!', '~', '==', '!=', '<', '<=', '>', '>=', '<=>',
+        '+', '-', '*', '/', '%', '&', '|', '^', '<<', '>>',
+    ))
     _GROUPS = {'(': ')', '[': ']', '{': '}'}
 
     def __init__(self, cpp):
         self.cpp = cpp
         self.previous = None
         self.head = False
+        self.capture = False
         self.closers = []
+        self.requires_count = 0
 
     def read(self, token):
         previous, self.previous = self.previous, token
         if not self.cpp:
             return previous == '->' and token == '{'
         if self.closers:
-            if token == '[' and previous == '[' and self.closers == [']']:
-                self.head = False  # C++ attribute, not a capture list
-            if token in self._GROUPS:
-                self.closers.append(self._GROUPS[token])
-            elif token == self.closers[-1]:
-                self.closers.pop()
+            self._read_group(token, previous)
         elif self.head:
-            if token == '{':
+            return self._read_declarator(token)
+        elif token == '[' and previous in self._OPERAND_STARTS:
+            self.head = self.capture = True
+            self.closers.append(']')
+            self.requires_count = 0
+        return False
+
+    def _read_group(self, token, previous):
+        if self.capture and token == '[' and previous == '[' and self.closers == [']']:
+            self.head = False
+        if token in self._GROUPS:
+            self.closers.append(self._GROUPS[token])
+        elif token == '<' and self.closers[-1] == '>':
+            self.closers.append('>')
+        elif token == '>>' and self.closers[-2:] == ['>', '>']:
+            del self.closers[-2:]
+        elif token == self.closers[-1]:
+            self.closers.pop()
+        if not self.closers:
+            self.capture = False
+
+    def _read_declarator(self, token):
+        if token == '{':
+            if self.requires_count > 1:
+                # A requires-expression in the constraint owns this group.
+                self.requires_count = 1
+                self.closers.append('}')
+            else:
                 self.head = False
                 return True
-            if token in ('(', '['):
-                self.closers.append(self._GROUPS[token])
-            elif token in (')', '}', ',', ';'):
-                self.head = False
-        elif token == '[' and previous in self._OPERAND_STARTS:
-            self.head = True
-            self.closers.append(']')
+        elif token in ('(', '['):
+            self.closers.append(self._GROUPS[token])
+        elif token == '<':
+            self.closers.append('>')
+        elif token == 'requires':
+            self.requires_count += 1
+        elif token in (')', '}', ',', ';'):
+            self.head = False
         return False
 
 
