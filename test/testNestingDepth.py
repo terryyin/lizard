@@ -26,6 +26,32 @@ class TestPHPNestingDepth(unittest.TestCase):
                 function, = analyzer.analyze_source_code('delivery.php', source).function_list
                 self.assertEqual(2, function.max_nesting_depth)
 
+    def test_elseif_branch_accepts_php_keyword_casing(self):
+        for keyword in ("ELSEIF", "eLsEiF"):
+            with self.subTest(keyword=keyword):
+                source = f"""<?php
+                function deliveryFee($trial, $discount, $active) {{
+                    if ($trial) {{ return 0; }}
+                    {keyword} ($discount) {{
+                        if ($active) {{ return 2; }}
+                    }}
+                    return 1;
+                }}
+                """
+                analyzer = FileAnalyzer(get_extensions(['nd']))
+                function, = analyzer.analyze_source_code('delivery.php', source).function_list
+                self.assertEqual(2, function.max_nesting_depth)
+
+    def test_cased_elseif_member_and_named_argument(self):
+        source = """<?php
+        function choose($pricing) {
+            return $pricing->ELSEIF(discount(eLsEiF: true));
+        }
+        """
+        analyzer = FileAnalyzer(get_extensions(['nd']))
+        function, = analyzer.analyze_source_code('delivery.php', source).function_list
+        self.assertEqual(0, function.max_nesting_depth)
+
 
 class TestCppNestingDepth(unittest.TestCase):
 
