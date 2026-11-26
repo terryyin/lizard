@@ -145,6 +145,22 @@ failed""",
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
+    def test_multiline_default_keeps_escaped_parameter_names(self):
+        functions = get_kotlin_function_list('''\
+fun notice(
+    `subject  line`: String,
+    `retry-count (max), !`: Int,
+    message: String = """Try
+later""".trimIndent(),
+): String {
+    return "$message!"
+}
+''')
+        self.assertEqual(
+            [("notice", ["subject  line", "retry-count (max), !", "message"], 3)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_one_function_with_return_value(self):
         result = get_kotlin_function_list('''
             fun sayGoodbye(): String {return "bye"}
