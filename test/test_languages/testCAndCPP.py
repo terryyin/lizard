@@ -763,6 +763,19 @@ auto make_box(bool ready) -> decltype(Box{}) {
         self.assertEqual(1, len(result))
         self.assertEqual("A::foo", result[0].name)
 
+    def test_parenthesized_trailing_constraint(self):
+        result = get_cpp_function_list("""template<class T> struct Cache {
+    unsigned capacity() const noexcept
+        requires (sizeof(T) > 1) {
+        return sizeof(T);
+    }
+};
+""")
+
+        self.assertEqual(
+            [("Cache::capacity", 2, 5)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
     def test_aggregate_initialization_with_double(self):
         result = get_cpp_function_list('''
             struct Bar {
