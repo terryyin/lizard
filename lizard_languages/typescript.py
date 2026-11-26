@@ -340,7 +340,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
                         if token in _NAME_FOLLOWERS or (
                                 token[0] in _PARAMETER_STARTS
-                                and state.member_name_context()):
+                                and state.member_name_context(keyword)):
                             keyword = _MemberName(keyword)
                         yield keyword
                         keyword = None

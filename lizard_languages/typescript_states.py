@@ -2,7 +2,7 @@
 
 from .code_reader import CodeStateMachine
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
-from .javascript_expression import JSXChildBrace
+from .javascript_expression import JSXChildBrace, active_js_state
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
@@ -110,6 +110,16 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self.context.current_function.abandoned = True
         self.context.forgive = True
         self._pop_function_from_stack()
+
+    def member_name_context(self, name=None):
+        if super().member_name_context():
+            return True
+        state = active_js_state(self)
+        annotation = state._state
+        return (name is not None and state.as_class
+                and isinstance(annotation, TypeScriptTypeAnnotationStates)
+                and state.saved_state == state._expecting_body_after_return_type
+                and annotation.ends_before_line_token(name))
 
     def end_expression_before(self, token):
         annotation = self._state
