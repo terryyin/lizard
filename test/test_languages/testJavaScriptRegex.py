@@ -126,6 +126,28 @@ class TestJavaScriptRegex(unittest.TestCase):
         )
         self.assert_functions(source, [('a', 1, 1, 2), ('b', 2, 2, 1)])
 
+    def test_return_regex_after_a_decimal_with_a_trailing_dot(self):
+        source = '''
+function supportsInterpolation(text) {
+  const startAt = 1_000.
+  return /{/.test(text.slice(startAt)) && text.endsWith('}');
+}
+function label(text) { return text.trim(); }
+'''
+        self.assert_functions(source, [('supportsInterpolation', 2, 5, 2),
+                                       ('label', 6, 6, 1)])
+
+    def test_dot_after_an_operand_still_allows_keyword_member_division(self):
+        for receiver in ('settings2.', '1..', '1e-3.', '1.3.', '0x10.'):
+            with self.subTest(receiver=receiver):
+                source = f'''
+function divide(settings2, count, fallback) {{
+  return {receiver}
+    return / (count || fallback) / 100;
+}}
+'''
+                self.assert_functions(source, [('divide', 2, 5, 2)])
+
     def test_arrow_regex_exposes_nested_condition(self):
         source = (
             'function b(xs) { return xs.filter(s => /"/.test(s) || s === "a"); }\n'
