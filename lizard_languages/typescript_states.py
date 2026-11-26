@@ -1,7 +1,8 @@
 """Shared JavaScript and TypeScript runtime state dispatch."""
 
 from .code_reader import CodeStateMachine
-from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin, read_recursive_local_bindings
+from .javascript_bindings import read_recursive_local_bindings
+from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
 from .javascript_expression import JSXChildBrace, ends_expression
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
@@ -141,10 +142,6 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._prev_token = '.'
             return
         if token == 'function' and not getattr(token, 'is_member_name', False):
-            self._explicit_function = hasattr(self.context, 'bare_recursive_functions')
-            self._local_function_declaration = self._explicit_function and (
-                self._prev_token in ('', ';', '{', '}')
-                or self.context.newline and ends_expression(self._prev_token))
             if self.started_function and not self.as_object:
                 self._pop_function_from_stack()
             self._signature = True
@@ -256,6 +253,11 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._in_prop_value = self._default_value = False
         if token == '<':
             self._generic_prefix = self._prev_token
+        if token == 'function' and self._state == self._function:
+            self._explicit_function = hasattr(self.context, 'bare_recursive_functions')
+            self._local_function_declaration = self._explicit_function and (
+                self._prev_token in ('', ';', '{', '}')
+                or self.context.newline and ends_expression(self._prev_token))
         self.last_tokens = token
         # Don't overwrite _prev_token if it's 'new' (preserve for next token)
         if self._prev_token != 'new':
