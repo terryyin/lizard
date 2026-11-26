@@ -1,7 +1,8 @@
 """Shared JavaScript and TypeScript runtime state dispatch."""
 
 from .code_reader import CodeStateMachine
-from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
+from .javascript_bindings import (
+    BindingSummary, JavaScriptBindings, JavaScriptBindingsMixin)
 from .javascript_expression import JSXChildBrace
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
@@ -18,6 +19,8 @@ _TAIL_TOKENS = frozenset(('`', ':', ',', '!'))
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        JavaScriptObjectsMixin, TypeScriptDeclarationsMixin,
                        CodeStateMachine):
+    _property_formals = None
+
     def __init__(self, context):
         super().__init__(context)
         self.last_tokens = ''
@@ -48,9 +51,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_condition = False  # Inside `if (...)` / `for (...)`
 
     def __call__(self, token, reader=None):
-        if self._binding_candidate:
+        bindings = self._binding_candidate or self._property_formals
+        if bindings:
             # Only named-formal readers need events for initializer dispatch.
-            self._binding_candidate.read_token(token, report=False)
+            bindings.read_token(token, report=False)
         return CodeStateMachine.__call__(self, token, reader)
 
     def next(self, state, token=None):
@@ -247,6 +251,20 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         # Don't overwrite _prev_token if it's 'new' (preserve for next token)
         if self._prev_token != 'new':
             self._prev_token = token
+
+    def _read_quoted_property_group(self):
+        """Collect possible parameters while the group reads expressions."""
+        group = self.__class__(self.context)
+        group._call_group = True
+        parameters = []
+        group._property_formals = JavaScriptBindings(')', parameters=parameters)
+
+        def after_group(token):
+            if token == '=>':
+                self._pending_bindings = BindingSummary(0, 0, 0, parameters)
+            self.next(self._state_global, token)
+
+        self.sub_state(group, lambda: self.next(after_group))
 
     def _statement_block_start(self):
         """Whether a '{' here starts a statement: right after a ';' or at

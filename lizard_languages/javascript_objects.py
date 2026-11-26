@@ -97,6 +97,10 @@ class JavaScriptObjectsMixin:
             name = self.last_tokens
             if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
                 self.function_name = name
+            elif (name == self.last_token and name.startswith(('"', "'"))
+                  and name[-1] == name[0]):
+                # This colon introduces the value after a quoted key.
+                self._prev_token = token
             self._in_prop_value = True
             return True
         elif (token == '<' or token.startswith('<') and token.endswith('>')) and (
@@ -119,7 +123,10 @@ class JavaScriptObjectsMixin:
             if self._in_prop_value and self.last_tokens != '=' and (
                     not self.function_name
                     or self.last_tokens != self.function_name):
-                self._read_parenthesis_group()
+                if self._prev_token == ':' and self.last_tokens.startswith(('"', "'")):
+                    self._read_quoted_property_group()
+                else:
+                    self._read_parenthesis_group()
                 self._prev_token = token
                 return True
             # Only "field = (" and "key: (" can open a group; a "(" after
