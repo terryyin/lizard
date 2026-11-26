@@ -20,6 +20,13 @@ _BODY_AND_TAIL_TOKENS = _TAIL_TOKENS | {'{'}
 _FUNCTION_OPERAND_PREFIXES = frozenset(('=', '||', '&&', '??', '?'))
 
 
+class _ConditionalColon(str):
+    """The colon that starts the alternate of a conditional expression."""
+
+
+_CONDITIONAL_COLON = _ConditionalColon(':')
+
+
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        JavaScriptObjectsMixin, TypeScriptDeclarationsMixin,
                        CodeStateMachine):
@@ -119,16 +126,23 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 if token != ':':
                     if token == '?' or not self.as_object:
                         self._ternary_depth += 1
+                        if token == 'case':
+                            self._case_colon_depth = self._ternary_depth
                 elif self._ternary_depth or (
                         self.last_tokens == 'default' and not self.as_object):
                     # Runtime colons must not swallow a following function type.
+                    previous = token
                     if self.last_tokens != 'default':
                         if (self._expression_body and self._ternary_depth
                                 == self._expression_ternary_depth):
                             self._pop_function_from_stack()
+                        if self._ternary_depth == self._case_colon_depth:
+                            self._case_colon_depth = 0
+                        else:
+                            previous = _CONDITIONAL_COLON
                         self._ternary_depth -= 1
                     self.last_tokens = token
-                    self._prev_token = token
+                    self._prev_token = previous
                     return
         if self.as_object and self._handle_object_member(token):
             return
@@ -309,6 +323,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self.next(self._state_global)
 
     _async_function_operand = False
+    _case_colon_depth = 0
     _function_operand = False
     function_operand_body = False
 
@@ -322,4 +337,5 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if previous == 'async':
             return not context.newline and self._async_function_operand
         return (previous in _FUNCTION_OPERAND_PREFIXES
+                or previous == ':' and self._prev_token is _CONDITIONAL_COLON
                 or previous in ('return', 'yield', 'throw') and not context.newline)
