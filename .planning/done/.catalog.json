@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-075_r-raw-literal-delimiters.json",
+      "identity": "SEED-075#r-raw-literal-delimiters",
+      "completedAt": "2026-11-26T11:05:38.066Z",
+      "blob": "7d8dc08e5e2eaa54b215c572e9aba852e0526b56"
+    },
+    {
       "fileName": "SEED-075_kotlin-adjacent-nested-comments.json",
       "identity": "SEED-075#kotlin-adjacent-nested-comments",
       "completedAt": "2026-11-26T10:04:47.535Z",

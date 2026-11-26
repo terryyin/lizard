@@ -34,8 +34,10 @@ class RReader(CodeReader, ScriptLanguageMixIn):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         """Generate tokens for R code with R-specific patterns."""
-        # R-specific token patterns
+        # R-specific token patterns. The raw-string alternative is one token
+        # and must precede generic strings, which stop at the first quote.
         r_patterns = (
+            r"""|[rR](?P<rq>["'])(?P<rd>-*)(?:\(.*?\)|\[.*?\]|\{.*?\}|\|.*?\|)(?P=rd)(?P=rq)"""
             r"|<-"          # Assignment operator <-
             r"|->"          # Assignment operator ->
             r"|%[a-zA-Z_*/>]+%"  # Special operators like %in%, %*%, %>%, %/%, etc.
