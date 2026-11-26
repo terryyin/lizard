@@ -49,6 +49,10 @@ class RustReader(CodeReader, CCppCommentsMixin):
             # char literals, before lifetimes, which also start with `'`
             r"|(?:'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])')"
             r"|(?:'\w+\b)")  # lifetimes, labels
+        if 'r"' in source_code or 'r#' in source_code:
+            addition += _RAW_STRING_TOKEN
+            if token_class is None:
+                token_class = _rust_token_text
         source_code = _flatten_nested_comments(source_code)
         if 'quote' not in source_code or _UNRECOGNIZED_RAW_START.search(source_code):
             return CodeReader.generate_tokens(source_code, addition, token_class)
