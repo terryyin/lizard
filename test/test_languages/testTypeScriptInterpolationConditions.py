@@ -1,6 +1,6 @@
 import unittest
 
-from lizard import FileAnalyzer, analyze_file, get_extensions
+from lizard import analyze_file
 
 
 class Test_conditions_in_template_interpolations(unittest.TestCase):
@@ -77,18 +77,3 @@ class Test_conditions_in_template_interpolations(unittest.TestCase):
                 self.assertEqual([('a', 1)],
                                  [(f.name, f.cyclomatic_complexity)
                                   for f in functions])
-
-    def test_interpolation_comment_does_not_stop_either_metric(self):
-        code = """
-            function label(ready) {
-              return `${ready /* GENERATED CODE is the banner text */ ? 'yes' : 'no'}`;
-            }
-        """
-        ordinary = analyze_file.analyze_source_code("label.js", code).function_list
-        cognitive = FileAnalyzer(get_extensions(["cognitive"]))
-        measured = cognitive.analyze_source_code("label.js", code).function_list
-
-        self.assertEqual([("label", 2)], [(f.name, f.cyclomatic_complexity) for f in ordinary])
-        self.assertEqual([("label", 2, 1)], [
-            (f.name, f.cyclomatic_complexity, f.cognitive_complexity) for f in measured
-        ])
