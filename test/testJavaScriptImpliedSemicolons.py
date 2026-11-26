@@ -59,6 +59,18 @@ function continueExpression(config) {
                 self.assertEqual(1, next(f.max_nesting_depth for f in functions
                                          if f.name == 'setup'))
 
+    def test_base_class_brace_does_not_end_the_derived_class_expression(self):
+        source = """\
+function setup(config, install, start) {
+  if (install) config.factory = () => class Session extends class Parent {}
+  {}
+  if (start) config.run()
+}
+"""
+        boundary = StatementEnds()
+        FileAnalyzer(get_extensions([boundary])).analyze_source_code('session.js', source)
+        self.assertNotIn(('{', 3), boundary.ends)
+
     def test_nesting_depth_and_nested_structures_together(self):
         for extensions in (['nd', 'ns'], ['ns', 'nd']):
             functions = FileAnalyzer(get_extensions(extensions)) \
