@@ -135,6 +135,22 @@ class TestSvelte(unittest.TestCase):
 ''')
         self.assertEqual([('reset', 3, 5, 1)], function_summaries(functions))
 
+    def test_script_text_in_markup_expressions_is_not_a_script_block(self):
+        for expression in (
+                '{@html `<script>function init() { load(); }</script>`}',
+                '{"<script>function init() { load(); }</script>"}',
+                '{/* <script>function init() { load(); }</script> */ label}'):
+            with self.subTest(expression=expression):
+                functions = get_svelte_function_list(expression + '''
+<script>
+  const label = 'Preview';
+  function format(value) { return value.trim(); }
+</script>
+<p>{format(label)}</p>
+''')
+                self.assertEqual([('format', 4, 4, 1)],
+                                 function_summaries(functions))
+
     def test_typescript_script_reads_class_field_annotations(self):
         typed = get_svelte_function_list(
             '<script lang="ts">'
