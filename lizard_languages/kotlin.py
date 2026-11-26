@@ -102,6 +102,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         'actual', 'context', 'import', 'package',
     } | _ACCESSORS | _ACCESSOR_MODIFIERS
     _HEADER_OPERATORS = {':', 'where', '.', '->', ',', '<', '(', '&', 'suspend'}
+    _PARAMETER_DELIMITERS = {'(': 1, '[': 1, '{': 1, ')': -1, ']': -1, '}': -1}
 
     def __init__(self, context, in_when_cases=False, accessor_declaration_scope=None):
         super().__init__(context)
@@ -290,16 +291,16 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         if not self._receiver_type_end(token):
             super()._expect_function_dec(token)
 
-    @CodeStateMachine.read_inside_brackets_then("()", "_expect_function_impl")
     def _function_dec(self, token):
-        if token in ('(', ')'):
-            return
-        if token == ',' and self.br_count > 1:
-            # A function type or default call can have its own arguments.
+        self.br_count += self._PARAMETER_DELIMITERS.get(token, 0)
+        if self.br_count == 0:
+            self._state = self._expect_function_impl
+        elif token == ',' and self.br_count > 1:
+            # A function type, default call or lambda can have its own commas.
             function = self.context.current_function
             function.add_to_long_name(" ,")
             function.full_parameters[-1] += " ,"
-        else:
+        elif token not in ('(', ')'):
             self.context.parameter(token)
 
     def _receiver_type_end(self, token):
