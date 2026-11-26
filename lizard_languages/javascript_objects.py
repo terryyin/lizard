@@ -1,5 +1,6 @@
 """JavaScript object and class members, including computed method names."""
 
+from .javascript_bindings import BindingSummary, JavaScriptBindings
 from .javascript_expression import active_js_state, ends_expression
 from .javascript_statements import opens_object
 
@@ -202,6 +203,28 @@ class JavaScriptObjectsMixin:
             return False
         # The token of a regular expression starts with a space.
         return opens_object(previous.lstrip())
+
+    def _read_quoted_property_group(self):
+        """Collect possible parameters while the group reads expressions."""
+        group = self.__class__(self.context)
+        group._call_group = True
+        parameters = []
+        formals = group._property_formals = JavaScriptBindings(')', parameters=parameters)
+        owner = self.context.current_function
+        complexity = owner.cyclomatic_complexity
+
+        def after_group(token):
+            if token in ('=>', ':'):
+                self._pending_bindings = BindingSummary(
+                    formals.defaults - group._confirmed_binding_defaults,
+                    owner.cyclomatic_complexity - complexity, 0, parameters)
+            if token == ':':
+                self.next(self._state_global)
+                self._consume_type_annotation()
+                return
+            self.next(self._state_global, token)
+
+        self.sub_state(group, lambda: self.next(after_group))
 
     def _collect_computed_name(self):
         # Collect tokens between [ and its ]
