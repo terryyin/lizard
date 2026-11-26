@@ -44,12 +44,18 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         enders = KotlinExpressionBody.ENDERS
         statement_ends = self._statement_ends
         tokens = self._mark_labels(tokens)
-        for index, token in enumerate(tokens):
+        indexed_tokens = enumerate(tokens)
+        for index, token in indexed_tokens:
             if bodies:
                 if token == '\n':
                     line_start = True
-                elif ((line_start or token in enders)
-                      and not (line_start and token[:2] in ('//', '/*'))):
+                elif line_start or token in enders:
+                    if line_start and token[:2] in ('//', '/*'):
+                        if '#lizard forgive' in token:
+                            line_start = not (yield from self._read_forgiven_declaration(tokens, indexed_tokens, index))
+                        else:
+                            yield token
+                        continue
                     ended = False
                     while bodies and bodies[-1].ends_before(token, line_start, tokens, index):
                         bodies[-1].end()
@@ -67,6 +73,38 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
             yield token
         while bodies:
             bodies[-1].end()
+
+    def _read_forgiven_declaration(self, tokens, indexed_tokens, index):
+        comment = self.get_comment_from_token(tokens[index]).strip()
+        following = None
+        if (comment.startswith('#lizard forgive')
+                and not comment.startswith(('#lizard forgive global', '#lizard forgives('))
+                and 'GENERATED CODE' not in comment):
+            following = _next_significant(tokens, index + 1)
+        ended = False
+        if following is not None and tokens[following] in KotlinStates._DECLARATION_STARTS:
+            target = tokens[following]
+            bodies = self._expression_bodies
+            # Close before the comment reaches the shared forgiveness counter.
+            while bodies and bodies[-1].ends_before(target, True, tokens, following):
+                bodies[-1].end()
+                ended = True
+        yield tokens[index]
+        if not ended:
+            return False
+
+        for position, token in indexed_tokens:
+            if position == following:
+                break
+            yield token
+        # The intervening comments and line breaks are not statement tokens.
+        statement_ends = self._statement_ends
+        if statement_ends is not None:
+            statement_ends.before_token = True
+        yield target
+        if statement_ends is not None:
+            statement_ends.before_token = False
+        return True
 
     def _mark_labels(self, tokens):
         tokens = self.mark_member_names(
