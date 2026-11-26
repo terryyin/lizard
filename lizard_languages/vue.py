@@ -21,7 +21,7 @@ _MARKUP = re.compile(
 _ATTRIBUTE = re.compile(
     r'''([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]*)))?''')
 _SCRIPT_END_LOWERCASE = re.compile(r'</script(?=[\s/>]|\Z)')
-_VUE_SCRIPT_END = re.compile(r'</(?ai:script)(?=[\t\n\f\r >])')
+_SCRIPT_END = re.compile(r'</(?ai:script)(?=[\t\n\f\r >])')
 # In a script, a closing tag in a string, a comment or a template is text.
 _SCRIPT_TEXT_OR_END = re.compile(
     r'/\*.*?\*/|' + LINE_COMMENT
@@ -55,16 +55,16 @@ class _ScriptTag(str):
         return (_attribute(self, 'lang') or 'js').lower()
 
 
-def _script_blocks(source, end_pattern):
+def _script_blocks(source, find_blocks, end_pattern):
     """(tag start, tag, code, code end) of each top-level script block."""
-    key = (id(source), end_pattern)
+    key = (id(source), find_blocks, end_pattern)
     cached = _BLOCK_CACHE.get(key)
     if cached is not None and cached[0] is source:
         return cached[1]
     blocks = [
         (tag_start, _ScriptTag(source[tag_start:code_start]),
          source[code_start:code_end], code_end)
-        for tag_start, code_start, code_end in _find_script_blocks(source, end_pattern)]
+        for tag_start, code_start, code_end in find_blocks(source, end_pattern)]
     _BLOCK_CACHE[key] = (source, blocks)
     return blocks
 
@@ -159,7 +159,8 @@ class VueReader(TypeScriptReader):
     # A lang="tsx" block keeps whole templates, as in a .tsx file.
     _scan_atomic_templates = True
     script_tokens = staticmethod(TypeScriptReader.generate_tokens)
-    _script_end_pattern = _VUE_SCRIPT_END
+    _script_end_pattern = _SCRIPT_END
+    find_script_blocks = staticmethod(_find_script_blocks)
 
     def __init__(self, context):
         super(VueReader, self).__init__(context)
@@ -169,7 +170,8 @@ class VueReader(TypeScriptReader):
         """The code of the script blocks, tokenized by their lang, and the
         tokens of the markup around them."""
         pos = 0
-        for tag_start, tag, code, code_end in _script_blocks(source_code, cls._script_end_pattern):
+        blocks = _script_blocks(source_code, cls.find_script_blocks, cls._script_end_pattern)
+        for tag_start, tag, code, code_end in blocks:
             yield from cls.markup_tokens(source_code, pos, tag_start)
             yield from cls.tag_tokens(tag)
             tokenizer = (TSXReader.generate_tokens if tag.lang in ('tsx', 'jsx')
