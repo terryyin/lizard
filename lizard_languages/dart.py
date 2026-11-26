@@ -115,7 +115,8 @@ class DartReader(CLikeReader):
             addition,
             token_class
         )
-        if _POSSIBLE_NULLABLE_GENERIC.search(source_code):
+        # Nullable metric markers belong to the default string token stream.
+        if token_class is None and _POSSIBLE_NULLABLE_GENERIC.search(source_code):
             return _mark_nullable_questions(tokens)
         return tokens
 
