@@ -287,6 +287,20 @@ class A {
                          [(function.name, function.start_line, function.end_line)
                           for function in result])
 
+    def test_negative_ternary_fallback_preserves_constructor(self):
+        for fallback in ('-1', '-.5'):
+            with self.subTest(fallback=fallback):
+                result = get_java_function_list(f'''class ScreenConfig {{
+    private final double scale = Boolean.getBoolean("uiScale") ? readScale() : {fallback};
+
+    ScreenConfig() {{}}
+    private double readScale() {{ return 2; }}
+}}
+''')
+                self.assertEqual(
+                    [('ScreenConfig::ScreenConfig', 4, 4), ('ScreenConfig::readScale', 5, 5)],
+                    [(function.name, function.start_line, function.end_line) for function in result])
+
     def test_method_call_in_anonymous_ternary_field_preserves_method(self):
         result = get_java_function_list("""class EscaperFactory {
     interface Escaper { char[] escapeUnsafe(char c); }
