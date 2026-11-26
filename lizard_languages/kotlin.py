@@ -2,10 +2,43 @@
 Language parser for Apple Swift
 '''
 
+import re
+
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine
 from .golike import GoLikeStates
 from .swift import SwiftReplaceLabel
+
+
+_KOTLIN_TRIVIA = re.compile(
+    r'//[^\n]*|""".*?"""|"(?:\\.|[^"\\])*"|'
+    r"'(?:\\.|[^'\\])*'|`[^`\n]*`|/\*", re.S)
+_COMMENT_DELIMITER = re.compile(r'/\*|\*/')
+
+
+def _flatten_nested_comments(source):
+    """Preserve positions while hiding inner closers from the shared lexer."""
+    if '/*' not in source:
+        return source
+    pieces = []
+    start = 0
+    for match in _KOTLIN_TRIVIA.finditer(source):
+        if match.start() < start or match.group() != '/*':
+            continue
+        depth = 1
+        for delimiter in _COMMENT_DELIMITER.finditer(source, match.end()):
+            depth += 1 if delimiter.group() == '/*' else -1
+            if depth == 0:
+                end = delimiter.end()
+                pieces.append(source[start:match.end()])
+                pieces.append(source[match.end():end - 2].replace('*/', '* '))
+                pieces.append('*/')
+                start = end
+                break
+        else:
+            break
+    pieces.append(source[start:])
+    return ''.join(pieces)
 
 
 class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
@@ -32,7 +65,7 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         return CodeReader.generate_tokens(
-            source_code,
+            _flatten_nested_comments(source_code),
             r'|""".*?""""*' +
             r"|`[^`\r\n]+`" +
             r"|\w+\?" +
