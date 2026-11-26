@@ -60,3 +60,21 @@ Source review: SEED-077#process-prs-past-48h at frozen master `f7a11e5248a388c1c
 
 - `if (a ? b : 0) {}` followed by a ternary in a `for` header scores 4, not 2, in .js, .ts, .jsx, .vue, .c, .java and .cs.
 - #684's JavaScript tests pass unchanged.
+
+<a id="c-family-pr-timing"></a>
+
+### Qualify and merge the held C-family PRs
+
+**Identity:** SEED-078#c-family-pr-timing
+
+**Beneficiary:** C, C++, Java, C#, Objective-C and Dart users. These PRs fix C++ raw strings with custom delimiters (#619) and `&&` in rvalue references being counted as a decision (#681, #688).
+
+**Goal:** Merge [#619](https://github.com/terryyin/lizard/pull/619), [#681](https://github.com/terryyin/lizard/pull/681) and [#688](https://github.com/terryyin/lizard/pull/688) once paired timing on a quiet machine shows each affected workload within the 3% bound. Otherwise, correct them first.
+
+**Scope:** SEED-077 reviewed all three and accepted them for correctness. #681 contains #688, so merge #688 first. The developer held them because the host load kept the paired timing inconclusive. The Java and C++ point estimates were about +6%. These changes touch the shared C-like tokenizer (#619 adds a back-reference alternative) and add an event filter for every C/C++ token (#681, #688). Time the C/C++, Java, C# and Dart API workloads, `-Eignoreassert`, nonstrict, and the broad CLI against current master. Use the corpora rebuilt from base test snippets plus the PRs' authored cases. Note for review: #681 and #688 shift CCN noticeably on real C++ code. Across 4,005 C++ files, the contributor measured 1,025 functions losing 2,107 CCN points in total.
+
+**Key examples:**
+
+- `R"d(… if (x) …)d"` in C++ adds no decision. The next function keeps its metrics.
+- `void f(T&& x)` adds no CCN. `a && (b = c)` still counts one.
+- Each affected workload's paired 95% upper bound is below 3%.

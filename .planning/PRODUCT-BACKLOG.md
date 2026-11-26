@@ -6,10 +6,9 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
-- [Process open PRs and issues from the past 48 hours](seeds/SEED-077-process-prs-past-48h.md#process-prs-past-48h) — SEED-077#process-prs-past-48h
-
 ## Backlog list
 
+- [Qualify and merge the held C-family PRs](seeds/SEED-078-pr-batch-follow-ups.md#c-family-pr-timing) — SEED-078#c-family-pr-timing
 - [Keep PL/SQL Boolean operator casing equivalent in nonstrict mode](seeds/SEED-075-reader-corrections.md#plsql-nonstrict-case) — SEED-075#plsql-nonstrict-case
 - [Split the Ruby reader tests by topic](seeds/SEED-076-ruby-reader-test-topics.md#ruby-reader-test-topics) — SEED-076#ruby-reader-test-topics
 - [Measure ND from control structures only](seeds/SEED-078-pr-batch-follow-ups.md#nd-without-logical-operators) — SEED-078#nd-without-logical-operators
