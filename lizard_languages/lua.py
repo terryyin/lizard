@@ -48,6 +48,9 @@ class LuaStateMachine(RubylikeStateMachine):
         if token == "=":
             self.next(self._assigning)
             return
+        if token == "." and self.last_token is not None and self.last_token.isidentifier():
+            self.next(self._member_name)
+            return
         self.probable_function_name = token
         if token in self._STATE_TOKENS:
             RubylikeStateMachine._state_global(self, token)
@@ -62,6 +65,13 @@ class LuaStateMachine(RubylikeStateMachine):
             self.next(self._state_global)
             if token != "end":
                 self.sub_state(self.statemachine_clone())
+
+    def _member_name(self, token):
+        if token.isidentifier() and self.probable_function_name is not None:
+            self.probable_function_name += "." + token
+            self.next(self._state_global)
+        else:
+            self.next(self._state_global, token)
 
     def _assigning(self, token):
         if token == self.FUNC_KEYWORD:
