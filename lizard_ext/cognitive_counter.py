@@ -337,14 +337,12 @@ class _Counter(object):  # pylint: disable=R0902
         a call to the function itself and a ``break``/``continue`` label."""
         state = self.state
         function = self.function
-        member_receivers = self.member_receivers
-        lua_member = (state.prev == ':' and member_receivers is not None
-                      and ':' in member_receivers)
         # The reader may still be appending to the name (``A`` -> ``A::f``),
         # so it is compared on every candidate token.
         if token in function.name and (
                 token == function.unqualified_name
-                or (lua_member and function.name.endswith('.' + token))):
+                or (state.prev == ':' and self.member_receivers
+                    and ':' in self.member_receivers and function.name.endswith('.' + token))):
             if state.prev in _MEMBER_ACCESS:
                 calls = state.prev != '::' and state.prev2 in _SELF_REFERENCES
             else:
@@ -352,6 +350,7 @@ class _Counter(object):  # pylint: disable=R0902
                 calls = getattr(token, 'is_member_name', False) or not (
                     self.profile.reserved_structures
                     and self._is_structure(token))
+            member_receivers = self.member_receivers
             if member_receivers is not None and state.prev in member_receivers:
                 calls = state.member_receiver in member_receivers[state.prev]
                 if calls and state.prev == ':':
