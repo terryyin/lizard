@@ -1,6 +1,6 @@
 """TypeScript declarations and type syntax excluded from runtime functions."""
 
-from .typescript_type_annotation import TypeScriptTypeAliasStates, TypeScriptTypeAnnotationStates
+from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .javascript_expression import OPERAND_WORDS, ends_expression
 from .js_style_regex_context import _EXPRESSION_KEYWORDS
 
@@ -67,7 +67,7 @@ class TypeScriptDeclarationsMixin:
                         return False  # One packed type parameter list in TSX.
                     elif t == '=':
                         self.next(self._state_global)
-                        self._read_type_annotation(TypeScriptTypeAliasStates(self.context))
+                        self._consume_type_alias_body()
                     elif t == ';':
                         self.next(self._state_global)
                         return True
@@ -114,6 +114,15 @@ class TypeScriptDeclarationsMixin:
             return True
         return False
 
+    def _consume_type_alias_body(self):
+        annotation = TypeScriptTypeAliasStates(self.context)
+
+        def resume():
+            if annotation.saved_token:
+                self._replay_token(annotation.saved_token)
+
+        self.sub_state(annotation, resume)
+
     def _assertion_operand(self):
         """Assertions follow consumed operands, not expression/statement starts."""
         if (self.context.newline or not self._prev_token
@@ -152,13 +161,12 @@ class TypeScriptDeclarationsMixin:
         self.next(consume)
 
     def _consume_type_annotation(self):
-        self._read_type_annotation(TypeScriptTypeAnnotationStates(self.context))
+        typeStates = TypeScriptTypeAnnotationStates(self.context)
 
-    def _read_type_annotation(self, annotation):
         def callback():
-            if annotation.saved_token:
-                self._replay_token(annotation.saved_token)
-        self.sub_state(annotation, callback)
+            if typeStates.saved_token:
+                self._replay_token(typeStates.saved_token)
+        self.sub_state(typeStates, callback)
 
     def _read_runtime_colon(self):
         binding = self._binding_candidate
@@ -187,3 +195,30 @@ def _continues_alias_name(name, token):
         # Only a lexically split character can follow a complete word.
         return len(token) == 1 and not token.isalnum() and token not in '_$' and identifier_part
     return identifier_part or token in ('{', '}') and '\\' in name
+
+
+class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
+    """An alias consumes function types and stops before runtime calls."""
+
+    def __init__(self, context):
+        super().__init__(context)
+        self._after_type_parameters = False
+        self._import_type = False
+
+    def _state_global(self, token):
+        if not self._brackets and not token.isspace():
+            if (token == '(' and not self._expect_type
+                    and not (self._after_type_parameters or self._import_type)):
+                # An IIFE can begin on the line after a complete alias.
+                self.saved_token = token
+                self.statemachine_return()
+                return
+            self._after_type_parameters = self._expect_type and token[0] == '<'
+            self._import_type = token == 'import' and not self._qualified_type
+            if token == 'new' and not self._qualified_type:
+                # A constructor type has its own parameters and return arrow.
+                self._expect_type = True
+                return
+            if self._qualified_type:
+                self._expect_type = True
+        super()._state_global(token)
