@@ -3,8 +3,10 @@ This is an extension of lizard, that counts the 'Nesting Depth'
 in every function.
 """
 from lizard import FileInfoBuilder, FunctionInfo
+from lizard_languages.javascript_statements import ImpliedSemicolons
 
 DEFAULT_ND_THRESHOLD = 7
+_STATEMENT_EXPRESSION_SEPARATORS = frozenset(('=', ',', ':', '?'))
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -41,14 +43,14 @@ class LizardExtension(object):  # pylint: disable=R0903
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
-        if hasattr(reader, "indent_indicator"):
-            indent_indicator = reader.indent_indicator
-        else:
-            indent_indicator = ';'
+        indent_indicator = getattr(reader, 'indent_indicator', ';')
+        standalone_chains = (isinstance(implied_semicolons, ImpliedSemicolons)
+                             or not {'cpp', 'java'}.isdisjoint(getattr(reader, 'language_names', ())))
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
-        ).union(block_ends, block_starts, loops)
+        ).union(block_ends, block_starts, loops,
+                _STATEMENT_EXPRESSION_SEPARATORS if standalone_chains else ())
         context = reader.context
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
@@ -57,6 +59,9 @@ class LizardExtension(object):  # pylint: disable=R0903
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
             if token in depth_tokens:
+                if (standalone_chains and token in _STATEMENT_EXPRESSION_SEPARATORS
+                        and context.get_condition_depth() == 0):
+                    context.current_function.standalone_logical_added = False
                 if token in block_ends:
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:
@@ -82,9 +87,10 @@ class LizardExtension(object):  # pylint: disable=R0903
                         if not context.get_logical_operator_added():
                             l_depth = context.open_level()
                             context.set_logical_operator_added(True)
-                    else:
+                    elif not standalone_chains or not context.current_function.standalone_logical_added:
                         # Not in a condition, treat as regular nesting
                         l_depth = context.open_level()
+                        context.current_function.standalone_logical_added = standalone_chains
 
                 # Handle other loop keywords (if, for, while, etc.)
                 elif token in loops and token not in ('&&', '||') \
@@ -117,6 +123,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.levels_awaiting_body = 0
         self.current_function.block_levels = []
         self.current_function.prev_was_else = False
+        self.current_function.standalone_logical_added = False
         self.reset_condition_tracking()
 
     def open_level(self):
@@ -129,16 +136,20 @@ class NDFileInfoAddition(FileInfoBuilder):
         function = self.current_function
         function.block_levels.append(function.levels_awaiting_body)
         function.levels_awaiting_body = 0
+        function.standalone_logical_added = False
 
     def close_block(self):
         """A block end releases the levels its block took over."""
-        levels = self.current_function.block_levels
+        function = self.current_function
+        levels = function.block_levels
+        function.standalone_logical_added = False
         return self.add_nd_condition(-(levels.pop() if levels else 1))
 
     def end_statement(self):
         """A statement ends the levels of a braceless body."""
         levels = self.current_function.levels_awaiting_body
         self.current_function.levels_awaiting_body = 0
+        self.current_function.standalone_logical_added = False
         return self.add_nd_condition(-levels)
 
     def set_in_condition(self, in_condition):
@@ -236,6 +247,7 @@ def _init_nesting_depth_data(self, *_):
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
+    self.standalone_logical_added = False
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
 
 
