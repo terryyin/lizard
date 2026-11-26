@@ -23,6 +23,7 @@ _KEYWORDS = (
     'true', 'try', 'typeof', 'uint', 'ulong', 'unchecked', 'unsafe',
     'ushort', 'using', 'virtual', 'void', 'volatile', 'while')
 _VERBATIM_KEYWORD = r"|@(?:" + "|".join(_KEYWORDS) + r")\b"
+_NON_LF_LINE_BREAK = re.compile(r'\r(?!\n)|[\x85\u2028\u2029]')
 
 
 class CSharpReader(CLikeReader):
@@ -46,6 +47,9 @@ class CSharpReader(CLikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        # Both the literal scanner and the metric counters use LF for line breaks.
+        if not source_code.isascii() or '\r' in source_code:
+            source_code = _NON_LF_LINE_BREAK.sub('\n', source_code)
         # A verbatim identifier, `@if`, is one name and never a keyword.
         # // comments end on the same line (not C/C++ line continuation).
         patterns = r"|(?:\?\?)" + _VERBATIM_KEYWORD
