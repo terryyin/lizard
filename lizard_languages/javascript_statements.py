@@ -58,8 +58,8 @@ class ImpliedSemicolons:
     # pylint: disable=R0912,R0914,R0915,R1702
     def read(self, tokens, context):
         # Each token passes here, so the state is in local variables.
-        blocks = []             # the blocks around the open one
         last_closed_operand = context.last_closed_function_operand = None
+        blocks = []             # the blocks around the open one
         # What is open between the last "{" and its "}":
         groups = 0              # open "(" and "["
         head = None             # the groups around an open structure head
@@ -82,6 +82,8 @@ class ImpliedSemicolons:
             line = context.current_line
             tracked = token in TRACKED
             if tracked or busy or line != last_line:
+                if token == '}':
+                    last_closed_operand = context.last_closed_function_operand
                 if busy or line != last_line or token == '}':
                     if found:
                         found = self.before_token = False
@@ -131,7 +133,6 @@ class ImpliedSemicolons:
                             busy = True
                     elif token == '}':
                         object_ended = bool(blocks) and is_object
-                        last_closed_operand = context.last_closed_function_operand
                         if blocks:
                             (groups, head, open_loops, loop_ends,
                              is_object) = blocks.pop()
