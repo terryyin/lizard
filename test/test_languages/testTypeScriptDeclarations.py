@@ -50,6 +50,21 @@ class Registry {
                     [(f.name, f.start_line, f.cyclomatic_complexity, f.parameters)
                      for f in functions])
 
+    def test_split_abstract_constructor_assertion_stays_type_only(self):
+        code = '''class Rect {
+  constructor(readonly width: number) {}
+}
+abstract class Shape {
+  factory = Rect as abstract
+    new (width: number) => Rect
+  area() { return new Rect(2).width; }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('constructor', 2, ['width']), ('area', 7, [])], [
+            (f.name, f.start_line, f.parameters) for f in functions
+        ])
+
     def test_abstract_constructor_return_type_stays_with_field_arrow(self):
         code = '''
 abstract class Item {}
