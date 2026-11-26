@@ -69,12 +69,17 @@ end
 def default_forward(*, source: build_default(0, *))
   source
 end
+
+def register_event(event, format:, message: render(event, output: format))
+  record(event, message)
+end
 '''
 
         functions = get_ruby_function_list(source)
 
         self.assertEqual(
-            [('destructure', 2, []), ('default_forward', 2, ['source'])],
+            [('destructure', 2, []), ('default_forward', 2, ['source']),
+             ('register_event', 3, ['event', 'format', 'message'])],
             [(fn.name, fn.parameter_count, fn.parameters) for fn in functions])
 
     def test_template_text_does_not_hide_a_later_method(self):

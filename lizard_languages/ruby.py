@@ -218,12 +218,16 @@ class RubyStateMachine(RubylikeStateMachine):
     def _finish_parameter(self):
         parameters = self.context.current_function.full_parameters
         if self._parameter_start is not None:
-            if self._parameter_has_group:
-                name = self._parameter_start.rstrip(':')
+            parameter = parameters[-1]
+            name = self._parameter_start.rstrip(':')
+            required_keyword = (self._parameter_start.endswith(':')
+                                and name.isidentifier()
+                                and parameter.strip() == self._parameter_start)
+            if self._parameter_has_group or required_keyword:
                 parameters[-1] = FormalParameter(
-                    parameters[-1], name if name.isidentifier() else None)
-            elif parameters[-1].strip() in ('*', '**', '&', '...'):
-                parameters[-1] = FormalParameter(parameters[-1])
+                    parameter, name if name.isidentifier() else None)
+            elif parameter.strip() in ('*', '**', '&', '...'):
+                parameters[-1] = FormalParameter(parameter)
         self._parameter_start = None
         self._parameter_has_group = False
         self._parameter_allows_group = False
