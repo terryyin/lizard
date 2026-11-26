@@ -52,12 +52,12 @@ class TypeScriptDeclarationsMixin:
             phase = [0]        # 0=expect name, 1=expect =, 2=after =
             brace_count = [0]
             generic_depth = [0]
-            name = ['']
+            name = []
 
             def handle_type_alias(t):
                 if phase[0] == 0:
-                    if t and t[0].isalpha():
-                        name[0] = t
+                    if not self.context.newline and _starts_alias_name(t):
+                        name.append(t)
                         phase[0] = 1
                     else:
                         self.last_tokens = 'type'
@@ -73,12 +73,15 @@ class TypeScriptDeclarationsMixin:
                     elif t == ';':
                         self.next(self._state_global)
                         return True
+                    elif not self.context.newline and _continues_alias_name(name, t):
+                        name.append(t)
                     else:
                         # `type` was a value, e.g. `f(type as string)`:
                         # an alias name is followed only by '<' or '='.
                         self.last_tokens = 'type'
                         self.next(self._state_global)
-                        self._state_global(name[0])
+                        for part in name:
+                            self._replay_token(part)
                         self._state_global(t)
                         return True
                 elif phase[0] == 2:
@@ -194,3 +197,19 @@ class TypeScriptDeclarationsMixin:
             # An unclaimed runtime colon introduces a labeled statement.
             self.next(self._expecting_statement_or_block)
         self._prev_token = ':'
+
+
+def _starts_alias_name(token):
+    return (token == '\\' or token[0] in '_$' or token[0].isalpha()
+            or token.isidentifier())
+
+
+def _continues_alias_name(name, token):
+    """The tokenizer emits identifier escapes and some Unicode parts separately."""
+    if token == '\\' or token in ('\u200c', '\u200d'):
+        return True
+    identifier_part = ('_' + token.replace('$', '_')).isidentifier()
+    if len(name) == 1 and name[0] != '\\':
+        # Only a lexically split character can follow a complete word.
+        return len(token) == 1 and not token.isalnum() and token not in '_$' and identifier_part
+    return identifier_part or token in ('{', '}') and '\\' in name
