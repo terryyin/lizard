@@ -248,6 +248,18 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         if not self._receiver_type_end(token):
             super()._expect_function_dec(token)
 
+    @CodeStateMachine.read_inside_brackets_then("()", "_expect_function_impl")
+    def _function_dec(self, token):
+        if token in ('(', ')'):
+            return
+        if token == ',' and self.br_count > 1:
+            # A function type or default call can have its own arguments.
+            function = self.context.current_function
+            function.add_to_long_name(" ,")
+            function.full_parameters[-1] += " ,"
+        else:
+            self.context.parameter(token)
+
     def _receiver_type_end(self, token):
         # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
         # is the receiver type. The function name comes after the dot.
