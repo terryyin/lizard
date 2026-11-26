@@ -1,5 +1,7 @@
 import unittest
 
+import pytest
+
 from lizard import FileAnalyzer, get_extensions
 from .testHelpers import get_cpp_function_list_with_extension
 from lizard_ext.lizardns import LizardExtension as NestedStructure
@@ -7,6 +9,47 @@ from lizard_ext.lizardns import LizardExtension as NestedStructure
 
 def process_cpp(source):
     return get_cpp_function_list_with_extension(source, NestedStructure())
+
+
+@pytest.mark.parametrize('branch', (
+    'if ($ready) { return "Ready"; } elseif ($pending) { BODY }',
+    'if ($ready) return "Ready"; elseif ($pending) BODY',
+    'if ($ready): echo "Ready"; elseif ($pending): BODY endif;',
+    'if ($ready) { return "Ready"; } ELSEIF ($pending) { BODY }',
+))
+def test_elseif_body_contributes_its_level(branch):
+    source = '''<?php
+    function shippingLabel($ready, $pending, $backordered) {
+        BRANCH
+        return "Queued";
+    }
+    '''.replace('BRANCH', branch.replace('BODY', 'if ($backordered) return "Backordered";'))
+
+    assert php_nested_structures(source) == {'shippingLabel': 2}
+
+
+def test_elseif_excludes_finished_loops_and_file_guard():
+    source = '''<?php
+    if (!function_exists('shippingLabel')):
+        function shippingLabel($ready, $pending, $orders) {
+            if ($ready):
+                foreach ($orders as $order) {
+                    echo $order;
+                }
+            elseif ($pending):
+                if ($orders) echo 'Pending';
+            endif;
+        }
+    endif;
+    '''
+
+    assert php_nested_structures(source) == {'shippingLabel': 2}
+
+
+def php_nested_structures(source):
+    analyzer = FileAnalyzer(get_extensions(['ns']))
+    functions = analyzer.analyze_source_code('shipping.php', source).function_list
+    return {function.name: function.max_nested_structures for function in functions}
 
 
 class TestCppNestedStructures(unittest.TestCase):
