@@ -23,6 +23,7 @@ _KEYWORDS = (
     'true', 'try', 'typeof', 'uint', 'ulong', 'unchecked', 'unsafe',
     'ushort', 'using', 'virtual', 'void', 'volatile', 'while')
 _VERBATIM_KEYWORD = r"|@(?:" + "|".join(_KEYWORDS) + r")\b"
+_NON_LF_LINE_BREAK = re.compile(r'\r(?!\n)|[\x85\u2028\u2029]')
 
 
 class CSharpReader(CLikeReader):
@@ -43,6 +44,9 @@ class CSharpReader(CLikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        # Both the literal scanner and the metric counters use LF for line breaks.
+        if not source_code.isascii() or '\r' in source_code:
+            source_code = _NON_LF_LINE_BREAK.sub('\n', source_code)
         # A verbatim identifier, `@if`, is one name and never a keyword.
         # // comments end on the same line (not C/C++ line continuation).
         patterns = r"|(?:\?\?)" + _VERBATIM_KEYWORD
@@ -313,10 +317,6 @@ class _OptionalHoleQuestion(_InterpolationPart):
     is_optional = True
 
 
-_TYPE_WORDS = frozenset({
-    'bool', 'byte', 'char', 'class', 'decimal', 'double', 'float',
-    'int', 'long', 'object', 'sbyte', 'short', 'string', 'uint', 'ulong', 'ushort',
-})
 _DECLARATION_MODIFIERS = frozenset({
     'abstract', 'const', 'extern', 'internal', 'override', 'private', 'protected',
     'public', 'readonly', 'sealed', 'static', 'virtual', 'volatile',
@@ -334,7 +334,7 @@ def _mark_questions(tokens):
     pending = 0
     question = None
     previous = before_previous = None
-    reading_type = empty_rank = False
+    reading_type = False
     type_brackets = constraint = 0
     for token in tokens:
         if buffered or token == '?':
@@ -353,12 +353,14 @@ def _mark_questions(tokens):
             question = None
             if token == '?':
                 index = len(buffered) - 1
-                if not reading_type and not empty_rank and previous not in _TYPE_WORDS:
+                if not reading_type:
                     question = index
                 mark = _OptionalHoleQuestion if isinstance(token, _InterpolationPart) else _OptionalQuestion
                 buffered[index] = mark(token)
             elif token == ':':
-                if constraint == 1:
+                # A named argument starts after the comma. Its colon does
+                # not pair with a question mark in the previous argument.
+                if constraint == 1 or (before_previous == ',' and previous.lstrip('@').isidentifier()):
                     pending -= _clear_questions(groups[-1])
                 else:
                     pending -= _resolve_ternary(groups[-1], buffered)
@@ -387,8 +389,8 @@ def _mark_questions(tokens):
                 type_brackets -= 1
             elif not type_brackets and token in _TYPE_END:
                 reading_type = False
-        empty_rank = token == ']' and previous in ('[', ',') and before_previous != 'is'
-        before_previous, previous = previous, token
+        if token != '@':
+            before_previous, previous = previous, token
     yield from buffered
 
 
