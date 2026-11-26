@@ -20,19 +20,6 @@ from .extension_base import ExtensionBase
 DEFAULT_NS_THRESHOLD = 3
 
 
-def _with_expression_counter(read):
-    @wraps(read)
-    def dispatch(self, tokens, reader=None):
-        languages = getattr(reader, 'language_names', ())
-        if (languages and languages[0] in ('kotlin', 'scala')
-                and not getattr(reader, 'interpolation_braces', None)):
-            counter = _ConditionalExpressionStructures()
-            return read(counter, counter.track(tokens, reader), reader)
-        return read(self, tokens, reader)
-
-    return dispatch
-
-
 class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     """The intent of the code is to detect control structures as entities.
 
@@ -87,7 +74,6 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self._global_tokens = frozenset(self.structures) | frozenset((
             '{', ';', '}', 'else', '.', '?.'))
 
-    @_with_expression_counter
     def __call__(self, tokens, reader=None):
         if 'python' in getattr(reader, 'language_names', ()):
             return self._indented_structures(tokens, reader)
@@ -300,3 +286,19 @@ class _ConditionalExpressionStructures(LizardExtension):
             self._state(token)
         else:
             super()._after_else(token)
+
+
+def _with_expression_counter(read):
+    @wraps(read)
+    def dispatch(self, tokens, reader=None):
+        languages = getattr(reader, 'language_names', ())
+        if (languages and languages[0] in ('kotlin', 'scala')
+                and not getattr(reader, 'interpolation_braces', None)):
+            counter = _ConditionalExpressionStructures()
+            return read(counter, counter.track(tokens, reader), reader)
+        return read(self, tokens, reader)
+
+    return dispatch
+
+
+LizardExtension.__call__ = _with_expression_counter(LizardExtension.__call__)
