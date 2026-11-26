@@ -98,3 +98,26 @@ function build(type: Foo) {
 }
 """ % assertion
                     self.assertEqual([('value', 3, 3, 1), ('build', 2, 6, 2)], summary(filename, code))
+
+    def test_contextual_type_name_keeps_following_iife(self):
+        for name in ('as', 'is'):
+            for filename in ('types.ts', 'types.tsx'):
+                with self.subTest(name=name, filename=filename):
+                    code = f"""type {name} = string;
+type Result = {name}
+(() => true)();
+function close() {{ return 'closed'; }}
+"""
+                    self.assertEqual([('(anonymous)', 3, 3, 1), ('close', 4, 4, 1)], summary(filename, code))
+
+    def test_identifier_after_alias_keeps_runtime_arrow_name(self):
+        for name, reference, expected in [('fn', r'\u0066n', 'u0066n'), ('\u309bfn', '\u309bfn', 'fn')]:
+            for filename in ('types.ts', 'types.tsx'):
+                with self.subTest(name=reference, filename=filename):
+                    code = f"""function run({name}: () => boolean) {{
+  type Options = {{ id: string }}
+  {reference} = () => true
+  return {name}()
+}}
+"""
+                    self.assertEqual([(expected, 3, 3, 1), ('run', 1, 5, 1)], summary(filename, code))
