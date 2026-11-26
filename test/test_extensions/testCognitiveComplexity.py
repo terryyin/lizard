@@ -622,6 +622,35 @@ class TestLogicalStatementBoundaries(unittest.TestCase):
             with self.subTest(filename=filename):
                 self.assertEqual([1], cogc(filename, code))
 
+    def test_kotlin_wrapped_quoted_infix_operator_continues_the_sequence(self):
+        for operator in ('`same`', '`same value`'):
+            with self.subTest(operator=operator):
+                scores = cogc("Permissions.kt", f"""
+                    infix fun Boolean.{operator}(other: Boolean): Boolean = this == other
+
+                    fun wrapped(a: Boolean, b: Boolean, c: Boolean, d: Boolean) =
+                        a && b {operator}
+                          c && d
+
+                    fun single(a: Boolean, b: Boolean, c: Boolean, d: Boolean) =
+                        a && b {operator} c && d
+                """)
+                self.assertEqual([1, 1], scores[-2:])
+
+    def test_kotlin_quoted_operand_ends_the_sequence_before_a_new_statement(self):
+        scores = cogc("Permissions.kt", """
+            fun audit(enabled: Boolean, `server ready`: Boolean, allowed: Boolean) {
+                enabled && `server ready`
+                allowed && enabled
+            }
+
+            fun check(enabled: Boolean, `server ready`: Boolean, allowed: Boolean) {
+                enabled && allowed xor `server ready`
+                allowed && enabled
+            }
+        """)
+        self.assertEqual([2, 2], scores)
+
     def test_second_statement_can_start_with_a_digit_or_underscore_name(self):
         cases = (
             ("Permissions.kt", """
