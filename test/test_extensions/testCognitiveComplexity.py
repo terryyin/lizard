@@ -888,6 +888,24 @@ class TestJavaScriptObjectExpressions(unittest.TestCase):
                 self.assertEqual([1, 2], cogc(filename, code))
 
 
+    def test_object_operand_preserves_statement_boundaries(self):
+        code = """
+            function audit(enabled, ready, send) {
+              const options = enabled %s { debug: true }
+              ready %s send(options)
+            }
+
+            function visible(enabled, ready) {
+              return enabled %s { debug: true }.debug
+                %s ready
+            }
+        """
+        for filename in ("settings.js", "settings.ts"):
+            for operator in ("&&", "||"):
+                with self.subTest(filename=filename, operator=operator):
+                    self.assertEqual([2, 1], cogc(filename, code % ((operator,) * 4)))
+
+
 class TestJavaScriptTemplateLiterals(unittest.TestCase):
     """The ``}`` of an interpolation ends no block."""
 
