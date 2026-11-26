@@ -145,7 +145,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         elif token in ('=>',):
             self._arrow_line = self.context.current_line
             if not self._pending_bindings:
-                name = self.last_tokens
+                name = (self.last_token if self._async_seen and self.last_token == 'async'
+                        else self.last_tokens)
                 if name.replace('$', '_').isidentifier():
                     self._pending_bindings = BindingSummary(0, 0, 0, [name])
             self._state = self._arrow_function

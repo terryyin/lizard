@@ -188,12 +188,10 @@ class JavaScriptFunctionsMixin:
             self.next(self._state_global)
             self._read_binding_candidate(')')
             return
-        if (token == 'async' and self._parameter_bindings.at_start
+        if (token == 'async' and not self._signature
+                and self._parameter_bindings.at_start
                 and self.last_token == '('):
-            # A grouped async arrow, `x = (async () => f())`, rather than
-            # parameters; keep the open "(" as for an arrow IIFE.
-            self._abandon_optimistic_parameter_group()
-            self.next(self._state_global, token)
+            self.next(self._after_possible_async_parameter)
             return
         if token == '@':
             self._decorated_parameters = True  # constructor(@Inject(T) x)
@@ -225,6 +223,16 @@ class JavaScriptFunctionsMixin:
         elif (not event.in_expression or event.root_separator) and token != '(':
             return
         self.context.add_to_long_function_name(" " + token)
+
+    def _after_possible_async_parameter(self, token):
+        if token in (')', ',', ':', '=', '?'):
+            self._read_parameter_binding('async')
+            self.next(self._dec, token)
+            return
+        # An expression such as `(async () => f())` uses the outer group.
+        self._abandon_optimistic_parameter_group()
+        self.next(self._state_global, 'async')
+        self._replay_token(token)
 
     def _expression_operand(self, token):
         bindings = self._parameter_bindings
