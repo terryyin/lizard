@@ -6,16 +6,6 @@ from .cognitive_counter import (
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 
 
-# These readers allow newlines between statements as well as within an
-# expression. A word can start a new statement unless it joins expressions.
-_LOGICAL_STATEMENT_LANGUAGES = frozenset(('kotlin', 'scala', 'swift'))
-_LINE_EXPRESSION_WORDS = frozenset((
-    'as', 'as?', 'as!', 'in', 'is', 'match', 'with', 'yield'))
-_OPERAND_PREFIX_WORDS = _LINE_EXPRESSION_WORDS | {
-    'await', 'case', 'do', 'else', 'new', 'return', 'then', 'throw',
-    'try', 'try?', 'try!'}
-
-
 class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     """Nesting from braces, parentheses and semicolons (C-like languages).
 
@@ -25,13 +15,25 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     ``finally`` and the ``while`` of a ``do`` bind to the right structure.
     """
 
+    _LINE_EXPRESSION_WORDS = frozenset((
+        'as', 'as?', 'as!', 'in', 'is', 'match', 'with', 'yield'))
+    _OPERAND_PREFIX_WORDS = _LINE_EXPRESSION_WORDS | {
+        'await', 'case', 'do', 'else', 'new', 'return', 'then', 'throw',
+        'try', 'try?', 'try!'}
+
     def __init__(self, reader, profile, gated):
         super(_BraceCounter, self).__init__(reader, profile, gated)
         self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
         self.actions = self._keyword_actions(profile)
         if not profile.nesting:
             self._process = self._process_flat
-        self.logical_statement_lines = reader.language_names[0] in _LOGICAL_STATEMENT_LANGUAGES
+        language = reader.language_names[0]
+        self.logical_statement_lines = language in ('kotlin', 'scala', 'swift')
+        self.comment_line_count = 0
+        self.last_counted_comment = None
+        if language == 'kotlin':
+            self.read_comment = reader.get_comment_from_token
+            reader.get_comment_from_token = self._count_kotlin_comment
 
     def _process(self, token):  # pylint: disable=E0202
         if token == '?' and getattr(token, 'is_optional', False):
@@ -39,8 +41,11 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         state = self.state
         line = self.line
         if line != state.line:
-            if self.logical_statement_lines and state.logical and not state.pdepth:
-                self._reset_logical_at_line_start(token)
+            if self.logical_statement_lines:
+                if (state.logical and not state.pdepth
+                        and line - state.line > self.comment_line_count):
+                    self._reset_logical_at_line_start(token)
+                self.comment_line_count = 0
             self._new_line(line)
         if state.pending:
             self._resolve_pending(token)
@@ -104,12 +109,23 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         previous = state.prev
         # Scala also permits a leading infix operator in backticks or
         # with an alphanumeric prefix ending in an underscore.
-        if not _is_word(token) or token.endswith('_') or token in _LINE_EXPRESSION_WORDS:
+        if not _is_word(token) or token.endswith('_') or token in self._LINE_EXPRESSION_WORDS:
             return
         if (previous in (')', ']', '}', '++', '--', '!!')
                 or (previous and (previous[0].isalnum() or previous[0] in "_\"'`")
-                    and previous not in _OPERAND_PREFIX_WORDS)):
+                    and previous not in self._OPERAND_PREFIX_WORDS)):
             state.logical.pop(0, None)
+
+    def _count_kotlin_comment(self, token):
+        comment = self.read_comment(token)
+        # The line counter keeps the lines of a block comment. Kotlin
+        # treats the whole comment as whitespace within the expression.
+        if comment and token.startswith('/*'):
+            line = self.context.current_line
+            if line != self.last_counted_comment:
+                self.comment_line_count += len(comment.splitlines()) - 1
+                self.last_counted_comment = line
+        return comment
 
     def _top_structure(self):
         for frame in reversed(self.state.frames):
