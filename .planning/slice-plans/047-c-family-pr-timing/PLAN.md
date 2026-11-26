@@ -36,7 +36,7 @@ Observed in this preparation workspace on 2026-11-26. `origin/master` was `51e06
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 Behavior: Build the combined candidate (master + #681 + #619) and freeze the corpora. Run the paired workloads in the order listed under Current decisions. Each workload ends with an evidence file and a verdict. All of them pass, or every miss has a profile and a decision: a correction on the contributor's branch, a linked correction story with that PR left unmerged, a quieter retry chosen before launch, or the developer's decision on a miss from master's mis-tokenization.
 
@@ -45,6 +45,36 @@ Behavior: Build the combined candidate (master + #681 + #619) and freeze the cor
 | The fixes still hold on current master | The seed's key examples `R"d(… if (x) …)d"`, `void f(T&& x)` and `a && (b = c)` pass through `analyze_file` on the combined candidate, and fail or differ on master. Full `pytest` and `make` pass on the combined candidate. |
 | Each workload stays strictly under the 3% bound | One `paired_benchmark.py` JSON per workload under `.planning/evidence/c-family-pr-timing/`, with verdict `passes`. Record the corpus hash, revisions and load in the plan's accepted proof. |
 | A correction keeps its proof | When a correction is pushed, rerun only the affected workloads and the full suite on the corrected head. Keep the earlier runs. |
+
+#### Accepted proof (2026-11-27)
+
+- **Revisions.** The baseline is `origin/master` `5294e585`, which includes `60a63ca6`, the production change to wrapped type reporting made after preparation. The candidate tree is `0f6daf21`: master + #681 `ec3d383a` (which contains #688 `352020cf`), then + #619 `e4679972`. Both are `git archive` copies outside the repository.
+- **Key examples** (`analyze_file`, CCN on master → candidate). The `R"d( ") if (x) { y; } )d"` raw-string function goes from 2 to 1, and the next function keeps CCN 2. `f(T&& x)` with a `T&&` local goes from 2 to 1. `if (a && (b = c))` goes from 2 to 3.
+- **Local gate on the candidate.** `pytest` gave 4094 passed and 7 skipped. `make` exited 0.
+- **Corpora** were captured from `FileAnalyzer.analyze_source_code` across master's `test/` suite, one file at a time with a 120 s timeout. Only `testHelpers.py` collected no tests. The PRs' tests (`testCAndCPP.py` and `test_cpp_delimited_raw_strings.py`) were added from the candidate. Frozen read-only, with file count and hash prefix: C/C++ 450 `5bd1596e`, Java 106 `36b9e64d`, C# 35 `6041f875`, Dart 37 `797f2207`, broad 4,939 `650e81bb`.
+- **Gate results.** Each workload's passing run is listed below. Every run is kept under `.planning/evidence/c-family-pr-timing/run-N/`, with a `DECISION.txt` written before each retry.
+
+  | Workload | Passing run | Change | 95% CI | Load before → after |
+  | --- | --- | --- | --- | --- |
+  | C/C++ API | 2 | −4.9% | −10.9 to +1.5 | 3.8 → 6.9 |
+  | Java API | 4 | −2.3% | −4.3 to −0.2 | 2.3 → 3.4 |
+  | C# API | 3 | −0.9% | −2.5 to +0.8 | 2.8 → 4.1 |
+  | Dart API | 3 | +0.9% | −0.7 to +2.5 | 3.0 → 3.7 |
+  | C/C++ `-Eignoreassert` | 2 | −3.4% | −7.6 to +1.0 | 3.7 → 4.6 |
+  | Java `-Eignoreassert` | 2 | −2.6% | −4.4 to −0.8 | 3.7 → 3.6 |
+  | C/C++ `-Enonstrict` | 2 | −0.1% | −2.0 to +1.9 | 3.6 → 3.4 |
+  | Broad CLI | 3 | +1.2% | −0.4 to +2.8 | 2.7 → 3.4 |
+
+- **Misses and retries.** Run 1 used the default settings at load 6–13. It gave five bound-not-met results and three inconclusive short-batch results.
+  - Profiling the candidate found no added cost. It made fewer calls than master on C++: 1.83M vs 1.88M plain, and 1.90M vs 2.01M with `-Eignoreassert`.
+  - Run 2 used `--seconds 4` and started each workload below load 4. Four workloads missed with wide intervals as load rose during the runs.
+  - Run 3 repeated those four with `--pairs 40`, starting below load 3. Only Java API missed (+1.6%, CI −0.5 to +3.8).
+  - Java profiling showed +0.15% calls: `CLikeReader.__init__` constructs `CppRValueRefStates`, which `JavaReader` then discards. A tokenizer-only A/B of #619's rule on the Java corpus gave +0.6% (CI −0.9 to +2.1) with identical token counts. With no correction target, run 4 timed Java alone with `--seconds 8 --pairs 40` and passed.
+  - No PR was corrected.
+
+#### Learnings
+
+- On this shared 16-core host, other agents raise the load during a run even when it starts quiet. Calibrated 1.2 s batches gave ±10% intervals there. Gate on 4–8 s batches, start only below load 3, and expect hour-long waits.
 
 ### 2. Qualified PRs merged on master
 
