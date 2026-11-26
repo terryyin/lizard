@@ -347,6 +347,41 @@ enum Op {
             ["Op::apply", "Op::apply", "(anonymous)::help", "Op::apply", "Op::Op", "Op::Op"],
             [f.name for f in result])
 
+    def test_local_class_fields_preserve_the_enclosing_method(self):
+        result = get_java_function_list("""class Registry {
+    void configure(boolean enabled) {
+        class Target {
+            Runnable action;
+            void clear() { action = null; }
+            int retries;
+        }
+        Target target = new Target();
+        if (enabled) {
+            target.clear();
+        }
+    }
+    void reset() {}
+}
+""")
+        self.assertEqual(
+            [('Target::clear', 5, 5, 1), ('Registry::configure', 2, 12, 2),
+             ('Registry::reset', 13, 13, 1)],
+            [(function.name, function.start_line, function.end_line, function.cyclomatic_complexity)
+             for function in result])
+
+    def test_anonymous_class_field_preserves_the_enclosing_method(self):
+        result = get_java_function_list("""class Registry {
+    Object configure() {
+        return new Object() {
+            String label = "entry";
+        };
+    }
+}
+""")
+        self.assertEqual([('Registry::configure', 2, 6)],
+                         [(function.name, function.start_line, function.end_line)
+                          for function in result])
+
     def test_local_record_in_method_body(self):
         result = get_java_function_list("""
 class A {
