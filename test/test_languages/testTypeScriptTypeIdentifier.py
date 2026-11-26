@@ -61,6 +61,20 @@ const itemKey = item => item.id
                      ('getLabel', 7, 7, 1)],
                     summary('a.js', code))
 
+    def test_callback_inside_schema_factory_call(self):
+        code = """import { type } from 'arktype';
+const person = type({
+  name: type('string').pipe(value => value.trim()),
+  age: 'number',
+});
+function parse(input: unknown) {
+  return person(input);
+}
+"""
+        functions = analyze_file.analyze_source_code('a.ts', code).function_list
+        self.assertIn(('(anonymous)', 3, ['value']),
+                      [(f.name, f.start_line, f.parameters) for f in functions])
+
     def test_type_cast_at_the_end_of_an_arrow_body(self):
         for ext in ('ts', 'tsx'):
             for alias in ('', 'type Tag = { run: (type: string) => string }\n'):
