@@ -13,6 +13,7 @@ from .js_style_regex_context import (
     REGEX_TOKEN_PUNCT_JSX,
     mark_regex_literal_starts,
 )
+from .ruby_regexp import REGEX_SUFFIX as RUBY_REGEX_SUFFIX
 
 __all__ = (
     'REGEX_LITERAL',
@@ -38,6 +39,8 @@ def js_style_regex_expression(func=None, *, language='js'):
     jsx = language == 'jsx'
     token_punct = REGEX_TOKEN_PUNCT_JSX if jsx else REGEX_TOKEN_PUNCT
     token = REGEX_TOKEN_JSX if jsx else REGEX_TOKEN
+    if language == 'ruby':
+        token += r'|' + REGEX_START_MARKER + RUBY_REGEX_SUFFIX
 
     def decorator(generate_tokens):
         def generate_tokens_with_regex(source_code, addition='', token_class=None):

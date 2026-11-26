@@ -13,6 +13,7 @@ from .js_style_regex_context import (
     _apply_marks,
 )
 from .ruby_documentation import match_opaque_span, may_have_documentation
+from . import ruby_regexp
 
 
 def mark_forward(source, js_family, *, jsx=False):
@@ -31,6 +32,11 @@ def mark_forward(source, js_family, *, jsx=False):
     keywords = _EXPRESSION_KEYWORDS if js_family else _RUBY_EXPRESSION_KEYWORDS
     whitespace = _JS_WHITESPACE if js_family and not jsx else _BASIC_WHITESPACE
     line_ends = _LINE_ENDS
+    append_operator = None if js_family else re.compile(r"<<[^\S\r\n]*/")
+    ruby_append = append_operator is not None and append_operator.search(source) is not None
+    ruby_line_has_code = False
+    if not js_family:
+        match_literal = ruby_regexp.LITERAL.match
 
     def after_operand(next_can_regex=False, next_expect_property=False):
         nonlocal can_regex, expect_property, pending_async
@@ -102,6 +108,8 @@ def mark_forward(source, js_family, *, jsx=False):
         nonlocal can_regex, pending_async, pending_for, async_nesting
         if expect_property:
             after_operand()
+        elif ruby_append and word == 'def':
+            after_operand(next_expect_property=True)
         elif word == 'async' and js_family:
             pending_async = True
             can_regex = False
@@ -125,13 +133,25 @@ def mark_forward(source, js_family, *, jsx=False):
             after_operand()
 
     def advance():
+        nonlocal ruby_line_has_code
         nonlocal i, can_regex, expect_property, pending_async, pending_for
         nonlocal paren_depth, async_nesting
         ch = source[i]
+        if ch == '\n' and not js_family:
+            ruby_line_has_code = False
 
         if ch in whitespace:
             i += 1
             return
+        if ch == '\\' and not js_family:
+            if source.startswith('\\\n', i):
+                i += 2
+                return
+            if source.startswith('\\\r\n', i):
+                i += 3
+                return
+        ruby_statement_start = not js_family and not ruby_line_has_code
+        ruby_line_has_code = True
         if js_family and ch == '/' and i + 1 < n and source[i + 1] == '/':
             i += 2
             while i < n and source[i] not in line_ends:
@@ -143,13 +163,22 @@ def mark_forward(source, js_family, *, jsx=False):
                 i += 1
             i = min(i + 2, n)
             return
+        if not (js_family or can_regex or ruby_statement_start) and source.startswith('//', i):
+            # Division can touch the opening slash of its right operand.
+            i += 1
+            after_operand(next_can_regex=True)
+            return
         if not js_family and ch == '#':
             i += 1
             while i < n and source[i] not in '\r\n':
                 i += 1
             return
-        if ch == '/' and can_regex:
+        if ch == '/' and (can_regex or ruby_statement_start):
             matched = match_literal(source, i)
+            if matched and not can_regex and '#{' in matched[0]:
+                # An inner slash may end the pattern before the interpolation.
+                if '#{' in ruby_regexp.COMPLETE_INTERPOLATION.sub('', matched[0]):
+                    matched = None
             if matched:
                 marks.append(i)
                 i = matched.end()
@@ -159,10 +188,20 @@ def mark_forward(source, js_family, *, jsx=False):
             skip_string(ch)
             after_operand()
             return
-        if ch == '`' and js_family:
-            scan_template()
-            pending_async = False
+        if ch == ':' and ruby_append and can_regex and source.startswith(':`', i):
+            # In an operand position, a colon and backtick name an operator.
+            i += 2
+            after_operand()
             return
+        if ch == '`':
+            if js_family:
+                scan_template()
+                pending_async = False
+                return
+            if ruby_append and not expect_property:
+                skip_string(ch)
+                after_operand()
+                return
         if source.startswith('=>', i):
             i += 2
             after_operand(next_can_regex=True)
@@ -184,6 +223,15 @@ def mark_forward(source, js_family, *, jsx=False):
                 i += 1
             after_operand()
             return
+        if ch == '<' and ruby_append and not expect_property:
+            append = append_operator.match(source, i)
+            matched = match_literal(source, append.end() - 1) if append else None
+            # A slash inside executable interpolation can end this match early.
+            if matched and '#{' not in matched[0]:
+                marks.append(matched.start())
+                i = matched.end()
+                after_operand()
+                return
         if ch == '(':
             if pending_for:
                 for_headers.append(paren_depth + 1)
@@ -234,12 +282,20 @@ def mark_forward(source, js_family, *, jsx=False):
         i += 1
         after_operand()
 
-    if not js_family and may_have_documentation(source):
-        from .ruby import _PERCENT_LITERAL
+    ruby_heredocs = not js_family and '<<' in source
+    ruby_documentation = not js_family and (ruby_append or may_have_documentation(source))
+    if ruby_heredocs or ruby_documentation:
+        from .ruby import _PERCENT_LITERAL, _plain_heredoc_at
         percent_literal = re.compile(_PERCENT_LITERAL, re.S)
         # A quote in documentation must not hide a later regex.
         while i < n:
-            if source[i] in '=%_':
+            if ruby_heredocs and source.startswith('<<', i):
+                heredoc = _plain_heredoc_at(source, i)
+                if heredoc:
+                    after_operand()
+                    i = heredoc.end()
+                    continue
+            if ruby_documentation and source[i] in '=%_':
                 span = match_opaque_span(source, i, percent_literal)
                 if span:
                     if source[i] == '%':

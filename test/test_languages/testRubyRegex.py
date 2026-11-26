@@ -10,11 +10,162 @@ def get_ruby_function_list(source_code):
 
 class Test_Ruby_regex_literal_context(unittest.TestCase):
 
+    def test_heredoc_apostrophe_does_not_hide_later_regexp(self):
+        source = '''def fallback(enabled)
+  notice = <<~TEXT
+    Here's the fallback notice.
+  TEXT
+  return // if enabled
+  notice
+end
+'''
+
+        function, = get_ruby_function_list(source)
+
+        self.assertEqual((7, 2), (function.end_line, function.cyclomatic_complexity))
+        self.assertIn('//', list(RubyReader.generate_tokens(source)))
+
+    def test_empty_regex_keeps_later_conditions(self):
+        source = '''
+def fallback(queue, enabled)
+  queue << // if enabled
+  return //x if queue.empty?
+end
+
+def match_rules(text, enabled)
+  empty = //
+  text =~ // && enabled
+end
+'''
+
+        functions = get_ruby_function_list(source)
+
+        self.assertEqual([('fallback', 3), ('match_rules', 2)],
+                         [(f.name, f.cyclomatic_complexity) for f in functions])
+        regexps = [t for t in RubyReader.generate_tokens(source) if t in ('//', '//x')]
+        self.assertEqual(['//', '//x', '//', '//'], regexps)
+
+    def test_division_can_touch_a_nonempty_regexp(self):
+        source = 'def ratio(value, units)\n value//unit/.match?(units) if units\nend\n'
+
+        function, = get_ruby_function_list(source)
+
+        self.assertEqual(2, function.cyclomatic_complexity)
+
+    def test_statement_start_regex_and_continued_division_keep_separate_tokens(self):
+        source = r'''
+def cleanup_rule
+  fallback = 'tmp'
+  /\A#{fallback}(?:-end)?\z/
+end
+
+def empty_rule(enabled)
+  notify
+  // if enabled
+end
+
+def ratio(value, factor, scale)
+  value \
+    / factor / scale
+end
+'''
+
+        tokens = [t for t in RubyReader.generate_tokens(source) if t.startswith('/')]
+        functions = get_ruby_function_list(source)
+
+        self.assertEqual([r'/\A#{fallback}(?:-end)?\z/', '//', '/', '/'], tokens)
+        self.assertEqual([1, 2, 1], [f.cyclomatic_complexity for f in functions])
+
+    def test_extended_multiline_regex_keeps_keywords_in_pattern_and_comments(self):
+        regexp = r'''/\A
+    (?<name>[a-z]+) # captured field
+    (?:end|next)?
+  \z/x'''
+        source = 'def header_rule\n  ' + regexp + '\nend\n'
+
+        function, = get_ruby_function_list(source)
+
+        self.assertEqual((6, 1), (function.end_line, function.cyclomatic_complexity))
+        self.assertIn(regexp, list(RubyReader.generate_tokens(source)))
+
+    def test_regexp_with_nested_literal_keeps_method_boundary(self):
+        source = r'''def key_pattern(key, namespace)
+  /.+\/#{Regexp.escape namespace.to_s}#{/%3A/i if namespace}#{Regexp.escape key}/
+end
+'''
+
+        function, = get_ruby_function_list(source)
+
+        self.assertEqual((1, 3), (function.start_line, function.end_line))
+
+    def test_statement_start_regexp_counts_executable_interpolation(self):
+        regexp = '/#{prefix if enabled}(?:-end)?/'
+        source = "def substitution(enabled)\n  prefix = 'tmp'\n  " + regexp + '\nend\n'
+
+        function, = get_ruby_function_list(source)
+
+        self.assertEqual((4, 2), (function.end_line, function.cyclomatic_complexity))
+        self.assertIn(regexp, list(RubyReader.generate_tokens(source)))
+
     def test_return_regex_exposes_ternary_condition(self):
         functions = get_ruby_function_list(
             'def a(s)\n return /#/ =~ s ? 1 : 0\nend\n')
         self.assertEqual([('a', 2)], [
             (f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_plain_regex_after_an_append(self):
+        source = r'''
+def append_defaults(rules, enabled)
+  rules << %r{#} << /\A(?:end|quit)?\z/ if enabled
+end
+
+def append_guard(rules, input, enabled)
+  rules << /#/ if /#/ =~ input && enabled
+end
+
+def append_prefix(rules, prefix)
+  rules << /#{prefix.delete_suffix('/')}/
+end
+
+def normalized_shift(enabled)
+  self.<< / (enabled ? 2 : 1) / 3
+end
+'''
+
+        functions = get_ruby_function_list(source)
+
+        self.assertEqual(
+            [('append_defaults', 4, 2), ('append_guard', 8, 3),
+             ('append_prefix', 12, 1), ('normalized_shift', 16, 2)],
+            [(function.name, function.end_line, function.cyclomatic_complexity)
+             for function in functions])
+
+    def test_backtick_operator_does_not_hide_later_regexps(self):
+        definitions = (
+            'def capture(shell, command)\n  shell.`(command)\nend\n',
+            'def `(command)\n  capture(command)\nend\n',
+            'module ShellOperators\n  alias_method :execute, :`\nend\n',
+            'expect(shell).to receive(:`).with(command)\n',
+        )
+        usage = r'''
+def ignore_rules(rules, count)
+  rules << /\Awhen\z/
+  return /#/ if count > 0
+end
+
+def dispatch(command)
+  command if /#/ =~ command
+end
+'''
+        for definition in definitions:
+            with self.subTest(definition=definition):
+                functions = get_ruby_function_list(definition + usage)
+
+                self.assertEqual(
+                    [('ignore_rules', 2), ('dispatch', 2)],
+                    [(function.name, function.cyclomatic_complexity)
+                     for function in functions[-2:]])
+                self.assertEqual(11, functions[-1].token_count)
 
     def test_member_division_keeps_condition_and_tokens(self):
         functions = get_ruby_function_list(
