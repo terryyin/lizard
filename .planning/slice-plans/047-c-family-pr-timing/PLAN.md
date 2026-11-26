@@ -96,6 +96,10 @@ Behavior: For each qualified PR, in the order #688, #681, #619: refresh its head
 - **Hosted CI** (`python-app.yml`) succeeded on all three merge commits: runs 45871359146, 45871439140 and 45871546557.
 - **Disposition:** the seed records all three as merged without correction, with the thank-you comment URLs.
 
+## Execution complete
+
+Product advice: no backlog change. Keep the seed's release-note reminder past wrap-up: the next release notes should say that #681 and #688 lower CCN on real C++ code. The contributor measured 1,025 functions in 4,005 C++ files losing 2,107 CCN points in total. #619 also fixes C++ raw strings with custom delimiters, which previously swallowed the code after them.
+
 ## Concern evidence
 
 Slice-plan refinement was not needed: there are two slices with one outcome each, and qualification comes before delivery. No remaining slice-specific concern was identified. If a correction is needed, its size is unknown until the profile. The plan bounds that with the deferral route, so it is not a readiness concern.
