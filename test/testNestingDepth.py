@@ -750,11 +750,15 @@ def schedule(jobs, ready)
   end else warn('No jobs') if jobs.empty?
   end
 end
+
+def assign_layout_data(layout)
+  payload[:layout] = merge(layout.data, payload[:layout] || {}) if layout
+end
 '''
     analyzer = FileAnalyzer(get_extensions(['nd']))
 
     functions = analyzer.analyze_source_code('jobs.rb', source).function_list
 
     assert [(f.name, f.max_nesting_depth) for f in functions] == [
-        ('append_actions', 1), ('schedule', 2),
+        ('append_actions', 1), ('schedule', 2), ('assign_layout_data', 2),
     ]
