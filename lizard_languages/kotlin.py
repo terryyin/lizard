@@ -79,7 +79,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             self._start_header()
             self._accessor_name = token
             self.context.push_new_function(token)
-            self._state = self._expect_function_impl
+            self._state = self._after_accessor_name
         elif (token in ('class', 'object') and self.last_token != '::'
               and self.context.current_function is not self.context.global_pseudo_function):
             self._state = self._local_class_header
@@ -140,6 +140,14 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         else:
             self.next(self._state_global, token)
 
+    def _after_accessor_name(self, token):
+        # A custom accessor needs parentheses before its body. Without them,
+        # `get { ... }` calls a function with a trailing lambda.
+        if token == '{':
+            self._discard_pending_declaration(token)
+        else:
+            self.next(self._expect_function_impl, token)
+
     def _expect_function_impl(self, token):
         if token == '=':
             self._expr_nesting = 0
@@ -147,12 +155,14 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         elif token == '{':
             self.next(self._function_impl, token)
         elif self._ends_declaration(token):
-            # `abstract fun f(): Int` or `private set` has no body. Its first
-            # line and token were already counted in the enclosing scope.
-            self.fold_into_enclosing_function()
-            self.context.current_function.nloc -= 1
-            self.context.current_function.token_count -= 1
-            self.next(self._state_global, token)
+            self._discard_pending_declaration(token)
+
+    def _discard_pending_declaration(self, token):
+        # The first line and token already count in the enclosing scope.
+        self.fold_into_enclosing_function()
+        self.context.current_function.nloc -= 1
+        self.context.current_function.token_count -= 1
+        self.next(self._state_global, token)
 
     def _ends_declaration(self, token):
         # Kotlin semicolons are optional, so a declaration without a body
