@@ -48,16 +48,6 @@ class Dashboard {
              ('(anonymous)', 2, ['value']), ('read', 1, [])],
             [(f.name, f.cyclomatic_complexity, f.parameters) for f in functions])
 
-    def test_async_value_on_the_next_line_is_still_the_field_value(self):
-        code = (
-            "class A {\n"
-            "  handler =\n"
-            "    async () => { return 1; }\n"
-            "}\n"
-        )
-        self.assertEqual(['handler'],
-                         [f.name for f in get_js_function_list(code)])
-
     def test_direct_field_keeps_grouped_constructor_callback(self):
         source = '''class Panel {
   direct = new (Meter)(input => input || 4);
@@ -82,3 +72,13 @@ class Dashboard {
             [('(anonymous)', 3, ['value'], 2), ('read', 4, [], 1)],
             [(f.name, f.start_line, f.parameters, f.cyclomatic_complexity)
              for f in functions])
+
+    def test_async_value_on_the_next_line_is_still_the_field_value(self):
+        code = (
+            "class A {\n"
+            "  handler =\n"
+            "    async () => { return 1; }\n"
+            "}\n"
+        )
+        self.assertEqual(['handler'],
+                         [f.name for f in get_js_function_list(code)])

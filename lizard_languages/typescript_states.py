@@ -155,6 +155,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             name = self.last_tokens
             if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
                 self.function_name = name
+        elif self.as_class and self._in_prop_value and token in ('+', '-'):
+            # These operators can continue the field after a line break.
+            pass
         elif token == '<' and self._class_body_pending:
             self._consume_generic_type_params()
         elif token == "(":
@@ -225,8 +228,6 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 # An object property value can continue across line breaks.
                 and (not self.as_object or self.as_class
                      or not self._in_prop_value or self.started_function)
-                # A line-leading additive operator can continue a class field.
-                and not (self.as_class and self._in_prop_value and token in ('+', '-'))
                 and (not self._expression_body or self.last_token == ',')):
             self._end_statement()
 
