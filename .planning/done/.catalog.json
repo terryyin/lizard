@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-076_ruby-reader-test-topics.json",
+      "identity": "SEED-076#ruby-reader-test-topics",
+      "completedAt": "2026-11-26T14:06:07.734Z",
+      "blob": "0c549a866d740c64b301b5cf27e85138a2e1868b"
+    },
+    {
       "fileName": "SEED-077_process-prs-past-48h.json",
       "identity": "SEED-077#process-prs-past-48h",
       "completedAt": "2026-11-26T13:47:07.808Z",

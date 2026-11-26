@@ -7,7 +7,6 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 ## Taken
 
 - [Keep PL/SQL Boolean operator casing equivalent in nonstrict mode](seeds/SEED-075-reader-corrections.md#plsql-nonstrict-case) — SEED-075#plsql-nonstrict-case ([plan](slice-plans/044-plsql-nonstrict-case/PLAN.md))
-- [Split the Ruby reader tests by topic](seeds/SEED-076-ruby-reader-test-topics.md#ruby-reader-test-topics) — SEED-076#ruby-reader-test-topics ([plan](slice-plans/045-ruby-reader-test-topics/PLAN.md))
 
 ## Backlog list
 
