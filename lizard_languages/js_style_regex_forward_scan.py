@@ -28,6 +28,8 @@ def mark_forward(source, js_family):
     match_literal = _REGEX_LITERAL_RE.match
     keywords = _EXPRESSION_KEYWORDS if js_family else _RUBY_EXPRESSION_KEYWORDS
     line_ends = _LINE_ENDS
+    append_operator = None if js_family else re.compile(r"<<[^\S\r\n]*/")
+    ruby_append = append_operator is not None and append_operator.search(source) is not None
 
     def after_operand(next_can_regex=False, next_expect_property=False):
         nonlocal can_regex, expect_property, pending_async
@@ -99,6 +101,8 @@ def mark_forward(source, js_family):
         nonlocal can_regex, pending_async, pending_for, async_nesting
         if expect_property:
             after_operand()
+        elif ruby_append and word == 'def':
+            after_operand(next_expect_property=True)
         elif word == 'async' and js_family:
             pending_async = True
             can_regex = False
@@ -156,10 +160,20 @@ def mark_forward(source, js_family):
             skip_string(ch)
             after_operand()
             return
-        if ch == '`' and js_family:
-            scan_template()
-            pending_async = False
+        if ch == ':' and ruby_append and can_regex and source.startswith(':`', i):
+            # In an operand position, a colon and backtick name an operator.
+            i += 2
+            after_operand()
             return
+        if ch == '`':
+            if js_family:
+                scan_template()
+                pending_async = False
+                return
+            if ruby_append and not expect_property:
+                skip_string(ch)
+                after_operand()
+                return
         if source.startswith('=>', i):
             i += 2
             after_operand(next_can_regex=True)
@@ -181,6 +195,15 @@ def mark_forward(source, js_family):
                 i += 1
             after_operand()
             return
+        if ch == '<' and ruby_append and not expect_property:
+            append = append_operator.match(source, i)
+            matched = match_literal(source, append.end() - 1) if append else None
+            # A slash inside executable interpolation can end this match early.
+            if matched and '#{' not in matched[0]:
+                marks.append(matched.start())
+                i = matched.end()
+                after_operand()
+                return
         if ch == '(':
             if pending_for:
                 for_headers.append(paren_depth + 1)
@@ -231,7 +254,7 @@ def mark_forward(source, js_family):
         i += 1
         after_operand()
 
-    if not js_family and may_have_documentation(source):
+    if not js_family and (ruby_append or may_have_documentation(source)):
         from .ruby import _PERCENT_LITERAL
         percent_literal = re.compile(_PERCENT_LITERAL, re.S)
         # A quote in documentation must not hide a later regex.
