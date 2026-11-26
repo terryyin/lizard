@@ -337,7 +337,12 @@ class _Counter(object):  # pylint: disable=R0902
         if (state.pending_call and token == '?.' and state.prev2 not in ('.', '?.')
                 and getattr(token, 'function', None) is self.function):
             state.pending_call = False
-            state.pending_optional_scopes = token.scopes
+            if token.has_type_arguments:
+                if not state.recursed:
+                    self.optional_recursions.append((self.function, state, token.scopes))
+                state.pending -= 1
+            else:
+                state.pending_optional_scopes = token.scopes
         if state.pending_call:
             state.pending_call = False
             state.pending -= 1

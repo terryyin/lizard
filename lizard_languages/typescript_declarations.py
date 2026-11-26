@@ -1,6 +1,7 @@
 """TypeScript declarations and type syntax excluded from runtime functions."""
 
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
+from .javascript_bindings import UsingDeclaration
 from .javascript_expression import OPERAND_WORDS, ends_expression
 from .js_style_regex_context import _EXPRESSION_KEYWORDS
 
@@ -9,7 +10,7 @@ from .js_style_regex_context import _EXPRESSION_KEYWORDS
 # it also handles the next token.
 DECLARATION_WORDS = frozenset((
     'declare', 'type', 'interface', 'abstract', 'class', 'const', 'let', 'var',
-    'as', 'satisfies'))
+    'as', 'satisfies', 'using'))
 # Type-only contextual words can be identifiers in runtime operand position.
 _EXPRESSION_PREFIXES = (
     _EXPRESSION_KEYWORDS | OPERAND_WORDS | {'default'}
@@ -18,7 +19,7 @@ _EXPRESSION_PREFIXES = (
 
 class TypeScriptDeclarationsMixin:
     def _handle_type_declaration(self, token):
-        if token in ('const', 'let', 'var'):
+        if token in ('const', 'let', 'var') or isinstance(token, UsingDeclaration):
             self._declaration_binding = True
             self.last_tokens = self._prev_token = token
             return True

@@ -1,5 +1,6 @@
 """Shared JavaScript and TypeScript runtime state dispatch."""
 
+from .javascript_bindings import UsingDeclaration
 from .code_reader import CodeStateMachine
 from .javascript_bindings import read_recursive_local_bindings
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
@@ -83,9 +84,11 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
     def _state_global(self, token):
         if self._declaration_binding:
-            if self.last_token in ('const', 'let', 'var'):
-                self._recursive_declaration_kind = self.last_token
-            if self.last_token in ('const', 'let', 'var', ','):
+            previous = self.last_token
+            starts_binding = previous in ('const', 'let', 'var') or isinstance(previous, UsingDeclaration)
+            if starts_binding:
+                self._recursive_declaration_kind = previous
+            if starts_binding or previous == ',':
                 kind = getattr(self, '_recursive_declaration_kind', None)
                 if kind is not None:
                     self._record_recursive_local(token, kind)

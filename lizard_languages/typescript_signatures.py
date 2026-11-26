@@ -1,4 +1,4 @@
-"""Confirm ambiguous return annotations before analysis consumes their tokens."""
+"""Confirm TypeScript syntax before analysis consumes its tokens."""
 
 from .javascript_bindings import JavaScriptBindings
 from .javascript_expression import ends_expression, starts_statement
@@ -7,6 +7,29 @@ from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 
 class ReturnTypeColon(str):
     """A colon confirmed to belong to an arrow's return annotation."""
+
+
+def optional_type_argument_call(tokens):
+    """After `?.`, check that the type arguments end at a call."""
+    code = (token for token in tokens
+            if not token.isspace() and not token.startswith(('//', '/*')))
+    first = next(code, '')
+    if first != '<':
+        # TSX can tokenize a simple type argument as a single token.
+        return first.startswith('<') and first.endswith('>') and next(code, '') == '('
+
+    pairs = TypeScriptTypeAnnotationStates.BRACKETS
+    closing = ['>']
+    for token in code:
+        if token in pairs:
+            closing.append(pairs[token])
+        elif token == closing[-1]:
+            closing.pop()
+            if not closing:
+                return next(code, '') == '('
+        elif token in (')', ']', '}', '>') or (token == ';' and len(closing) == 1):
+            break
+    return False
 
 
 def return_type_colon(tokens, depth):

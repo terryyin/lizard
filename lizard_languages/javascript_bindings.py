@@ -24,11 +24,17 @@ class BindingFrame:
 class OptionalCallBinding(str):
     """A bare optional callee and the scopes that can bind its name."""
 
+    has_type_arguments = False
+
     def __new__(cls, token, function, scopes):
         reference = super().__new__(cls, token)
         reference.function = function
         reference.scopes = scopes
         return reference
+
+
+class UsingDeclaration(str):
+    """A contextual `using` keyword that introduces a resource binding."""
 
 
 def read_recursive_local_bindings(read_token):

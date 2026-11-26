@@ -4,14 +4,14 @@ Language parser for TypeScript
 
 from itertools import tee
 
-from .javascript_bindings import OptionalCallBinding
+from .javascript_bindings import OptionalCallBinding, UsingDeclaration
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
-from .typescript_signatures import ReturnTypeColon, return_type_colon
+from .typescript_signatures import ReturnTypeColon, optional_type_argument_call, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
@@ -302,7 +302,22 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             before_dot = token == '.' and state.last_token
                             if token == '?.':
                                 token = self._mark_optional_call_binding(token, state)
+                                if (self.context.class_field_annotations
+                                        and isinstance(token, OptionalCallBinding)):
+                                    tokens, lookahead = tee(tokens)
+                                    token.has_type_arguments = optional_type_argument_call(lookahead)
+                                    del lookahead
+                                    yield token
+                                    break
                     else:
+                        if (token == 'using' and not member_access
+                                and self.context.class_field_annotations):
+                            tokens, lookahead = tee(tokens)
+                            if self._starts_using_declaration(lookahead, state):
+                                token = UsingDeclaration(token)
+                            del lookahead
+                            yield token
+                            break
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
                             member_access = False
@@ -325,6 +340,28 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 if keyword is not None:
                     yield keyword
                 return
+
+    @staticmethod
+    def _starts_using_declaration(tokens, state):
+        for binding in tokens:
+            if any(line_break in binding for line_break in ('\n', '\r', '\u2028', '\u2029')):
+                return False
+            if not binding.isspace() and not binding.startswith(_COMMENT_STARTS):
+                break
+        else:
+            return False
+        if not binding.replace('$', '_').isidentifier():
+            return False
+        follower = next((token for token in tokens
+                         if not token.isspace() and not token.startswith(_COMMENT_STARTS)), '')
+        if follower != 'of' or binding == 'of':
+            return follower in ('=', ':')
+        while isinstance(state._state, TypeScriptStates):
+            condition = state._state
+            if state._condition_kind == 'for' and condition._in_condition:
+                return condition.last_token in (None, 'await')
+            state = condition
+        return False
 
     def _mark_optional_call_binding(self, token, state):
         functions = getattr(self.context, 'bare_recursive_functions', ())
