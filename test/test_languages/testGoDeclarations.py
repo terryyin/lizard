@@ -105,3 +105,24 @@ func reset() {}
 ''')
     assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
             for f in result] == [('encodeHeader', 8, 15, 2), ('reset', 17, 17, 1)]
+
+
+def test_bodyless_array_result_keeps_the_following_function():
+    for terminator in ('', ';'):
+        result = get_go_function_list('''package wire
+
+import "unsafe"
+
+type Header struct{ Version, Flags uint32 }
+
+func encodeHeader(header Header) [unsafe.Sizeof(Header{})]byte''' + terminator + '''
+
+func reset(flags uint32) uint32 {
+    if flags == 0 {
+        return 1
+    }
+    return 0
+}
+''')
+        assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                for f in result] == [('encodeHeader', 7, 7, 1), ('reset', 9, 14, 2)]
