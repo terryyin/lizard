@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-075_plsql-national-literals.json",
+      "identity": "SEED-075#plsql-national-literals",
+      "completedAt": "2026-11-26T09:57:31.623Z",
+      "blob": "9051b0868a2fe6a4da4597f311f4e0b7135bd6a8"
+    },
+    {
       "fileName": "SEED-075_perl-word-operator-context.json",
       "identity": "SEED-075#perl-word-operator-context",
       "completedAt": "2026-11-26T00:17:17.712Z",
@@ -468,24 +474,6 @@
       "identity": "SEED-010#review-fabio-malpezzi-prs",
       "completedAt": "2026-10-27T09:58:45.282Z",
       "blob": "c644564b0ce516939c8c361f9b1932f232708728"
-    },
-    {
-      "fileName": "SEED-012_modernize-website-react.json",
-      "identity": "SEED-012#modernize-website-react",
-      "completedAt": "2026-10-27T08:33:55.764Z",
-      "blob": "fa60c57f762708cc6043f96c3d5b7e1cdaa1c835"
-    },
-    {
-      "fileName": "SEED-011_revive-lizard-website.json",
-      "identity": "SEED-011#revive-lizard-website",
-      "completedAt": "2026-10-27T06:27:36.268Z",
-      "blob": "b76816df303aa19fad41561447e6c433e53d079d"
-    },
-    {
-      "fileName": "SEED-006_ci-verified-python-support.json",
-      "identity": "SEED-006#ci-verified-python-support",
-      "completedAt": "2026-10-27T04:14:39.002Z",
-      "blob": "1fa7f46c1c13e680a5dc8b94c05604d3a720ed23"
     }
   ],
   "unreadable": []
