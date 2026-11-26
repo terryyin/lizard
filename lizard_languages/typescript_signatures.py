@@ -9,6 +9,33 @@ class ReturnTypeColon(str):
     """A colon confirmed to belong to an arrow's return annotation."""
 
 
+class ConstructorTypeOpen(str):
+    """The start of a constructor type argument list with a function type."""
+
+
+def constructor_has_function_type(tokens):
+    annotation = TypeScriptTypeAnnotationStates(None)
+    function_type = False
+    previous = None
+    bare_void = False
+    for token in tokens:
+        if token.isspace() or token.startswith(('//', '/*')):
+            continue
+        # A nested arrow with a bare void result cannot be a value
+        # expression. The runtime void operator requires an operand.
+        if bare_void and token in (')', ']', '}', ',', ';', '>'):
+            function_type = True
+        if token == '=>' and annotation.accepts_function_type_arrow():
+            function_type = True
+        bare_void = previous == '=>' and token == 'void'
+        previous = token
+        if annotation(token):
+            if token != ',':
+                return token == '>' and function_type
+            annotation = TypeScriptTypeAnnotationStates(None)
+    return False
+
+
 def return_type_colon(tokens, depth):
     """Use the existing type reader; a conditional must keep its separator."""
     annotation = TypeScriptTypeAnnotationStates(None)

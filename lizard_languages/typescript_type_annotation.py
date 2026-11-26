@@ -28,6 +28,9 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         self._qualified_type = False
         self._reference_parenthesis = False
 
+    def accepts_function_type_arrow(self):
+        return self._function_arrow and not self._brackets
+
     def _state_global(self, token):
         if token.isspace():
             self._line_break |= '\n' in token

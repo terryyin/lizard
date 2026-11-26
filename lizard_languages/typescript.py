@@ -10,7 +10,8 @@ from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
-from .typescript_signatures import ReturnTypeColon, return_type_colon
+from .typescript_signatures import (
+    ConstructorTypeOpen, ReturnTypeColon, constructor_has_function_type, return_type_colon)
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
@@ -255,6 +256,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         member_access = False
         before_dot = ''
         keyword = None      # waits for the next token: `{ if: a }`
+        constructor = None
         tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
@@ -306,6 +308,24 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         if token in name_keywords:
                             keyword = token
                             continue
+                    if (constructor is not None or token == 'new') and not token.startswith(_COMMENT_STARTS):
+                        if (token == 'new' and self.context.class_field_annotations
+                                and state.last_token not in member_access_tokens):
+                            constructor = 'name'
+                        elif constructor == 'name' and (token[0].isalpha() or token[0] in '_$#'):
+                            constructor = 'arguments'
+                        elif constructor == 'arguments' and token == '.':
+                            constructor = 'name'
+                        else:
+                            check_arguments = constructor == 'arguments' and token == '<'
+                            constructor = None
+                            if check_arguments:
+                                tokens, lookahead = tee(tokens)
+                                if constructor_has_function_type(lookahead):
+                                    token = ConstructorTypeOpen(token)
+                                del lookahead
+                                yield token
+                                break
                     yield token
                 elif token == '\n':
                     if keyword is not None:

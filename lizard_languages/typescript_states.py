@@ -5,7 +5,7 @@ from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
 from .javascript_expression import JSXChildBrace
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
-from .typescript_signatures import ReturnTypeColon
+from .typescript_signatures import ConstructorTypeOpen, ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
 
@@ -155,7 +155,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             name = self.last_tokens
             if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
                 self.function_name = name
-        elif token == '<' and self._class_body_pending:
+        elif token == '<' and (self._class_body_pending or isinstance(token, ConstructorTypeOpen)):
             self._consume_generic_type_params()
         elif token == "(":
             self._parenthesis_prefix = self._prev_token
