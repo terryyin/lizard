@@ -79,31 +79,28 @@ def call_type_argument_span(tokens):
     for offset, token in enumerate(code, 1):
         if token.startswith(('//', '/*')):
             continue
-        if previous == '[':
+        if token == '>' and (not expects_type or previous == ','):
+            depth -= 1
+            if not depth:
+                return offset if comma and _next_code_token(code) == '(' else 0
+            expects_type = False
+        elif previous == '[':
             if token != ']':
                 return 0
         elif expects_type:
             if token in ('keyof', 'readonly', 'typeof'):
                 continue
-            if token == '>' and previous == ',':
-                depth -= 1
-                expects_type = False
-            elif token.replace('$', '_').isidentifier() or token[0] in "'\"":
-                expects_type = False
-            else:
+            if not (token.replace('$', '_').isidentifier() or token[0] in "'\""):
                 return 0
+            expects_type = False
         elif token == '<':
             depth += 1
             expects_type = True
-        elif token == '>':
-            depth -= 1
         elif token in (',', '|', '&', '.'):
             comma |= token == ','
             expects_type = True
         elif token != '[' and not _packed_type_reference(token):
             return 0
-        if not depth:
-            return offset if comma and _next_code_token(code) == '(' else 0
         previous = token
     return 0
 
