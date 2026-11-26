@@ -178,10 +178,18 @@ class JavaScriptFunctionsMixin:
             self._parameter_bindings = JavaScriptBindings(
                 ')', self.context.current_function)
             self._decorated_parameters = False
+            self._grouped_object_member = None
             self._state = self._dec
             self.context.add_to_long_function_name(" " + token)
 
     def _dec(self, token):
+        if not self._signature and self._parameter_bindings.in_object_pattern:
+            if token == '(' and self._grouped_object_member:
+                self._read_grouped_object_method(token)
+                return
+            self._grouped_object_member = (
+                token if self.last_token in ('{', ',')
+                and token.replace('$', '_').isidentifier() else None)
         if token == '(' and self._parameter_bindings.at_start:
             # Grouped expression, such as an arrow IIFE, rather than parameters.
             self._abandon_optimistic_parameter_group()
@@ -225,6 +233,17 @@ class JavaScriptFunctionsMixin:
         elif (not event.in_expression or event.root_separator) and token != '(':
             return
         self.context.add_to_long_function_name(" " + token)
+
+    def _read_grouped_object_method(self, token):
+        """A method signature proves that this brace holds an object."""
+        def complete(_):
+            self._parameter_bindings.read_token('}', report=False)
+
+        reader = self._read_binding_candidate(
+            '}', complete, as_object=True, track_complexity=False)
+        reader.holds_members = True
+        reader.last_tokens = reader.last_token = self._grouped_object_member
+        reader(token)
 
     def _expression_operand(self, token):
         bindings = self._parameter_bindings
