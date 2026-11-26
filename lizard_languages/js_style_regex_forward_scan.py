@@ -14,12 +14,6 @@ from .js_style_regex_context import (
 from .ruby_documentation import match_opaque_span, may_have_documentation
 
 
-_JS_NON_ASCII_SPACES = frozenset(
-    '\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005'
-    '\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff')
-_ASSERTION_SPACES = _JS_NON_ASCII_SPACES | frozenset(' \t\v\f')
-
-
 def mark_forward(source, js_family):
     """Full forward context when of/await/for/async structure matters."""
     n = len(source)
@@ -260,6 +254,12 @@ def mark_forward(source, js_family):
         while i < n:
             advance()
     return _apply_marks(source, marks)
+
+
+_JS_NON_ASCII_SPACES = frozenset(
+    '\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005'
+    '\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff')
+_ASSERTION_SPACES = _JS_NON_ASCII_SPACES | frozenset(' \t\v\f')
 
 
 def _after_assertion_operand(source, pos):
