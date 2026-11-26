@@ -24,6 +24,20 @@ function close() { return pending.size }
 
 
 @pytest.mark.parametrize('suffix', ('ts', 'tsx'))
+def test_constructor_template_type_keeps_the_following_runtime_function(suffix):
+    source = """function registry<T extends boolean>() {
+  return new Map<`${T extends true ? 'yes' : 'no'}`, () => void>();
+}
+function runtime(ready: boolean) {
+  return new Map<string, () => boolean>([[`${ready ? 'yes' : 'no'}`, () => ready]]);
+}
+"""
+    assert [(f.name, f.start_line, f.end_line, f.parameter_count)
+            for f in functions(source, suffix)] == [
+                ('registry', 1, 3, 0), ('(anonymous)', 5, 5, 0), ('runtime', 4, 6, 1)]
+
+
+@pytest.mark.parametrize('suffix', ('ts', 'tsx'))
 def test_constructor_comparison_keeps_a_runtime_arrow(suffix):
     source = """function isLater(limit: any) {
   return new Date < (() => new Date())() > limit
