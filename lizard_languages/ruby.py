@@ -291,6 +291,7 @@ class RubyReader(RubylikeReader):
     ext = ['rb']
     language_names = ['ruby']
     STATE_MACHINE = RubyStateMachine
+    _control_flow_keywords = RubylikeReader._control_flow_keywords | {'unless'}
 
     def track_nested_structures(self):
         self.parallel_states[0].structure_depth = 0
