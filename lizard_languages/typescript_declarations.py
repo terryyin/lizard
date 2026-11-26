@@ -22,9 +22,7 @@ class TypeScriptDeclarationsMixin:
             self._declaration_binding = True
             self.last_tokens = self._prev_token = token
             return True
-        elif token == 'class' and (
-                not self.as_object or self._in_prop_value
-                or self.as_namespace and not self._ts_declare):
+        elif token == 'class' and (not self.as_object or self._in_prop_value):
             self._class_body_pending = True
         elif (token in ('as', 'satisfies')
               and (not self.as_object or self._in_prop_value)
@@ -34,6 +32,8 @@ class TypeScriptDeclarationsMixin:
         if token == 'declare':
             self._ts_declare = True
             return True
+        if token == 'class' and self.as_namespace and not (self._in_prop_value or self._ts_declare):
+            self._class_body_pending += 1
         if token == 'namespace':
             if not self._ts_declare:
                 self._maybe_read_namespace()

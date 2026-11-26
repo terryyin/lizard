@@ -236,10 +236,13 @@ class JavaScriptFunctionsMixin:
                 and (name[0].isalpha() or name[0] in ('_', '$')))
 
     def _expecting_func_opening_bracket(self, token):
+        if (token == ':' and self.as_namespace_class
+                and getattr(self.function_name, 'is_member_name', False)):
+            self._consume_type_annotation()
+            return
         # Do not reset started_function for arrow functions (=>)
         if token == ':':
-            if not self.as_namespace_class or not getattr(self.function_name, 'is_member_name', False):
-                self.next(self._state_global)
+            self.next(self._state_global)
             self._consume_type_annotation()
             return
         elif token == ';' and self.as_object and self._in_abstract_context:

@@ -12,8 +12,6 @@ class JavaScriptObjectsMixin:
     # A class body or an object literal: braces that hold members.  The
     # reader also reads blocks such as `catch {` or `case 1: {` as objects.
     holds_members = False
-    as_namespace = False
-    as_namespace_class = False
     # In an object: a default value is open, `{ a = async function () {} }`.
     _default_value = False
 
@@ -157,6 +155,9 @@ class JavaScriptObjectsMixin:
                 return True
         return False
 
+    as_namespace = False
+    as_namespace_class = False
+
     def read_object(self):
         def callback(summary):
             self._pending_bindings = summary
@@ -164,15 +165,15 @@ class JavaScriptObjectsMixin:
 
         object_reader = self._read_binding_candidate(
             '}', callback, as_object=True, track_complexity=False)
-        if self._class_body_pending:
-            object_reader.as_class = True
-            object_reader.as_namespace_class = self.as_namespace
+        object_reader.as_class = self._class_body_pending
         object_reader.holds_members = self._opens_members()
         self._class_body_pending = False
         object_reader._static_seen = self._static_seen
         object_reader._async_seen = self._async_seen
         self._static_seen = False
         self._async_seen = False
+        if object_reader.as_class and self.as_namespace:
+            object_reader.as_namespace_class = True
         return object_reader
 
     def _opens_members(self):
