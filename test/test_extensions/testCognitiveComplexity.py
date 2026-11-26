@@ -794,6 +794,25 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
               return {'value': (ready ? 1 : 2) || 0};
             }"""))
 
+    def test_parameter_and_body_expressions_have_independent_scores(self):
+        forms = (
+            "return {'entry': (x = %s) => %s};",
+            "return {entry: (x = %s) => %s};",
+            "const entry = (x = %s) => %s; return entry;",
+            "const entry = async (x = %s) => %s; return entry;",
+            "function entry(x = %s) { return %s; } return entry;",
+            "return {entry(x = %s) { return %s; }};",
+        )
+        cases = (
+            ('a || b', 'x || b'),
+            ('a ? 1 : 2', 'b ? x : 0'),
+        )
+        for form in forms:
+            for default, body in cases:
+                with self.subTest(form=form, default=default):
+                    code = "function factory(a, b) { " + (form % (default, body)) + " }"
+                    self.assertEqual([2, 0], cogc("a.js", code))
+
     def test_nested_function_keeps_its_own_score(self):
         self.assertEqual([3, 2], cogc("a.js", """
             function report(errors) {
