@@ -90,6 +90,7 @@ class _Counter(object):  # pylint: disable=R0902
         self.logical_ops = frozenset(
             getattr(reader, 'logical_operators', ())) - _UNARY_OR_COALESCING
         self.states = WeakKeyDictionary()
+        self.optional_recursions = []
         if profile.nested_functions:
             self.context.bare_recursive_functions = WeakSet()
             self.context.recursive_var_shadows = WeakSet()
@@ -102,7 +103,6 @@ class _Counter(object):  # pylint: disable=R0902
         self.candidates = []    # functions the reader can still abandon
         self.held = {}          # function -> lists of (order, token, line)
         self.order = 0          # number of tokens held so far
-        self.optional_recursions = []
 
     def process(self, token, line=None, function=None):
         """Count the token for its function.  The held tokens come back with
@@ -149,11 +149,6 @@ class _Counter(object):  # pylint: disable=R0902
             self._settle()
             del self.candidates[:]
             self._release(*list(self.held))
-        # A local declaration can bind a name before the declaration's token.
-        for function, state, scopes in self.optional_recursions:
-            if not state.recursed and not any(function in scope for scope in scopes):
-                state.recursed = True
-                function.cognitive_complexity += 1
 
     def _route(self, function, token):
         """The function that counts the bracket, and the token to count.
@@ -355,3 +350,10 @@ class _Counter(object):  # pylint: disable=R0902
                 self._fundamental()
             state.pending_jump_line = None
             state.pending -= 1
+
+    def finish_optional_calls(self):
+        """Resolve optional calls after all of their bindings are known."""
+        for function, state, scopes in self.optional_recursions:
+            if not state.recursed and not any(function in scope for scope in scopes):
+                state.recursed = True
+                function.cognitive_complexity += 1

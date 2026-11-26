@@ -13,8 +13,6 @@ __all__ = (
 
 
 class JavaScriptFunctionsMixin:
-    _local_function_declaration = False
-
     def _read_parenthesis_group(self):
         """Only possible signatures need provisional binding frames."""
         if parameter_group(self._prev_token):
@@ -158,7 +156,7 @@ class JavaScriptFunctionsMixin:
         if token.startswith('<') and token.endswith('>') and len(token) > 1:
             # Single-token generic from TSX tokenizer (e.g., <T>, <Props>)
             return
-        if self._local_function_declaration:
+        if getattr(self, '_local_function_declaration', False):
             self._local_function_declaration = False
             if token != '(':
                 self._record_recursive_local(token, 'function')

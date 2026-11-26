@@ -51,6 +51,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if self._binding_candidate:
             # Only named-formal readers need events for initializer dispatch.
             self._binding_candidate.read_token(token, report=False)
+        return self._dispatch_binding_token(token, reader)
+
+    def _dispatch_binding_token(self, token, reader):
         if self._recursive_local_pattern is not None:
             self._read_recursive_local_pattern(token)
         return CodeStateMachine.__call__(self, token, reader)
@@ -311,6 +314,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
         def read_body(token):
             self._expecting_statement_or_block(token, shadows)
+            if token != '{':
+                self.recursive_statement_scope = shadows
 
         self.next(read_body)
 
@@ -328,8 +333,6 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         else:
             self._prev_token = ''
             self.next(self._state_global, token)
-            if shadows:
-                self.recursive_statement_scope = shadows
 
     def _state_template_literal(self, token):
         if token == '`':
