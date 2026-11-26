@@ -553,6 +553,15 @@ fun classify(flag: Boolean, value: Int) = Pair(
                 ''')
                 self.assertEqual([("", 3, 3, 1), ("classify", 2, 5, 2)], rows(result))
 
+    def test_function_type_in_a_generic_call_keeps_the_next_argument_in_the_caller(self):
+        result = get_kotlin_function_list('''\
+fun handlers(flag: Boolean) = Pair(
+    fun() = emptyMap<String, (Int) -> Int>(),
+    if (flag) 1 else 0,
+)
+        ''')
+        self.assertEqual([("", 2, 2, 1), ("handlers", 1, 4, 2)], rows(result))
+
     def test_expression_body_ends_after_nested_type_arguments_with_a_nullable_type(self):
         result = get_kotlin_function_list('''
 fun decode(value: Any) = value as? List<Pair<String, Int?>>
