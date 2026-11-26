@@ -99,7 +99,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                 elif token in loops and token not in ('&&', '||') \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
-                    l_depth = context.open_level(keep_condition and token in _CONTROL_HEADERS)
+                    l_depth = context.open_level(
+                        token if keep_condition and token in _CONTROL_HEADERS else None)
 
                 if token in block_starts:
                     context.open_block(opens_lambda)
@@ -129,12 +130,13 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.prev_was_else = False
         self.reset_condition_tracking()
 
-    def open_level(self, control_body=False):
+    def open_level(self, header=None):
         """A structure opens a level that its body will close."""
         function = self.current_function
         function.levels_awaiting_body += 1
-        if control_body:
+        if header is not None:
             function.control_header_depth = function.condition_depth
+            function.in_control_header = header in ('if', 'while')
         return self.add_nd_condition()
 
     def open_block(self, opens_lambda=False):
@@ -153,6 +155,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         function.block_levels.append(function.levels_awaiting_body)
         function.levels_awaiting_body = 0
         function.control_header_depth = None
+        function.in_control_header = False
 
     def close_block(self):
         """A block end releases the levels its block took over."""
@@ -165,6 +168,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         function.condition_depth = levels.condition_depth
         function.logical_operator_added = levels.logical_operator_added
         function.control_header_depth = levels.header_depth
+        function.in_control_header = levels.in_control_header
         function.in_condition = True
         return depth
 
@@ -173,6 +177,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         levels = self.current_function.levels_awaiting_body
         self.current_function.levels_awaiting_body = 0
         self.current_function.control_header_depth = None
+        self.current_function.in_control_header = False
         self.current_function.logical_operator_added = False
         return self.add_nd_condition(-levels)
 
@@ -191,15 +196,13 @@ class NDFileInfoAddition(FileInfoBuilder):
         function = self.current_function
         function.in_condition = True
         function.condition_depth += 1
-        function.logical_operator_added = False
+        if not function.in_control_header:
+            function.logical_operator_added = False
 
     def close_condition(self):
         """A ")" closes a level, and the condition with its last level."""
         self.decrement_condition_depth()
-        function = self.current_function
-        if function.condition_depth == 0:
-            function.in_condition = False
-            function.logical_operator_added = False
+        _close_logical_condition(self.current_function)
 
     def increment_condition_depth(self):
         self.current_function.condition_depth += 1
@@ -214,9 +217,7 @@ class NDFileInfoAddition(FileInfoBuilder):
             enclosing = self.stacked_functions[-1]
             if enclosing.condition_depth > 0:
                 enclosing.condition_depth -= 1
-                if enclosing.condition_depth == 0:
-                    enclosing.in_condition = False
-                    enclosing.logical_operator_added = False
+                _close_logical_condition(enclosing)
 
     def get_condition_depth(self):
         return self.current_function.condition_depth
@@ -225,6 +226,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.in_condition = False
         self.current_function.condition_depth = 0
         self.current_function.logical_operator_added = False
+        self.current_function.in_control_header = False
 
     def set_logical_operator_added(self, added):
         self.current_function.logical_operator_added = added
@@ -242,12 +244,21 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.prev_was_else = False
 
 
+def _close_logical_condition(function):
+    if function.condition_depth == 0:
+        function.in_condition = False
+    if function.condition_depth in (0, function.control_header_depth):
+        function.logical_operator_added = False
+        function.in_control_header = False
+
+
 class _ConditionBrace:  # pylint: disable=R0903
     """A condition suspended while a lambda body reads its statements."""
 
     def __init__(self, function):
         self.levels = function.levels_awaiting_body
         self.header_depth = function.control_header_depth
+        self.in_control_header = function.in_control_header
         self.condition_depth = function.condition_depth
         self.logical_operator_added = function.logical_operator_added
 
@@ -352,6 +363,7 @@ def _init_nesting_depth_data(self, *_):
     self.control_header_depth = None
     self.block_levels = []  # structure levels each open block will close
     self.in_condition = False  # Track if we're inside a condition
+    self.in_control_header = False
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
