@@ -251,22 +251,27 @@ class CppRValueRefStates(CodeStateMachine):
             getattr(token, 'is_ignored_condition', False) or getattr(token, 'is_member_name', False))
 
 
+def _guard_tests(path):
+    while path is not None:
+        guard, path = path
+        yield guard
+
+
 class _MacroConditional:
     """Keep the guard paths and macro writes of one conditional."""
 
-    def __init__(self, guard):
-        self.arms = [[guard]]
+    def __init__(self, guard, parent):
+        # Every path links one guard to the tests it shares with other arms.
+        self.arms = [(guard, parent)]
         self.names = set()
         self.has_else = False
 
     def next_arm(self, guard):
         if self.has_else:
             return
-        path = self._otherwise()
+        previous_tests = self._otherwise()
         self.has_else = guard is None
-        if guard is not None:
-            path.append(guard)
-        self.arms.append(path)
+        self.arms.append(previous_tests if self.has_else else (guard, previous_tests))
 
     def paths(self):
         yield from self.arms
@@ -274,9 +279,8 @@ class _MacroConditional:
             yield self._otherwise()
 
     def _otherwise(self):
-        current = self.arms[-1]
-        key, sense = current[-1]
-        return current[:-1] + [(key, not sense)]
+        (key, sense), parent = self.arms[-1]
+        return (key, not sense), parent
 
 
 class _MacroPrefixDefinitions:
@@ -304,7 +308,7 @@ class _MacroPrefixDefinitions:
 
     def read(self, directive, definition):
         if directive in self._START:
-            self._branches.append(_MacroConditional(self._guard(directive, definition)))
+            self._branches.append(_MacroConditional(self._guard(directive, definition), self._current_path()))
         elif self._branches and directive in self._ALTERNATIVES:
             guard = self._guard("if" + directive[4:], definition) if directive in self._ELIF else None
             self._branches[-1].next_arm(guard)
@@ -313,12 +317,15 @@ class _MacroPrefixDefinitions:
         elif directive == "include":
             self._include_version = object()
 
+        updating_definition = directive in ("define", "undef")
+        if not updating_definition and not self._prefix_names:
+            return self._active_prefixes
         guards = self._current_guards()
         if guards is None:
             self._active_prefixes.clear()
             return self._active_prefixes
-        if directive in ("define", "undef"):
-            name = self._record_definition(directive, definition, guards)
+        if updating_definition:
+            name = self._record_definition(directive, definition, self._current_path())
             if name in self._prefix_names and self._is_prefix(name, guards):
                 self._active_prefixes.add(name)
             else:
@@ -332,23 +339,33 @@ class _MacroPrefixDefinitions:
         if self._branches:
             self._branches[-1].names.update(branch.names)
         names = branch.names & self._prefix_names
-        outer = self._current_guards()
-        if not names or outer is None:
+        if not names:
             return
-        paths = [self._compatible_guards(outer, path) for path in branch.paths()]
-        paths = [path for path in paths if path is not None]
-        for name in names:
-            if paths and all(self._is_prefix(name, path) for path in paths):
-                # After the join, every reachable arm establishes the same role.
+        reachable = False
+        for path in branch.paths():
+            guards = self._compatible_guards(path)
+            if guards is None:
+                continue
+            reachable = True
+            names = {name for name in names if self._is_prefix(name, guards)}
+            if not names:
+                return
+        if reachable:
+            # After the join, every reachable arm establishes the same role.
+            outer = self._current_path()
+            for name in names:
                 self._definitions[name].append((outer, True))
 
+    def _current_path(self):
+        return self._branches[-1].arms[-1] if self._branches else None
+
     def _current_guards(self):
-        return self._compatible_guards({}, (test for branch in self._branches for test in branch.arms[-1]))
+        return self._compatible_guards(self._current_path())
 
     @staticmethod
-    def _compatible_guards(outer, path):
-        guards = outer.copy()
-        for key, sense in path:
+    def _compatible_guards(path):
+        guards = {}
+        for key, sense in _guard_tests(path):
             if guards.setdefault(key, sense) != sense:
                 return None
         return guards
@@ -368,7 +385,7 @@ class _MacroPrefixDefinitions:
         key = kind, definition, self._macro_versions.get(definition), self._include_version
         return key, sense
 
-    def _record_definition(self, directive, definition, guards):
+    def _record_definition(self, directive, definition, path):
         word = re.match(r"\w+", definition)
         if not word:
             return
@@ -379,20 +396,26 @@ class _MacroPrefixDefinitions:
         is_prefix = directive == "define" and bool(self._PREFIX_MACRO.match(definition))
         if is_prefix:
             self._prefix_names.add(name)
-        if not guards:
+        if path is None:
             self._definitions.pop(name, None)
             if not is_prefix:
                 self._prefix_names.discard(name)
                 return name
-        self._definitions.setdefault(name, []).append((guards, is_prefix))
+        self._definitions.setdefault(name, []).append((path, is_prefix))
         return name
 
     def _is_prefix(self, name, guards):
-        for required, is_prefix in reversed(self._definitions[name]):
-            if any(key in guards and guards[key] != sense for key, sense in required.items()):
-                continue
-            # A possibly active definition cannot prove an expression role.
-            return is_prefix and required.keys() <= guards.keys()
+        for path, is_prefix in reversed(self._definitions[name]):
+            known = True
+            for key, sense in _guard_tests(path):
+                active = guards.get(key)
+                if active is None:
+                    known = False
+                elif active != sense:
+                    break
+            else:
+                # A possibly active definition cannot prove an expression role.
+                return is_prefix and known
         return False
 
 
