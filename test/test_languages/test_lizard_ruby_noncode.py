@@ -110,6 +110,24 @@ end
     ]
 
 
+def test_heredoc_before_a_call_closing_parenthesis_preserves_later_code():
+    source = '''
+def prepare(checker)
+  checker.verify(<<~RUBY)
+    if requested
+      authorize
+    end
+  RUBY
+  use_fallback if enabled?
+end
+'''
+
+    result = analyze_file.analyze_source_code('verify.rb', source)
+
+    assert [(f.name, f.start_line, f.end_line, f.nloc, f.cyclomatic_complexity)
+            for f in result.function_list] == [('prepare', 2, 9, 8, 2)]
+
+
 def test_documentation_quote_does_not_hide_following_regex():
     source = "=begin\nWhat's this?\n=end\ndef real\n if /if/ =~ x\n  1\n end\nend\n"
     result = analyze_file.analyze_source_code('sample.rb', source)
