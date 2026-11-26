@@ -23,9 +23,14 @@ class JavaScriptObjectsMixin:
         state = active_js_state(self)
         return state._state == state._state_global and state._typed_class_member()
 
-    def member_name_context(self):
+    def member_name_context(self, follower=None):
         """Whether a word before '(' here names a method, `catch(e) {}`."""
         state = active_js_state(self)
+        if follower == '(' and state._state == state._dec:
+            # The signature reader has not yet handed this object to its
+            # member reader. Mark its first keyword before counting it.
+            return (not state._signature and state.last_token in ('{', ',')
+                    and state._parameter_bindings.in_object_pattern)
         return (state.holds_members and state._state == state._state_global
                 and not state._in_prop_value and not state._default_value
                 and (state.as_class or state.last_token in _MEMBER_STARTS))
