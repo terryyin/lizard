@@ -66,7 +66,7 @@ def active_js_state(state):
 def awaiting_line_token(state):
     active = active_js_state(state)
     return (active._state == active._expecting_func_opening_bracket
-            or active.as_class and active._in_prop_value)
+            or _in_javascript_class_field(active))
 
 
 def end_before_line_token(state, arrows, token):
@@ -82,8 +82,13 @@ def end_before_line_token(state, arrows, token):
 
 
 def _starts_next_class_field(state, token):
-    return (state.as_class and state._in_prop_value
+    return (_in_javascript_class_field(state)
             and state._state == state._state_global
             and (token[0].isalnum() or token[0] in _STATEMENT_STARTS or token[0] == '@')
             and starts_statement(token)
             and ends_expression(state.last_token or ''))
+
+
+def _in_javascript_class_field(state):
+    return (state.as_class and state._in_prop_value
+            and not state.context.class_field_annotations)
