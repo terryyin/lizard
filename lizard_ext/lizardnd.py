@@ -131,7 +131,7 @@ def _python_depth(tokens, reader):
             yield token
             continue
         if statement_start and (token in _PYTHON_SUITES or
-                                (token == 'case' and reader._keyword_case)):
+                                (token == 'case' and getattr(reader, '_keyword_case', False))):
             suites.append(context.current_nesting_level)
             context.add_nd_condition()
         elif token in ('if', 'for'):
