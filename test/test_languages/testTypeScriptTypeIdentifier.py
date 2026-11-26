@@ -52,3 +52,23 @@ type
 $onClose = () => { dialog.close(); };
 """
         self.assertEqual([('$onClose', 2, 2, 1)], summary('a.ts', code))
+
+    def test_multiline_function_type_alias_keeps_following_arrow(self):
+        for filename, params in (('types.ts', '<T>'), ('types.tsx', '<T,>')):
+            with self.subTest(filename=filename):
+                code = f"""type $Parse = {params}(
+  value: T,
+) => T
+const parse: $Parse = (value) => value
+"""
+                self.assertEqual([('parse', 4, 4, 1)], summary(filename, code))
+
+    def test_alias_intersection_keeps_following_function_expression(self):
+        code = """type Matcher = { description: string } & (
+  (label: string) => boolean
+)
+(function initialize() { return true })()
+"""
+        for filename in ('types.ts', 'types.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([('initialize', 4, 4, 1)], summary(filename, code))
