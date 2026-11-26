@@ -29,6 +29,7 @@ _SCRIPT_TEXT_OR_END = re.compile(
     + r'|`|' + _SCRIPT_END_LOWERCASE.pattern, re.S)
 # Elements of a template that hold only text, as in an HTML parser.
 _TEXT_ELEMENTS = frozenset(('script', 'style', 'textarea', 'title'))
+_SCRIPT_END_TAIL = re.compile(r'[\t\n\f\r ]*>')
 # The blocks of reused source objects (warmed analyzer batches): the same
 # code strings keep their memoized regex marks.
 _BLOCK_CACHE = {}
@@ -119,6 +120,11 @@ def _script_end(source, pos, end_pattern):
         token = match.group()
         if token.startswith('</'):
             return match.start()
+        if token.startswith('//') and '</script' in token:
+            # The markup end tag can close the script on the comment line.
+            for tag in re.finditer(r'</script', token):
+                if _SCRIPT_END_TAIL.match(source, match.start() + tag.end()):
+                    return match.start() + tag.start()
         if token == '`':
             pos, expressions = _template_end(source, match.start())
             if expressions is None:

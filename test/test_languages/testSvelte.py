@@ -78,6 +78,19 @@ class TestSvelte(unittest.TestCase):
             [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity,
               f.nloc, f.token_count) for f in with_markup[:1]])
 
+    def test_script_end_in_line_comment(self):
+        info = analyze_file.analyze_source_code('Example.svelte', '''\
+<script>
+function format(value) {
+  return value ?? ''
+}
+// end</script>
+<textarea>Use </script> to close the script block.</textarea>
+''')
+        self.assertEqual([('format', 2, 4, 2), (COMPONENT, 2, 4, 1)],
+                         function_summaries(info.function_list))
+        self.assertEqual(3, info.nloc)
+
     def test_module_script_and_instance_script(self):
         functions = get_svelte_function_list('''\
 <script module>
