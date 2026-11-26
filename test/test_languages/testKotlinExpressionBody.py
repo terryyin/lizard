@@ -40,6 +40,40 @@ class Test_parser_for_Kotlin_expression_body(unittest.TestCase):
         ''')
         self.assertEqual(["exprBody", "braced"], [f.name for f in result])
 
+    def test_leading_forgiveness_after_an_expression_body(self):
+        directives = ("// #lizard forgives\n// Review folded this route.",
+                      "/* #lizard forgives\n   The route has its own check. */")
+        for directive in directives:
+            with self.subTest(directive=directive):
+                result = FileAnalyzer(get_extensions(["nd", "ns"])).analyze_source_code("a.kt", f'''\
+fun ready(flag: Boolean) = if (flag) 1 else 0
+{directive}
+fun following(flag: Boolean): Int {{ return if (flag) 1 else 0 }}
+fun ordinary(flag: Boolean): Int {{ return if (flag) 1 else 0 }}
+                ''').function_list
+                self.assertEqual(
+                    [("ready", 2, 1, 2), ("ordinary", 2, 1, 2)],
+                    [(f.name, f.cyclomatic_complexity, f.max_nesting_depth,
+                      f.max_nested_structures) for f in result],
+                )
+                self.assertEqual((1, 1), (result[0].start_line, result[0].end_line))
+
+    def test_forgiveness_inside_a_continued_expression_body(self):
+        result = get_kotlin_function_list('''\
+fun component(): Any =
+    // #lizard forgives
+    object {}
+fun ready() = true
+        ''')
+        self.assertEqual([("ready", 4, 4, 1)], rows(result))
+
+    def test_trailing_forgiveness_in_an_expression_body(self):
+        result = get_kotlin_function_list('''\
+fun fallback() = 0 /* #lizard forgives */
+fun ready() = true
+        ''')
+        self.assertEqual([("ready", 2, 2, 1)], rows(result))
+
     def test_expression_body_when_complexity(self):
         result = get_kotlin_function_list('''
             fun exprBody(x: Int) = when (x) {
