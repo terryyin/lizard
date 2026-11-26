@@ -9,245 +9,203 @@ description: >-
 
 # Execute planned or planless work
 
-Execute the selected plan or one explicitly authorized planless quick slice from an
-understood canonical feature story or contextual instruction. The coordinator owns
-delivery; implementation agents return uncommitted changes.
+The coordinator owns execution and delivery. Implementation agents return
+uncommitted changes.
 
-Options: `--trunk` selects Trunk Mode; omitted mode keeps Story Branch Mode.
-`--one-shot` keeps selected trivial work's result for review; `--auto-land`
-lands it. `--skip-retro` skips the automatic planned-execution retrospective.
-`--replan` and `--no-replan` choose whether an oversized attempt may continue
-through planning.
+Open a step's references when its prerequisites are met. At startup, establish
+source, authority and checkout readiness before loading CI setup. Resolve
+applicable observation and select the slice before loading delegation guidance.
+
+Use [targeted retrieval](references/disposable-research.md) for the current
+decision. Read applicable headings or bounded ranges that fit the tool output.
+Group passages for the same decision, including only the prerequisites they need.
+If output cuts off required text, recover that passage with a narrower request
+before continuing. Reuse complete passages while their sources and assumptions hold.
+If an authoritative input remains unavailable, name it and stop the dependent step.
+
+Use the tools named for the current step when available. When one is missing,
+search for the operation and result you need. Inspect plausible tools' descriptions,
+inputs and outputs to confirm they provide the required behavior, including any
+continuation or notification needed by the workflow.
 
 ## Establish execution context
 
-Identify the execution source before changing project state:
+Resolve source and authority before changing project state or delegating.
 
-- **Planned:** require an executable plan. For a feature story, read its seed section.
-  For a bounded correction, require its complete correction input — its story and
-  plan, or a plan-homed correction's plan — under [planning scope and lifecycle](../dough-story-refinement/references/planning.md#choose-the-planning-level).
-- **Quick:** require an explicit current instruction that authorizes planless
-  execution. The source is either a canonical feature story with understood goal,
-  scope, key examples, and no blocking decision, plus the instruction to skip slice
-  planning; or a contextual instruction that supplies the objective, known
-  expectations, remaining uncertainty, and authority. A seed alone or apparent story
-  size cannot select this path. Corrections require plans. In Story Branch or
-  Trunk Mode, first [admit](#admit-accepted-work-that-no-backlog-list-holds) an
-  accepted independent mission; otherwise create no story, plan, or queue entry.
+- **Planned** work requires an executable plan and the selected story's seed
+  section or the [complete correction input](../dough-story-refinement/references/planning.md#choose-the-planning-level).
+- **Quick** work requires explicit current authorization to execute one
+  planless slice and a source. Use either a canonical story with understood
+  goal, scope, key examples and no blocking decision, or a contextual instruction
+  with objective, known expectations, remaining uncertainty and authority.
+  A seed alone or apparent size cannot select this path. Corrections require plans.
+  In Story Branch or Trunk Mode [admit an accepted independent mission](#admit-accepted-work-that-no-backlog-list-holds)
+  when no backlog list holds it. Keep the quick scope in its story when
+  admitted, and the decisions, progress and proof in the conversation.
+  Create no plan, completion note or substitute record. Resolve any remaining
+  expectations that a behavior change requires, or return an evidenced no-change result.
 
-Name missing authority or source context and stop before backlog changes, delegation,
-or implementation. Successful quick execution keeps its scope in its story, when
-admitted, and its decisions, progress, and proof in the conversation; create no plan,
-completion note, or substitute record. A contextual instruction may leave expectations
-unresolved. Carry its goal and uncertainty, resolve what a behavior change requires,
-and allow an evidenced no-change conclusion through the explained-empty-change path.
-
-Use [planning level](../dough-story-refinement/references/planning.md#choose-the-planning-level)
-for source ownership, [proof ownership](../dough-story-refinement/references/planning.md#own-executable-proof)
-when mapping or accepting proof, and [active-plan refinement](../dough-story-refinement/references/planning.md#refine-the-active-plan)
-for plan updates. Judge proof during execution; retain completed plans, source
-history, and proof decisions for retrospective and
-[story wrap-up](../dough-story-wrap-up/SKILL.md). Quick work retains its source,
-conversation, and execution identity. Use
-[slice decomposition](../dough-story-decomposition/references/problem-decomposition.md#decompose-slices)
-for Behavior/Structure types and [slice sizing](../dough-story-decomposition/references/problem-decomposition.md#size-and-escalate-slices)
-for budgets and learning escalation.
-
-At startup, obtain enough authoritative context to select and delegate the first slice.
-Reuse instructions while their sources and applicability assumptions remain unchanged.
-Resolve project context at the first boundary that needs it:
-
-- execution-source kind;
-  [replanning permission](references/execution-decisions.md#choose-replanning-permission);
-  integration checkout, when one exists, and branch for a claim, using the project's configured integration branch or `main` when none is supplied;
-  execution mode and location: default Story Branch Mode; `--trunk` or a clear
-  equivalent selects Trunk Mode; explicit caller selection uses the current
-  branch. Resolve contradictions before changing state. Mode never creates
-  execution authority; for planned work, plan path and status vocabulary;
-- backlog path and selected entry for work selected from **Backlog list**;
-- selective formatter and commit hook contract before taking or admitting work and its claim commit;
-- navigation, focused tests, runtime wrapper, and workflow precedence for the selected slice;
-- authorized push destination before delivery; for Story Branch or Trunk Mode, also
-  [trunk publication's Preconditions](references/trunk-publication.md#preconditions) before
-  selecting the owned workspace and taking or admitting work, and before publishing a
-  claim, validated increment, or owned repair — those preconditions resolve
-  publication inputs and defer shared-checkout preservation to
-  [maintain the default checkout](references/maintain-default-checkout.md);
-- generation triggers and commands when affected; and
-- [refactor context](../dough-post-change-refactor/SKILL.md) before refactor delegation.
-
-Missing context stops its affected boundary, including first-slice delegation when
-needed there. Other invoking tools, including GSD, retain this slice delivery contract;
-a phase or task cannot replace a slice.
-
-## Read guidance at each boundary
-
-Read each row when its boundary is reached, never earlier, and as its own tool
-result, never combined with another row. On a host that reads this skill body as
-a tool result, the body is its own read. Each row fits one tool result; a row
-already read needs no reload while its sources stay unchanged. When a passage is
-truncated or absent, follow [targeted retrieval](references/disposable-research.md)
-for that passage alone.
-
-| Boundary                                                              | Reads                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Skill body, on a host that reads it as a tool result                  | [this skill](SKILL.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| An established start your instruction carries                         | [established start](references/established-start.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| Before creating the execution workspace                               | [execution location](references/execution-location.md); when CI setup applies, [runtime setup](references/runtime-setup.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| On Codex, arming observation at execution start                       | [own one observer](references/ci-monitor.md#own-one-observer), [Codex adapter](references/ci-notify-codex.md), [runtime setup](references/runtime-setup.md)                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Before first implementation delegation                                | [delegation](references/delegation.md), [reassessment](references/execution-decisions.md#reassess-before-extending-work), [human judgment](references/execution-decisions.md#stop-for-human-judgment), [replanning permission](references/execution-decisions.md#choose-replanning-permission), [targeted retrieval](references/disposable-research.md), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries), [proof evidence](references/proof-evidence.md), [return contract](references/return-report.md) |
-| Before accepting a return                                             | in planned Story Branch Mode [freshness settlement](references/deliver-the-change.md#settle-freshness-before-dependent-work) and [named siblings](references/deliver-the-change.md#check-named-siblings), then [proof acceptance](references/wrap-up.md#accept-proof), [return contract](references/return-report.md) |
-| Before delivery, or a validated increment or owned repair publication | [freshness settlement](references/deliver-the-change.md#settle-freshness-before-dependent-work), [named siblings](references/deliver-the-change.md#check-named-siblings), [delivery](references/deliver-the-change.md#deliver-the-change), [fresh increment](references/fresh-increment.md#publish), [increment publication](references/trunk-publication.md#publish-an-execution-increment-or-repair), [publish the candidate](references/trunk-publication.md#publish-the-candidate), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries) |
-| Arming observation on other hosts                                     | [CI observation](references/ci-monitor.md), [Cursor and Claude Code adapters](references/ci-notify-hosts.md)                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Handling a CI notification                                            | [handle a notification](references/ci-monitor.md#handle-a-notification), with only the current host's adapter: [Codex](references/ci-notify-codex.md) or [Cursor and Claude Code](references/ci-notify-hosts.md)                                                                                                                                                                                                                                                                                                                                                                          |
-| Before finishing or stopping                                          | [finish or stop](references/finish-or-stop.md), [await the applicable revision at completion](references/ci-completion-wait.md), [story-obligation inputs](references/story-obligations.md#use-the-record-at-execution-boundaries), in Story Branch Mode [source freshness](references/source-freshness.md)                                                                                                                                                                                                                                                                               |
-
-Read other [execution decisions](references/execution-decisions.md) sections when
-they trigger. Arm from the execution checkout against the authorized target
-branch; do not wait for CI.
+Story Branch Mode is the default. `--trunk` or a clear equivalent selects
+Trunk Mode. Explicit caller selection uses the current branch. Resolve
+contradictions before changing state. Mode never grants execution authority.
+[Resolve replanning permission](references/execution-decisions.md#choose-replanning-permission)
+from `--replan`, `--no-replan` or existing authority. `--skip-retro` skips the
+automatic planned-execution retrospective. `--one-shot` keeps selected trivial
+work for review, and `--auto-land` selects its automatic landing.
 
 ## Take or admit work
 
-After resolving execution source and authority, inspect the backlog before
-plan-status changes, observer startup, delegation, or implementation. Resolve the
-selective formatter and claim commit hook contract. An absent or understood
-check-only hook permits the transition; an unknown, mutating, failing, or disputed
-hook stops with the queue unchanged. Resolve [publication
-preconditions](references/trunk-publication.md#preconditions), including the
-authorized remote/trunk, before a Story Branch or Trunk Mode startup that publishes
-a claim. Existing current-branch and host-owned checkout restrictions still apply.
+When the instruction carries an [established start](references/established-start.md),
+retain its identity and accepted publication. Use the named checkout and skip
+the start command. Continue at [checkout setup](#choose-the-execution-location).
 
-When your instruction carries an established start, follow [established start](references/established-start.md) instead of the start command below.
-When your session holds this story's Preparing workspace with unlanded preparation, first follow
-[hand off to execution in the same session](../dough-story-refinement/references/preparation-journey.md#hand-off-to-execution-in-the-same-session) before that command.
-When your session's first message carried an established session, give that command the workspace and branch [established session](references/established-session.md) decides.
+Otherwise inspect the backlog before changing plan status, starting
+observation or delegating. For queued work, resolve its selected entry and
+the plan path and status vocabulary. Before taking or admitting work, resolve
+the selective formatter and claim commit hook contract. An absent or understood
+check-only hook permits the transition. An unknown, mutating, failing or disputed
+hook stops with the queue unchanged.
+
+For Story Branch or Trunk Mode, resolve [publication preconditions](references/trunk-publication.md#preconditions),
+the originating integration checkout if one exists, the authorized remote and
+the configured integration branch (`main` when none is supplied). Resolve
+[execution location](references/execution-location.md) for the owned workspace.
+If this session holds the story's unlanded Preparing workspace, follow
+[the same-session handoff](../dough-story-refinement/references/preparation-journey.md#hand-off-to-execution-in-the-same-session).
+If the first message carried an [established session](references/established-session.md),
+use the workspace and branch it decides.
 
 To take or admit work in Story Branch or Trunk Mode, invoke the installed
-`scripts/execution-start.mjs start` once with the originating integration
-checkout as `--integration` when one exists. Without one, an existing owned
-workspace supplies repository access; to create a new workspace, supply an
-owned worktree of the repository or its common Git directory as
-`--repository`, which is only read from, never refreshed. Also supply the
-owned workspace path and branch, selected identity, stable execution publisher
-ID, mode (`trunk` or `story-branch`), actual remote and trunk branch, and the
-established `--push-authorized --workspace-authorized` flags. Supply your own `--host` (`claude`, `codex`, or
-`cursor`) and `--model`; omit either you cannot state rather than guess. Supply
-`--plan` as a path relative to the backlog directory when explicitly selected;
-the command also resolves the canonical published plan. The command fetches trunk,
-checks the published selected source and preparation, selects the workspace or reuses it under [refresh
-eligibility](references/maintain-default-checkout.md#refresh-eligibility), names you as an agent,
-commits an isolated Take that publishes your agent profile, makes that agent the
-author of your workspace commits (`workspaceAuthorship: "not-configured"` means
-only the Take commit names the agent), confirms publication on remote trunk,
-publishes a Story Branch Mode execution branch at that Take so the branch the
-profile names exists on the remote, and reports local refresh separately.
+`scripts/execution-start.mjs start` once. Supply `--integration` with the
+originating integration checkout when it exists. Without one, an existing
+owned checkout supplies repository access, or `--repository` supplies an
+owned worktree or common Git directory as a read-only source for a new
+workspace. Supply the owned workspace and branch, story identity, stable
+publisher ID, mode, remote and trunk, and the established
+`--push-authorized --workspace-authorized` flags. Give `--host` (`claude`,
+`codex` or `cursor`) and `--model` when known. Give `--plan` relative to the
+backlog directory when explicitly selected.
 
-Use the [compact start result](references/execution-location.md#read-and-recover-the-start-result)
-to retain publication, local maintenance, and recovery coordinates. An uncertain
-result stops implementation; resume that retained start rather than publishing
-another claim.
+The command verifies the published source and preparation, publishes the
+isolated Take and agent profile, sets workspace authorship when configured,
+and publishes the Story Branch execution branch at the Take. Retain the
+[compact start result](references/execution-location.md#read-and-recover-the-start-result)
+with publication, local maintenance and recovery coordinates. An uncertain
+result stops implementation until that start is recovered.
 
-Every accepted start, new or resumed, then requires this project's
-checkout-bound setup and applicable command under [execution
-location](references/execution-location.md) before implementation. Setup failure
-preserves the accepted claim and workspace. The separate product-backlog Take
-tool keeps its local domain purpose; a local Taken entry alone does not satisfy
-this startup boundary. Queued current-branch work keeps its existing local Take
-contract and gains no publication authority. Leave taken work through pauses,
-failures, completion, and retrospective; wrap-up removes it.
+A local Taken entry alone does not satisfy managed startup. Queued
+current-branch work uses its existing local Take contract and gains no
+publication authority. Leave taken work through pauses, failures, completion
+and retrospective. Wrap-up removes it.
 
 ### Admit accepted work that no backlog list holds
 
-When the current instruction accepts a mission that no backlog list holds,
-follow [admit accepted work](references/admit-accepted-work.md), which admits it
-with this start command and `--admit` before its substantive work. Explicitly
-selected [one-shot work](references/one-shot.md) starts with `--one-shot` instead.
+Follow [admit accepted work](references/admit-accepted-work.md) and supply
+`--admit` to the startup command before substantive work. Explicitly selected
+[one-shot work](references/one-shot.md) uses `--one-shot` instead.
 
 ## Choose the execution location
 
-Follow [execution location](references/execution-location.md) for mode, workspace
-creation, project-command readiness, reuse of host-established preparation for the
-selected checkout, retained identity, execution resume, push destination, and
-checkout-bound runtime. That reference applies the shared checkout ownership
-lifecycle for selection, local checkout role, and target selection.
+Apply [execution location](references/execution-location.md) to select or
+verify the checkout and target and run the checkout-bound setup and applicable
+project command before implementation. Reuse host preparation only when it
+holds for the selected checkout. Setup failure preserves the claim and workspace.
+
+### Arm CI observation
+
+After checkout readiness, follow [runtime setup](references/runtime-setup.md)
+to resolve the checkout-bound runtime, CI source and prerequisites. Follow
+[observer ownership](references/ci-monitor.md#own-one-observer) to recover or
+arm this coordinator's observer and continue without waiting for CI. Observe
+the authorized ordinary publication target. In Story Branch Mode this is the
+remote execution branch. In Trunk Mode it is the remote integration branch.
+Use the adapter for this host at this step.
+
+- **Codex** uses its [yielded observer](references/ci-notify-codex.md).
+- **Cursor or Claude Code** uses its [hook-backed observer](references/ci-notify-hosts.md).
+
+At a safe boundary after a notification, [handle it](references/ci-monitor.md#handle-a-notification)
+using the current host adapter for ownership, pause and recovery.
 
 ## Continue or recover at an execution boundary
 
-Planned work uses the existing plan and conversation under
-[execution and resume state](../dough-story-refinement/references/planning.md#write-an-executable-plan).
-Quick work uses its source and conversation, without a recovery artifact. Retain the
-resolved replanning permission with that context. During uninterrupted
-work, reuse decisions, accepted proof, and delivery progress while their sources,
-assumptions, and covered boundaries hold. After confirmed push, obtain only newly relevant
-next-slice detail; a slice transition alone needs no full recovery read.
+Use the existing [plan and execution state](../dough-story-refinement/references/planning.md#write-an-executable-plan)
+for planned work. For quick work use its source and conversation. Retain the
+resolved replanning permission. Continue with newly relevant detail while
+recorded decisions, proof and delivery evidence still apply.
 
-After interruption or a changed observation from Git, agents, or observer coverage, verify
-execution identity first and reconcile only affected worktree/index, branch/commits,
-implementation/refactor return, and exact observer identity. Preserve unrelated or ambiguously
-owned work. Reuse proof only while promise, boundary, implementation, setup, and observations match.
-In a new coordinator session, give the first slice-clock `start`
-`--after-ended-session`, whether resuming the same slice or starting another.
-Follow [track active time](references/oversized-slice.md#track-active-time) for
-settlement and the stop-time `pause` rule.
+After interruption or changed evidence, verify execution identity first.
+Reconcile the affected worktree, index, branch and commits, agent return and
+exact observer identity. Preserve unrelated or ambiguously owned work. Reuse
+proof while the promise, boundary, implementation, setup and observations match.
+On a new coordinator's first slice-clock `start`, pass `--after-ended-session`.
+Follow [active-time tracking](references/oversized-slice.md#track-active-time)
+for settlement and pause.
 
-Resume at the first delivery obligation not established by evidence. An incomplete
-or oversized return still needs [oversized-slice handling](references/oversized-slice.md)
-before proof acceptance. Otherwise implementation returns still need proof
-acceptance/refactoring; completed refactors need remaining delivery;
-uncommitted plan edits need staging/commit. Classify an interrupted claim,
-increment, or repair with
-[interrupted publication](references/trunk-publication.md#resume-an-interrupted-publication)
-before any further commit or push. Plan status or a compact report proves none
-of those later boundaries. When pushed commit, retained delivery result, and
-required registration agree, select the next unfinished slice in plan order.
-Missing/contradictory execution identity requires the recovery decision above.
+Resume at the first unresolved boundary. An incomplete or oversized return
+needs [oversized-slice handling](references/oversized-slice.md) before
+acceptance. An interrupted claim, increment or repair needs
+[publication recovery](references/trunk-publication.md#resume-an-interrupted-publication)
+before another commit or push. Use the pushed commit, retained result and
+required registration to establish delivery before selecting the next slice.
 
 ## Execute the next slice
 
-For planned or quick test work, follow [test boundary and entry guidance](references/test-entry-rules.md)
-when choosing proof and before authoring tests. Carry its requirements into
-delegation.
-
-1. In the execution checkout, use the plan's current statuses, decisions, learnings,
-   proof, and selected existing-solution finding/evidence when present. Read retained state
-   on initial entry/recovery; reuse valid readings during continuation. For quick work,
-   reread the source and conversation's scope, decisions, progress, proof, and remaining
-   uncertainty; it is the only slice, with no separate state artifact. Confirm current
-   execution authority. Recover an existing CI observer before considering a new one.
-2. Before selecting the next unfinished slice, apply
-   [execution decisions](references/execution-decisions.md), including the limit
-   and risk check. Select in plan order, or use the one quick slice. For
-   behavior/state removal or disablement, run the
-   [destructive later-outcome check](references/destructive-later-outcome-check.md).
-   When the slice changes a runtime failure path, apply
+1. In the execution checkout, read the plan's current status, decisions,
+   learnings, proof and selected existing-solution evidence if present, or
+   the quick slice's source and retained context. Confirm authority and apply
+   [reassessment and limits](references/execution-decisions.md#reassess-before-extending-work)
+   and [human-judgment stops](references/execution-decisions.md#stop-for-human-judgment)
+   as applicable. Select the next unfinished slice in plan order, or the one
+   quick slice. Apply [slice structure and sizing](../dough-story-decomposition/references/problem-decomposition.md#decompose-slices)
+   when reassessing scope.
+2. Apply relevant conditions. Before behavior or state removal or disablement,
+   run the [destructive later-outcome check](references/destructive-later-outcome-check.md).
+   For a runtime failure-path change, apply
    [runtime failure handling](../dough-slice-planning/references/architectural-thinking.md#runtime-failure-handling)
-   and carry the intended outcome into the implementation brief.
-3. When planned refinement is needed and learning escalation permits, invoke
-   [slice-plan refinement](../dough-slice-plan-refinement/SKILL.md) in place.
-   Restart at step 1 after an in-limit refinement. With replanning disabled, apply
-   [oversized-slice decisions](references/oversized-slice.md)
-   and stop without retry. If quick work no longer fits one coherent slice, apply
-   [oversized-slice decisions](references/oversized-slice.md).
-   A no-replan return stops without planning or retry. When replanning is allowed, use
-   [ordinary slice planning](../dough-slice-planning/SKILL.md) for remaining work,
-   and restart as planned execution. Before delegating a change that invalidates a required
-   pre-change observation, apply [proof ownership](../dough-story-refinement/references/planning.md#own-executable-proof):
-   reuse an adequate baseline with known matching revision/environment/selection conditions,
-   or obtain it first. Missing/failed prerequisites stop only dependent work. Apply on entry
-   and resume without a new startup audit or repeated recovery read. Before expensive proof, apply
-   [choose expensive proof before launch](../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch). Then delegate under [delegation](references/delegation.md).
-4. On return, recheck execution decisions; handle incomplete/oversized work there before
-   delivery, including a no-replan overrun. For planned Story Branch work, first
-   [settle freshness](references/deliver-the-change.md#settle-freshness-before-dependent-work). Then [accept proof](references/wrap-up.md#accept-proof) and confirm
-   uncommitted work or an explained empty change.
-5. Run [delivery](references/deliver-the-change.md#deliver-the-change) end to end. That
-   delivery publishes through
-   [increment and repair publication](references/trunk-publication.md#publish-an-execution-increment-or-repair).
-   After successful delivery, restart for the next planned slice, one at a time:
-   each finishes its delivery before the next starts; a quick slice has no successor.
+   and carry the intended outcome into the brief. When learning permits,
+   [refine the active plan](../dough-slice-plan-refinement/SKILL.md) and reread
+   the affected state. Apply [oversized-slice handling](references/oversized-slice.md)
+   when the slice no longer fits. Respect a no-replan stop. When authorized,
+   use [slice planning](../dough-slice-planning/SKILL.md) for remaining work
+   and resume as planned execution.
+3. Prepare proof and delegate. Apply [proof ownership](../dough-story-refinement/references/planning.md#own-executable-proof)
+   before a change invalidates a required baseline. Reuse a matching baseline
+   or obtain the necessary observation first. Before choosing test proof or
+   authoring tests, use [test entry guidance](references/test-entry-rules.md).
+   Apply [expensive-proof selection](../dough-story-refinement/references/executable-proof.md#choose-expensive-proof-before-launch)
+   before launching it. Resolve project navigation, focused tests, runtime
+   wrapper and workflow precedence. List any planned
+   [story obligations](references/story-obligations.md#use-the-record-at-execution-boundaries).
+   Follow [delegation](references/delegation.md), including
+   [proof evidence](references/proof-evidence.md) and the
+   [return contract](references/return-report.md). Other invoking tools,
+   including GSD, keep this slice contract.
+4. On return, recheck execution decisions and handle incomplete or oversized
+   work before acceptance. In planned Story Branch Mode
+   [settle freshness](references/deliver-the-change.md#settle-freshness-before-dependent-work)
+   and [check named siblings](references/deliver-the-change.md#check-named-siblings).
+   Then [accept proof](references/wrap-up.md#accept-proof) against the
+   return contract and confirm uncommitted work or an explained empty change.
+5. Run [delivery](references/deliver-the-change.md#deliver-the-change),
+   including independent [refactor context](../dough-post-change-refactor/SKILL.md)
+   when required. Resolve triggered generation, selective formatting, hook
+   contract, authority and [publication preconditions](references/trunk-publication.md#preconditions)
+   when applicable. For planned work
+   [update the active plan](../dough-story-refinement/references/planning.md#refine-the-active-plan)
+   and check its [story obligations](references/story-obligations.md#use-the-record-at-execution-boundaries)
+   at delivery. Use [guarded fresh delivery](references/fresh-increment.md#publish)
+   for a validated [increment or owned repair](references/trunk-publication.md#publish-an-execution-increment-or-repair)
+   and follow the applicable [candidate publication](references/trunk-publication.md#publish-the-candidate).
+   Finish delivery before selecting the next planned slice. Quick work has no successor.
 
 ## Finish or stop
 
-Follow [finish or stop](references/finish-or-stop.md) for the execution-complete record,
-completion operation, automatic retrospective, conditional planned continuation into
-Story Wrap Up, attention-only handoff reporting, and incomplete-work reporting.
+Apply [finish or stop](references/finish-or-stop.md) for normal completion,
+the automatic retrospective, attention-only reporting and conditional
+continuation into [Story Wrap Up](../dough-story-wrap-up/SKILL.md), or
+incomplete-work reporting. Retain source, completed plan and accepted proof
+for review and wrap-up. Check planned [story obligations](references/story-obligations.md#use-the-record-at-execution-boundaries)
+and [Story Branch source freshness](references/source-freshness.md) where
+required. When completion is due, use the
+[applicable CI revision and shutdown operation](references/ci-completion-wait.md#await-the-applicable-revision-at-completion).
