@@ -4,7 +4,7 @@ from itertools import chain
 from weakref import WeakKeyDictionary
 
 from .cognitive_profile import (
-    _EXPRESSION_BREAKERS, _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
+    _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
 
 HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY = range(5)
 
@@ -88,10 +88,6 @@ class _Counter(object):  # pylint: disable=R0902
         self.gated = gated
         self.logical_ops = frozenset(
             getattr(reader, 'logical_operators', ())) - _UNARY_OR_COALESCING
-        self.expression_breakers = _EXPRESSION_BREAKERS
-        if reader.language_names[0] == 'scala':
-            # A question mark can be a Scala operator or a type wildcard.
-            self.expression_breakers = _EXPRESSION_BREAKERS - {'?'}
         self.states = WeakKeyDictionary()
         self.function = None
         self.state = None
