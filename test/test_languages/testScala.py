@@ -310,6 +310,67 @@ class TestScala(unittest.TestCase):
         self.assertEqual([("send", 3), ("stop", 5)],
                          [(f.name, f.end_line) for f in result])
 
+    def test_comment_and_symbol_literals_inside_interpolation(self):
+        result = get_scala_function_list('''
+            object Status {
+              def label(): String = s"${/* outer /* example */ if */ 1}"
+              def report(): String = s"key ${'mode.name}"
+              def next(): Symbol = 'status
+            }
+            ''')
+        self.assertEqual([("label", 3, 1), ("report", 4, 1), ("next", 5, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity) for f in result])
+
+    def test_scala3_macro_quotes_keep_their_ranges(self):
+        result = get_scala_function_list('''
+            import scala.quoted.*
+
+            inline def example: Int = ${ exampleImpl }
+            def exampleImpl(using Quotes): Expr[Int] =
+              val ignored = '{ 1 }
+
+              '{ 2 }
+            ''')
+        self.assertEqual([("exampleImpl", 5, 8)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_interpolations_keep_surrounding_and_sibling_nesting(self):
+        cases = (
+            ('interpolation in a branch',
+             '''if (ok) s"user ${id.toString}" + (if (verbose) " selected" else "") else ""''',
+             '''if (ok) "user " + id.toString + (if (verbose) " selected" else "") else ""'''),
+            ('multiline interpolation in a branch',
+             '''if (ok) s"""${
+                id.toString
+             }""" + (if (verbose) " selected" else "") else ""''',
+             '''if (ok) id.toString + (if (verbose) " selected" else "") else ""'''),
+            ('adjacent interpolations',
+             '''s"${if (ok) 1 else 0}, ${if (ok) 2 else 3}"''',
+             '''{
+                val first = if (ok) 1 else 0;
+                val second = if (ok) 2 else 3;
+                first.toString + ", " + second.toString
+             }'''),
+        )
+        for name, interpolation, control in cases:
+            with self.subTest(name):
+                result = self._status_metrics(interpolation)
+                self.assertEqual(self._status_metrics(control), result)
+
+    def test_interpolated_condition_counts_nested_decisions(self):
+        expression = '''if (s"${if (ok) id.toString else ""}".nonEmpty) "yes" else "no"'''
+        _, _, _, cognitive = self._status_metrics(expression)
+        self.assertEqual(5, cognitive)
+
+    def _status_metrics(self, expression):
+        analyzer = FileAnalyzer(get_extensions(['ND', 'NS', 'cognitive']))
+        source = (
+            'object Status {\n'
+            'def status(ok: Boolean, verbose: Boolean, id: Int): String = ' + expression + '\n}')
+        function, = analyzer.analyze_source_code('status.scala', source).function_list
+        return (function.cyclomatic_complexity, function.max_nesting_depth,
+                function.max_nested_structures, function.cognitive_complexity)
+
     def test_expression_body_that_continues_after_else(self):
         result = get_scala_function_list('''
             object Pick {
@@ -376,7 +437,7 @@ class TestScala(unittest.TestCase):
               def `set asScala`(s: Set[Int]): Int = s.size
             }
             ''')
-        self.assertEqual([("match", 4, 4), ("outer", 3, 6), ("set", 7, 7)],
+        self.assertEqual([("match", 4, 4), ("outer", 3, 6), ("set asScala", 7, 7)],
                          [(f.name, f.start_line, f.end_line)
                           for f in result])
 
@@ -538,6 +599,32 @@ class TestScala(unittest.TestCase):
         self.assertEqual([("usage", 3, 4), ("next", 5, 6)],
                          [(f.name, f.start_line, f.end_line) for f in result])
 
+    def test_quotes_in_a_multi_line_string(self):
+        result = get_scala_function_list('''
+            object Users {
+              def query(): String =
+                """SELECT "if" FROM users
+                  |WHERE name = "guest"""".stripMargin
+              def next(): Int = 1
+            }
+            ''')
+        self.assertEqual([("query", 5, 1), ("next", 6, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_conditions_in_string_interpolation(self):
+        result = get_scala_function_list('''
+            object Status {
+              def label(ok: Boolean): String = s"status: ${if (ok) "ready" else "failed"}"
+              def report(ok: Boolean): String =
+                s"""status: ${if (ok) """ready""" else """failed"""}"""
+              def next(): Int = 0
+            }
+            ''')
+        self.assertEqual([("label", 3, 2), ("report", 5, 2), ("next", 6, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
     def test_call_of_a_function_with_the_backtick_name_def(self):
         result = get_scala_function_list('''
             object C {
@@ -575,3 +662,353 @@ class TestScala(unittest.TestCase):
         self.assertEqual([("first", 4, 1)],
                          [(f.name, f.end_line, f.cyclomatic_complexity)
                           for f in result])
+
+    def test_function_with_a_symbolic_name(self):
+        result = get_scala_function_list('''
+            final class Division(numerator: Int) {
+              def /%(divisor: Int): (Int, Int) =
+                (numerator / divisor, numerator % divisor)
+              def value(): Int = numerator
+            }
+            ''')
+        self.assertEqual([("/%", 3, 4, 1), ("value", 5, 5, 0)],
+                         [(f.name, f.start_line, f.end_line, f.parameter_count)
+                          for f in result])
+
+    def test_abstract_symbolic_method_keeps_following_method(self):
+        result = get_scala_function_list('''
+            trait Output {
+              def >>(path: String): Unit
+              def >>(code: Int): Int =:= Int
+              def extension(path: String): String = path.split('.').last
+            }
+            ''')
+        self.assertEqual([("extension", 5, 5)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_symbolic_method_example_in_a_string_is_literal_text(self):
+        result = get_scala_function_list('''
+            object Examples {
+              def docs(): String = """Divider operator: "
+                def /%(x: Int): Int = x
+                """
+              def follow(x: Int): Int = x
+            }
+            ''')
+        self.assertEqual([("docs", 3, 5), ("follow", 6, 6)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_symbolic_methods_inside_xml_are_scala_only_in_splices(self):
+        result = get_scala_function_list('''
+            object Template {
+              def documentation(): scala.xml.Elem =
+                <pre label="if (ready)">
+                  def /%(n: Int): Int = n
+                  <![CDATA[def /%(n: Int): Int = n]]>
+                  <!-- def /%(n: Int): Int = n -->
+                  {{ def /%(n: Int): Int = n }}
+                  <span>{def /%(n: Int): Int = n; /%(3)}</span>
+                </pre>
+              def after(): Int = 42
+            }
+            ''')
+        self.assertEqual([("/%", 9, 9), ("documentation", 3, 10), ("after", 11, 11)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_xml_patterns_keep_sibling_case_depth(self):
+        analyzer = FileAnalyzer(get_extensions(['ND']))
+        source = """
+            import scala.xml.Elem
+
+            object XmlMatchDepth {
+              def plain(node: Elem): Int = node match {
+                case <item>{ _ }</item> => 1
+                case <literal>2</literal> => 2
+                case <empty/> => 3
+                case <check>{ _ }</check> if node.label.nonEmpty => 4
+                case _ => 0
+              }
+
+              def nested(node: Elem): Int = node match {
+                case <item>{ _ }</item> => 1
+                case <box>{ _ }</box> => if (node.label == "box") 2 else 3
+                case _ => 0
+              }
+            }
+            """
+
+        functions = analyzer.analyze_source_code('XmlMatchDepth.scala', source).function_list
+
+        self.assertEqual([('plain', 1), ('nested', 2)],
+                         [(function.name, function.max_nesting_depth) for function in functions])
+
+    def test_indented_xml_match_keeps_sibling_case_depth(self):
+        analyzer = FileAnalyzer(get_extensions(['ND']))
+        source = """
+            import scala.xml.Elem
+
+            object XmlMatchIndentBody {
+              def classify(node: Elem): Int = {
+                node match
+                  case <item>{ _ }</item> => 1
+                  case <box>{ _ }</box> => 2
+                  case _ => 0
+              }
+
+              def braced(node: Elem): Int = {
+                node match {
+                  case <item>{ _ }</item> => 1
+                  case <box>{ _ }</box> => 2
+                  case _ => 0
+                }
+              }
+            }
+            """
+
+        functions = analyzer.analyze_source_code('XmlMatchIndentBody.scala', source).function_list
+
+        self.assertEqual([('classify', 1), ('braced', 1)],
+                         [(function.name, function.max_nesting_depth) for function in functions])
+
+    def test_xml_literal_keeps_ordinary_indented_match_depth(self):
+        analyzer = FileAnalyzer(get_extensions(['ND']))
+        source = """
+            object OrdinaryMatch {
+              def decide(value: Int): Int = {
+                if (value > 0)
+                  value match
+                    case 1 => { 1 }
+                    case 2 => 2
+                    case _ => 3
+                else 0
+              }
+              def xml(): scala.xml.Elem = <note/>
+            }
+            """
+
+        functions = analyzer.analyze_source_code('OrdinaryMatch.scala', source).function_list
+
+        self.assertEqual([('decide', 2), ('xml', 0)],
+                         [(function.name, function.max_nesting_depth) for function in functions])
+
+    def test_xml_match_end_marker_keeps_outer_case_depth(self):
+        analyzer = FileAnalyzer(get_extensions(['ND']))
+        source = """
+            import scala.xml.Elem
+
+            object XmlEdges {
+              def nestedEnd(node: Elem, other: Elem): Int = {
+                node match
+                  case <item>{ _ }</item> =>
+                    other match
+                      case <box>{ _ }</box> => 1
+                      case _ => 0
+                    end match
+                  case _ => if (other.label.nonEmpty) 1 else 0
+              }
+            }
+            """
+
+        functions = analyzer.analyze_source_code('XmlEdges.scala', source).function_list
+
+        self.assertEqual([('nestedEnd', 5, 13, 2)],
+                         [(function.name, function.start_line, function.end_line, function.max_nesting_depth)
+                          for function in functions])
+
+    def test_hash_in_a_backtick_name_keeps_the_next_method(self):
+        result = get_scala_function_list('''
+            object Requests {
+              def `request#42 keeps the default status`(): Int = 200
+              def timeout(): Int = 504
+            }
+            ''')
+        self.assertEqual([("request#42 keeps the default status", 3, 3), ("timeout", 4, 4)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_symbolic_method_example_in_a_backtick_identifier_is_opaque(self):
+        functions = get_scala_function_list(
+            "object QuotedSymbolicText {\n"
+            "  val `sample def /%(n: Int): Int = n` = 1\n"
+            "  def after(): Int = 42\n"
+            "}\n"
+        )
+        self.assertEqual([("after", 3, 3)], [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_type_operator_in_a_name_keeps_the_next_method(self):
+        result = get_scala_function_list('''
+            trait Rank {
+              def is_<:(other: Rank): Boolean
+              def compare(other: Rank): Int = 0
+            }
+            ''')
+        self.assertEqual([("compare", 4, 4)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_abstract_methods_do_not_take_following_bodies(self):
+        result = get_scala_function_list('''
+            trait Port {
+              def read(offset: Int): Int
+              val capacity = 10
+              def write(value: Int): Unit; def size(): Int = capacity
+              def label(offset: Int):
+                  String = if (offset < 0) "invalid" else offset.toString
+            }
+            ''')
+        self.assertEqual([("size", 5, 5, 1), ("label", 6, 7, 2)],
+                         [(f.name, f.start_line, f.end_line,
+                           f.cyclomatic_complexity) for f in result])
+
+    def test_abstract_method_at_the_end_of_a_local_trait(self):
+        result = get_scala_function_list('''
+            object Status {
+              def outer(n: Int): Int = {
+                trait Source {
+                  def value(key: String): Int
+                }
+                if (n < 0) 0 else n
+              }
+              def next(): Int = 1
+            }
+            ''')
+        self.assertEqual([("outer", 3, 8, 2), ("next", 9, 9, 1)],
+                         [(f.name, f.start_line, f.end_line,
+                           f.cyclomatic_complexity) for f in result])
+
+    def test_singleton_type_at_the_end_of_a_body(self):
+        result = get_scala_function_list('''
+            object Settings
+
+            object Reader {
+              def cast(input: Any): Settings.type = {
+                input.asInstanceOf[Settings.type]
+              }
+              def next(): Int = 0
+            }
+            ''')
+        self.assertEqual([("cast", 5, 7), ("next", 8, 8)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_anonymous_context_parameter_occupies_one_slot(self):
+        result = get_scala_function_list('''
+            trait Encoder[A, B]
+            def render[A, B](using Encoder[A, B]): String = "encoded"
+            def named[A, B](using encoder: Encoder[A, B]): String = "encoded"
+            ''')
+        self.assertEqual([("render", 1, []), ("named", 1, ["encoder"])],
+                         [(f.name, f.parameter_count, f.parameters) for f in result])
+
+    def test_multiline_default_in_a_second_parameter_list(self):
+        result = get_scala_function_list('''
+            object Mailbox {
+              def send(message: (String, Int))(
+                options: (Int, Int) = (0, 3)
+              ): Int =
+                if (message._1.nonEmpty) options._1 else 0
+              def stop(): Unit = ()
+            }
+            ''')
+        self.assertEqual([("send", 6, 2, ["message", "options"]), ("stop", 7, 1, [])],
+                         [(f.name, f.end_line, f.cyclomatic_complexity, f.parameters) for f in result])
+
+    def test_scala3_quote_preserves_the_macro_body_and_the_next_method(self):
+        result = get_scala_function_list('''
+            import scala.quoted.*
+            trait Source:
+              type Value
+              def read: Value
+            inline def expand(inline input: Source): Source#Value = ${ impl('input) }
+            def impl[A: Type](input: Expr[Source { def read: A }])(using Quotes): Expr[A] =
+              '{ $input.read }
+            ''')
+        self.assertEqual([("expand", 6, 6), ("impl", 7, 8)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_type_projection_in_a_parameter_list(self):
+        result = get_scala_function_list('''
+            trait EventBus {
+              type Event <: AnyRef
+              def describe(event: EventBus#Event): String = event.toString
+              def eventIds(count: Int) = 0 until count
+            }
+            ''')
+        self.assertEqual([("describe", 4, 4, 1), ("eventIds", 5, 5, 1)],
+                         [(f.name, f.start_line, f.end_line, f.parameter_count)
+                          for f in result])
+
+    def test_continues_infix_result_type(self):
+        result = get_scala_function_list('''object Boundary {
+              trait Assoc[A, B]
+              def complete(value: Int): Int Assoc
+                String = new Assoc[Int, String] {}
+              def next(): Int = 1
+
+              trait Config {
+                def first(
+                  key: String
+                ): List[
+                  Int
+                ]
+                def second(key: String): String = key
+              }
+
+              def metadata(key: Int): Any {
+                def getValue(i: Int): Int
+              } = new {
+                def getValue(i: Int): Int = i + key
+              }
+              def last(): Int = 2
+            }
+            ''')
+        self.assertEqual([
+            ('complete', 3, 4),
+            ('next', 5, 5),
+            ('second', 13, 13),
+            ('getValue', 19, 19),
+            ('metadata', 16, 20),
+            ('last', 21, 21),
+        ], [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_ends_abstract_signature_before_annotated_method(self):
+        result = get_scala_function_list('''trait AnnotationLine {
+              def resolve(key: Int): Int
+
+              @deprecated("use resolve", "1") def resolveOld(key: Int): Int = key + 1
+
+              def after(): Int = 0
+            }
+            ''')
+        self.assertEqual([
+            ('resolveOld', 4, 4),
+            ('after', 6, 6),
+        ], [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_balances_macro_splices_with_quoted_arguments(self):
+        result = get_scala_function_list('''import scala.quoted.*
+
+            trait Source:
+              type Value
+              def read: Value
+
+            object Macros:
+              inline def original(inline input: Source): Source#Value = ${ impl('input) }
+              inline def multiline(inline input: Source): Source#Value =
+                ${ impl('input) }
+              inline def explicit(inline input: Source): Source#Value = ${ impl('input, 'input) }
+              inline def simple(inline input: Int): Int = ${ passthrough('input) }
+              def impl[A: Type](input: Expr[Source { def read: A }])(using Quotes): Expr[A] =
+                '{ $input.read }
+              def impl[A: Type](input: Expr[Source { def read: A }], other: Expr[Source])(using Quotes): Expr[A] =
+                '{ $input.read }
+              def passthrough(input: Expr[Int])(using Quotes): Expr[Int] = input
+              def after(): Int = 1
+            ''')
+        self.assertEqual([
+            ('original', 8, 8),
+            ('multiline', 9, 10),
+            ('explicit', 11, 11),
+            ('simple', 12, 12),
+            ('impl', 13, 14),
+            ('impl', 15, 16),
+            ('passthrough', 17, 17),
+            ('after', 18, 18),
+        ], [(f.name, f.start_line, f.end_line) for f in result])
