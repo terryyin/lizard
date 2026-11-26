@@ -30,6 +30,8 @@ class LizardExtension(object):  # pylint: disable=R0903
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
+        if 'kotlin' in getattr(reader, 'language_names', ()):
+            tokens = _kotlin_braced_branches(tokens, reader)
         return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
 
     @staticmethod
@@ -226,6 +228,31 @@ def patch_append_method(frm, accept_class, method_name):
         frm(*args, **kargs)
 
     setattr(accept_class, method_name, appended)
+
+
+def _kotlin_braced_branches(tokens, reader):
+    """Reopen a closed else-if level when the branch has a braced body."""
+    context = reader.context
+    interpolation = getattr(reader, 'interpolation_braces', None)
+    interpolation_start = interpolation[0] if interpolation else None
+    headers = []
+    previous = None
+    after_else_if = False
+    for token in tokens:
+        if headers and previous == ')':
+            function, depth = headers[-1]
+            if function is context.current_function and context.get_condition_depth() == depth:
+                headers.pop()
+                if token == '{' and token is not interpolation_start:
+                    context.open_level()
+        if after_else_if and token == '(':
+            function = context.current_function
+            if function.levels_awaiting_body == 0:
+                headers.append((function, context.get_condition_depth()))
+        after_else_if = (token == 'if' and previous == 'else'
+                         and not getattr(token, 'is_member_name', False))
+        previous = token
+        yield token
 
 
 def _init_nesting_depth_data(self, *_):
