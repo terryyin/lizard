@@ -92,6 +92,7 @@ class RubyReader(RubylikeReader):
         context = self.context
         context.at_line_end = None
         name_follows = False
+        tokens = _expand_percent_interpolation(tokens)
         for token in tokens:
             if token.isspace():
                 if token != '\n':
@@ -165,11 +166,19 @@ class RubyReader(RubylikeReader):
                         source = source[token.begin + token.find(sep)+2:]
                         break
                 if percent_strings and token.startswith(('%(', '%Q(')) and '#{' in token:
-                    yield from _percent_interpolation_tokens(token, addition)
-                else:
-                    yield token
+                    token.percent_interpolation = addition
+                yield token
             else:
                 source = None
+
+
+def _expand_percent_interpolation(tokens):
+    for token in tokens:
+        addition = getattr(token, 'percent_interpolation', None)
+        if addition is None:
+            yield token
+        else:
+            yield from _percent_interpolation_tokens(token, addition)
 
 
 def _percent_interpolation_tokens(token, addition):
