@@ -28,6 +28,38 @@ class Test_parser_for_Ruby(unittest.TestCase):
         self.assertEqual(1, result[0].cyclomatic_complexity)
         self.assertEqual(2, result[0].length)
 
+    def test_anonymous_parameters_count_as_formal_slots(self):
+        code = '''
+def connect(adapter: nil, **)
+  adapter
+end
+
+def clear_entries(*)
+  @entries.clear
+end
+
+def visit_entries(&)
+  @entries.each(&)
+end
+
+def dispatch(action, ...)
+  public_send(action, ...)
+end
+
+def import_rows(rows, *, **, &)
+  @store.import(rows, *, **, &)
+end
+'''
+
+        functions = get_ruby_function_list(code)
+
+        self.assertEqual(
+            [('connect', 2), ('clear_entries', 1), ('visit_entries', 1),
+             ('dispatch', 2), ('import_rows', 4)],
+            [(fn.name, fn.parameter_count) for fn in functions])
+        self.assertEqual(['action'], functions[3].parameters)
+        self.assertEqual(['rows'], functions[4].parameters)
+
     def test_one_function_loc(self):
         result = get_ruby_function_list('''
             def f
