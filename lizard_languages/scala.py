@@ -3,7 +3,7 @@ Language parser for Scala
 '''
 import re
 
-from .code_reader import CodeReader
+from .code_reader import CodeReader, MemberName
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
 from .token_pattern import compiled_token_pattern, tokens_in_span
@@ -384,6 +384,7 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
         # blank line, 3: after a comment at a line start, which is no blank.
         after_line_break = (1, 2, 2, 1)
         line_start = 0
+        after_def = False
         for token in tokens:
             if not token.isspace():
                 if line_start:
@@ -400,6 +401,12 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
                 if token == '?' and isinstance(token, _XmlIndentBoundary):
                     # Keep the reader's operator marker on a dedent token.
                     token.token = getattr(self, '_question_mark', token.token)
+                if after_def and not token.startswith(('//', '/*')):
+                    if token in self.logical_operators:
+                        token = MemberName(token)
+                    after_def = False
+                elif token == 'def':
+                    after_def = True
                 yield token
             elif token == '\n':
                 line_start = after_line_break[line_start]
