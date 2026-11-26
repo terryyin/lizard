@@ -184,15 +184,6 @@ class PHPLanguageStates(CodeStateMachine):
                 self.context.add_to_long_function_name(" " + token)
                 self.context.parameter(token)
 
-    def _parameter_attribute(self, token):
-        if token == '[':
-            self.attribute_bracket_level += 1
-        elif token == ']':
-            self.attribute_bracket_level -= 1
-            if self.attribute_bracket_level == 0:
-                self.fold_into_enclosing_function()
-                self._state = self._function_args_continue
-
     def _function_return_type_or_body(self, token):
         if token == ':':
             # Skip return type declaration
@@ -226,6 +217,15 @@ class PHPLanguageStates(CodeStateMachine):
                     self.context.end_of_function()
                     self.started_function = False
                 self._state = self._state_global
+
+    def _parameter_attribute(self, token):
+        if token == '[':
+            self.attribute_bracket_level += 1
+        elif token == ']':
+            self.attribute_bracket_level -= 1
+            if self.attribute_bracket_level == 0:
+                self.fold_into_enclosing_function()
+                self._state = self._function_args_continue
 
     def _condition_expected(self, token):
         if token == '(':
