@@ -69,6 +69,18 @@ fun outer() {
         ''')
         self.assertEqual(["read", "outer"], [f.name for f in result])
 
+    def test_comparison_in_second_argument_keeps_later_decisions_in_the_caller(self):
+        for next_argument in ("if (flag) 1 else 0", "run { if (flag) 1 else 0 }"):
+            with self.subTest(next_argument=next_argument):
+                result = get_kotlin_function_list(f'''\
+private const val LIMIT = 4
+fun check(flag: Boolean) = Triple(0, fun(n: Int) = n < LIMIT, {next_argument})
+                ''')
+                self.assertEqual(
+                    [("", 1), ("check", 2)],
+                    [(f.name, f.cyclomatic_complexity) for f in result],
+                )
+
     def test_anonymous_function_argument_after_a_comma(self):
         result = get_kotlin_function_list('''
 fun outer() {
