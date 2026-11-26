@@ -69,9 +69,10 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     @property
     def parameter_count(self):
-        # Binding patterns can occupy formal slots without introducing names.
         if self._declared_parameter_names is not None:
             return len(self._declared_parameter_names)
+
+        # Binding patterns can occupy formal slots without introducing names.
         return sum(
             bool(_PARAMETER_NAME.search(parameter))
             or parameter.strip() in ('{}', '[]', '()')
@@ -79,14 +80,15 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     @property
     def parameters(self):
+        if self._declared_parameter_names is not None:
+            return list(self._declared_parameter_names)
+
         # Exclude empty tokens as parameters. These can occur in languages
         # allowing a trailing comma on the last parameter in an function
         # argument list.
         # Regex matches the parameter name, then optionally:
         # - a default value given after an '=' sign
         # - a type annotation given after a ':'
-        if self._declared_parameter_names is not None:
-            return list(self._declared_parameter_names)
         matches = map(_PARAMETER_NAME.search, self.full_parameters)
         return [m.group(1) for m in matches if m]
 

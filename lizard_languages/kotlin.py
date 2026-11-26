@@ -5,7 +5,8 @@ Language parser for Apple Swift
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine
 from .golike import GoLikeStates
-from .swift import SwiftReplaceLabel, _is_local_name
+from .swift import SwiftReplaceLabel
+from .swift import _is_local_name
 
 
 class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
