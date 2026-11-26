@@ -1352,8 +1352,27 @@ class TestCognitiveOptionalRecursion(unittest.TestCase):
               }
               if (count) return retry?.({retry: count - 1});
             }
+            function start({start: count}, callback) {
+              if (count) {
+                const start = callback;
+                start?.();
+              }
+            }
         """
-        self.assertEqual([0, 3], cogc('retry.js', source))
+        self.assertEqual([0, 3, 1], cogc('retry.js', source))
+
+    def test_local_pattern_distinguishes_property_keys_and_bindings(self):
+        source = """
+            function retry({retry: count}, handlers) {
+              const { retry } = handlers;
+              return retry?.(count);
+            }
+            function start({start: count}, handlers) {
+              const { start: callback } = handlers;
+              if (count) return start?.({start: count - 1}, handlers);
+            }
+        """
+        self.assertEqual([0, 2], cogc('retry.js', source))
 
     def test_var_binding_applies_before_its_declaration(self):
         source = """
