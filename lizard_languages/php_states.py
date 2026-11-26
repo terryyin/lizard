@@ -165,16 +165,19 @@ class PHPLanguageStates(CodeStateMachine):
             self._state = self._function_args_continue
 
     def _function_args_continue(self, token):
-        if token == '(':
+        if token in ('(', '[', '{'):
             self.bracket_level += 1
-        elif token == ')':
+        elif token in (')', ']', '}'):
             self.bracket_level -= 1
             if self.bracket_level == 0:
                 self._state = self._function_return_type_or_body
-        elif token.startswith('$'):
-            # Found a parameter (PHP parameters start with $)
-            if self.started_function:
-                self.context.parameter(token)
+        elif self.bracket_level == 1 and token.startswith('$'):
+            # Each top-level variable is a formal parameter. Nested expressions
+            # can have variables of their own, such as a closure in an attribute.
+            parameters = self.context.current_function.full_parameters
+            if parameters:
+                parameters.append('')
+            self.context.parameter(token)
 
     def _function_return_type_or_body(self, token):
         if token == ':':
