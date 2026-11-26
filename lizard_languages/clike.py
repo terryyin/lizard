@@ -116,9 +116,8 @@ class CppRValueRefStates(CodeStateMachine):
         self._events = self._IDLE_TOKENS
 
     def __call__(self, token, reader=None):
-        events = self._events
-        if events is None or token in events:
-            self._state(token)
+        if token == "&&":
+            self._grouped_type = self._statement_type_name
         if token == "operator":
             self._qualified_operator = self.last_token == "::"
         if self._cpp_source:
@@ -130,6 +129,9 @@ class CppRValueRefStates(CodeStateMachine):
                 self._unused_type_names.remove(token)
                 if self.last_token in self._STATEMENT_BOUNDARIES:
                     self._statement_type_name = token
+        events = self._events
+        if events is None or token in events:
+            self._state(token)
         self.last_token = token
 
     def _set_state(self, state, events=None):
@@ -154,7 +156,6 @@ class CppRValueRefStates(CodeStateMachine):
         if not self._counts_and(token):
             return
         previous = self.last_token
-        self._grouped_type = self._statement_type_name
         if previous == "operator" and (self._cpp_source or self._qualified_operator):
             self.context.add_condition(-1)
             self._end_reference_scan()
