@@ -151,6 +151,33 @@ function boot() {
 
 class Test_PHP_logical_operators(unittest.TestCase):
 
+    def test_calls_keep_word_operators_in_the_control_condition(self):
+        result = FileAnalyzer(get_extensions(['nd'])).analyze_source_code(
+            'permissions.php', """<?php
+class Permissions {
+    public static function or($account) {
+        return $account->active;
+    }
+
+    public static function canPublish($ready, $account, $override) {
+        if ($ready AnD self::or($account) Or $override) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function canEdit($ready, $account, $override) {
+        if ($ready && self::or($account) || $override) {
+            return true;
+        }
+        return false;
+    }
+}
+""").function_list
+        self.assertEqual([('Permissions::or', 0), ('Permissions::canPublish', 2),
+                          ('Permissions::canEdit', 2)],
+                         [(f.name, f.max_nesting_depth) for f in result])
+
     def test_word_operators_count_and_keep_their_case_insensitive_sequences(self):
         self.assertEqual(
             [('canPublish', 5, 3, 2, 1,
