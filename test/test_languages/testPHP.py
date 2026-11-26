@@ -169,6 +169,15 @@ array_map(function ($item) { return $item * 2; }, [1]);
 """)
         self.assertEqual(['$format', '(anonymous)'], [f.name for f in functions])
 
+    def test_grouped_closure_gets_its_assignment_name(self):
+        functions = get_php_function_list("""<?php
+$format = ((static function ($value): string {
+    return (string) $value;
+}));
+$display = (function ($value): string { return (string) $value; })(42);
+""")
+        self.assertEqual(['$format', '(anonymous)'], [f.name for f in functions])
+
     def test_function_without_name_assign_to_field(self):
         functions = get_php_function_list("<?php a.b.c = function (a, b){} ?>")
         self.assertEqual('c', functions[0].name)
