@@ -127,7 +127,7 @@ def test_arrow_ends_before_call_statement(suffix, factory):
 @pytest.mark.parametrize('suffix,params', [('ts', '<T>'), ('tsx', '<T,>')])
 @pytest.mark.parametrize('name', [
     'Factory', r'\u0046actory', r'F\u{61}ctory', 'Fa\u0301ctory', 'F\u200dactory',
-    'Fa\u203fctory',
+    'Fa\u203fctory', '\u309bFactory', 'Fa\u309bctory', '\u037aFactory', 'Fa\u30fbctory',
 ])
 def test_generic_function_type_alias_has_no_function_body(suffix, params, name):
     source = """type Result<T> = { value: T }

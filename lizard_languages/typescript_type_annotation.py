@@ -1,7 +1,8 @@
 """Consume type-owned brackets and return enclosing runtime delimiters."""
 
 from .code_reader import CodeStateMachine
-from .javascript_expression import JSXMarkup, OPERAND_WORDS, starts_statement
+from .javascript_expression import (
+    JSXMarkup, OPERAND_WORDS, is_identifier, is_identifier_part, starts_statement)
 
 
 # These words introduce an expression. A following '<' starts an angle
@@ -172,7 +173,7 @@ class TypeAliasContext(TypeScriptTypeAnnotationStates):
                 self.statemachine_return()
         elif token == '\\':
             self.next(self._escaped_name)
-        elif token.replace('$', '_').isidentifier():
+        elif is_identifier(token):
             self.next(self._name_parts)
         else:
             self.statemachine_return()
@@ -193,7 +194,7 @@ class TypeAliasContext(TypeScriptTypeAnnotationStates):
         # connector other than underscore, or a zero-width joiner.
         if token == '\\':
             self.next(self._escaped_name)
-        elif not _identifier_part(token):
+        elif not is_identifier_part(token):
             self.next(self._after_name)
             self._after_name(token)
 
@@ -203,7 +204,7 @@ class TypeAliasContext(TypeScriptTypeAnnotationStates):
         if token[0] in '<=' or token.isspace():
             self.next(self._after_name)
             self._after_name(token)
-        elif token not in ('\\', '{', '}') and not _identifier_part(token):
+        elif token not in ('\\', '{', '}') and not is_identifier_part(token):
             self.statemachine_return()
 
     def _type_parameters(self, token):
@@ -213,11 +214,6 @@ class TypeAliasContext(TypeScriptTypeAnnotationStates):
             self.br_count -= 1
             if not self.br_count:
                 self.next(self._after_name)
-
-
-def _identifier_part(token):
-    return (token in ('\u200c', '\u200d')
-            or ('_' + token.replace('$', '_')).isidentifier())
 
 
 class TypeArguments:  # pylint: disable=too-few-public-methods
