@@ -2,13 +2,14 @@
 
 from .code_reader import CodeStateMachine
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
-from .javascript_expression import JSXChildBrace, active_js_state
+from .javascript_expression import JSXChildBrace
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates, can_take_type_arguments
+from .javascript_expression import active_js_state
 
 # Ordinary tokens skip declaration and marker dispatch together.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
@@ -112,6 +113,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._pop_function_from_stack()
 
     def member_name_context(self, name=None):
+        """Include methods whose names are still buffered after a return type."""
         if super().member_name_context():
             return True
         state = active_js_state(self)
