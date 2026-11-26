@@ -114,10 +114,11 @@ class JavaScriptObjectsMixin:
                 self._read_parenthesis_group()
                 self._prev_token = token
                 return True
-            # In property value (after ':'), identifier( is a function call
-            # unless it's the prop name itself: prop: (...) => {} is arrow fn
+            # A colon can leave the name in last_tokens for arrow formals.
+            # In an assigned class field, a matching name can be a callee.
             if self._in_prop_value and self.last_tokens != '=' and (
-                    not self.function_name
+                    self.as_class and self.last_token != ':'
+                    or not self.function_name
                     or self.last_tokens != self.function_name):
                 self._read_parenthesis_group()
                 self._prev_token = token
