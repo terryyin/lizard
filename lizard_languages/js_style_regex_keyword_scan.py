@@ -21,25 +21,54 @@ _LINE_BREAK = re.compile(rf'[{_LINE_TERMINATORS}]')
 _OPERAND_OPERATOR = re.compile(r'(?:[=!]=|(?<!<)<=|(?<!>)>=|(?<!=)>|\?\?|[<+*/%~!&|^-])\Z')
 
 
+_AFTER_PAREN = re.compile(r'\)\s*/(?![/*])')
+_PAREN_EVENTS = re.compile(r"""[/()`"']""")
+_CONTROL_HEADERS = frozenset(('if', 'while', 'for', 'with'))
+
+
 def mark_keyword_slashes(source, *, jsx=False):
     """Find-jump scan: C-level seeks between quotes, templates and slashes."""
     marks = []
     # The JSX tokenizer identifies element text after this scan has run.
     comments = None if jsx else {}
     literal_ends = None if jsx else set()
+    roles = []
+    closing = None
+    scan_parens = not jsx and _AFTER_PAREN.search(source) is not None
     n = len(source)
     i = 0
     find = source.find
     while i < n:
-        j_slash = find('/', i)
-        j_dq = find('"', i)
-        j_sq = find("'", i)
-        j_tmpl = find('`', i)
-        candidates = [j for j in (j_slash, j_dq, j_sq, j_tmpl) if j >= 0]
-        if not candidates:
-            break
-        i = min(candidates)
+        if scan_parens:
+            event = _PAREN_EVENTS.search(source, i)
+            if event is None:
+                break
+            i = event.start()
+        else:
+            j_slash = find('/', i)
+            j_dq = find('"', i)
+            j_sq = find("'", i)
+            j_tmpl = find('`', i)
+            candidates = [j for j in (j_slash, j_dq, j_sq, j_tmpl) if j >= 0]
+            if not candidates:
+                break
+            i = min(candidates)
         ch = source[i]
+        if ch == '(':
+            prev, _ = _before_comments(source, _skip_ws_back(source, i - 1), comments)
+            word, before = _word_before(source, prev)
+            control = word in _CONTROL_HEADERS
+            if control:
+                receiver, _ = _before_comments(source, _skip_ws_back(source, before), comments)
+                control = receiver < 0 or source[receiver] not in '.#'
+            roles.append(control)
+            i += 1
+            continue
+        if ch == ')':
+            if roles:
+                closing = i, roles.pop()
+            i += 1
+            continue
         if ch == '"' or ch == "'":
             quote = ch
             i += 1
@@ -61,7 +90,7 @@ def mark_keyword_slashes(source, *, jsx=False):
         if i + 1 < n and source[i + 1] in '/*':
             i = _read_comment(source, i, comments)
             continue
-        i = _consider_slash(source, i, marks, comments, literal_ends)
+        i = _consider_slash(source, i, marks, comments, literal_ends, closing)
     return _apply_marks(source, marks)
 
 
@@ -81,7 +110,7 @@ def _before_comments(source, i, comments):
     return i, line_comment
 
 
-def _consider_slash(source, i, marks, comments, literal_ends):
+def _consider_slash(source, i, marks, comments, literal_ends, closing=None):
     matched = _REGEX_LITERAL_RE.match(source, i)
     if matched is None:
         return i + 1
@@ -99,6 +128,13 @@ def _consider_slash(source, i, marks, comments, literal_ends):
     if prev < 0 or source[prev] in _EXPRESSION_PUNCTUATION:
         if commented:
             marks.append(i)
+        literal_ends.add(matched.end() - 1)
+        return matched.end()
+    if closing is not None and prev == closing[0]:
+        # A control header starts a statement. A call or group ends an operand.
+        if not closing[1]:
+            return i + 1
+        marks.append(i)
         literal_ends.add(matched.end() - 1)
         return matched.end()
     if prev >= 1 and source[prev] == '>' and source[prev - 1] == '=':
