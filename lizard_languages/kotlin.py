@@ -5,7 +5,7 @@ Language parser for Apple Swift
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine
 from .golike import GoLikeStates
-from .swift import SwiftReplaceLabel
+from .swift import SwiftReplaceLabel, _is_local_name
 
 
 class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
@@ -168,7 +168,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _start_header(self):
         self._type_depth = 0
         self._type_annotated = False
-        self._parameter_default = False
+        self._parameter_name = None
+        self._parameter_default = None
 
     def _type_is_open(self):
         # The next token continues a type that has an open `<` or `(`, that
@@ -253,16 +254,19 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _function_dec(self, token):
         if token in ('(', ')'):
             return
-        if self.br_count == 1 and token in ('=', ','):
-            self._parameter_default = token == '='
-        if self._parameter_default and '\n' in token:
-            # Keep literal line breaks in the display name. The parameter
-            # name pattern must be able to match across the default value.
-            function = self.context.current_function
-            function.add_to_long_name(" " + token)
-            function._append_parameter(function.full_parameters, token.replace('\n', ' '))
-        else:
-            self.context.parameter(token)
+        function = self.context.current_function
+        if self.br_count == 1:
+            if token == ',':
+                self._parameter_name = self._parameter_default = None
+            elif self._parameter_default is None:
+                if token == ':' and self.last_token and _is_local_name(self.last_token):
+                    self._parameter_name = len(function.full_parameters) - 1, self.last_token.strip('`')
+                elif token == '=':
+                    self._parameter_default = self._parameter_name
+        if self._parameter_default is not None and '\n' in token:
+            # A multiline default can hide the formal name from the shared pattern.
+            function.record_parameter_name(*self._parameter_default)
+        function.add_parameter(token)
 
     def _receiver_type_end(self, token):
         # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
