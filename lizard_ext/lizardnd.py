@@ -40,6 +40,9 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     @staticmethod
     def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
+        # Reopen a branch only when ND can also find the end of its body.
+        reopen_else_if = not _EXPLICIT_BRANCH_ENDS.isdisjoint(
+            getattr(reader, 'language_names', ()))
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -55,23 +58,22 @@ class LizardExtension(object):  # pylint: disable=R0903
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
-        # Reopen a branch only when ND can also find the end of its body.
-        reopen_else_if = not _EXPLICIT_BRANCH_ENDS.isdisjoint(
-            getattr(reader, 'language_names', ()))
         context = reader.context
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
-                context.clear_else()
+                context.clear_prev_was_else()
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
             if token in depth_tokens:
                 if token in block_ends:
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:
-                    context.clear_else()
+                    context.clear_prev_was_else()
+                # Don't add nesting for "if" when it immediately follows "else" (else if)
+                # Syntactically else if is equivalent to else {if} but should not increase depth
                 if token == 'else' and not getattr(token, 'is_member_name', False):
-                    context.mark_else()
+                    context.set_prev_was_else(True)
                 elif token == 'if' and token in loops and context.reuse_if_level(reopen_else_if):
                     pass
                 # Handle opening parenthesis - start of condition
@@ -200,9 +202,9 @@ class NDFileInfoAddition(FileInfoBuilder):
     def get_logical_operator_added(self):
         return self.current_function.logical_operator_added
 
-    def mark_else(self):
+    def set_prev_was_else(self, value):
         function = self.current_function
-        function.else_token_count = function.token_count
+        function.else_token_count = function.token_count if value else None
 
     def reuse_if_level(self, reopen_else_if):
         function = self.current_function
@@ -214,7 +216,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         return (not reopen_else_if or function.levels_awaiting_body > 0
                 or function.token_count != else_position + 1)
 
-    def clear_else(self):
+    def clear_prev_was_else(self):
         self.current_function.else_token_count = None
 
 
