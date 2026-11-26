@@ -34,6 +34,7 @@ Design Decisions:
 
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
+from .plsql_declarations import PLSQLDeclarationStates
 
 
 class PLSQLReader(CodeReader, CCppCommentsMixin):
@@ -148,217 +149,17 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
         return super().get_comment_from_token(token)
 
 
-class PLSQLStates(CodeStateMachine):
+class PLSQLStates(PLSQLDeclarationStates, CodeStateMachine):
     """
     State machine for parsing PL/SQL code structure.
     """
 
     def __init__(self, context):
         super(PLSQLStates, self).__init__(context)
-        self.in_parameter_list = False
         self.last_control_keyword = None  # Track FOR/WHILE to avoid counting their LOOP
         self.declaring_nested_function = (
             False  # Track if we're declaring a nested function
         )
-
-    def _state_global(self, token):
-        """Global state - looking for function/procedure/trigger declarations."""
-        token_lower = token.lower()
-
-        if token_lower == "procedure":
-            self.next(self._procedure_name)
-        elif token_lower == "function":
-            self.next(self._function_name)
-        elif token_lower == "trigger":
-            self.next(self._trigger_name)
-
-    def _procedure_name(self, token):
-        """Read procedure name."""
-        if token.isspace() or token == "\n":
-            return
-        if token == "(":
-            self.in_parameter_list = True
-            self.next(self._parameters, "(")
-        elif token.lower() in ("is", "as"):
-            self.context.confirm_new_function()
-            self.next(self._state_before_begin)
-        else:
-            # Check if this is a nested function
-            if self.declaring_nested_function:
-                self.context.push_new_function(token)
-                self.declaring_nested_function = False
-            else:
-                self.context.try_new_function(token)
-            self.next(self._procedure_after_name)
-
-    def _procedure_after_name(self, token):
-        """After procedure name, look for parameters or IS/AS."""
-        if token == ".":
-            # Schema-qualified name: the previous token was the schema,
-            # next non-whitespace token will be the actual procedure name
-            self.next(self._procedure_name_after_dot)
-        elif token == "(":
-            self.in_parameter_list = True
-            self.next(self._parameters, "(")
-        elif token.lower() in ("is", "as"):
-            self.context.confirm_new_function()
-            self.next(self._state_before_begin)
-        # Skip whitespace and other tokens
-
-    def _procedure_name_after_dot(self, token):
-        """Read the actual procedure name after schema.dot."""
-        if token.isspace() or token == "\n":
-            return
-        # Replace the previous (schema) name with the actual procedure name
-        self.context.current_function.name = token
-        self.next(self._procedure_after_name)
-
-    def _function_name(self, token):
-        """Read function name."""
-        if token.isspace() or token == "\n":
-            return
-        if token == "(":
-            self.in_parameter_list = True
-            self.next(self._parameters, "(")
-        elif token.lower() == "return":
-            self.next(self._return_type)
-        elif token.lower() in ("is", "as"):
-            self.context.confirm_new_function()
-            self.next(self._state_before_begin)
-        else:
-            # Check if this is a nested function
-            if self.declaring_nested_function:
-                self.context.push_new_function(token)
-                self.declaring_nested_function = False
-            else:
-                self.context.try_new_function(token)
-            self.next(self._function_after_name)
-
-    def _function_after_name(self, token):
-        """After function name, look for parameters, RETURN, or IS/AS."""
-        if token == ".":
-            # Schema-qualified name: the previous token was the schema,
-            # next non-whitespace token will be the actual function name
-            self.next(self._function_name_after_dot)
-        elif token == "(":
-            self.in_parameter_list = True
-            self.next(self._parameters, "(")
-        elif token.lower() == "return":
-            self.next(self._return_type)
-        elif token.lower() in ("is", "as"):
-            self.context.confirm_new_function()
-            self.next(self._state_before_begin)
-        # Skip whitespace and other tokens
-
-    def _function_name_after_dot(self, token):
-        """Read the actual function name after schema.dot."""
-        if token.isspace() or token == "\n":
-            return
-        # Replace the previous (schema) name with the actual function name
-        self.context.current_function.name = token
-        self.next(self._function_after_name)
-
-    def _return_type(self, token):
-        """Skip return type declaration."""
-        if token.lower() in ("is", "as"):
-            self.context.confirm_new_function()
-            self.next(self._state_before_begin)
-        # Skip everything else (return type tokens)
-
-    def _parameters(self, token):
-        """Read parameters."""
-        if token == ")":
-            self.in_parameter_list = False
-            self.next(self._after_parameters)
-        elif token == ",":
-            # Each comma separates parameters
-            self.context.parameter(token)
-        elif not token.isspace() and token != "\n":
-            # Track non-whitespace tokens as potential parameters
-            self.context.parameter(token)
-
-    def _after_parameters(self, token):
-        """After parameters, look for IS/AS or RETURN."""
-        if token.lower() == "return":
-            self.next(self._return_type)
-        elif token.lower() in ("is", "as"):
-            self.context.confirm_new_function()
-            self.next(self._state_before_begin)
-        # Skip whitespace and other tokens
-
-    def _trigger_name(self, token):
-        """Read trigger name."""
-        if token.isspace() or token == "\n":
-            return
-        # Trigger name found
-        self.context.try_new_function(token)
-        self.seen_trigger_name_token = False  # Track if we've seen non-whitespace after name
-        self.next(self._trigger_after_name)
-
-    def _trigger_after_name(self, token):
-        """After trigger name, skip until DECLARE or BEGIN."""
-        token_lower = token.lower()
-
-        # Only check for dot immediately after trigger name (before any other tokens)
-        if token == "." and not self.seen_trigger_name_token:
-            # Schema-qualified name: the previous token was the schema,
-            # next non-whitespace token will be the actual trigger name
-            self.next(self._trigger_name_after_dot)
-            return
-
-        # Mark that we've seen a non-whitespace token after the trigger name
-        if not token.isspace() and token != "\n":
-            self.seen_trigger_name_token = True
-
-        if token_lower == "declare":
-            self.context.confirm_new_function()
-            self.next(self._state_before_begin)
-        elif token_lower == "begin":
-            self.context.confirm_new_function()
-            self.br_count = 1
-            self.next(self._state_body)
-        # Skip everything else (BEFORE/AFTER, INSERT/UPDATE/DELETE, ON table_name, FOR EACH ROW, etc.)
-
-    def _trigger_name_after_dot(self, token):
-        """Read the actual trigger name after schema.dot."""
-        if token.isspace() or token == "\n":
-            return
-        # Replace the previous (schema) name with the actual trigger name
-        self.context.current_function.name = token
-        self.seen_trigger_name_token = False  # Reset for the real trigger name
-        self.next(self._trigger_after_name)
-
-    def _state_before_begin(self, token):
-        """
-        State between IS/AS and BEGIN - this is the declaration section.
-        Watch for nested procedures/functions and the BEGIN keyword.
-        """
-        token_lower = token.lower()
-
-        # Check for nested procedure/function declarations
-        if token_lower == "procedure":
-            self.declaring_nested_function = True
-            # Store current br_count level to know when nested function ends
-            if not hasattr(self, "nested_br_level"):
-                self.nested_br_level = 0
-            self.next(self._procedure_name)
-            return
-        elif token_lower == "function":
-            self.declaring_nested_function = True
-            # Store current br_count level to know when nested function ends
-            if not hasattr(self, "nested_br_level"):
-                self.nested_br_level = 0
-            self.next(self._function_name)
-            return
-        elif token_lower == "begin":
-            # Start of the implementation body
-            # Check if we had nested functions and need to reset br_count tracking
-            if hasattr(self, "nested_br_level"):
-                self.br_count = self.nested_br_level + 1
-                delattr(self, "nested_br_level")
-            else:
-                self.br_count = 1  # Initialize counter for the first BEGIN
-            self.next(self._state_body)
 
     def _state_body(self, token):
         """

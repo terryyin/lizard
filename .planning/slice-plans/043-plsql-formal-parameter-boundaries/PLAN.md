@@ -34,11 +34,13 @@ Both analyzer runs reported CCN 1 for these bodies and placed the nested, enclos
 
 Type: Structure
 
-Status: planned
+Status: done
 
 Move PL/SQL declaration recognition from `lizard_languages/plsql.py` (426 lines) into a focused declaration module. The seam runs from identifying top-level and nested procedure, function, and trigger headers through the handoff to body tracking. Keep the reader entry point, token processing, and body state in the original module and preserve their state-machine flow and builder ownership. Keep the resulting edited modules within the [250-line file-size check](../../../.agents/skills/dough-post-change-refactor/references/refactor-checks.md#file-size).
 
 Run the existing PL/SQL reader tests, including `testPLSQL.py` (751 lines, run as-is) and the alternative-quote fixtures. Compare the analyzer observations above before and after extraction, including exact metrics, function order, and declaration outputs. The declaration seam gives the next slice one location for formal-list parsing.
+
+- Delivered proof: extracted `PLSQLDeclarationStates` into `lizard_languages/plsql_declarations.py` (205 lines) and reduced `lizard_languages/plsql.py` to 227 lines; removed dead `in_parameter_list` attribute. Pre/post analyzer baseline identical across 5 cases; `testPLSQL.py` + `test_lizard_plsql_alternative_quotes.py` (49 passed), consumer tests (55 passed), full pytest (3777 passed, 7 skipped).
 
 ### 2. Count complete PL/SQL formal declarations
 
