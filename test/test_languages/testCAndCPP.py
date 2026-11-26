@@ -201,6 +201,31 @@ bool ready(bool active, bool ready) {
 
         self.assertEqual([("ready", 8)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
+    def test_logical_prefix_passed_to_a_macro(self):
+        source = """#define JOIN_CONDITION(prefix, suffix) (prefix suffix)
+struct Job {};
+bool accepts(Job&&);
+template<class, class> struct Enabled { static constexpr bool value = true; };
+
+bool can_run(bool active, bool ready) {
+    return JOIN_CONDITION(active &&, ready);
+}
+
+bool can_dispatch(bool active, bool ready) {
+    return JOIN_CONDITION((active || ready) &&, ready) && Enabled<Job&&, int>::value;
+}
+
+bool can_move(Job& job) {
+    return accepts(JOIN_CONDITION(Job&&,) job);
+}
+"""
+        result = get_cpp_function_list(source)
+
+        self.assertEqual(
+            [("can_run", 2), ("can_dispatch", 4), ("can_move", 1)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result],
+        )
+
     def test_unnamed_array_rvalue_reference(self):
         result = get_cpp_function_list("""#include <type_traits>
 
