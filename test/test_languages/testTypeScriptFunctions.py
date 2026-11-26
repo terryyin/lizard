@@ -1,5 +1,7 @@
 import unittest
 
+from lizard import analyze_file
+
 from .testTypeScript import get_ts_function_list
 
 
@@ -127,6 +129,69 @@ class Test_TypeScript_generic_arrow_functions(unittest.TestCase):
         code = "const identity = <T>(x: T): T => x;"
         functions = get_ts_function_list(code)
         self.assertEqual(["identity"], [f.name for f in functions])
+
+    def test_mapped_constraint_can_end_its_member_with_a_semicolon(self):
+        code = """function dual<F>(callback: F): F { return callback }
+const handlers = dual(
+  <E extends { tag: string }, Cases extends {
+    [K in E["tag"]]?: (error: E) => string;
+  }>(error: E, cases: Cases) => {
+    return cases[error.tag as E["tag"]]?.(error) ?? "missing"
+  },
+)
+if (handlers({ tag: "ready" }, { ready: () => "ok" }) !== "ok") throw new Error("mapped control")
+"""
+        from lizard import analyze_file
+
+        for suffix in ('ts', 'tsx'):
+            with self.subTest(suffix=suffix):
+                functions = analyze_file.analyze_source_code('example.' + suffix, code).function_list
+                self.assertEqual([
+                    ('dual', 1, 1, 1, 1), ('(anonymous)', 5, 7, 2, 2), ('ready', 9, 9, 0, 1),
+                ], [
+                    (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                    for f in functions])
+
+    def test_mapped_constraint_does_not_create_a_function(self):
+        code = """declare function dual<F>(_arity: number, callback: F): F
+const handlers = dual(
+  2,
+  <
+    E extends { _tag: string },
+    Cases extends
+      & {
+        [K in E["_tag"]]+?: (
+          error: Extract<E, { _tag: K }>
+        ) => string
+      }
+  >(error: E, cases: Cases) => {
+    const lookup = () => Object.keys(cases).includes(error._tag)
+    return lookup()
+  },
+)
+function close() { return handlers }
+"""
+        for suffix in ('ts', 'tsx'):
+            with self.subTest(suffix=suffix):
+                functions = analyze_file.analyze_source_code('handlers.' + suffix, code).function_list
+                self.assertEqual([('lookup', 13, 13, 0), ('(anonymous)', 12, 15, 2), ('close', 17, 17, 0)], [
+                    (f.name, f.start_line, f.end_line, f.parameter_count) for f in functions])
+
+    def test_template_constraint_and_comparison_keep_runtime_arrows(self):
+        code = """const format = <T extends `${number}`>(value: T) => value;
+function below(value: number, limit: number) {
+  return value
+    < (() => limit)();
+}
+function preserve(ready: boolean) {
+  return ready ? (value: number) => value : (value: number) => -value;
+}
+"""
+        expected = [
+            ('format', 1, 1, 1), ('(anonymous)', 4, 4, 0), ('below', 2, 5, 2),
+            ('(anonymous)', 7, 7, 1), ('(anonymous)', 7, 7, 1), ('preserve', 6, 8, 1)]
+        self.assertEqual(expected, [(f.name, f.start_line, f.end_line, f.parameter_count)
+                                    for f in get_ts_function_list(code)])
 
     def test_generic_function_declaration(self):
         """function first<T>(list: T[]) {} keeps its parameters after <T>"""
