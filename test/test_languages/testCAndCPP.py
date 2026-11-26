@@ -702,6 +702,28 @@ bool binds(bool ready) {
             [(fn.name, fn.cyclomatic_complexity) for fn in result],
         )
 
+    def test_grouped_reference_declarator_with_default_argument(self):
+        result = get_cpp_function_list("""struct Entry {};
+bool read(bool);
+void declare_reader() {
+    Entry &&(read(Entry = {}));
+}
+
+void check_entry(bool Entry) {
+    Entry && (read(Entry = {}));
+}
+
+void check_local() {
+    bool Entry = true;
+    Entry && (read(Entry = {}));
+}
+""")
+
+        self.assertEqual(
+            [("declare_reader", 1), ("check_entry", 2), ("check_local", 2)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result],
+        )
+
     def test_rvalue_reference_with_parenthesized_initializer(self):
         result = get_cpp_function_list("""int read_at(int index);
 
