@@ -59,6 +59,39 @@ class Test_JavaScript_members(unittest.TestCase):
         expected_methods = ['constructor', 'getValue']
         self.assertEqual(sorted(expected_methods), sorted(found_methods))
 
+    def test_keyword_methods_in_await_operands(self):
+        cases = [
+            ("async function load() { return await\n{ catch() {} }; }", "load"),
+            ("const load = async () => { return await\n{ catch() {} }; };", "load"),
+            ("const load = async item => (await\n{ catch() {} });", "load"),
+            ("const service = { async load() { return await\n{ catch() {} }; } };",
+             "load"),
+        ]
+        for code, name in cases:
+            with self.subTest(code=code):
+                functions = get_js_function_list(code)
+                self.assertEqual([('catch', 1), (name, 1)], [
+                    (f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_blocks_after_a_value_named_await_keep_conditions(self):
+        functions = get_js_function_list("""
+async function load(service) {
+    function inner(await) {
+        return await
+        { if (await) { run(); } }
+    }
+    service.await
+    { if (service) { inner(false); } }
+}
+const next = async => {
+    const await = async;
+    return await
+    { if (await) { run(); } }
+};
+""")
+        self.assertEqual([('inner', 2), ('load', 2), ('next', 2)], [
+            (f.name, f.cyclomatic_complexity) for f in functions])
+
     def test_class_with_complex_constructor_and_methods(self):
         # This reproduces the failing pattern from the original issue
         code = '''
