@@ -6,6 +6,10 @@ from .code_reader import CodeStateMachine
 
 MEMBER_ACCESS = frozenset(('->', '?->', '::'))
 _SKIPPED = frozenset(('fn', 'public', 'private', 'protected', 'static'))
+_CLOSURE_EXPRESSION_CONTINUATION = frozenset((
+    '(', '[', '->', '?->', '::', 'instanceof', '?', '?:', '??', '&&', '||',
+    '==', '===', '!=', '!==', '<', '>', '<=', '>=', '%', '*', '**', '/', '+', '-', '.', '&', '|', '^',
+))
 
 
 class PHPLanguageStates(CodeStateMachine):
@@ -158,7 +162,7 @@ class PHPLanguageStates(CodeStateMachine):
             self.bracket_level = 1
             self._state = self._function_args_continue
             self.context.push_new_function(self.function_name)
-            if self.assignment_parens and self.assignment_name == self.function_name:
+            if self.assignment_name == self.function_name:
                 self.assigned_closure = self.context.current_function
             self.assignment_name = ''
             self.started_function = True
@@ -228,8 +232,9 @@ class PHPLanguageStates(CodeStateMachine):
         if self.assignment_parens and token == ')':
             self.assignment_parens -= 1
             return
-        if self.assignment_parens or token == '(':
-            # The group contains another expression, or the closure is called.
+        # "and", "or" and "xor" have lower precedence than assignment.
+        if self.assignment_parens or token.lower() in _CLOSURE_EXPRESSION_CONTINUATION:
+            # The assignment receives the expression result.
             closure = self.assigned_closure
             closure.long_name = '(anonymous)' + closure.long_name[len(closure.name):]
             closure.name = '(anonymous)'
