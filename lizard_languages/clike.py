@@ -119,6 +119,9 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 CLikeNestingStackStates(context),
                 CppRValueRefStates(context))
 
+        function_reader, nesting_reader, _ = self.parallel_states
+        nesting_reader.on_class_alignment = function_reader.expect_class_alignment
+
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         return clike_tokens(source_code, addition + _C_LINE_COMMENT, token_class)
@@ -174,6 +177,21 @@ class CppStates(CLikeStates, _CppTemplateAngles):  # pylint: disable=R0903
             self._state = self._state_initializer
         else:
             super()._state_dec_to_imp(token)
+
+    def expect_class_alignment(self):
+        if self._state == self._state_function:
+            self._state = self._state_alignment_or_function
+
+    def _state_alignment_or_function(self, token):
+        if token == "(":
+            self._state = self._state_class_alignment
+        else:
+            self._state = self._state_function
+        self._state(token)
+
+    @CodeStateMachine.read_inside_brackets_then("()", "_state_global")
+    def _state_class_alignment(self, _):
+        """Skip the alignment specifier before looking for a function."""
 
     def _state_template_in_name(self, token):
         if token == "<" and not self.br_count:
@@ -252,6 +270,7 @@ class CLikeNestingStackStates(CodeStateMachine, _CppTemplateAngles):
 
     __namespace_separators = ['<', ":", "final", "[", "extends", 'implements']
     _TYPE_KEYWORDS = ("struct", "class", "namespace", "union")
+    on_class_alignment = None
 
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
@@ -271,11 +290,28 @@ class CLikeNestingStackStates(CodeStateMachine, _CppTemplateAngles):
 
     def _read_namespace(self, token):
         """Processes declarations right after namespace/class keywords."""
-        if token == "[":
+        if token == "alignas" and self.on_class_alignment is not None:
+            self.on_class_alignment()
+            self._state = self._read_alignment_or_type_name
+            return
+        elif token == "[":
             self._state = self._read_attribute
         else:
             self._state = self._read_namespace_name
         self._state(token)
+
+    def _read_alignment_or_type_name(self, token):
+        if token == "(":
+            self._state = self._read_alignment
+        else:
+            # Before C++11, alignas can be a class name.
+            self._state = self._read_namespace_name
+            self._state("alignas")
+        self._state(token)
+
+    @CodeStateMachine.read_inside_brackets_then("()", "_read_namespace")
+    def _read_alignment(self, _):
+        """Resume the class head after the alignment specifier."""
 
     @CodeStateMachine.read_until_then(')({;')
     def _read_namespace_name(self, token, saved):
