@@ -75,6 +75,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def __call__(self, tokens, reader=None):
         if 'python' in getattr(reader, 'language_names', ()):
             return self._indented_structures(tokens, reader)
+        if getattr(reader, 'interpolation_braces', None):
+            return self._read_interpolations(tokens, reader)
         if hasattr(reader, 'implied_semicolons'):
             return self._unterminated_statements(tokens, reader)
         return super(LizardExtension, self).__call__(tokens, reader)
@@ -95,6 +97,28 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             if implied_semicolons.before_token:
                 self._state(';')
             self._state(token)
+            yield token
+
+    def _read_interpolations(self, tokens, reader):
+        self._start_file(reader)
+        opening, closing = reader.interpolation_braces
+        scopes = []
+        ends = None
+        if hasattr(reader, 'implied_semicolons'):
+            tokens, ends = reader.implied_semicolons(tokens)
+        for token in tokens:
+            if ends and ends.before_token:
+                self._state(';')
+            if token is opening:
+                scopes.append((self._state, self.br_count, len(self.structure_piles)))
+                self._push_scope()
+                self._state = self._state_global
+                self.br_count = 0
+            elif token is closing:
+                self._state, self.br_count, pile_count = scopes.pop()
+                del self.structure_piles[pile_count:]
+            else:
+                self._state(token)
             yield token
 
     def _indented_structures(self, tokens, reader):
