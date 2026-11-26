@@ -10,6 +10,28 @@ def get_cpp_with_nestdepth(source):
 
 class TestCppNestingDepth(unittest.TestCase):
 
+    def test_cpp_condition_lambda_starts_a_separate_statement_scope(self):
+        functions = get_cpp_with_nestdepth("""
+        template<class Check> bool verify(Check check) { return check(); }
+        bool allowed(bool ready, bool cached, bool fresh) {
+            if (ready && [&] {
+                bool valid = cached && fresh;
+                return valid;
+            }()) return true;
+            return false;
+        }
+        bool allowedLater(bool ready, bool cached, bool fresh) {
+            if (verify([&] {
+                bool valid = cached && fresh;
+                if (valid) return true;
+                return false;
+            }) && ready) return true;
+            return false;
+        }
+        """)
+        self.assertEqual([('verify', 0), ('allowed', 3), ('allowedLater', 2)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_initializer_braces_keep_the_logical_condition(self):
         functions = get_cpp_with_nestdepth("""
         struct Toggle { bool active; };
@@ -257,6 +279,34 @@ class TestCppNestingDepth(unittest.TestCase):
 
 
 class TestJavaNestingDepth(unittest.TestCase):
+
+    def test_java_condition_lambda_starts_a_separate_statement_scope(self):
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'Permissions.java', """
+        import java.util.function.BooleanSupplier;
+        class Permissions {
+            static boolean verify(BooleanSupplier check) { return check.getAsBoolean(); }
+            static void log(boolean value) {}
+            static boolean allowed(boolean ready, boolean cached, boolean fresh) {
+                if (ready && verify(() -> {
+                    log(cached && fresh);
+                    return true;
+                })) return true;
+                return false;
+            }
+            static boolean allowedLater(boolean ready, boolean cached, boolean fresh) {
+                if (verify(() -> {
+                    boolean valid = cached && fresh;
+                    if (valid) return true;
+                    return false;
+                }) && ready) return true;
+                return false;
+            }
+        }
+        """).function_list
+        self.assertEqual([('Permissions::verify', 0), ('Permissions::log', 0),
+                          ('Permissions::allowed', 3), ('Permissions::allowedLater', 2)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
 
     def test_array_initializer_braces_keep_the_logical_condition(self):
         functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
