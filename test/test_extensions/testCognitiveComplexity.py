@@ -1573,3 +1573,35 @@ class TestCommandLine(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class TestJavaScriptTernaryBranches(unittest.TestCase):
+
+    def test_arrow_ends_before_enclosing_false_branch(self):
+        source = """
+            function select(primary, cached, fallback, value) {
+                return [primary ? cached ? load(value) : (entry) => entry
+                    : fallback ? 2 : 3];
+            }
+        """
+        self.assertEqual(
+            [('(anonymous)', 0, 1), ('select', 5, 4)],
+            [(function.name, function.cognitive_complexity, function.cyclomatic_complexity)
+             for function in analyze("report.js", source).function_list])
+
+    def test_nested_ternaries_in_both_branches_have_equal_nesting(self):
+        source = """
+            function select(primary, cached, fallback) {
+                return primary ? cached ? 0 : 1 : fallback ? 2 : 3;
+            }
+        """
+        self.assertEqual([5], cogc("report.js", source))
+
+    def test_arrow_return_type_colon_preserves_the_branch(self):
+        source = """
+            function select(primary: boolean, cached: boolean, fallback: boolean) {
+                return [primary ? cached ? 0 : (entry: number): number => entry
+                    : fallback ? 2 : 3];
+            }
+        """
+        self.assertEqual([0, 5], cogc("report.ts", source))

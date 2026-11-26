@@ -34,7 +34,7 @@ class _Frame(object):  # pylint: disable=R0903
     """An open control structure (or lambda / ternary) nesting its body."""
 
     __slots__ = ('kind', 'phase', 'braced', 'depth', 'pdepth', 'level',
-                 'closing')
+                 'closing', 'conditional_alternate')
 
     def __init__(self, kind, phase, depth=0, pdepth=0, level=0):
         self.kind = kind
@@ -44,6 +44,7 @@ class _Frame(object):  # pylint: disable=R0903
         self.pdepth = pdepth    # bracket depth where the frame was opened
         self.level = level      # lizard nesting level (indentation engine)
         self.closing = False    # body finished; waiting for else/catch/...
+        self.conditional_alternate = False
 
 
 class _FunctionState(object):  # pylint: disable=R0902,R0903
@@ -112,7 +113,9 @@ class _Counter(object):  # pylint: disable=R0902
                 in_brackets = (candidates and
                                len(self.openers) >= candidates[-1].depth)
                 read = token
-                if token in _BRACKETS:
+                if token == ':' and getattr(token, 'ends_arrow_body', False):
+                    function = context.stacked_functions[-1]
+                elif token in _BRACKETS:
                     function, token = self._route(function, token)
                 held = candidates and self._involved(function)
                 if held:

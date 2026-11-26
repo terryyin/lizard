@@ -276,6 +276,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         token = _MemberName(token)
                         member_access = False
                     elif token in marked_punctuation:
+                        if token == ':':
+                            token = state.conditional_colon(token)
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens
                         if token == '?':

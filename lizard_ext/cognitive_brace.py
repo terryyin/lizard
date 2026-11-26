@@ -42,6 +42,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if frames and frames[-1].closing:
             if self._resolve_closing(token):
                 return
+        if token == ':' and getattr(token, 'is_conditional_colon', False):
+            self._conditional_alternate()
         if token in self.logical_ops:
             if token == '&&' and self.profile.rvalue_refs:
                 if state.lambda_scan != 'params':   # ``[](T&& t)``: a type
@@ -171,6 +173,20 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             self._push('else', BODY_PENDING)
             return True
         return False
+
+    def _conditional_alternate(self):
+        """Close complete conditionals in the current true arm."""
+        state = self.state
+        frames = state.frames
+        for index in range(len(frames) - 1, -1, -1):
+            frame = frames[index]
+            if (frame.kind != 'ternary' or frame.pdepth != state.pdepth
+                    or frame.depth != state.depth):
+                return
+            if not frame.conditional_alternate:
+                del frames[index + 1:]
+                frame.conditional_alternate = True
+                return
 
     def _bind(self, kinds):
         """Pop the innermost finished frame of the given kinds, and the

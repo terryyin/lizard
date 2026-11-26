@@ -12,6 +12,22 @@ __all__ = (
     'starts_statement', 'parameter_group', 'JavaScriptFunctionsMixin')
 
 
+class _ConditionalColon(str):
+    """The separator between a conditional expression's two arms."""
+
+    is_conditional_colon = True
+
+
+class _ArrowEndingColon(_ConditionalColon):
+    """A conditional separator that also ends the preceding arrow body."""
+
+    ends_arrow_body = True
+
+
+_CONDITIONAL_COLON = _ConditionalColon(':')
+_ARROW_ENDING_COLON = _ArrowEndingColon(':')
+
+
 class JavaScriptFunctionsMixin:
     _arrow_only_signature = False
 
@@ -268,6 +284,17 @@ class JavaScriptFunctionsMixin:
         elif token != '{' and token != '=>':
             self._discard_signature()
         self.next(self._state_global, token)
+
+    def conditional_colon(self, token):
+        """Mark the runtime colon and whether it ends an expression arrow."""
+        state = active_js_state(self)
+        if (state._state == state._state_global
+                and state._ternary_depth and state.last_tokens != 'default'):
+            if (state._expression_body and
+                    state._ternary_depth == state._expression_ternary_depth):
+                return _ARROW_ENDING_COLON
+            return _CONDITIONAL_COLON
+        return token
 
     def _field(self, token):
         if token in ('(', '['):
