@@ -886,6 +886,17 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
             }
         """))
 
+    def test_runtime_ternary_and_conditional_type_inside_interpolation(self):
+        self.assertEqual([0, 1], cogc("status.ts", """
+            function label(value: unknown) {
+              return `${value as (unknown extends string ? number : string)}`;
+            }
+
+            function status(value: unknown) {
+              return `${value as boolean ? 'enabled' : 'off'}`;
+            }
+        """))
+
     def test_interpolation_in_block(self):
         self.assertEqual([3], cogc("a.js", """
             function label(item) {
