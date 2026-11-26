@@ -51,11 +51,6 @@ class JavaScriptFunctionsMixin:
     def end_expression_before(self, token):
         """Called by the reader with a line's first token before it is
         counted, so an ended arrow or abandoned signature keeps none of it."""
-        if (self._pending_type_alias and ends_expression(self.last_token)
-                and starts_statement(token)):
-            # The type keyword at the end of this arrow was an identifier.
-            self._pending_type_alias = False
-            self.next(self._state_global)
         if (self._state == self._expecting_func_opening_bracket
                 and self.started_function and starts_statement(token)
                 and token != '{'):
@@ -67,6 +62,12 @@ class JavaScriptFunctionsMixin:
         if (self._state == self._state_global
                 and ends_expression(self.last_token)
                 and starts_statement(token)):
+            self._end_statement()
+        elif (self._pending_type_alias and ends_expression(self.last_token)
+              and starts_statement(token)):
+            # The type keyword at the end of this arrow was an identifier.
+            self._pending_type_alias = False
+            self.next(self._state_global)
             self._end_statement()
 
     def end_signature_before(self, token):
