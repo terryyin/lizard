@@ -58,6 +58,10 @@ Bring in #638's reader change and tests, extend its pattern to both quotes and t
 
 Accepted proof, before publication: `nix develop -c python -m pytest test/test_languages/test_lizard_r_raw_strings.py` (6 passed) and `nix develop -c python -m pytest test/test_languages/testR.py` (29 passed). Both ran at `d576262e` with these uncommitted files. The new file asserts CCN and, where the promise names one, the following function's start line, through `analyze_file.analyze_source_code`. The existing R suite still passes. Refactor found no edit: the one raw-string pattern is in `RReader.generate_tokens`, outside `RStates`. No later slice remains, and no learning changes later work.
 
+## Execution complete
+
+Product advice: no change. The delivered raw-string token matches the story, and the focused R proof is accepted. No correction.
+
 ## Preparation review
 
 Slice-plan refinement: not needed. The plan has one Behavior slice, settled premises and mapped outside-in proof, with no cumulative design or sizing concern.
@@ -68,4 +72,4 @@ Remaining slice-specific concerns: none.
 
 Story Branch Mode. Owned workspace `/Users/terryyin/git/lizard/.worktrees/keep-valid-r-raw-string-delimiter-forms-opaque`, branch `cursor/keep-valid-r-raw-string-delimiter-forms-opaque`, starting revision `47e27cf4b521cd5febe7a6bc4fc911e11a789c33`, reused. Integration checkout `/Users/terryyin/git/lizard`. Remote `origin`, trunk `master`.
 
-Published claim `d576262e3e0d1f6c02ea15046a1832bbb1e5dc22` on `origin/cursor/keep-valid-r-raw-string-delimiter-forms-opaque`. That claim is `pendingCi: unobserved`. CI source is GitHub Actions, workflow `python-app.yml` (`Python application`). Observer `/tmp/dough-ci-501/watch-wzfKXe` watches `terryyin/lizard` branch `cursor/keep-valid-r-raw-string-delimiter-forms-opaque`.
+Published claim `d576262e3e0d1f6c02ea15046a1832bbb1e5dc22` on `origin/cursor/keep-valid-r-raw-string-delimiter-forms-opaque`. That claim is `pendingCi: unobserved`. Increment `04341f29ecd4b97fa6acfe9fab2e46caad4f1207` is the accepted story-branch candidate; suffix base `d576262e3e0d1f6c02ea15046a1832bbb1e5dc22`. CI source is GitHub Actions, workflow `python-app.yml` (`Python application`). Observer `/tmp/dough-ci-501/watch-wzfKXe` watches `terryyin/lizard` branch `cursor/keep-valid-r-raw-string-delimiter-forms-opaque`.
