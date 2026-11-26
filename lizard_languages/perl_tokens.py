@@ -23,6 +23,14 @@ _LITERAL = re.compile(r'.+', re.DOTALL)
 _HEREDOC = re.compile(
     r"""<<(?P<indent>~?)(?:(?P<bare>\\?\w+)|[ \t]*(?P<quote>['"`])(?P<quoted>[^\n]*?)(?P=quote))""")
 _READLINE = re.compile(r'<<>>|<(?:\$?[\w:]+)?>')
+_FORMAT_SPACE = r'\s*(?:\#[^\n]*\n\s*)*'
+_FORMAT_NAME = r"(?:::|')?(?:\w+(?:::|'))*\w+"
+_FORMAT_HEADER = re.compile(
+    rf"format(?:(?=[\s#]){_FORMAT_SPACE}{_FORMAT_NAME})?{_FORMAT_SPACE}=[ \t\r]*(?:\#[^\n]*)?\n")
+_FORMAT_LINE = re.compile(r'[^\n]*')
+_FORMAT_END = re.compile(r'\.[ \t\r]*')
+_FORMAT_FIELD = re.compile(r'[@^]')
+_FORMAT_STATEMENT_START = frozenset(('', ';', '{', '}', ':'))
 _SIGILS = frozenset(('$', '@', '%', '&', '$#'))
 NAME_PREFIXES = _SIGILS | frozenset(('->', '::'))
 _TERM_PREFIX = frozenset((
@@ -33,10 +41,28 @@ _TERM_PREFIX = frozenset((
 _TERM_END = frozenset((')', ']', '}', '++', '--'))
 _TOKEN_ADDITION = (
     r"|\#[^\n]*"
-    r"|\$\#(?=\$|\w|\{)|\$(?:\^[A-Z]|[!@?/'\"`\\<>|&+.,;:\-=~*%])"
+    r"|\$\#(?=\$|\w|\{)|\$\$(?=[\[\]])|\$(?:\^[A-Z]|[\[\]!@?/'\"`\\<>|&+.,;:\-=~*%])"
     r"|`(?:\\.|[^`\\])*`"
     r"|(?P<perl_quote><(?=<(?!=)|[>$\w])|//=?|/=?|(?:q[qwxr]?|tr|[msy])\b)"
+    r"|(?P<perl_format>format\b)"
 )
+
+
+class FormatBoundary(str):
+    """Opaque picture text next to a value expression or the closing dot."""
+
+    def __new__(cls, text, after_value):
+        token = super().__new__(cls, text)
+        token.after_value = after_value
+        return token
+
+
+class FormatValue(FormatBoundary):
+    """A picture followed by an executable value expression."""
+
+
+class FormatEnd(FormatBoundary):
+    """The closing dot of a format declaration."""
 
 
 class _EvaluatedReplacement(NamedTuple):
@@ -48,12 +74,13 @@ class _EvaluatedReplacement(NamedTuple):
 def perl_tokens(source, addition, token_class, documentation):
     pattern = compiled_token_pattern(
         r'|(?P<perl_documentation>' + documentation + ')' + addition + _TOKEN_ADDITION)
-    return _tokens_in_span(source, pattern, token_class, 0, len(source))
+    return _tokens_in_span(source, pattern, token_class, (0, len(source)))
 
 
-def _tokens_in_span(source, pattern, token_class, start, stop):
+def _tokens_in_span(source, pattern, token_class, span, *, value_depth=None):
     previous = before_previous = ''
-    matches = pattern.finditer(source, start, stop)
+    stop = span[1]
+    matches = pattern.finditer(source, *span)
     heredocs = []
     while (match := next(matches, None)) is not None:
         if match.lastgroup == 'perl_documentation':
@@ -61,13 +88,24 @@ def _tokens_in_span(source, pattern, token_class, start, stop):
             continue
 
         token = match[0]
-        if token == '\n' and heredocs:
-            end = match.end()
-            for label, indented in heredocs:
-                end = _skip_heredoc(source, end, stop, label, indented)
+        if token == '\n' and (heredocs or value_depth == 0):
+            end = _skip_heredocs(source, match.end(), stop, heredocs)
             yield from repeat('\n', source.count('\n', match.start(), end))
+            if value_depth == 0:
+                return end
             matches = pattern.finditer(source, end, stop)
             heredocs.clear()
+            continue
+
+        if value_depth is not None:
+            # Perl resumes picture scanning at a newline outside braces and brackets.
+            value_depth += (token in ('{', '[')) - (token in ('}', ']'))
+
+        if (match.lastgroup == 'perl_format' and previous in _FORMAT_STATEMENT_START
+                and (header := _FORMAT_HEADER.match(source, match.start(), stop))):
+            end = yield from _format_tokens(source, pattern, token_class, header)
+            matches = pattern.finditer(source, end, stop)
+            before_previous, previous = previous, ';'
             continue
 
         literal_end = None
@@ -78,6 +116,8 @@ def _tokens_in_span(source, pattern, token_class, start, stop):
                 matches = pattern.finditer(source, literal_end.quote_end, stop)
                 before_previous, previous = previous, None
                 continue
+        if not (token.isspace() or token.startswith('#')):
+            before_previous, previous = previous, token if literal_end is None else None
         if literal_end is not None and literal_end != match.end():
             # The regular expression only matched the opener. Resume after the literal.
             token = source[match.start():literal_end]
@@ -85,8 +125,42 @@ def _tokens_in_span(source, pattern, token_class, start, stop):
             if token_class:
                 match = _LITERAL.match(source, match.start(), literal_end)
         yield token_class(match) if token_class else token
-        if not (token.isspace() or token.startswith('#')):
-            before_previous, previous = previous, token if literal_end is None else None
+    return stop
+
+
+def _format_tokens(source, pattern, token_class, header):
+    start, picture, stop = header.start(), header.end(), header.endpos
+    after_value = False
+    while picture < stop:
+        end = _FORMAT_LINE.match(source, picture, stop).end()
+        next_line = min(end + 1, stop)
+        if _FORMAT_END.fullmatch(source, picture, end):
+            yield _format_text(source, token_class, (start, end), FormatEnd, after_value=after_value)
+            return end
+        if source[picture] == '#':
+            # A picture comment at the start of a span must stay out of the
+            # Perl comment processor, which also handles Lizard directives.
+            if start == picture:
+                yield '\n'
+                start = next_line
+        elif _FORMAT_FIELD.search(source, picture, end):
+            yield _format_text(source, token_class, (start, end), FormatValue, after_value=after_value)
+            after_value = True
+            yield '\n'
+            next_line = yield from _tokens_in_span(source, pattern, token_class, (next_line, stop), value_depth=0)
+            start = next_line
+        picture = next_line
+    if start < stop:
+        yield _format_text(source, token_class, (start, stop))
+    return stop
+
+
+def _format_text(source, token_class, span, boundary=None, *, after_value=False):
+    if token_class:
+        return token_class(_LITERAL.match(source, *span))
+    start, end = span
+    text = source[start:end]
+    return boundary(text, after_value) if boundary else text
 
 
 def _evaluated_tokens(source, pattern, token_class, start, replacement):
@@ -95,7 +169,7 @@ def _evaluated_tokens(source, pattern, token_class, start, replacement):
         yield token_class(_LITERAL.match(source, start, replacement.start))
     else:
         yield source[start:replacement.start]
-    yield from _tokens_in_span(source, pattern, token_class, replacement.start, replacement.stop)
+    yield from _tokens_in_span(source, pattern, token_class, (replacement.start, replacement.stop))
 
 
 def _quote_end(source, match, previous, before_previous, heredocs):
@@ -108,9 +182,8 @@ def _quote_end(source, match, previous, before_previous, heredocs):
             return _heredoc_opener_end(source, match.start(), match.endpos, heredocs)
         return None
     if token.startswith('/'):
-        if _expects_term_after(previous, before_previous):
-            return _delimited_quote_end(source, '/', match.start(), match.endpos)
-        return None
+        return (_delimited_quote_end(source, '/', match.start(), match.endpos)
+                if _expects_term_after(previous, before_previous) else None)
     return _quote_operator_end(source, match, previous)
 
 
@@ -192,6 +265,12 @@ def _skip_delimited(source, start, stop):
             depth += 1
         index += 1
     return None
+
+
+def _skip_heredocs(source, start, stop, heredocs):
+    for label, indented in heredocs:
+        start = _skip_heredoc(source, start, stop, label, indented)
+    return start
 
 
 def _skip_heredoc(source, start, stop, label, indented):

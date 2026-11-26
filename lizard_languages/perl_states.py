@@ -1,15 +1,41 @@
 """Function and scope states for the Perl reader."""
 
 from .code_reader import CodeStateMachine
-from .perl_tokens import NAME_PREFIXES
+from .perl_tokens import FormatBoundary, FormatEnd, FormatValue, NAME_PREFIXES
 
 
 class PerlStates(CodeStateMachine):
+    def __call__(self, token, reader=None):
+        if isinstance(token, FormatBoundary):
+            self._format_boundary(token)
+            self.last_token = token
+            return None
+        # A brace can open and close in different parser states.
+        if token == '{':
+            self.package_scopes.append(self.package_name)
+        result = super().__call__(token, reader)
+        if token == '}' and self.package_scopes:
+            self.package_name = self.package_scopes.pop()
+        return result
+
+    def _format_boundary(self, token):
+        if token.after_value:
+            state, variable = self.format_values.pop()
+            variable_states = (self._state_variable, self._state_assignment)
+            if self._state in variable_states or state in variable_states:
+                self.next(state)
+                self.variable_name = variable
+        if isinstance(token, FormatValue):
+            self.format_values.append((self._state, self.variable_name))
+
     def __init__(self, context):
         super(PerlStates, self).__init__(context)
         self.function_name = ''
         self.declaration_line = 0
         self.package_name = ''
+        self.package_declaration = ''
+        self.package_scopes = []
+        self.format_values = []
         self.variable_name = ''
         self.brace_count = 0
         self.enclosing_brace_count = 0
@@ -31,7 +57,9 @@ class PerlStates(CodeStateMachine):
         return token == 'sub' and self.last_token not in NAME_PREFIXES
 
     def _state_global(self, token):
-        if token == 'package':
+        if token == 'package' and (
+                self.last_token in (None, ';', '{', '}', ':') or isinstance(self.last_token, FormatEnd)):
+            self.package_declaration = ''
             self.next(self._state_package_dec)
         elif self._is_sub_keyword(token):
             self.function_name = ''
@@ -49,9 +77,23 @@ class PerlStates(CodeStateMachine):
             self.next(self._state_variable)
 
     def _state_package_dec(self, token):
-        if not token.isspace():
-            self.package_name = token
+        if token.isspace():
+            return
+        if not self.package_declaration and token != '::' and not token.isidentifier():
             self.next(self._state_global)
+            self._state_global(token)
+        elif not self.package_declaration or token == '::' or self.package_declaration.endswith('::'):
+            self.package_declaration += token
+        else:
+            self.next(self._state_package_end)
+            self._state_package_end(token)
+
+    def _state_package_end(self, token):
+        if token not in ('{', ';', '}'):
+            return
+        self.package_name = self.package_declaration
+        self.next(self._state_global)
+        self._state_global(token)
 
     def _state_variable(self, token):
         if token == '$':
