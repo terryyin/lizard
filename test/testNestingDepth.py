@@ -10,6 +10,16 @@ def get_cpp_with_nestdepth(source):
 
 class TestCppNestingDepth(unittest.TestCase):
 
+    def test_grouped_comma_separates_logical_expressions(self):
+        functions = get_cpp_with_nestdepth("""
+        void report(bool flag);
+        bool allowed(bool a, bool b, bool c, bool d, bool enabled) {
+            if (enabled) return (report(a && b), c && d);
+            return false;
+        }
+        """)
+        self.assertEqual(2, functions[0].max_nesting_depth)
+
     def test_parentheses_keep_operators_in_the_same_standalone_chain(self):
         functions = get_cpp_with_nestdepth("""
         bool check(bool);
@@ -391,6 +401,13 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
 
 
 class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
+
+    def test_grouped_comma_separates_logical_expressions(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function allowed(report, a, b, c, d) {
+            return (report(a && b), c && d)
+        }
+        """))
     """A statement that ends at a line break closes its levels,
     as a statement that ends with ';' does."""
 
