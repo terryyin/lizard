@@ -212,6 +212,13 @@ Concrete defect. `AGENTS.md` and `.agents/agent-map.md` tell agents to prefix to
   - Evidence: coordinator readiness `nix develop -c python -m pytest …` failed with `experimental Nix feature 'nix-command' is disabled`; the slice-2 implementer's first `slice-clock.mjs run` passed the flag form as one string and failed with `spawn nix --extra-experimental-features … ENOENT` (job evidence `slice2/corrected-test.log`), then wrote an `nx.sh` wrapper; implementation `3eb7f65d`
   - Observed effect: one failed readiness command, the corrected wrapper carried in every brief, and one wasted implementer proof run
   - Inference: the longer flag form makes quoting mistakes more likely when commands are passed as argument arrays
+- Execution: SEED-078#c-family-pr-timing
+  - Timestamp: 2026-11-26T23:12:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: the coordinator's first key-example run, `nix develop -c python …`, failed with `experimental Nix feature 'nix-command' is disabled`. The plan's premises already used the flag form.
+  - Observed effect: one failed command, after which the flag form was used throughout
 
 ## DD-495 — Coordinator acceptance and paired timing caught two defects after green implementer proof
 
@@ -240,8 +247,22 @@ Other. The coordinator added an `Accepted proof` subheading within the ordered s
   - Evidence: plan 046 and guarded delivery's `plan/status mutation` result. Delivery accepted `60a63ca6` after changing the evidence label to bold text.
   - Observed effect: one refused preparation and a repeated source-freshness check.
 
+## DD-497 — Default paired timing on the shared host could not settle a 3% gate
+
+Other. The plan timed eight workloads with the paired runner's default settings (1.2 s calibrated batches, 20 pairs). On this shared 16-core host, other agents kept the load average at 6–13. The first pass gave no passing result: five bound-not-met with ±4–12% intervals, and three inconclusive short-batch results. The profile showed no added cost. All eight passed only after retries decided before launch: `--seconds 4`, then `--pairs 40`, then `--seconds 8` for Java, each starting below load 4 or 3. A `DECISION.txt` written before each retry, and a stop rule declared before the last one, kept the retries from becoming a search for a pass.
+
+### Occurrences
+- Execution: SEED-078#c-family-pr-timing
+  - Timestamp: 2026-11-26T23:18:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: `6ee1ea00:.planning/slice-plans/047-c-family-pr-timing/PLAN.md`, slice 1 accepted proof and learnings. The run-1 to run-4 JSON and `DECISION.txt` files were Git-ignored local evidence, deleted at wrap-up.
+  - Observed effect: about 2.5 hours from the first launch to the last pass, including about 50 minutes waiting for load to drop. Run 2 still missed four workloads because load rose during the runs after starting below 4.
+  - Inference: on this host, start the gate with 4–8 s batches and a load threshold, and expect waits. Whether the runner's default should change remains a question for the runner's owner
+
 ## Retention
 
-- Highest allocated local number: 496
+- Highest allocated local number: 497
 - Shared-feedback adoption and compaction recovery (2026-11-07): `7129516bc5bd9ba57f370a6353ffe0e10eb1c861:DearDough.md`; its rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.
