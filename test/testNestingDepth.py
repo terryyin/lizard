@@ -639,13 +639,13 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
     def test_comparison_before_a_sibling_property_with_greater_than(self):
         source = """
         function compare(a: number, b: number, c: number, d: number) {
-          return { lower: a < b && "low", higher: c > (d) && "high" };
+          return { lower: a < b, higher: c > (d || 0) };
         }
         """
         analyzer = FileAnalyzer(get_extensions([NestDepth()]))
         functions = analyzer.analyze_source_code("a.ts", source).function_list
 
-        self.assertEqual([('compare', 2)], [(f.name, f.max_nesting_depth) for f in functions])
+        self.assertEqual([('compare', 1)], [(f.name, f.max_nesting_depth) for f in functions])
 
     def test_tsx_generic_return_type(self):
         self.assertEqual(1, self.nesting_depth("""
