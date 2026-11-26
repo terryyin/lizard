@@ -481,6 +481,22 @@ class Labels
         self.assertEqual(4, build.cyclomatic_complexity)
         self.assertEqual([['?', 6], ['?', 7], ['??', 7]], build.complex_tags)
 
+    def test_nullable_generic_local_return_type_is_not_a_condition(self):
+        source = """
+#nullable enable
+using System.Collections.Generic;
+class Labels
+{
+    static int Count()
+    {
+        List<T>? Get<T>() where T : class { return null; }
+        return Get<string>()?.Count ?? 0;
+    }
+}
+"""
+        count, = get_csharp_function_list(source)
+        self.assertEqual(2, count.cyclomatic_complexity)
+
     def test_expression_method_ends_after_the_outer_semicolon(self):
         source = """
 using System;
@@ -565,19 +581,3 @@ class Labels
         functions = get_csharp_function_list(source)
         self.assertEqual([('Labels::Label<T>', 4, 8), ('Labels::Read', 9, 9)], [
             (f.name, f.start_line, f.end_line) for f in functions])
-
-    def test_nullable_generic_local_return_type_is_not_a_condition(self):
-        source = """
-#nullable enable
-using System.Collections.Generic;
-class Labels
-{
-    static int Count()
-    {
-        List<T>? Get<T>() where T : class { return null; }
-        return Get<string>()?.Count ?? 0;
-    }
-}
-"""
-        count, = get_csharp_function_list(source)
-        self.assertEqual(2, count.cyclomatic_complexity)
