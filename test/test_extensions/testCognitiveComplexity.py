@@ -858,6 +858,36 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptObjectExpressions(unittest.TestCase):
+
+    def test_property_commas_keep_the_enclosing_ternary_open(self):
+        code = """
+            function settings(hasDraft, canEdit) {
+              return hasDraft ? {
+                label: 'Draft',
+                editable: true
+              } : canEdit ? { editable: true } : { editable: false };
+            }"""
+        for filename in ("settings.js", "settings.ts"):
+            with self.subTest(filename=filename):
+                self.assertEqual([3], cogc(filename, code))
+
+    def test_logical_sequence_continues_after_an_object_literal(self):
+        code = """
+            function visible(enabled, defaults, overrides, allowed) {
+              return enabled && { ...defaults, ...overrides }.visible && allowed;
+            }
+
+            function publish(enabled, defaults, active, allowed) {
+              return enabled && {
+                ...defaults, visible: active && defaults.visible
+              }.visible && allowed;
+            }"""
+        for filename in ("settings.js", "settings.ts"):
+            with self.subTest(filename=filename):
+                self.assertEqual([1, 2], cogc(filename, code))
+
+
 class TestJavaScriptTemplateLiterals(unittest.TestCase):
     """The ``}`` of an interpolation ends no block."""
 
