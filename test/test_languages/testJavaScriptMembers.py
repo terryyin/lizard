@@ -56,6 +56,22 @@ class Test_JavaScript_members(unittest.TestCase):
              ('retry', 1, ['target'])],
             [(f.name, f.cyclomatic_complexity, f.parameters) for f in functions])
 
+    def test_accessors_named_interface_keep_the_accessor_prefix(self):
+        functions = get_js_function_list('''
+            const network = {
+                _port: 'eth0',
+                get interface() { return this._port; },
+                set interface(value) { this._port = value; },
+                get port() { return this._port; },
+                set port(value) { this._port = value; },
+            };
+            function after() { return network.interface; }
+        ''')
+        self.assertEqual(
+            [('get interface', []), ('set interface', ['value']),
+             ('get port', []), ('set port', ['value']), ('after', [])],
+            [(f.name, f.parameters) for f in functions])
+
     def test_simple_class_two_methods_WORKS(self):
         # This simpler case works fine
         code = '''

@@ -4,6 +4,21 @@ from .testTypeScript import get_ts_function_list
 
 
 class Test_TypeScript_members(unittest.TestCase):
+    def test_generic_and_optional_methods_named_interface(self):
+        functions = get_ts_function_list('''
+            const adapter = {
+                interface<T>(request: T) { return request; },
+            };
+            class Device {
+                interface?(port: number) { return port; }
+                connect(host: string) { return host; }
+            }
+        ''')
+        self.assertEqual(
+            [('interface', ['request']), ('interface', ['port']),
+             ('connect', ['host'])],
+            [(f.name, f.parameters) for f in functions])
+
     def test_object_method(self):
         functions = get_ts_function_list("""
         const x = {
