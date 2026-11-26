@@ -48,6 +48,21 @@ fun livePid(): Int {{ return 2 }}
                 ''')
                 self.assertEqual(["livePid"], [f.name for f in result])
 
+    def test_forgiveness_on_a_local_abstract_method_keeps_the_outer_warning(self):
+        for outer_directive, expected in (("", ["bodylessOwns"]), ("// #lizard forgives", [])):
+            with self.subTest(outer_directive=outer_directive):
+                result = get_kotlin_function_list(f'''\
+{outer_directive}
+fun bodylessOwns(flag: Boolean): Int {{
+    abstract class Local {{
+        // #lizard forgives
+        abstract fun read(): Int
+    }}
+    return if (flag) 1 else 0
+}}
+                ''')
+                self.assertEqual(expected, [f.name for f in result])
+
     def test_functions_with_a_body_in_an_interface(self):
         result = get_kotlin_function_list('''
 interface Interval {
