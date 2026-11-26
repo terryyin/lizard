@@ -3,6 +3,7 @@ Language parser for Scala
 '''
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
+from . import code_reader
 from .golike import GoLikeStates
 __author__ = 'David Baum'
 
@@ -28,7 +29,9 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
     _control_flow_keywords = {'if', 'for', 'while', 'catch', 'do'}
     _logical_operators = {'&&', '||'}
     _case_keywords = {'case'}  # Pattern matching
-    _ternary_operators = {'?'}
+    _ternary_operators = set()
+    # Keep the operator or wildcard as an expression token.
+    _question_mark = code_reader.MemberName('?')
 
     def __init__(self, context):
         super(ScalaReader, self).__init__(context)
@@ -49,6 +52,8 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
         after_line_break = (1, 2, 2, 1)
         line_start = 0
         for token in tokens:
+            if token == '?' and type(token) is str:
+                token = self._question_mark
             if not token.isspace():
                 if line_start:
                     if not token.startswith(('//', '/*')):
