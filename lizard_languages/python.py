@@ -2,7 +2,7 @@
 
 from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
-from .python_structure import PythonIndents, PythonStates, count_spaces
+from .python_structure import PythonStates, count_spaces
 from .python_tokens import FStringLiteralToken, PrefixedStringToken, \
     generate_tokens as generate_python_tokens
 
@@ -183,8 +183,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                 yield token
 
     def preprocess(self, tokens):
-        indents = PythonIndents(self.context)
         states = self.parallel_states[0]
+        indents = states.indents
         current_leading_spaces = 0
         reading_leading_space = True
         for token in self._soft_keyword_lookahead(tokens):
@@ -196,9 +196,11 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                         if not token.startswith('#'):
                             current_function = self.context.current_function
                             if (current_function.name == '*global*' or
-                                    (current_function.long_name.endswith(')') and
-                                     not states.reading_return_annotation)):
-                                indents.set_nesting(current_leading_spaces, token)
+                                    current_function.long_name.endswith(')')):
+                                if states.reading_return_annotation:
+                                    indents.defer_function_indent(current_leading_spaces)
+                                else:
+                                    indents.set_nesting(current_leading_spaces, token)
                         reading_leading_space = False
             else:
                 reading_leading_space = True
