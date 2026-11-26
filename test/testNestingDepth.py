@@ -8,6 +8,25 @@ def get_cpp_with_nestdepth(source):
     return get_cpp_function_list_with_extension(source, NestDepth())
 
 
+class TestPHPNestingDepth(unittest.TestCase):
+
+    def test_alternate_branch_keeps_its_level(self):
+        for first_body in ("{ return 0; }", "return 0;"):
+            with self.subTest(first_body=first_body):
+                source = f"""<?php
+                function deliveryFee($trial, $discount, $active) {{
+                    if ($trial) {first_body}
+                    elseif ($discount) {{
+                        if ($active) {{ return 2; }}
+                    }}
+                    return 1;
+                }}
+                """
+                analyzer = FileAnalyzer(get_extensions(['nd']))
+                function, = analyzer.analyze_source_code('delivery.php', source).function_list
+                self.assertEqual(2, function.max_nesting_depth)
+
+
 class TestCppNestingDepth(unittest.TestCase):
 
     def test_one_function_with_no_nd_condition(self):
