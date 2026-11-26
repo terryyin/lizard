@@ -24,7 +24,9 @@ The root cause is the scan's position. `finditer` resumes at the end of the `/*`
 
 ## Current decisions
 
-Fix #647's `_flatten_nested_comments` scan position rather than replacing its approach. Continue matching from the end of each consumed comment or literal, as Rust's `_flatten_nested_comments` already does with its index loop. Reuse #647's `_KOTLIN_TRIVIA` and `_COMMENT_DELIMITER` patterns. Do not merge the Kotlin and Rust scanners: their literal grammars differ (Rust lifetimes and `r#"` raw strings, Kotlin backtick identifiers and `"""`). Keep the scanner at module level in the Kotlin reader, outside `KotlinStates`. Use Lizard's established [analysis vocabulary](../../../docs/adrs/0001-ubiquitous-language-accepted.md).
+Fix #647's `_flatten_nested_comments` scan position rather than replacing its approach. Continue matching from the end of each consumed comment or literal, as Rust's `_flatten_nested_comments` already does with its index loop. Reuse #647's `_KOTLIN_TRIVIA` and `_COMMENT_DELIMITER` patterns. Do not merge the Kotlin and Rust scanners: their literal grammars differ (Rust lifetimes and `r#"` raw strings, Kotlin backtick identifiers and `"""`). Keep the scanner at module level in the Kotlin reader. Use Lizard's established [analysis vocabulary](../../../docs/adrs/0001-ubiquitous-language-accepted.md).
+
+`kotlin.py` was 271 lines at the Take and 310 with the scanner. Slice 1 follows the existing Perl and Fortran reader pattern by moving `KotlinStates` intact to `kotlin_states.py`. `KotlinReader` and its scanner stay in `kotlin.py`, which imports `KotlinStates` under the existing name. Keep the registration and declaration parsing behavior. Verify the unchanged state machine and its import, then rerun the affected analyzer proof before timing the final production bytes.
 
 No North Star topic bears on this reader correction beyond that ADR.
 
@@ -50,6 +52,14 @@ Proof: `analyze_file.analyze_source_code` on the key-example sources reports the
 Behavior: Given Kotlin source with a block comment that contains a quote, raw-string quote, character quote or backtick, followed by a nested block comment with apparent code, when the reader analyzes it, then only the real decision counts and following functions keep their start lines.
 
 Bring in #647's reader change and tests, correct the scan position, and add the adjacent-comment regressions. Compare master, the exact proposal and the corrected revision.
+
+#### Execution evidence
+
+- Story Branch Mode uses `origin/codex/resume-kotlin-tokenization-after-each-complete-b`, with Take `75d72bc218d404fd9d001ef02f43291708ce462e`. GitHub Actions `python-app.yml` is observed by coordinator `nana-chan-de863105`.
+- Pinned master `bdafc0a1` reported CCN 3 for all four adjacent-comment examples. Proposal `a30a5c63` reported 3 for the ordinary, raw-string and character quotes and 2 for backticks. The corrected analyzer reported f CCN 2 and NLOC 4, g at line 7 with CCN 1, and file NLOC 5 for all four. The deeper nested and literal-marker controls preserved the proposal's corrected metrics. The CLI and HTTP adapter exposed the same corrected metrics for the ordinary-quote case.
+- `KotlinStates` matches the original class body byte for byte and both import paths resolve to the same class. After the move, 82 focused Kotlin tests and 201 affected consumer tests passed. Full pytest passed with 3,766 tests and seven skips, and `nix develop -c make` passed.
+- The paired Kotlin API timing used eight fixed sources and 20 alternating pairs against `bdafc0a1`. The change was 16.4% faster on that corpus (95% interval 12.1% to 20.5% faster).
+- The paired broad CLI timing used 153 fixed UTF-8 sources and 20 alternating pairs against the same baseline. Four-second calibration produced a valid estimate of 0.8% faster (95% interval 5.7% faster to 4.4% slower). The interval includes no change. The plan sets no numerical acceptance threshold. The earlier CLI attempts stopped on an unsupported binary asset and yielded sub-second samples, respectively.
 
 ## Preparation review
 
