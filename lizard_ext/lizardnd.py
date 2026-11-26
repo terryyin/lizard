@@ -301,7 +301,7 @@ class _CppTemplateArguments:
     ))
     _TYPE_PUNCTUATION = frozenset(('::', '*', '&', '...'))
     _EXPRESSION_KEYWORDS = frozenset((
-        'if', 'else', 'foreach', 'for', 'while', 'catch', 'case', 'try', 'def',
+        'if', 'else', 'foreach', 'for', 'while', 'catch', 'case', 'try', 'def', 'new',
     ))
 
     def __init__(self, explicit):
