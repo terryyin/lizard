@@ -53,11 +53,24 @@ def variable_declaration(matches):
     return '', tokens.count
 
 
+def composite_literal_braces(matches):
+    """Find the braces of an explicit array or slice type and its literal."""
+    braces = set()
+    tokens = _SignatureTokens(matches, braces)
+    tokens.read_type()
+    if tokens.peek() == '{':
+        braces.add(tokens.position)
+        return braces
+    return ()
+
+
 class _SignatureTokens:
-    def __init__(self, matches):
+    def __init__(self, matches, braces=None):
         self.matches = matches
         self.pending = None
         self.count = 0
+        self.braces = braces
+        self.position = None
 
     def peek(self, newlines=False):
         while self.pending is None:
@@ -70,6 +83,10 @@ class _SignatureTokens:
                     continue
             if token.isspace() and (token != '\n' or newlines):
                 continue
+            if self.braces is not None and match:
+                self.position = match.start()
+                if token == '{':
+                    self.braces.add(self.position)
             self.pending = token
         if newlines and self.pending == '\n':
             self.pending = None
@@ -92,6 +109,8 @@ class _SignatureTokens:
                 continue
             self.count += 1
             if token in closing:
+                if token == '{' and self.braces is not None:
+                    self.braces.add(match.start())
                 stack.append(closing[token])
             elif token == stack[-1]:
                 stack.pop()

@@ -5,6 +5,7 @@ in every function.
 from lizard import FileInfoBuilder, FunctionInfo
 
 DEFAULT_ND_THRESHOLD = 7
+_GO_COMPOSITE_LITERAL = object()
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -97,7 +98,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     l_depth = context.start_go_if() if go_if and token == 'if' else context.open_level()
 
                 if token in block_starts:
-                    context.open_block()
+                    context.open_block(token)
                 if token == indent_indicator and \
                         context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
@@ -131,10 +132,15 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.levels_awaiting_body += 1
         return self.add_nd_condition()
 
-    def open_block(self):
+    def open_block(self, token=None):
         """The block takes over the levels awaiting their body."""
         function = self.current_function
         if function.go_if_levels is not None:
+            if (getattr(token, 'is_composite_literal_brace', False) or
+                    (function.block_levels and
+                     function.block_levels[-1] is _GO_COMPOSITE_LITERAL)):
+                function.block_levels.append(_GO_COMPOSITE_LITERAL)
+                return
             if function.condition_depth or function.go_initializer:
                 # An initializer still needs its semicolon before the if body.
                 function.block_levels.append(0)
@@ -148,7 +154,8 @@ class NDFileInfoAddition(FileInfoBuilder):
     def close_block(self):
         """A block end releases the levels its block took over."""
         levels = self.current_function.block_levels
-        return self.add_nd_condition(-(levels.pop() if levels else 1))
+        closed = levels.pop() if levels else 1
+        return self.add_nd_condition(0 if closed is _GO_COMPOSITE_LITERAL else -closed)
 
     def end_statement(self):
         """A statement ends the levels of a braceless body."""
