@@ -9,7 +9,8 @@ from .cognitive_profile import (
 HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY = range(5)
 
 _IF_LIKE = ('if', 'else if')
-_CLOSER_OF = {'(': ')', '[': ']', '{': '}', '${': '}'}
+_OBJECT_EXPRESSION = object()
+_CLOSER_OF = {'(': ')', '[': ']', '{': '}', '${': '}', _OBJECT_EXPRESSION: '}'}
 _BRACKETS = frozenset(_CLOSER_OF) | frozenset(_CLOSER_OF.values())
 _EXPRESSION_FRAMES = ('ternary', 'lambda')
 
@@ -158,12 +159,19 @@ class _Counter(object):  # pylint: disable=R0902
         openers = self.openers
         if token in _CLOSER_OF:
             if not _is_markup(token):
+                if token == '{' and (self.previous == '?' or self.previous in self.logical_ops):
+                    # A brace after one of these operators opens an object
+                    # literal. Its contents have their own expression depth.
+                    openers.append((_OBJECT_EXPRESSION, function))
+                    return function, '['
                 openers.append((token, function))
         elif openers and _CLOSER_OF[openers[-1][0]] == token and \
                 not _is_markup(token):
             opener, function = openers.pop()
             if opener == '${':
                 token = ','
+            if opener is _OBJECT_EXPRESSION:
+                token = ']'
         return function, token
 
     # -- functions the reader abandons ----------------------------------------
