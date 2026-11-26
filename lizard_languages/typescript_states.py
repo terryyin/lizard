@@ -18,9 +18,6 @@ _TAIL_TOKENS = frozenset(('`', ':', ',', '!', '/'))
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        JavaScriptObjectsMixin, TypeScriptDeclarationsMixin,
                        CodeStateMachine):
-    _possible_regex_line = None
-    _slash_can_close_literal = False
-
     def __init__(self, context):
         super().__init__(context)
         self.last_tokens = ''

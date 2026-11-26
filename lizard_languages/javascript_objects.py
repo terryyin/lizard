@@ -12,6 +12,8 @@ class JavaScriptObjectsMixin:
     # A class body or an object literal: braces that hold members.  The
     # reader also reads blocks such as `catch {` or `case 1: {` as objects.
     holds_members = False
+    _possible_regex_line = None
+    _slash_can_close_literal = False
     # In an object: a default value is open, `{ a = async function () {} }`.
     _default_value = False
 
