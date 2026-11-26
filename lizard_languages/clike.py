@@ -44,7 +44,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         super(CLikeReader, self).__init__(context)
         self.parallel_states = (
                 CLikeStates(context),
-                CLikeNestingStackStates(context),
+                CppNestingStackStates(context),
                 CppRValueRefStates(context))
 
     @staticmethod
@@ -113,14 +113,9 @@ class CLikeNestingStackStates(CodeStateMachine):
     __namespace_separators = ['<', ":", "final", "[", "extends", 'implements']
     _TYPE_KEYWORDS = ("struct", "class", "namespace", "union")
 
-    def __init__(self, context):
-        super().__init__(context)
-        # Uppercase .C and .mm can contain C++ templates.
-        self._recognize_templates = context is None or not context.fileinfo.filename.endswith((".c", ".m"))
-
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
-        if token == "template" and self._recognize_templates:
+        if token == "template":
             self._state = self._template_declaration
         elif token == ".":
             self._state = self._dot
@@ -159,3 +154,13 @@ class CLikeNestingStackStates(CodeStateMachine):
     def _read_attribute(self, _):
         """Ignores C++11 attributes inside [[ ]]."""
         pass
+
+
+class CppNestingStackStates(CLikeNestingStackStates):
+    def _template_declaration(self, token):
+        # A template parameter list can only start outside a function.
+        if token == "<" and self.context.last_function is None:
+            self._state = super()._template_declaration
+        else:
+            self._state = self._state_global
+        self._state(token)
