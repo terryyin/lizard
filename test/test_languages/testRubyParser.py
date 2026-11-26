@@ -60,6 +60,23 @@ end
         self.assertEqual(['action'], functions[3].parameters)
         self.assertEqual(['rows'], functions[4].parameters)
 
+    def test_nested_default_and_destructuring_keep_outer_slots(self):
+        source = '''
+def destructure(*, (key, value))
+  store(key, value)
+end
+
+def default_forward(*, source: build_default(0, *))
+  source
+end
+'''
+
+        functions = get_ruby_function_list(source)
+
+        self.assertEqual(
+            [('destructure', 2, []), ('default_forward', 2, ['source'])],
+            [(fn.name, fn.parameter_count, fn.parameters) for fn in functions])
+
     def test_one_function_loc(self):
         result = get_ruby_function_list('''
             def f

@@ -4,7 +4,7 @@ Language parser for Ruby
 
 import re
 
-from lizard_core.function_info import AnonymousParameter
+from lizard_core.function_info import FormalParameter
 
 from .rubylike import RubylikeReader, RubylikeStateMachine
 from .js_style_regex_expression import js_style_regex_expression
@@ -171,9 +171,44 @@ class RubyReader(RubylikeReader):
 
 
 class RubyStateMachine(RubylikeStateMachine):
+    _parameter_depth = 0
+    _parameter_start = None
+    _parameter_has_group = False
+
     def _def_parameters(self, token):
+        if self._parameter_depth:
+            self._read_grouped_parameter(token)
+            return
         if token in (',', ')'):
-            parameters = self.context.current_function.full_parameters
-            if parameters and parameters[-1].strip() in ('*', '**', '&', '...'):
-                parameters[-1] = AnonymousParameter(parameters[-1])
+            self._finish_parameter()
+        else:
+            if self._parameter_start is None:
+                self._parameter_start = token
+            if token in ('(', '[', '{', '${'):
+                self._parameter_depth = 1
+                self._parameter_has_group = True
         super()._def_parameters(token)
+
+    def _read_grouped_parameter(self, token):
+        if token in ('(', '[', '{', '${'):
+            self._parameter_depth += 1
+        elif token in (')', ']', '}'):
+            self._parameter_depth -= 1
+
+        if token == ',':
+            self.context.add_to_long_function_name(' ,')
+            self.context.current_function.full_parameters[-1] += ' ,'
+        else:
+            self.context.parameter(token)
+
+    def _finish_parameter(self):
+        parameters = self.context.current_function.full_parameters
+        if self._parameter_start is not None:
+            if self._parameter_has_group:
+                name = self._parameter_start.rstrip(':')
+                parameters[-1] = FormalParameter(
+                    parameters[-1], name if name.isidentifier() else None)
+            elif parameters[-1].strip() in ('*', '**', '&', '...'):
+                parameters[-1] = FormalParameter(parameters[-1])
+        self._parameter_start = None
+        self._parameter_has_group = False
