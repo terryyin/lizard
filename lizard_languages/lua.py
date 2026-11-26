@@ -31,6 +31,7 @@ class LuaReader(RubylikeReader):
 
 
 class LuaStateMachine(RubylikeStateMachine):
+    _member_assignment = False
     FUNC_KEYWORD = 'function'
     PARAMETERS_ON_DEF_LINE = False
     # Lua has no `case`, and its `until` ends a `repeat` loop.
@@ -40,13 +41,13 @@ class LuaStateMachine(RubylikeStateMachine):
     def __init__(self, context):
         super(LuaStateMachine, self).__init__(context)
         self.probable_function_name = None
-        self._member_assignment = False
 
     def _state_global(self, token):
+        if token != '=':
+            self._member_assignment = token == '.' or self.last_token == '.'
         if token == "=":
             self.next(self._assigning)
             return
-        self._member_assignment = self.last_token == '.'
         self.probable_function_name = token
         super(LuaStateMachine, self)._state_global(token)
 
