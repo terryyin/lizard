@@ -100,8 +100,14 @@ def _expression_end(source, pos):
             return None
 
 
+class _WordOperator(str):
+    """A short-circuit word with a symbolic spelling for metrics."""
+
+    is_word_operator = True
+
+
 _WORD_OPERATORS = {
-    ''.join(letters): operator
+    ''.join(letters): _WordOperator(operator)
     for word, operator in (('and', '&&'), ('or', '||'))
     for letters in product(*zip(word, word.upper()))
 }
