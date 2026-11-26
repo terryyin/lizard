@@ -180,6 +180,10 @@ class PHPLanguageStates(CodeStateMachine):
         if token == '#' and getattr(token, 'starts_attribute', False):
             # An attribute can contain its own closure and parameters.
             self.context.push_new_function('')
+            # The tokenizer already counted the opening marker in the method.
+            attribute = self.context.current_function
+            attribute.nloc = 0
+            attribute.token_count = 0
             self.attribute_bracket_level = 0
             self._state = self._parameter_attribute
         elif token == '(':

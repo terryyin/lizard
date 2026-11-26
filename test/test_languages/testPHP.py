@@ -250,6 +250,7 @@ class Store {
                          (method.name, method.cyclomatic_complexity, method.cognitive_complexity,
                           method.max_nesting_depth, method.max_nested_structures, method.parameters))
         self.assertNotIn('$candidate', method.long_name)
+        self.assertEqual(6, method.nloc)
 
     def test_attribute_markers_in_nowdoc_stay_text(self):
         functions = get_php_function_list("""<?php
