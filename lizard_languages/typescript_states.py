@@ -155,9 +155,6 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             name = self.last_tokens
             if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
                 self.function_name = name
-        elif self.as_class and self._in_prop_value and token in ('+', '-'):
-            # These operators can continue the field after a line break.
-            pass
         elif token == '<' and self._class_body_pending:
             self._consume_generic_type_params()
         elif token == "(":
@@ -215,6 +212,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 and not self._binding_candidate._frames):
             self._empty_parenthesis = self.last_token is None
             self.statemachine_return()
+        elif self.as_class and self._in_prop_value and token in ('+', '-'):
+            # These operators can continue the field after a line break.
+            pass
         elif token == ';' or (
                 # A binding/object/call reader owns an arrow's enclosing comma.
                 # Global expression arrows retain commas in generic calls.
