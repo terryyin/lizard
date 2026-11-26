@@ -123,6 +123,34 @@ def _apply_marks(source, marks):
     return ''.join(parts)
 
 
+def _is_js_dividend(source, prev, word):
+    if prev < 0 or word in ('await', 'default', 'extends'):
+        return False
+    operand = source[prev]
+    return operand.isalnum() or operand in '_$]"`\''
+
+
+def _yield_after_operator(source, start):
+    prev = _skip_ws_and_comments_back(source, start - 1)
+    if prev < 0 or _OPERAND_OPERATOR.search(source, max(0, prev - 1), prev + 1) is None:
+        return False
+    # A second yield can be the expression delegated by yield*.
+    if source[prev] == '*':
+        word, _ = _word_before(source, _skip_ws_and_comments_back(source, prev - 1))
+        if word == 'yield':
+            return False
+    return True
+
+
+def _opens_control_header(source, start):
+    prev = _skip_ws_and_comments_back(source, start - 1)
+    word, before = _word_before(source, prev)
+    if word not in ('if', 'while', 'for', 'with'):
+        return False
+    prefix = _skip_ws_and_comments_back(source, before)
+    return prefix < 0 or source[prefix] not in '.#'
+
+
 def _skip_ws_back(source, i):
     while i >= 0 and source[i] in _JS_WHITESPACE:
         i -= 1
@@ -169,31 +197,3 @@ def _skip_ws_and_comments_back(source, i):
 def _is_property_before(source, i):
     j = _skip_ws_and_comments_back(source, i)
     return j >= 0 and source[j] == '.'
-
-
-def _is_js_dividend(source, prev, word):
-    if prev < 0 or word in ('await', 'default', 'extends'):
-        return False
-    operand = source[prev]
-    return operand.isalnum() or operand in '_$]"`\''
-
-
-def _yield_after_operator(source, start):
-    prev = _skip_ws_and_comments_back(source, start - 1)
-    if prev < 0 or _OPERAND_OPERATOR.search(source, max(0, prev - 1), prev + 1) is None:
-        return False
-    # A second yield can be the expression delegated by yield*.
-    if source[prev] == '*':
-        word, _ = _word_before(source, _skip_ws_and_comments_back(source, prev - 1))
-        if word == 'yield':
-            return False
-    return True
-
-
-def _opens_control_header(source, start):
-    prev = _skip_ws_and_comments_back(source, start - 1)
-    word, before = _word_before(source, prev)
-    if word not in ('if', 'while', 'for', 'with'):
-        return False
-    prefix = _skip_ws_and_comments_back(source, before)
-    return prefix < 0 or source[prefix] not in '.#'
