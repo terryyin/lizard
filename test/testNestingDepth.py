@@ -356,6 +356,26 @@ class TestCppNestingDepth(unittest.TestCase):
 
 class TestJavaNestingDepth(unittest.TestCase):
 
+    def test_condition_expression_lambda_keeps_its_own_logic(self):
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'Permissions.java', """
+        import java.util.function.BooleanSupplier;
+        class Permissions {
+            static boolean verify(BooleanSupplier check) { return check.getAsBoolean(); }
+            static boolean allowed(boolean online, boolean ready, boolean cached) {
+                if (online && verify(() -> ready && cached)) return true;
+                return false;
+            }
+            static boolean allowedLater(boolean online, boolean ready, boolean cached) {
+                if (verify(() -> ready && cached) && online) return true;
+                return false;
+            }
+        }
+        """).function_list
+        self.assertEqual([('Permissions::verify', 0), ('Permissions::allowed', 3),
+                          ('Permissions::allowedLater', 2)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_java_condition_lambda_starts_a_separate_statement_scope(self):
         functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             'Permissions.java', """
