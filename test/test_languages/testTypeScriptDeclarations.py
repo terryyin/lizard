@@ -88,6 +88,22 @@ function local() { return global }
 """
         self.assertEqual(['local'], [f.name for f in get_ts_function_list(code)])
 
+    def test_declared_class_field_keeps_the_next_runtime_method(self):
+        analyzer = FileAnalyzer(get_extensions([]))
+        for name in ('class', 'module', 'namespace', 'global'):
+            for filename in ('registry.ts', 'registry.tsx'):
+                with self.subTest(name=name, filename=filename):
+                    code = f"""class Registry {{
+  declare {name}: string
+  open(key: string) {{ return key || "default" }}
+}}
+function local() {{ return new Registry() }}
+"""
+                    functions = analyzer.analyze_source_code(filename, code).function_list
+                    self.assertEqual([('open', 3, 3, 2), ('local', 5, 5, 1)], [
+                        (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                        for f in functions])
+
 
 class Test_TypeScript_type_alias_no_false_positives(unittest.TestCase):
     """Tests that type aliases with arrow signatures are NOT detected as functions (Fix 2)."""
