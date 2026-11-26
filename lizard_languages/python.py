@@ -188,7 +188,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     def preprocess(self, tokens):
         states = self.parallel_states[0]
-        indents = states.indents
+        indents = PythonIndents(self.context)
         current_leading_spaces = 0
         reading_leading_space = True
         for token in self._soft_keyword_lookahead(tokens):
