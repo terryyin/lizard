@@ -10,6 +10,8 @@ class FStringExpressionToken(str):
 class ContinuedLineToken(str):
     """A physical newline inside a grouping delimiter."""
 
+    is_continuation = True
+
 
 class PrefixedStringToken(str):
     '''A string written directly after its prefix token (f, r, b, ...).'''

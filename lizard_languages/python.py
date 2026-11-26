@@ -2,11 +2,9 @@
 
 from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
-from .python_structure import PythonStates, count_spaces
-from .python_tokens import (
-    ContinuedLineToken, FStringExpressionToken, FStringLiteralToken, PrefixedStringToken,
-    generate_tokens as generate_python_tokens,
-)
+from .python_structure import PythonIndents, PythonStates, count_spaces
+from .python_tokens import FStringExpressionToken, FStringLiteralToken, PrefixedStringToken, \
+    ContinuedLineToken, generate_tokens as generate_python_tokens
 
 
 class PythonReader(CodeReader, ScriptLanguageMixIn):
