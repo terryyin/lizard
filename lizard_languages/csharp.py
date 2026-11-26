@@ -447,12 +447,11 @@ def _resolve_ternary(group, buffered):
 
 
 class _ConditionalCode(str):
-    """An ordinary code token with the preceding conditional directives."""
+    """An expression boundary with the preceding conditional directives."""
 
     def __new__(cls, token, directives):
         code = super().__new__(cls, token)
         code.directives = directives
-        code.is_optional = getattr(token, 'is_optional', False)
         return code
 
 
@@ -464,8 +463,7 @@ def _mark_conditional_code(tokens):
             match = _CONDITIONAL_DIRECTIVE.match(token)
             if match and not isinstance(token, _InterpolationPart):
                 directives.append(match.group(1))
-        elif directives and not (token.isspace() or token.startswith(('//', '/*')) or
-                                 isinstance(token, _InterpolationPart)):
+        elif directives and token in ('{', '}', ';', '=>') and not isinstance(token, _InterpolationPart):
             token = _ConditionalCode(token, directives)
             directives = []
         yield token
