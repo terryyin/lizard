@@ -437,6 +437,19 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """))
 
+    def test_sibling_if_after_an_arrow_and_explicit_semicolon(self):
+        for value, separator in (('class {}', '\n'), ('make()', ' ')):
+            with self.subTest(value=value, separator=separator):
+                code = f"""
+                function setup(flag, ready) {{
+                  if (flag) create = () => {value};{separator}if (ready) use(create)
+                }}
+                """
+                analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+                functions = analyzer.analyze_source_code("a.js", code).function_list
+
+                self.assertEqual(1, functions[-1].max_nesting_depth)
+
     def test_braceless_body_on_the_next_line(self):
         self.assertEqual(1, self.nesting_depth("""
         function role(user) {
