@@ -1325,6 +1325,38 @@ end
 """))
 
 
+class TestCognitiveOptionalRecursion(unittest.TestCase):
+    def test_destructured_parameter_key_and_binding(self):
+        source = """
+            function run({run, n}) { if (n) run?.({run: n - 1}); }
+            function retry({retry: n}) { if (n) retry?.({retry: n - 1}); }
+        """
+        self.assertEqual([1, 2], cogc('retry.js', source))
+
+    def test_nested_typed_binding_and_renamed_callback(self):
+        source = """
+            function retry({state: {retry}}: {state: {retry?: () => void}}) {
+                retry?.();
+            }
+            function refresh({state: {refresh: attempts}}: {state: {refresh: number}}) {
+                if (attempts) refresh?.({state: {refresh: attempts - 1}});
+            }
+        """
+        self.assertEqual([0, 2], cogc('retry.ts', source))
+
+    def test_other_optional_accesses_do_not_recurse(self):
+        source = """
+            function run(plugin) {
+                plugin?.run?.();
+                plugin.run?.();
+                return run?.name;
+            }
+            const client = { run() { run?.(); } };
+            function wrap(run) { return { run() { run?.(); } }; }
+        """
+        self.assertEqual([0, 0, 0, 0], cogc('retry.js', source))
+
+
 class TestProfilesBuiltFromTheReaders(unittest.TestCase):
     """The control-flow keywords come from the language readers; a profile
     only adds what cyclomatic complexity does not count."""
