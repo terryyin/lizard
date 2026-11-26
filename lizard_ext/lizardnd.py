@@ -49,8 +49,6 @@ class LizardExtension(object):  # pylint: disable=R0903
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
-        if 'php' in getattr(reader, 'language_names', ()):
-            tokens = _php_elseif_branches(tokens, reader.context)
         context = reader.context
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
@@ -223,11 +221,26 @@ def patch(frm, accept_class):
 def _php_elseif_branches(tokens, context):
     """An elseif header reuses its branch level or reopens a closed one."""
     after_elseif = False
+    previous = None
     for token in tokens:
         if after_elseif and token == '(' and not context.current_function.levels_awaiting_body:
             context.open_level()
-        after_elseif = token == 'elseif' and not getattr(token, 'is_member_name', False)
+        after_elseif = (len(token) == len('elseif') and token.lower() == 'elseif'
+                        and previous not in ('->', '?->', '::', 'function', '&')
+                        and not getattr(token, 'is_member_name', False))
+        previous = token
         yield token
+
+
+def _track_php_elseif(read):
+    def track(extension, tokens, reader, l_depth=0):
+        if 'php' in getattr(reader, 'language_names', ()):
+            tokens = _php_elseif_branches(tokens, reader.context)
+        return read(extension, tokens, reader, l_depth)
+    return track
+
+
+LizardExtension.__call__ = _track_php_elseif(LizardExtension.__call__)
 
 
 def patch_append_method(frm, accept_class, method_name):
