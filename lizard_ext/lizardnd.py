@@ -61,9 +61,6 @@ class LizardExtension(object):  # pylint: disable=R0903
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
             if token in depth_tokens:
-                if (standalone_chains and token in _STANDALONE_BOUNDARIES
-                        and not isinstance(token, _DeferredCppComma)):
-                    l_depth = context.read_standalone_boundary(token, l_depth)
                 if token in block_ends:
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:
@@ -104,6 +101,9 @@ class LizardExtension(object):  # pylint: disable=R0903
                         and not getattr(token, 'is_member_name', False):
                     l_depth = context.open_level()
 
+                if (standalone_chains and token in _STANDALONE_BOUNDARIES
+                        and not isinstance(token, _DeferredCppComma)):
+                    l_depth = context.read_standalone_boundary(token, l_depth)
                 if token in block_starts:
                     context.open_block()
                 if token == indent_indicator and \
