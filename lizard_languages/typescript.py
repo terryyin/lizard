@@ -18,6 +18,7 @@ from .javascript_templates import LINE_COMMENT, interpolation_code, template_tok
 from .javascript_expression import (
     TypeArgumentEnd, awaiting_function_body, end_before_line_token)
 from .javascript_statements import ImpliedSemicolons
+from .javascript_expression import active_js_state
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -177,12 +178,36 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         """Tokens of a piece of code; Vue tokenizes its files as markup."""
         return self.generate_tokens(code)
 
-    def _count_interpolation_conditions(self, token, in_expression):
+    def type_annotation_owns_question_mark(self):
+        state = active_js_state(self.parallel_states[0])._state
+        return isinstance(state, TypeScriptTypeAnnotationStates) and state.owns_question_mark()
+
+    def in_template_literal_type(self):
+        if not self.context.class_field_annotations:
+            return False
+        state = active_js_state(self.parallel_states[0])._state
+        return (isinstance(state, TypeScriptTypeAnnotationStates)
+                or getattr(state, 'in_type_alias', False))
+
+    def _count_interpolation_conditions(self, token, in_expression, measure=None):
+        if getattr(token, 'interpolation_measured', False):
+            return None
+        tokens = self._interpolation_tokens(token, in_expression, measure is not None)
+        result = measure(tokens) if measure is not None else None
+        for _ in tokens:
+            pass
+        return result
+
+    def _interpolation_tokens(self, token, in_expression, emit):
         # Re-tokenize opaque interpolation spans; keyword members stay non-
         # conditions the same way as on the outer token stream (#546).
         conditions = self.conditions
         earlier = previous = None
-        for start, end in interpolation_code(token, in_expression):
+        for part in interpolation_code(token, in_expression, delimiters=emit):
+            if isinstance(part, str):
+                yield part
+                continue
+            start, end = part
             for inner in self.script_tokens(token[start:end]):
                 # A word after a dot names a member; `1. ? a : b` is a ternary.
                 if (inner in conditions and (previous not in _MEMBER_ACCESS
@@ -194,6 +219,13 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 elif not (inner.isspace()
                           or inner.startswith(_COMMENT_STARTS)):
                     earlier, previous = previous, inner
+                if emit:
+                    if inner.startswith(_COMMENT_STARTS):
+                        # Interpolation comments cannot end the source file.
+                        for _ in inner.splitlines()[1:]:
+                            yield '\n'
+                    else:
+                        yield inner
 
     def _count_conditions_from_token(self, previous, token):
         # Split JS/TS exposes '${' then the expression; atomic TSX/JSX
