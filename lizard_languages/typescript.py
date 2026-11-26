@@ -96,7 +96,7 @@ class _MemberName(str):
 _MEMBER_ACCESS = ('.', '?.')
 _COMMENT_STARTS = ('//', '/*')
 # The tokens that preprocess looks at, in one set for the hot loop.
-_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset(_MEMBER_ACCESS)
+_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset((*_MEMBER_ACCESS, '['))
 # With the reader's conditions: the keywords that a metric counts as a
 # structure or a jump.
 _STRUCTURE_KEYWORDS = frozenset((
@@ -151,6 +151,34 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
             self._implied_semicolons = ImpliedSemicolons()
             tokens = self._implied_semicolons.read(tokens, self.context)
         return tokens, self._implied_semicolons
+
+    def track_object_property_depth(self, tokens):
+        """Keep logical levels from one property out of its siblings."""
+        context = self.context
+        for token in tokens:
+            function = context.current_function
+            logical = token in ('&&', '||')
+            pending = getattr(function, 'js_property_logical_levels', None)
+            if not (logical or pending):
+                yield token
+                continue
+
+            before = function.levels_awaiting_body
+            yield token
+            after = function.levels_awaiting_body
+            if pending and after < before:
+                while pending and pending[-1] > after:
+                    pending.pop()
+            if logical and after > before:
+                if pending is None:
+                    pending = function.js_property_logical_levels = []
+                pending.append(after)
+            elif (pending and token in (':', '...', '[')
+                  and context.__dict__.get('js_object_property') == context.fileinfo.token_count):
+                function.levels_awaiting_body -= len(pending)
+                function.logical_operator_added = False
+                context.add_nd_condition(-len(pending))
+                pending.clear()
 
     def script_tokens(self, code):
         """Tokens of a piece of code; Vue tokenizes its files as markup."""
@@ -297,6 +325,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     yield token
                                     # Resume with the buffered iterator.
                                     break
+                        elif token == '[' and state.computed_property_context():
+                            tokens, lookahead = tee(tokens)
+                            token = state.computed_property_token(lookahead) or token
+                            del lookahead
+                            yield token
+                            break
                         elif member_access:
                             before_dot = token == '.' and state.last_token
                     else:

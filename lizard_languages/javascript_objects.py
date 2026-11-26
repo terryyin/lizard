@@ -8,6 +8,13 @@ from .javascript_statements import opens_object
 _MEMBER_STARTS = frozenset((None, ',', '*', 'async', 'get', 'set'))
 
 
+class _ComputedPropertyStart(str):
+    """The beginning of a confirmed object property key."""
+
+
+COMPUTED_PROPERTY_START = _ComputedPropertyStart('[')
+
+
 class JavaScriptObjectsMixin:
     # A class body or an object literal: braces that hold members.  The
     # reader also reads blocks such as `catch {` or `case 1: {` as objects.
@@ -29,6 +36,27 @@ class JavaScriptObjectsMixin:
         return (state.holds_members and state._state == state._state_global
                 and not state._in_prop_value and not state._default_value
                 and (state.as_class or state.last_token in _MEMBER_STARTS))
+
+    def computed_property_context(self):
+        state = active_js_state(self)
+        return (state.holds_members and not state.as_class
+                and state._state == state._state_global
+                and not state._in_prop_value and not state._default_value)
+
+    @staticmethod
+    def computed_property_token(tokens):
+        """Distinguish a property key from an array or a TypeScript tuple."""
+        depth = 1
+        for token in tokens:
+            if token.isspace() or token.startswith(('//', '/*')):
+                continue
+            if not depth:
+                return COMPUTED_PROPERTY_START if token in (':', '(') else None
+            if token == '[':
+                depth += 1
+            elif token == ']':
+                depth -= 1
+        return None
 
     def _end_field_before_modifier(self):
         """A modifier at a line start begins the next class member, so a
@@ -62,6 +90,7 @@ class JavaScriptObjectsMixin:
             return True
         # Support for getter/setter: look for 'get' or 'set' before method name
         if token == '...':
+            self._record_property_start(0)
             # What a spread takes is a value: ...(c && {f() {}}), ...g(x)
             self._in_prop_value = True
             self.last_tokens = token
@@ -86,6 +115,8 @@ class JavaScriptObjectsMixin:
                 # An array value, {list: [[1], 2]}, not a computed name.
                 self._read_binding_candidate(']')
             else:
+                if token is COMPUTED_PROPERTY_START:
+                    self.context.js_object_property = self.context.fileinfo.token_count
                 self._collect_computed_name()
             return True
         if token == ':' and self.as_class and self._typed_class_member():
@@ -93,6 +124,7 @@ class JavaScriptObjectsMixin:
             self._consume_type_annotation()
             return True
         if token == ':':
+            self._record_property_start(1)
             # Only set function_name for valid identifiers
             name = self.last_tokens
             if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
@@ -203,10 +235,15 @@ class JavaScriptObjectsMixin:
         # Collect tokens between [ and its ]
         tokens = []
         depth = [0]
+        position = self.context.fileinfo.token_count
+        starts_property = (self._next_property_key == position or
+                           self.context.__dict__.get('js_object_property') == position)
 
         def collect(token):
             depth[0] += {'[': 1, ']': -1}.get(token, 0)
             if depth[0] < 0:
+                if starts_property:
+                    self._next_property_key = self.context.fileinfo.token_count
                 # Try to join tokens and camelCase if possible
                 name = ''.join(tokens)
                 # Remove quotes and pluses for simple cases
@@ -228,3 +265,9 @@ class JavaScriptObjectsMixin:
         if not parts:
             return s
         return parts[0][0].lower() + parts[0][1:] + ''.join(p.capitalize() for p in parts[1:])
+
+    def _record_property_start(self, key_offset):
+        """A key followed by a colon, or a spread, confirms the comma's role."""
+        position = self.context.fileinfo.token_count
+        if position == self._next_property_key + key_offset:
+            self.context.js_object_property = position

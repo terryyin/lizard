@@ -581,6 +581,64 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """, "a.ts"))
 
+    def test_callback_object_properties_have_independent_depth(self):
+        cases = (
+            ('() => ({ a: x || "", b: y || "" })', 1),
+            ('() => { return { a: x || "", b: y || "" }; }', 1),
+            ('() => ({ a: x || { label: y || "" }, b: z || "" })', 2),
+            ('() => ({ a: x || format(y, z || ""), b: y || "" })', 2),
+            ('() => ({ a: x || "", [key]: y || "" })', 1),
+        )
+        for filename in ("a.js", "a.ts"):
+            for callback, expected in cases:
+                with self.subTest(filename=filename, callback=callback):
+                    source = f"function pack(x, y, z) {{ return invoke({callback}); }}"
+                    analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+                    functions = analyzer.analyze_source_code(filename, source).function_list
+
+                    self.assertEqual(
+                        [('(anonymous)', expected), ('pack', 0)],
+                        [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_computed_property_key_owns_its_logical_depth(self):
+        cases = (
+            ('first: a || "a", [b || "key"]: b || "value"', 1),
+            ('[b || "key"]: b || "value"', 1),
+            ('first: a || "a", [b || pair(0, c || "key")]: b || "value"', 2),
+        )
+        for filename in ("a.js", "a.ts"):
+            for properties, expected in cases:
+                with self.subTest(filename=filename, properties=properties):
+                    source = f"function pack(a, b, c) {{ return {{ {properties} }}; }}"
+                    analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+                    functions = analyzer.analyze_source_code(filename, source).function_list
+
+                    self.assertEqual(expected, functions[-1].max_nesting_depth)
+
+    def test_object_properties_keep_existing_ternary_depth(self):
+        source = """
+        function pack(x, y) {
+          return invoke(() => ({ a: x ? "yes" : "no", b: y ? "yes" : "no" }));
+        }
+        """
+        analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+        functions = analyzer.analyze_source_code("a.js", source).function_list
+
+        self.assertEqual(2, functions[0].max_nesting_depth)
+
+    def test_type_argument_comma_stays_inside_an_object_property(self):
+        source = """
+        function pack(x, y, z) {
+          return invoke(() => ({
+            a: x || format<string, string>(y, z || "") || ""
+          }));
+        }
+        """
+        analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+        functions = analyzer.analyze_source_code("a.ts", source).function_list
+
+        self.assertEqual(2, functions[0].max_nesting_depth)
+
     def test_object_literals_stay_in_their_statement(self):
         self.assertEqual(2, self.nesting_depth("""
         function flags(user, post) {
