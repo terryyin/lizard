@@ -63,6 +63,11 @@ class TypeArgumentComma(str):
     is_type_argument_comma = True
 
 
+# The type parser reads these as complete types. Their value forms can
+# still have members in comparisons, such as `score < this.min`.
+_UNQUALIFIED_TYPE_ATOMS = frozenset(('this', 'true', 'false', 'null', 'void'))
+
+
 def can_start_call_type_arguments(previous):
     """The callee before a possible '<'."""
     return previous and (previous in (')', ']', '?.', '!') or
@@ -73,6 +78,7 @@ def call_type_argument_span(tokens):
     """Return the span of comma-delimited reference types before a call."""
     depth = 1
     expects_type = True
+    reference_name = False
     previous = '<'
     comma = False
     code = (token for token in tokens if not token.isspace())
@@ -87,19 +93,29 @@ def call_type_argument_span(tokens):
             if not depth:
                 return offset if comma and _next_code_token(code) == '(' else 0
             expects_type = False
+            reference_name = False
         elif expects_type:
-            if token in ('keyof', 'readonly', 'typeof'):
+            if previous not in ('.', 'typeof') and token in ('keyof', 'readonly', 'typeof'):
+                previous = token
                 continue
-            if not (token.replace('$', '_').isidentifier() or token[0] in "'\""):
+            identifier = token.replace('$', '_').isidentifier()
+            qualified = previous in ('.', 'typeof')
+            if not identifier and (qualified or token[0] not in "'\""):
                 return 0
             expects_type = False
-        elif token == '<':
-            depth += 1
-            expects_type = True
-        elif token in (',', '|', '&', '.'):
+            reference_name = identifier and (qualified or token not in _UNQUALIFIED_TYPE_ATOMS)
+        elif token in ('.', '<') or _packed_type_reference(token):
+            if not reference_name:
+                return 0
+            depth += token == '<'
+            expects_type = token in ('.', '<')
+            reference_name = False
+        elif token in (',', '|', '&'):
             comma |= token == ','
             expects_type = True
-        elif token != '[' and not _packed_type_reference(token):
+        elif token == '[':
+            reference_name = False
+        else:
             return 0
         previous = token
     return 0
