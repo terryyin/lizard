@@ -216,6 +216,17 @@ class TestSvelte(unittest.TestCase):
 ''')
         self.assertEqual([('format', 7, 7, 1)], function_summaries(functions))
 
+    def test_unicode_component_keeps_nested_script_out_of_the_file(self):
+        for tag in ('É', 'é.Page'):
+            with self.subTest(tag=tag):
+                functions = get_svelte_function_list(f'''
+<{tag}><script>function nested() {{ return 2 }}</script></{tag}>
+<script>
+function actual() {{ return 1 }}
+</script>
+''')
+                self.assertEqual([('actual', 4, 4, 1)], function_summaries(functions))
+
     def test_brace_in_static_script_attribute_keeps_the_script(self):
         functions = get_svelte_function_list('''
 <script data-label="{">
