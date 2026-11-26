@@ -444,6 +444,36 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """))
 
+    def test_trailing_while_after_a_callback_fallback(self):
+        for filename in ("a.js", "a.ts"):
+            for terminator in ('', ';'):
+                with self.subTest(filename=filename, terminator=terminator):
+                    code = f"""
+                    function setup(options) {{
+                      do options.run = options.run || function () {{}}{terminator}
+                      while (options.retry)
+                    }}
+                    """
+                    analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+                    functions = analyzer.analyze_source_code(filename, code).function_list
+
+                    self.assertEqual(1, functions[-1].max_nesting_depth)
+
+    def test_do_while_tail_keeps_the_enclosing_if(self):
+        for terminator in ('', ';'):
+            with self.subTest(terminator=terminator):
+                code = f"""
+                function setup(enabled, options) {{
+                  if (enabled)
+                    do options.run = function () {{}}{terminator}
+                    while (options.retry && enabled)
+                }}
+                """
+                analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+                functions = analyzer.analyze_source_code("a.js", code).function_list
+
+                self.assertEqual(3, functions[-1].max_nesting_depth)
+
     def test_braces_on_their_own_line(self):
         self.assertEqual(2, self.nesting_depth("""
         function notify(user, devices)
