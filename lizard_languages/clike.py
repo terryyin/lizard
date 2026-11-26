@@ -251,6 +251,34 @@ class CppRValueRefStates(CodeStateMachine):
             getattr(token, 'is_ignored_condition', False) or getattr(token, 'is_member_name', False))
 
 
+class _MacroConditional:
+    """Keep the guard paths and macro writes of one conditional."""
+
+    def __init__(self, guard):
+        self.arms = [[guard]]
+        self.names = set()
+        self.has_else = False
+
+    def next_arm(self, guard):
+        if self.has_else:
+            return
+        path = self._otherwise()
+        self.has_else = guard is None
+        if guard is not None:
+            path.append(guard)
+        self.arms.append(path)
+
+    def paths(self):
+        yield from self.arms
+        if not self.has_else:
+            yield self._otherwise()
+
+    def _otherwise(self):
+        current = self.arms[-1]
+        key, sense = current[-1]
+        return current[:-1] + [(key, not sense)]
+
+
 class _MacroPrefixDefinitions:
     """Find local prefix macros whose definitions agree with the current guards."""
 
@@ -263,6 +291,9 @@ class _MacroPrefixDefinitions:
         r"(?P<name>\w+)\(\s*(?P<left>\w+)\s*,\s*(?P<right>\w+)\s*\)"
         r"\s*\(\s*(?P=left)\s+(?P=right)\s*\)\s*(?://[^\n]*)?\Z")
 
+    _DEFINED = re.compile(
+        r"(?P<negated>!\s*)?defined(?:\s*\(\s*(?P<parenthesized>\w+)\s*\)|\s+(?P<name>\w+))\Z")
+
     def __init__(self):
         self._branches = []
         self._definitions = {}
@@ -273,19 +304,19 @@ class _MacroPrefixDefinitions:
 
     def read(self, directive, definition):
         if directive in self._START:
-            self._branches.append([self._guard(directive, definition)])
+            self._branches.append(_MacroConditional(self._guard(directive, definition)))
         elif self._branches and directive in self._ALTERNATIVES:
-            branch = self._branches[-1]
-            condition, sense = branch[-1]
-            branch[-1] = condition, not sense
-            if directive in self._ELIF:
-                branch.append(self._guard("if" + directive[4:], definition))
+            guard = self._guard("if" + directive[4:], definition) if directive in self._ELIF else None
+            self._branches[-1].next_arm(guard)
         elif self._branches and directive == "endif":
-            self._branches.pop()
+            self._join_conditional()
         elif directive == "include":
             self._include_version = object()
 
-        guards = dict(guard for branch in self._branches for guard in branch)
+        guards = self._current_guards()
+        if guards is None:
+            self._active_prefixes.clear()
+            return self._active_prefixes
         if directive in ("define", "undef"):
             name = self._record_definition(directive, definition, guards)
             if name in self._prefix_names and self._is_prefix(name, guards):
@@ -296,20 +327,54 @@ class _MacroPrefixDefinitions:
             self._active_prefixes = {name for name in self._prefix_names if self._is_prefix(name, guards)}
         return self._active_prefixes
 
+    def _join_conditional(self):
+        branch = self._branches.pop()
+        if self._branches:
+            self._branches[-1].names.update(branch.names)
+        names = branch.names & self._prefix_names
+        outer = self._current_guards()
+        if not names or outer is None:
+            return
+        paths = [self._compatible_guards(outer, path) for path in branch.paths()]
+        paths = [path for path in paths if path is not None]
+        for name in names:
+            if paths and all(self._is_prefix(name, path) for path in paths):
+                # After the join, every reachable arm establishes the same role.
+                self._definitions[name].append((outer, True))
+
+    def _current_guards(self):
+        return self._compatible_guards({}, (test for branch in self._branches for test in branch.arms[-1]))
+
+    @staticmethod
+    def _compatible_guards(outer, path):
+        guards = outer.copy()
+        for key, sense in path:
+            if guards.setdefault(key, sense) != sense:
+                return None
+        return guards
+
     def _guard(self, directive, definition):
         definition = definition.strip()
-        if not definition.isidentifier():
-            # For a compound condition, use only this conditional's own arms.
-            return object(), True
         kind = "value" if directive == "if" else "defined"
+        sense = directive != "ifndef"
+        defined = self._DEFINED.fullmatch(definition) if directive == "if" else None
+        if defined:
+            definition = defined["parenthesized"] or defined["name"]
+            kind = "defined"
+            sense = not defined["negated"]
+        if not definition.isidentifier():
+            # For other compound conditions, use only this conditional's own arms.
+            return object(), True
         key = kind, definition, self._macro_versions.get(definition), self._include_version
-        return key, directive != "ifndef"
+        return key, sense
 
     def _record_definition(self, directive, definition, guards):
         word = re.match(r"\w+", definition)
         if not word:
             return
         name = word[0]
+        if self._branches:
+            self._branches[-1].names.add(name)
         self._macro_versions[name] = object()
         is_prefix = directive == "define" and bool(self._PREFIX_MACRO.match(definition))
         if is_prefix:
