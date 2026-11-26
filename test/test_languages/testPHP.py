@@ -180,7 +180,10 @@ $display = (function ($value): string { return (string) $value; })(42);
 
     def test_grouped_closure_expression_result_stays_anonymous(self):
         functions = get_php_function_list("""<?php
-$result = (function () { return 42; })->call(new stdClass());
+class Page {
+    public int $limit = 42;
+}
+$result = (function () { return $this->limit; })->call(new Page());
 $isClosure = ((function () {})) INSTANCEOF Closure;
 $label = ((function () {})) ? 'available' : 'missing';
 $format = (function ($value) { return (string) $value; }) and true;
