@@ -16,15 +16,13 @@ class LuaReader(RubylikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        lua_patterns = r"|--(?:\[\[.*?\]\]|[^\n]+)|\[\[.*?\]\]"
+        if "[=" in source_code:
+            lua_patterns = _leveled_brackets(source_code, addition) + lua_patterns
         # Lua can start with a hash line for the interpreter. Elsewhere,
         # a hash is the length operator.
         if source_code.startswith(("#", "\ufeff#")):
             addition = r"|(?:\A|(?<=\A\ufeff))#[^\n]*" + addition
-        lua_patterns = r"|--(?:\[\[.*?\]\]|[^\n]+)|\[\[.*?\]\]"
-        if addition or "[=" in source_code:
-            lua_patterns = (
-                r"|(?:--\[=|\[=)(?P<lua_level>=*)\[.*?\]=(?P=lua_level)\]" +
-                lua_patterns)
         pattern = compiled_token_pattern(
             lua_patterns +
             r"|\-\-.*?$" +
@@ -105,3 +103,11 @@ class LuaLoopHeaderFunction(LuaStateMachine):
     def _end_def(self):
         self.context.end_of_function()
         self.statemachine_return()
+
+
+def _leveled_brackets(source_code, addition):
+    if not addition:
+        return r"|(?:--\[=|\[=)(?P<lua_level>=*)\[.*?\]=(?P=lua_level)\]"
+    # Use literal levels so Lua's pattern cannot renumber caller captures.
+    levels = sorted(set(re.findall(r"(?=\[(=+)\[)", source_code)))
+    return "".join(rf"|(?:--)?\[{level}\[.*?\]{level}\]" for level in levels)
