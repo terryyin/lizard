@@ -50,6 +50,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
         context = reader.context
+        open_block, close_block = _nesting_blocks(reader)
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
@@ -58,7 +59,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     l_depth = context.end_statement()
             if token in depth_tokens:
                 if token in block_ends:
-                    l_depth = context.close_block()
+                    l_depth = close_block(token)
                 if token in block_starts or token == indent_indicator:
                     context.clear_prev_was_else()
                 # Don't add nesting for "if" when it immediately follows "else" (else if)
@@ -93,7 +94,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     l_depth = context.open_level()
 
                 if token in block_starts:
-                    context.open_block()
+                    open_block(token)
                 if token == indent_indicator and \
                         context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
@@ -101,6 +102,47 @@ class LizardExtension(object):  # pylint: disable=R0903
                 l_depth = 0
                 context.reset_nd_complexity()
             yield token
+
+
+def _nesting_blocks(reader):
+    context = reader.context
+    braces = getattr(reader, "interpolation_braces", None)
+    if braces is None:
+        return context.open_block, context.close_block
+    opening, closing = braces
+    interpolations = []
+
+    def open_block(token):
+        if token is opening:
+            interpolations.append(_InterpolationNesting(context))
+        else:
+            context.open_block()
+
+    def close_block(token):
+        if token is closing:
+            return interpolations.pop().restore()
+        return context.close_block()
+
+    return open_block, close_block
+
+
+class _InterpolationNesting:  # pylint: disable=R0903
+    """A template expression inherits depth, but owns its statements and parentheses."""
+
+    def __init__(self, context):
+        function = self.function = context.current_function
+        self.levels = function.nesting_depth, function.levels_awaiting_body, function.block_levels
+        self.condition = function.condition_depth, function.in_condition, function.logical_operator_added
+        function.levels_awaiting_body = 0
+        function.block_levels = []
+        context.reset_condition_tracking()
+
+    def restore(self):
+        function = self.function
+        function.nesting_depth, function.levels_awaiting_body, function.block_levels = self.levels
+        function.condition_depth, function.in_condition, function.logical_operator_added = self.condition
+        function.prev_was_else = False
+        return function.nesting_depth
 
 
 class NDFileInfoAddition(FileInfoBuilder):
@@ -124,13 +166,13 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.levels_awaiting_body += 1
         return self.add_nd_condition()
 
-    def open_block(self):
+    def open_block(self, _token=None):
         """The block takes over the levels awaiting their body."""
         function = self.current_function
         function.block_levels.append(function.levels_awaiting_body)
         function.levels_awaiting_body = 0
 
-    def close_block(self):
+    def close_block(self, _token=None):
         """A block end releases the levels its block took over."""
         levels = self.current_function.block_levels
         return self.add_nd_condition(-(levels.pop() if levels else 1))
