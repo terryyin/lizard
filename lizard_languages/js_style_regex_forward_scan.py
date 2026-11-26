@@ -28,7 +28,8 @@ def mark_forward(source, js_family):
     match_literal = _REGEX_LITERAL_RE.match
     keywords = _EXPRESSION_KEYWORDS if js_family else _RUBY_EXPRESSION_KEYWORDS
     line_ends = _LINE_ENDS
-    ruby_append = not js_family and _RUBY_APPEND.search(source) is not None
+    append_operator = None if js_family else re.compile(r"<<[^\S\r\n]*/")
+    ruby_append = append_operator is not None and append_operator.search(source) is not None
 
     def after_operand(next_can_regex=False, next_expect_property=False):
         nonlocal can_regex, expect_property, pending_async
@@ -195,7 +196,7 @@ def mark_forward(source, js_family):
             after_operand()
             return
         if ch == '<' and ruby_append and not expect_property:
-            append = _RUBY_APPEND.match(source, i)
+            append = append_operator.match(source, i)
             matched = match_literal(source, append.end() - 1) if append else None
             # A slash inside executable interpolation can end this match early.
             if matched and '#{' not in matched[0]:
@@ -270,6 +271,3 @@ def mark_forward(source, js_family):
         while i < n:
             advance()
     return _apply_marks(source, marks)
-
-
-_RUBY_APPEND = re.compile(r"<<[^\S\r\n]*/")
