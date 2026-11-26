@@ -155,6 +155,22 @@ const callbacks = {
     ]
 
 
+@pytest.mark.parametrize('literal', ("'hit'", '200', '-1', 'true'))
+def test_quoted_arrow_keeps_grouped_literal_return_type(literal):
+    source = (
+        "const responses = {\n"
+        f"  'cache:hit': (cached: boolean): ({literal}) => {{\n"
+        f"    if (cached) return {literal};\n"
+        "    throw new Error('Cache miss');\n"
+        "  },\n"
+        "};\n"
+    )
+
+    assert summaries(functions(source, 'ts')) == [
+        ('(anonymous)', 2, 2, 5, ['cached']),
+    ]
+
+
 @pytest.mark.parametrize('suffix', ('js', 'ts'))
 def test_quoted_arrow_default_ccn_belongs_to_the_arrow(suffix):
     source = '''function configure(ready) {
