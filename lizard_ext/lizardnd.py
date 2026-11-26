@@ -67,6 +67,10 @@ class LizardExtension(object):  # pylint: disable=R0903
                     context.set_prev_was_else(True)
                 elif token == 'if' and token in loops and context.get_prev_was_else():
                     context.clear_prev_was_else()
+                elif (go_if and token == 'if' and token in loops
+                      and not getattr(token, 'is_optional', False)
+                      and not getattr(token, 'is_member_name', False)):
+                    l_depth = _start_go_if(context)
                 # Handle opening parenthesis - start of condition
                 elif token == '(':
                     context.open_condition()
@@ -90,7 +94,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 elif token in loops and token not in ('&&', '||') \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
-                    l_depth = _start_go_if(context) if go_if and token == 'if' else context.open_level()
+                    l_depth = context.open_level()
 
                 if token in block_starts:
                     context.open_block()
@@ -286,14 +290,14 @@ def _go_nesting_tokens(tokens, reader):
         yield token
 
 
-def _end_go_statement(context, keep_levels=0):
+def _end_go_statement(context):
     """Release a Go statement while preserving its if initializer level."""
     function = context.current_function
     function.go_statement_logical_levels = 0
     function.go_initializer = False
     # An explicit semicolon can separate a Go if initializer and test.
-    if function.go_if_levels:
-        keep_levels = function.go_if_levels
+    keep_levels = function.go_if_levels or 0
+    if keep_levels:
         function.logical_operator_added = False
     return context.end_statement(keep_levels)
 
