@@ -8,7 +8,6 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 - [Process open PRs and issues from the past 48 hours](seeds/SEED-077-process-prs-past-48h.md#process-prs-past-48h) — SEED-077#process-prs-past-48h
 - [Count R variadic and quoted formals with nested defaults](seeds/SEED-075-reader-corrections.md#r-formal-parameter-boundaries) — SEED-075#r-formal-parameter-boundaries ([plan](slice-plans/042-r-formal-parameter-boundaries/PLAN.md))
-- [Preserve quoted PL/SQL formals and their declarations](seeds/SEED-075-reader-corrections.md#plsql-formal-parameter-boundaries) — SEED-075#plsql-formal-parameter-boundaries ([plan](slice-plans/043-plsql-formal-parameter-boundaries/PLAN.md))
 
 ## Backlog list
 

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-075#plsql-formal-parameter-boundaries",
+  "title": "Preserve quoted PL/SQL formals and their declarations",
+  "completedAt": "2026-11-26T13:26:27.752Z",
+  "developer": "Terry Yin",
+  "agent": "Sola-chan",
+  "host": "cursor",
+  "model": "auto"
+}
