@@ -23,7 +23,7 @@ class ScriptLanguageMixIn:
         return None
 
     @staticmethod
-    def generate_common_tokens(source_code, addition, match_holder=None):
+    def generate_common_tokens(source_code, addition, match_holder=None, *, start=0):
         # A '#' line comment ends at the newline; a trailing backslash does
         # not continue it onto the next line (issue #317). C/C++ '//' comments,
         # which legitimately continue on a backslash, go through CodeReader
@@ -31,4 +31,4 @@ class ScriptLanguageMixIn:
         return CodeReader.generate_tokens(
             source_code,
             r"|\#[^\n]*" + addition,
-            match_holder)
+            match_holder, start=start)
