@@ -473,6 +473,27 @@ bool ready_for_level(bool ready, Node* node) {
             [("previous", 3), ("ready_for_top", 2), ("ready_for_level", 2)],
             [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
+    def test_logical_and_before_call_assignment_in_condition(self):
+        result = get_cpp_function_list("""int read(int value);
+int next_value(const int* cursor, bool active) {
+    int value = 0;
+    if (active && read(value = *cursor)) {
+        return value;
+    }
+    return 0;
+}
+
+struct Value {};
+Value fallback();
+void declare_reader() {
+    Value&& read(Value = fallback());
+}
+""")
+
+        self.assertEqual(
+            [("next_value", 3), ("declare_reader", 1)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
     def test_operator_and_call_with_assignment_argument(self):
         result = get_cpp_function_list("""struct Flag { bool operator&&(int) const; };
 int fetch();
