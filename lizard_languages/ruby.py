@@ -20,6 +20,24 @@ class MyToken(str):
         self.begin = value.start() if hasattr(value, 'start') else 0
 
 
+class _HeredocCall(MyToken):
+    def __init__(self, match):
+        super().__init__(match)
+        self.opener = MyToken(match['heredoc_opener'])
+        self.opener.begin = match.start('heredoc_opener')
+        self.closers = match['heredoc_closers']
+
+
+class _HeredocLines(str):
+    """Line breaks in a literal whose opener was already emitted."""
+
+
+def _heredoc_token(match):
+    if match['heredoc_closers']:
+        return _HeredocCall(match)
+    return MyToken(match)
+
+
 class _MethodName(str):
     """A keyword that names a method, `m.end(0)` or `def self.for(user)`:
     neither the reader nor a metric reads it as a structure."""
@@ -78,8 +96,10 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
 # and its body contains only text or constant references. Keep a shift
 # such as pages <<~mask separate.
 _SIMPLE_HEREDOC = (
-    r"(?:(?<!\\\n)(?<!\\\r\n)^[ \t]*|(?<==)[ \t]*)<<(?P<heredoc_indent>[-~])?"
-    r"(?P<heredoc_quoted>')?(?P<heredoc_label>[A-Za-z_]\w*)(?(heredoc_quoted)')[ \t]*\r?\n"
+    r"(?:(?<!\\\n)(?<!\\\r\n)^[ \t]*|(?<==)[ \t]*|(?P<heredoc_call>(?<=[(,])[ \t]*))"
+    r"(?P<heredoc_opener><<(?P<heredoc_indent>[-~])?"
+    r"(?P<heredoc_quoted>')?(?P<heredoc_label>[A-Za-z_]\w*)(?(heredoc_quoted)'))"
+    r"(?(heredoc_call)[ \t]*(?P<heredoc_closers>[)\]]+))[ \t]*\r?\n"
     r"(?:(?!^(?(heredoc_indent)[ \t]*)(?P=heredoc_label)\r?$)"
     r"(?(heredoc_quoted)[^\n]*|(?:[^#\n]|#(?!\{)|#\{[A-Z]\w*(?:::[A-Z]\w*)*\})*)\n)*"
     r"^(?(heredoc_indent)[ \t]*)(?P=heredoc_label)\r?$"
@@ -101,6 +121,13 @@ class RubyReader(RubylikeReader):
         context.at_line_end = None
         name_follows = False
         for token in tokens:
+            if type(token) is _HeredocLines:
+                # The opener is the literal's token. Its disjoint body
+                # contributes physical lines after the call closes.
+                for _ in token:
+                    yield '\n'
+                context.add_nloc(len(token))
+                continue
             if token.isspace():
                 if token != '\n':
                     continue
@@ -148,13 +175,15 @@ class RubyReader(RubylikeReader):
     def generate_tokens(source_code, addition='', token_class=None):
         addition = (r"|\w+:|\$\w+|\.+|:?\@{0,2}\w+\??\!?"
                     r"|" + _PERCENT_LITERAL + addition)
+        read_token = MyToken
         if "<<" in source_code:
             addition += "|" + _SIMPLE_HEREDOC
+            read_token = _heredoc_token
         bracket_stack = []
         source = source_code
         while source is not None:
             tokens = tokens_ignoring_documentation(
-                source, addition, MyToken, pattern_for_fragment(source, source is source_code),
+                source, addition, read_token, pattern_for_fragment(source, source is source_code),
                 may_have_documentation(source))
             for token in tokens:
                 if token == "{":
@@ -173,6 +202,11 @@ class RubyReader(RubylikeReader):
                         bracket_stack.append(sep)
                         source = source[token.begin + token.find(sep)+2:]
                         break
-                yield token
+                if type(token) is _HeredocCall:
+                    yield token.opener
+                    yield from token.closers
+                    yield _HeredocLines('\n' * token.count('\n'))
+                else:
+                    yield token
             else:
                 source = None
