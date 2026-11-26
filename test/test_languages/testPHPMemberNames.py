@@ -172,10 +172,25 @@ class Permissions {
         }
         return false;
     }
+
+    public static function canReview($ready, $verified, $account, $override) {
+        if ($ready AnD self::or(($verified AnD $account) Or $override)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function canApprove($ready, $verified, $account) {
+        if (self::or($verified && $account) && $ready) {
+            return true;
+        }
+        return false;
+    }
 }
 """).function_list
         self.assertEqual([('Permissions::or', 0), ('Permissions::canPublish', 2),
-                          ('Permissions::canEdit', 2)],
+                          ('Permissions::canEdit', 2),
+                          ('Permissions::canReview', 3), ('Permissions::canApprove', 2)],
                          [(f.name, f.max_nesting_depth) for f in result])
 
     def test_word_operators_count_and_keep_their_case_insensitive_sequences(self):
