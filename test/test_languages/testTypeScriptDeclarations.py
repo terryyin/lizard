@@ -22,6 +22,21 @@ class Test_TypeScript_declared_functions(unittest.TestCase):
 
 
 class Test_TypeScript_declaration_boundaries(unittest.TestCase):
+    def test_interface_member_and_multiline_interface_declaration(self):
+        functions = get_ts_function_list('''
+          export default interface
+          Connection {
+              close(): void;
+          }
+
+          class Adapter {
+              interface = 'eth0';
+              open(port: number) { return [this.interface, port]; }
+          }
+        ''')
+        self.assertEqual([('open', ['port'])],
+                         [(f.name, f.parameters) for f in functions])
+
     def test_declare_function_skipped(self):
         """declare function should be skipped, real function after it detected"""
         code = '''
