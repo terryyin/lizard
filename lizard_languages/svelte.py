@@ -590,6 +590,7 @@ class SvelteReader(VueReader):
 
     ext = ['svelte']
     language_names = ['svelte']
+    _template_v_pre = False
 
     def implied_semicolons(self, tokens):
         """As TypeScriptReader.implied_semicolons, with script ends ending
