@@ -76,22 +76,57 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
 
 class RubyStateMachine(RubylikeStateMachine):
 
-    def _start_block(self, opener, callback=None):
-        if opener not in ('if', 'case') or not getattr(self.context, 'ruby_tracks_depth', False):
-            super()._start_block(opener, callback)
+    _closed_nd_peak = 0
+    _loop_depth = False
+
+    def _start_block(self, opener, callback=None, token=None):
+        if not getattr(self.context, 'ruby_tracks_depth', False):
+            super()._start_block(opener, callback, token)
             return
 
-        # Claim the pending level before a brace in the predicate can
-        # take it. Its matching keyword end closes it.
         function = self.context.current_function
-        function.levels_awaiting_body -= 1
+        owns_depth = self._loop_depth if opener == 'loop' else (
+            opener in ('if', 'case') and self._take_pending_depth())
+        parent_peak = function.ruby_block_peak
+        function.ruby_block_peak = function.nesting_depth
 
         def close_depth():
-            self.context.add_nd_condition(-1)
+            self._closed_nd_peak = function.ruby_block_peak
+            function.ruby_block_peak = (
+                None if parent_peak is None else max(parent_peak, self._closed_nd_peak))
+            if owns_depth:
+                self.context.add_nd_condition(-1)
             if callback is not None:
                 callback()
 
-        super()._start_block(opener, close_depth)
+        super()._start_block(opener, close_depth, token)
+
+    def _start_loop(self, opener, state):
+        self._loop_depth = (opener in ('while', 'for')
+                            and getattr(self.context, 'ruby_tracks_depth', False)
+                            and self._take_pending_depth())
+        super()._start_loop(opener, state)
+
+    def _take_pending_depth(self):
+        # Keep a keyword's level before a brace or line break can close it.
+        function = self.context.current_function
+        if not function.levels_awaiting_body:
+            return False
+        function.levels_awaiting_body -= 1
+        return True
+
+    def _loop_modifier(self, token):
+        if token == 'while':
+            self._record_modified_block_depth()
+
+    def _read_modifier(self, token):
+        if token == 'if':
+            self._record_modified_block_depth()
+        super()._read_modifier(token)
+
+    def _record_modified_block_depth(self):
+        if self._closed_nd_peak and self.last_token in ('end', '}'):
+            self.context.record_nd_peak(self._closed_nd_peak + 1)
 
     def _if(self, token):
         # A modifier predicate can open a block: `return if jobs.any? do`.
@@ -105,7 +140,7 @@ class RubyStateMachine(RubylikeStateMachine):
         # distinct opening. Keep reading the predicate on other tokens.
         if self.is_newline() or token in ('|', '||', ';'):
             self.next(self._state_global)
-            self.sub_state(self.statemachine_clone(), token=token)
+            self._start_block('do', token=token)
         else:
             self.next(self._if, token)
 

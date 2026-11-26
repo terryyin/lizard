@@ -60,22 +60,32 @@ class RubylikeStateMachine(CodeStateMachine):
                 self._state = self._it
         elif token in self.BLOCK_KEYWORDS and self.last_token != ".":
             self._start_block(token)
-        elif token in self.LOOP_KEYWORDS:
-            if not getattr(token, 'is_member_name', False) and \
-                    not self.follows_value():
-                self.next(self._for_while)
+        elif token in self.LOOP_KEYWORDS and not getattr(token, 'is_member_name', False):
+            if self.follows_value():
+                self._loop_modifier(token)
+            else:
+                self._start_loop(token, self._for_while)
         elif token in ("if", "unless"):
             if getattr(token, 'is_member_name', False):
                 pass
             elif self.follows_value():
-                self.next(self._if)
+                self._read_modifier(token)
             else:
                 self._start_block(token)
         elif token == "=begin":
             self.sub_state(state_embedded_doc)
 
-    def _start_block(self, opener, callback=None):
-        self.sub_state(self.statemachine_clone(), callback)
+    def _start_block(self, opener, callback=None, token=None):
+        self.sub_state(self.statemachine_clone(), callback, token)
+
+    def _start_loop(self, opener, state):
+        self.next(state)
+
+    def _loop_modifier(self, _token):
+        pass
+
+    def _read_modifier(self, token):
+        self.next(self._if)
 
     def is_newline(self):
         return self.context.newline or self.last_token == ";"
@@ -168,7 +178,7 @@ class RubylikeStateMachine(CodeStateMachine):
         elif token in self.LOOP_KEYWORDS and not self.follows_value() and \
                 not getattr(token, 'is_member_name', False):
             self.context.at_line_end = None
-            self.next(self._endless_loop)
+            self._start_loop(token, self._endless_loop)
             return
         elif token in ("}", ";") or (
                 token == "end" and
@@ -231,11 +241,11 @@ class RubylikeStateMachine(CodeStateMachine):
             if token == "do" and \
                     not getattr(token, 'is_member_name', False):
                 self.next(state)
-                self.sub_state(self.statemachine_clone(), callback)
+                self._start_block('loop', callback)
                 return
             if self.is_newline():
                 self.next(state)
-                self.sub_state(self.statemachine_clone(), callback, token)
+                self._start_block('loop', callback, token)
                 return
         if token in ("(", "[", "${") or (
                 token == "{" and self.last_token != ")"):

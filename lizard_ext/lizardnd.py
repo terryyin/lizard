@@ -109,11 +109,17 @@ class LizardExtension(object):  # pylint: disable=R0903
 class NDFileInfoAddition(FileInfoBuilder):
 
     def add_nd_condition(self, inc=1):
-        self.current_function.nesting_depth += inc
-        nd_tmp = self.current_function.nesting_depth
-        if self.current_function.max_nesting_depth < nd_tmp:
-            self.current_function.max_nesting_depth = nd_tmp
-        return self.current_function.nesting_depth
+        function = self.current_function
+        function.nesting_depth += inc
+        self.record_nd_peak(function.nesting_depth)
+        return function.nesting_depth
+
+    def record_nd_peak(self, depth):
+        function = self.current_function
+        if function.max_nesting_depth < depth:
+            function.max_nesting_depth = depth
+        if function.ruby_block_peak is not None and function.ruby_block_peak < depth:
+            function.ruby_block_peak = depth
 
     def reset_nd_complexity(self):
         self.current_function.nesting_depth = 0
@@ -234,6 +240,7 @@ def patch_append_method(frm, accept_class, method_name):
 def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
     self.max_nesting_depth = 0
+    self.ruby_block_peak = None
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
     self.in_condition = False  # Track if we're inside a condition

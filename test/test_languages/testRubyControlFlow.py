@@ -124,6 +124,53 @@ end
             [('store_path', 2), ('load_cache', 1), ('validate_cache', 2)],
             [(function.name, function.max_nesting_depth) for function in functions])
 
+    def test_loop_depth_covers_the_body_before_or_after_its_header(self):
+        source = '''
+def save_valid
+  while (item = next_item)
+    if item.valid?
+      save(item)
+    end
+  end
+end
+
+def notify_valid
+  while (item = next_item) do
+    if item.valid?
+      notify(item)
+    end
+  end
+end
+
+def cancel_all(items)
+  for item in items
+    if item.open?
+      cancel(item)
+    end
+  end
+end
+
+def compare_batches(left, right)
+  begin
+    return true if left.empty? && right.empty?
+  end while left == right
+end
+
+def dispatch_ready(queue)
+  queue.each do |job|
+    dispatch(job) if job.ready?
+  end if queue.available?
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['nd']))
+
+        functions = analyzer.analyze_source_code('queue.rb', source).function_list
+
+        self.assertEqual(
+            [('save_valid', 2), ('notify_valid', 2), ('cancel_all', 2),
+             ('compare_batches', 3), ('dispatch_ready', 2)],
+            [(function.name, function.max_nesting_depth) for function in functions])
+
     def test_basic_if_with_then_on_one_line(self):
         result = get_ruby_function_list('''
             def f
