@@ -352,6 +352,11 @@ class TestScala(unittest.TestCase):
                 result = self._status_metrics(interpolation)
                 self.assertEqual(self._status_metrics(control), result)
 
+    def test_interpolated_condition_counts_nested_decisions(self):
+        expression = '''if (s"${if (ok) id.toString else ""}".nonEmpty) "yes" else "no"'''
+        _, _, _, cognitive = self._status_metrics(expression)
+        self.assertEqual(5, cognitive)
+
     def _status_metrics(self, expression):
         analyzer = FileAnalyzer(get_extensions(['ND', 'NS', 'cognitive']))
         source = (
