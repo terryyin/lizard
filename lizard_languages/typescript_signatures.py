@@ -55,3 +55,59 @@ def _has_branch_separators(tokens, required):
         previous = token
         line_start = False
     return False
+
+
+class TypeArgumentComma(str):
+    """A comma within a TypeScript call's type arguments."""
+
+    is_type_argument_comma = True
+
+
+def call_type_argument_span(tokens):
+    """Return the span of comma-delimited reference types before a call."""
+    depth = 1
+    expects_type = True
+    previous = '<'
+    comma = False
+    for offset, token in enumerate(tokens, 1):
+        if token.isspace() or token.startswith(('//', '/*')):
+            continue
+        if previous == '[':
+            if token != ']':
+                return 0
+        elif expects_type:
+            if token in ('keyof', 'readonly', 'typeof'):
+                continue
+            if token == '>' and previous == ',':
+                depth -= 1
+                expects_type = False
+            elif token.replace('$', '_').isidentifier() or token[0] in "'\"":
+                expects_type = False
+            else:
+                return 0
+        elif token == '<':
+            depth += 1
+            expects_type = True
+        elif token == '>':
+            depth -= 1
+        elif token in (',', '|', '&', '.'):
+            comma |= token == ','
+            expects_type = True
+        elif token != '[' and not _packed_type_reference(token):
+            return 0
+        if not depth:
+            return offset if comma and _next_code_token(tokens) == '(' else 0
+        previous = token
+    return 0
+
+
+def _packed_type_reference(token):
+    # The TSX lexer emits a simple '<Name>' as one token.
+    return token[0] == '<' and token.endswith('>') and (
+        token[1:-1].replace('.', '_').isidentifier()
+        and not getattr(token, 'is_jsx_markup', False))
+
+
+def _next_code_token(tokens):
+    return next((token for token in tokens if not (
+        token.isspace() or token.startswith(('//', '/*')))), None)

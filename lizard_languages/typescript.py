@@ -14,6 +14,7 @@ from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
+from .typescript_signatures import TypeArgumentComma, call_type_argument_span
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -83,6 +84,7 @@ class _OptionalMemberQuestion(str):
 
 
 _OPTIONAL_MEMBER_QUESTION = _OptionalMemberQuestion('?')
+_TYPE_ARGUMENT_COMMA = TypeArgumentComma(',')
 _ANNOTATION_PUNCTUATION = frozenset(('?', ':'))
 
 
@@ -116,6 +118,11 @@ def _ends_a_number(token):
     """Whether a '.' after this token is a decimal point, `1_000.`."""
     return bool(token) and token[0].isdigit() and token.replace(
         '_', '').isdigit()
+
+
+def _can_specialize(token):
+    return token and (token in (')', ']', '?.', '!') or
+                      token[0].isalpha() or token[0] in '_$#')
 
 
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
@@ -255,9 +262,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         member_access = False
         before_dot = ''
         keyword = None      # waits for the next token: `{ if: a }`
+        type_argument_span = 0
         tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
+                if type_argument_span:
+                    type_argument_span -= 1
+                    if token == ',':
+                        token = _TYPE_ARGUMENT_COMMA
                 if not token.isspace():
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
@@ -306,6 +318,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         if token in name_keywords:
                             keyword = token
                             continue
+                    if (token == '<' and not type_argument_span
+                            and self.context.class_field_annotations
+                            and _can_specialize(state.last_token)):
+                        tokens, lookahead = tee(tokens)
+                        type_argument_span = call_type_argument_span(lookahead)
+                        del lookahead
+                        yield token
+                        break
                     yield token
                 elif token == '\n':
                     if keyword is not None:
