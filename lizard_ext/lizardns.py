@@ -77,7 +77,25 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             return self._indented_structures(tokens, reader)
         if hasattr(reader, 'implied_semicolons'):
             return self._unterminated_statements(tokens, reader)
+        if getattr(reader, 'has_scala_interpolation', False):
+            self._start_file(reader)
+            return self._read_scala_interpolation(tokens)
         return super(LizardExtension, self).__call__(tokens, reader)
+
+    def _read_scala_interpolation(self, tokens):
+        scopes = []
+        for token in tokens:
+            if not getattr(token, 'is_scala_interpolation', False):
+                self._state(token)
+            elif token == '{':
+                scopes.append((self._state, self.br_count, len(self.structure_piles)))
+                self._push_scope()
+                self._state = self._state_global
+                self.br_count = 0
+            elif scopes:
+                self._state, self.br_count, scope = scopes.pop()
+                del self.structure_piles[scope:]
+            yield token
 
     def _start_file(self, reader):
         super(LizardExtension, self)._start_file(reader)
