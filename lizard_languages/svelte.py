@@ -59,6 +59,9 @@ _IMPLICIT_CLOSE = {
     'td': ('td', 'th', 'tr'),
     'th': ('td', 'th', 'tr'),
 }
+# The attributes of root script and style tags contain only text.
+_STATIC_TAG_ITEM = re.compile(r"""=\s*(?:"[^"]*"|'[^']*')|>""")
+_RAW_TAG_WITH_ATTRIBUTES = re.compile(r'<(?:script|style)\s')
 # The head of a block tag. `{/* note */ a}` and `{// note` start code.
 _TAG_HEAD = re.compile(r'\s*([#:@]|/(?![/*]))(else\s+if\b|[\w$]*)')
 # Elements whose content is text, and the tags that end it.
@@ -287,6 +290,38 @@ def _split_at_last(tokens, words):
     return found
 
 
+def _static_tag_end(source, pos, end):
+    for match in _STATIC_TAG_ITEM.finditer(source, pos, end):
+        if match.group() == '>':
+            return match.end()
+    return None
+
+
+def _step_markup_block(parents, head):
+    if not head:
+        return
+    role = head.group(1)
+    if role == '#':
+        parents.append(None)
+    elif role in ':/':
+        while parents and parents[-1] is not None:
+            parents.pop()
+        if role == '/' and parents:
+            parents.pop()
+
+
+def _close_markup_element(parents, name):
+    if parents and (parents[-1] == name or name in parents):
+        while parents.pop() != name:
+            pass
+
+
+def _is_root_element(parents, name):
+    if parents and name in _IMPLICIT_CLOSE.get(parents[-1], ()):
+        parents.pop()
+    return not parents
+
+
 def _svelte_script_blocks(source, end_pattern):
     """Find scripts in the root fragment, outside elements and blocks."""
     # pylint: disable=R0912
@@ -307,34 +342,25 @@ def _svelte_script_blocks(source, end_pattern):
             close = source.find('-->', pos)
             pos = len(source) if close < 0 else close + 3
         elif name is None:
-            head = _TAG_HEAD.match(source, pos)
-            if head:
-                role = head.group(1)
-                if role == '#':
-                    parents.append(None)
-                elif role in ':/':
-                    while parents and parents[-1] is not None:
-                        parents.pop()
-                    if role == '/' and parents:
-                        parents.pop()
+            _step_markup_block(parents, _TAG_HEAD.match(source, pos))
             pos = yield from markup._tag(pos, measure=False)
             if pos is None:
                 break
         elif match.group(1):
             close = source.find('>', pos)
             pos = len(source) if close < 0 else close + 1
-            if parents and (parents[-1] == name or name in parents):
-                while parents.pop() != name:
-                    pass
+            _close_markup_element(parents, name)
         else:
-            if parents and name in _IMPLICIT_CLOSE.get(parents[-1], ()):
-                parents.pop()
-            pos = yield from markup._start_tag(pos, measure=False)
+            root = _is_root_element(parents, name)
+            if root and name in _RAW_TEXT_END:
+                pos = _static_tag_end(source, pos, len(source))
+            else:
+                pos = yield from markup._start_tag(pos, measure=False)
             if pos is None:
                 break
             if source[pos - 2:pos] == '/>' or name in _VOID_ELEMENTS:
                 continue
-            if name == 'script' and not parents:
+            if name == 'script' and root:
                 end = vue._script_end(source, pos, end_pattern)
                 yield match.start(), pos, end
                 pos = end
@@ -374,6 +400,7 @@ class _MarkupTokens:
     def __iter__(self):
         source, end = self.source, self.end
         pos = self.start
+        parents = [] if _RAW_TAG_WITH_ATTRIBUTES.search(source, pos, end) else None
         while True:
             match = _MARKUP_ITEM.search(source, pos, end)
             if match is None:
@@ -384,12 +411,20 @@ class _MarkupTokens:
                 close = source.find('-->', pos, end)
                 pos = end if close < 0 else close + 3
             elif name is None:
+                if parents is not None:
+                    _step_markup_block(parents, _TAG_HEAD.match(source, pos, end))
                 pos = yield from self._tag(pos)
             elif match.group(1):
                 close = source.find('>', pos, end)
                 pos = end if close < 0 else close + 1
+                if parents is not None:
+                    _close_markup_element(parents, name)
             else:
-                pos = yield from self._start_tag(pos)
+                root = parents is not None and _is_root_element(parents, name)
+                if root and name in _RAW_TEXT_END:
+                    pos = _static_tag_end(source, pos, end) or end
+                else:
+                    pos = yield from self._start_tag(pos)
                 if source[pos - 2:pos] == '/>':
                     continue
                 if name in _RAW_TEXT_END:
@@ -397,6 +432,8 @@ class _MarkupTokens:
                     pos = end if close is None else close.end()
                 elif name == 'textarea':
                     pos = yield from self._sequence(pos, _TEXTAREA_ITEM, measure=True)
+                elif parents is not None and name not in _VOID_ELEMENTS:
+                    parents.append(name)
         yield from self._newlines(end)
         for block in reversed(self.blocks):
             if block != 'key':
