@@ -43,6 +43,31 @@ end
             [(function.name, function.end_line, function.cyclomatic_complexity)
              for function in functions])
 
+    def test_backtick_method_does_not_hide_later_regexps(self):
+        definitions = (
+            'def capture(shell, command)\n  shell.`(command)\nend\n',
+            'def `(command)\n  capture(command)\nend\n',
+        )
+        usage = r'''
+def ignore_rules(rules, count)
+  rules << /\Awhen\z/
+  return /#/ if count > 0
+end
+
+def dispatch(command)
+  command if /#/ =~ command
+end
+'''
+        for definition in definitions:
+            with self.subTest(definition=definition):
+                functions = get_ruby_function_list(definition + usage)
+
+                self.assertEqual(
+                    [('ignore_rules', 2), ('dispatch', 2)],
+                    [(function.name, function.cyclomatic_complexity)
+                     for function in functions[-2:]])
+                self.assertEqual(11, functions[-1].token_count)
+
     def test_member_division_keeps_condition_and_tokens(self):
         functions = get_ruby_function_list(
             'def divide(obj,a,b,c)\n obj.return / (a || b) / c\nend\n')

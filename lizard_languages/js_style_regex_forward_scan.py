@@ -105,6 +105,8 @@ def mark_forward(source, js_family):
         nonlocal can_regex, pending_async, pending_for, async_nesting
         if expect_property:
             after_operand()
+        elif ruby_append and word == 'def':
+            after_operand(next_expect_property=True)
         elif word == 'async' and js_family:
             pending_async = True
             can_regex = False
@@ -167,7 +169,7 @@ def mark_forward(source, js_family):
                 scan_template()
                 pending_async = False
                 return
-            if ruby_append:
+            if ruby_append and not expect_property:
                 skip_string(ch)
                 after_operand()
                 return
