@@ -29,7 +29,8 @@ from .typescript import TypeScriptReader
 from .vue import VueReader, _attributes
 
 # In markup: a comment, a start or end tag, or a '{' that opens code.
-_MARKUP_ITEM = re.compile(r'<!--|<(/?)([A-Za-z][^\s/>{]*)|\{')
+# Component names can start with a Unicode letter.
+_MARKUP_ITEM = re.compile(r'<!--|<(/?)([^\W\d_][^\s/>{]*)|\{')
 # In a start tag: an expression, a quoted value, or the end of the tag.
 _TAG_ITEM = re.compile(r'''\{|=\s*(["'])|>''')
 _QUOTED_VALUE_ITEM = {'"': re.compile(r'\{|"'), "'": re.compile(r"\{|'")}
