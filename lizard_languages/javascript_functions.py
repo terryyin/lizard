@@ -199,6 +199,8 @@ class JavaScriptFunctionsMixin:
             self._state = self._dec
             self.context.add_to_long_function_name(" " + token)
 
+    _arrow_only_signature = False
+
     def _dec(self, token):
         if token == '(' and self._parameter_bindings.at_start:
             # Grouped expression, such as an arrow IIFE, rather than parameters.
@@ -268,8 +270,6 @@ class JavaScriptFunctionsMixin:
         elif token != '{' and token != '=>':
             self._discard_signature()
         self.next(self._state_global, token)
-
-    _arrow_only_signature = False
 
     def _field(self, token):
         if token in ('(', '['):

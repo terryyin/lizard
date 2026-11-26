@@ -4,11 +4,11 @@ Language parser for TypeScript
 
 from itertools import tee
 
+from .code_reader import CodeReader, CodeStateMachine, MemberName
+from .clike import CCppCommentsMixin
 from .typescript_declarations import SplitTypeAliasName, has_split_alias_name
 from .typescript_type_annotation import (
     TypeAliasContext, TypeArguments, followed_by_new_statement, packed_type_arguments)
-from .code_reader import CodeReader, CodeStateMachine, MemberName
-from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
@@ -18,7 +18,8 @@ from .javascript_templates import LINE_COMMENT, interpolation_code, template_tok
 from .javascript_expression import (
     TypeArgumentEnd, awaiting_function_body, end_before_line_token)
 from .javascript_statements import ImpliedSemicolons
-from .javascript_expression import active_js_state
+from .javascript_expression import active_js_state, ends_expression
+from .typescript_signatures import template_call_type_arguments
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -148,6 +149,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # JS/TS split templates into '${' + expression tokens; only TSX/JSX keep
     # atomic templates that need a backtick scan on the fast path.
     _scan_atomic_templates = False
+    measure_template_types = False
+    _in_call_type_arguments = False
     _class_field_annotations = True
 
     # Separated condition categories
@@ -185,10 +188,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     def in_template_literal_type(self):
         if not self.context.class_field_annotations:
             return False
-        state = active_js_state(self.parallel_states[0])._state
+        if self._in_call_type_arguments:
+            return True
+        active = active_js_state(self.parallel_states[0])
+        state = active._state
         if isinstance(state, TypeScriptTypeAnnotationStates):
             return not (self.context.newline and state.ends_before_line_token('`'))
-        return getattr(state, 'in_type_alias', False)
+        return (getattr(state, 'in_type_alias', False)
+                and not (self.context.newline and ends_expression(active.last_token or '')))
 
     def _count_interpolation_conditions(self, token, in_expression, measure=None):
         if getattr(token, 'interpolation_measured', False):
@@ -308,6 +315,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         name_keywords = structure_keywords | _NAMED_KEYWORDS
         member_access = False
         before_dot = ''
+        track_templates = self.measure_template_types and self.context.class_field_annotations
+        type_tokens = 0
         keyword = None      # waits for the next token: `{ if: a }`
         tokens = iter(self.code_tokens(tokens))
         filename = self.context.fileinfo.filename.lower()
@@ -322,6 +331,10 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     # when the runtime reader has left a multiline alias.
                     type_alias = _read_type_alias(type_alias, token)
                 if not token.isspace():
+                    if track_templates:
+                        self._in_call_type_arguments = bool(type_tokens)
+                        if type_tokens:
+                            type_tokens -= 1
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
                         if token in _NAME_FOLLOWERS or (
@@ -353,6 +366,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False
+                    elif (track_templates and token == '<' and not self._in_call_type_arguments
+                          and ends_expression(state.last_token or '')):
+                        tokens, lookahead = tee(tokens)
+                        type_tokens = template_call_type_arguments(lookahead, self.script_tokens)
+                        del lookahead
+                        member_access = False
+                        yield token
+                        break
                     elif token in marked_punctuation:
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens

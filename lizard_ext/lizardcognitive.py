@@ -80,6 +80,7 @@ class LizardExtension(object):  # pylint: disable=R0903
 
 
 def _measure_templates(tokens, counter):
+    counter.reader.measure_template_types = True
     atomic = type(counter.reader)._scan_atomic_templates  # pylint: disable=protected-access
     read_interpolation = counter.reader._count_interpolation_conditions  # pylint: disable=protected-access
     measure = partial(_measure_interpolation, counter)
