@@ -36,6 +36,12 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         newline = self._line_break or self.context is not None and self.context.newline
         self._line_break = False
         brackets = self._brackets
+        if (token == 'new' and not brackets and self.last_token == 'abstract'
+                and self.abstract_constructor_prefix):
+            # The arrow after these parameters belongs to the constructor type.
+            self.abstract_constructor_prefix = False
+            self._expect_type = True
+            return
         if brackets:
             if self._parenthesis_first is None and len(brackets) == 1:
                 # A parenthesized function type groups its own arrow; the
