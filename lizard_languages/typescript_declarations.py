@@ -1,7 +1,8 @@
 """TypeScript declarations and type syntax excluded from runtime functions."""
 
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
-from .javascript_expression import OPERAND_WORDS, ends_expression, is_identifier, is_identifier_part
+from .javascript_expression import (
+    OPERAND_WORDS, ends_expression, is_identifier, is_identifier_part, starts_statement)
 from .js_style_regex_context import _EXPRESSION_KEYWORDS
 
 
@@ -225,12 +226,16 @@ class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
 
     def _state_global(self, token):
         if not self._brackets and not token.isspace():
-            if not self._expect_type and self._starts_runtime_expression(token):
+            if not (self._expect_type or self._qualified_type) and self._starts_runtime_expression(token):
                 self.saved_token = token
                 self.statemachine_return()
                 return
             self._after_type_parameters = self._expect_type and token[0] == '<'
             self._import_type = token == 'import' and not self._qualified_type
+            if token in ('as', 'is') and (self._expect_type or self._qualified_type):
+                self._expect_type = self._qualified_type = self._closed_type = False
+                self._line_break = False
+                return
             if (token == 'new' and not self._qualified_type
                     and (self._expect_type or self.last_token == 'abstract')):
                 # A constructor type has its own parameters and return arrow.
@@ -244,4 +249,6 @@ class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
         if token == '(':
             return not (self._after_type_parameters or self._import_type)
         # A line break ends a type before postfix brackets or type arguments.
-        return self.context.newline and token[0] in '[<'
+        return self.context.newline and (
+            token[0] in '[<\\'
+            or token not in ('in', 'instanceof') and not starts_statement(token) and is_identifier(token))
