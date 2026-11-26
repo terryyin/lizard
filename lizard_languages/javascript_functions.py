@@ -198,9 +198,8 @@ class JavaScriptFunctionsMixin:
         if token == '@':
             self._decorated_parameters = True  # constructor(@Inject(T) x)
         elif self._expression_operand(token):
-            # `x = (items.map(f))`, `x = (g(y))`: a call or member access at
-            # the root of the group, so an expression; read it as one so the
-            # arrows in it are found. Re-read the name before this token.
+            # A call, member access or binary operator at the group root
+            # makes this an expression. Read its leading name again.
             name = self.last_token
             self._abandon_optimistic_parameter_group()
             self.next(self._state_global, name)
@@ -229,7 +228,7 @@ class JavaScriptFunctionsMixin:
     def _expression_operand(self, token):
         bindings = self._parameter_bindings
         name = self.last_token
-        return (token in ('.', '?.', '(') and not self._decorated_parameters
+        return (token in ('.', '?.', '(', '&&', '||') and not self._decorated_parameters
                 and bindings.at_root and not bindings.in_expression
                 and not bindings._in_parameter_type
                 and name == bindings.previous and name not in ('this', 'new')
