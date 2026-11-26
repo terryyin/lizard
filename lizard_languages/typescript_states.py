@@ -8,6 +8,7 @@ from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
+from .typescript_type_annotation import TypeScriptTypeAnnotationStates, can_take_type_arguments
 
 # Ordinary tokens skip declaration and marker dispatch together.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
@@ -23,7 +24,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self.last_tokens = ''
         self.function_name = ''
         self.started_function = None
-        self._signature = False     # the "(" of _function can't open a group
+        # False for an optimistic signature, 'function' after the keyword.
+        self._signature = False
         self.as_object = False
         self.as_class = False
         self._class_body_pending = False
@@ -76,7 +78,68 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
     def statemachine_before_return(self):
         if self.started_function:
-            self._pop_function_from_stack()
+            if (isinstance(self._state, TypeScriptTypeAnnotationStates)
+                    and self.saved_state == self._expecting_body_after_return_type):
+                self._discard_bodyless_signature()
+            else:
+                self._pop_function_from_stack()
+
+    def _consume_type_annotation(self, return_type=False, runtime_assertion=False):
+        # A signature stays tentative while its return type is read.
+        return_type = return_type or (
+            not runtime_assertion and self.started_function
+            and not self._expression_body and self.last_token == ')')
+        declaration = self._signature == 'function' or (
+            self.as_class and self._signature and not self._in_prop_value)
+        body_candidate = return_type and declaration
+        if body_candidate:
+            self.next(self._expecting_body_after_return_type)
+        super()._consume_type_annotation(
+            return_type=return_type, class_member=body_candidate and self.as_class,
+            runtime_assertion=runtime_assertion)
+
+    def _expecting_body_after_return_type(self, token):
+        # Later child states resume ordinary parsing.
+        self.saved_state = self._state_global
+        if token not in ('{', '=>'):
+            self._discard_bodyless_signature()
+        self.next(self._state_global, token)
+
+    def _discard_bodyless_signature(self):
+        # Unlike an expression, a declaration adds no enclosing decisions.
+        self.context.current_function.abandoned = True
+        self.context.forgive = True
+        self._pop_function_from_stack()
+
+    def end_expression_before(self, token):
+        annotation = self._state
+        if (self._expression_body
+                and isinstance(annotation, TypeScriptTypeAnnotationStates)
+                and annotation.runtime_assertion
+                and annotation.ends_before_line_token(token)):
+            # Return to the runtime owner before the counters see the next
+            # statement. There is no token for the annotation to replay yet.
+            self.next(self.saved_state)
+            self.callback = None
+            self._end_statement()
+            return
+        super().end_expression_before(token)
+
+    def type_argument_context(self):
+        if isinstance(self._state, TypeScriptStates):
+            return self._state.type_argument_context()
+        previous = self.last_token
+        if self._class_body_pending or self.started_function and not self._expression_body:
+            return False
+        if self.as_object and not self.holds_members:
+            return False
+        if self._state != self._state_global and not (
+                isinstance(self._state, TypeScriptTypeAnnotationStates)
+                and self._state.runtime_assertion):
+            return False
+        if previous == '!':
+            return getattr(self, '_postfix_operand', False)
+        return can_take_type_arguments(previous)
 
     def _state_global(self, token):
         if self._pending_bindings:
@@ -88,7 +151,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
             if token in _MARKER_TOKENS:
                 if isinstance(token, ReturnTypeColon):
-                    self._consume_type_annotation()
+                    self._consume_type_annotation(return_type=True)
                     return
                 if token == 'static':
                     # Hot path: most `static`/`async` tokens are not inside an
@@ -134,7 +197,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if token == 'function' and not getattr(token, 'is_member_name', False):
             if self.started_function and not self.as_object:
                 self._pop_function_from_stack()
-            self._signature = True
+            self._signature = token
+            self._arrow_only_signature = False
             self._state = self._function
         elif (token in ('if', 'switch', 'for', 'while', 'catch')
               and not getattr(token, 'is_member_name', False)):
@@ -170,6 +234,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        and self._generic_prefix in ('=', 'async'))):
                 # Only "name = (" can open a group.
                 self._signature = self.last_token != '='
+                self._arrow_only_signature = True
                 if not self.started_function:
                     self._function(self.function_name)
                 self.next(self._function, token)
