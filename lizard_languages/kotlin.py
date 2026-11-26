@@ -211,6 +211,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _start_header(self):
         self._type_depth = 0
         self._type_annotated = False
+        self._parameter_angles = 0
+        self._parameter_comma = None
 
     def _type_is_open(self):
         # The next token continues a type that has an open `<` or `(`, that
@@ -295,13 +297,35 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         self.br_count += self._PARAMETER_DELIMITERS.get(token, 0)
         if self.br_count == 0:
             self._state = self._expect_function_impl
-        elif token == ',' and self.br_count > 1:
-            # A function type, default call or lambda can have its own commas.
-            function = self.context.current_function
-            function.add_to_long_name(" ,")
-            function.full_parameters[-1] += " ,"
         elif token not in ('(', ')'):
-            self.context.parameter(token)
+            function = self.context.current_function
+            if self.br_count == 1 and token in ('<', '>', ':'):
+                self._parameter_type_token(function, token)
+            if token == ',' and (self.br_count > 1 or self._parameter_angles):
+                # A type or default expression can have its own commas.
+                if self.br_count == 1:
+                    self._parameter_comma = len(function.full_parameters[-1])
+                function.add_to_long_name(" ,")
+                function.full_parameters[-1] += " ,"
+            else:
+                function.add_parameter(token)
+
+    def _parameter_type_token(self, function, token):
+        if token == '<':
+            self._parameter_angles += 1
+        elif token == '>':
+            self._parameter_angles = max(0, self._parameter_angles - 1)
+            if not self._parameter_angles:
+                self._parameter_comma = None
+        elif self._parameter_comma is not None:
+            # A declaration colon confirms a parameter after a comparison
+            # such as `enabled: Boolean = low < high, timeout: Int`.
+            index = self._parameter_comma
+            text = function.full_parameters[-1]
+            function.full_parameters[-1] = text[:index]
+            function.full_parameters.append(text[index + len(" ,"):])
+            self._parameter_comma = None
+            self._parameter_angles = 0
 
     def _receiver_type_end(self, token):
         # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
