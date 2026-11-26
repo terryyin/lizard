@@ -6,9 +6,6 @@ from .cognitive_counter import (
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 
 
-_TERNARY_KINDS = ('ternary', 'ternary_true')
-
-
 class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     """Nesting from braces, parentheses and semicolons (C-like languages).
 
@@ -66,7 +63,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 return
         if frames:
             top = frames[-1]
-            if top.kind in _TERNARY_KINDS:
+            if top.kind in self._TERNARY_KINDS:
                 top = self._top_structure()
             if top is not None and top.phase != BODY and \
                     self._in_head(top, token):
@@ -89,9 +86,11 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             if top.phase == BODY and not top.braced:
                 self._statement_end()
 
+    _TERNARY_KINDS = ('ternary', 'ternary_true')
+
     def _top_structure(self):
         for frame in reversed(self.state.frames):
-            if frame.kind not in _TERNARY_KINDS:
+            if frame.kind not in self._TERNARY_KINDS:
                 return frame
         return None
 
@@ -118,7 +117,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         keep = len(frames)
         while keep:
             frame = frames[keep - 1]
-            if (frame.kind not in _TERNARY_KINDS or frame.pdepth != state.pdepth
+            if (frame.kind not in self._TERNARY_KINDS or frame.pdepth != state.pdepth
                     or frame.depth != state.depth):
                 break
             if frame.kind == 'ternary_true':
@@ -131,7 +130,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         """A ';' at bracket depth 0 finishes the braceless bodies around it."""
         state = self.state
         frames = state.frames
-        while frames and frames[-1].kind in _TERNARY_KINDS:
+        while frames and frames[-1].kind in self._TERNARY_KINDS:
             frames.pop()
         for frame in reversed(frames):
             if frame.braced or frame.depth != state.depth or \
