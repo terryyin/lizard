@@ -50,6 +50,8 @@ class LizardExtension(object):  # pylint: disable=R0903
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
         context = reader.context
+        php = 'php' in getattr(reader, 'language_names', ())
+        previous_token = None
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
@@ -69,7 +71,9 @@ class LizardExtension(object):  # pylint: disable=R0903
                     context.clear_prev_was_else()
                 # Handle opening parenthesis - start of condition
                 elif token == '(':
-                    context.open_condition()
+                    context.open_condition(
+                        php and previous_token in ('if', 'elseif', 'while') and
+                        not getattr(previous_token, 'is_member_name', False))
                 # Handle closing parenthesis - end of condition
                 elif token == ')':
                     context.close_condition()
@@ -100,6 +104,8 @@ class LizardExtension(object):  # pylint: disable=R0903
             if l_depth < 0:
                 l_depth = 0
                 context.reset_nd_complexity()
+            if php:
+                previous_token = token
             yield token
 
 
@@ -147,12 +153,15 @@ class NDFileInfoAddition(FileInfoBuilder):
     def get_in_condition(self):
         return self.current_function.in_condition
 
-    def open_condition(self):
+    def open_condition(self, php_header=False):
         """A "(" opens a condition, or a level inside one."""
         function = self.current_function
+        if function.condition_depth == 0:
+            function.in_php_header = php_header
         function.in_condition = True
         function.condition_depth += 1
-        function.logical_operator_added = False
+        if not function.in_php_header:
+            function.logical_operator_added = False
 
     def close_condition(self):
         """A ")" closes a level, and the condition with its last level."""
@@ -234,6 +243,7 @@ def _init_nesting_depth_data(self, *_):
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
     self.in_condition = False  # Track if we're inside a condition
+    self.in_php_header = False
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
