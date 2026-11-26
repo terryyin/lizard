@@ -178,6 +178,16 @@ $display = (function ($value): string { return (string) $value; })(42);
 """)
         self.assertEqual(['$format', '(anonymous)'], [f.name for f in functions])
 
+    def test_grouped_closure_expression_result_stays_anonymous(self):
+        functions = get_php_function_list("""<?php
+$result = (function () { return 42; })->call(new stdClass());
+$isClosure = ((function () {})) INSTANCEOF Closure;
+$label = ((function () {})) ? 'available' : 'missing';
+$format = (function ($value) { return (string) $value; }) and true;
+""")
+        self.assertEqual(['(anonymous)', '(anonymous)', '(anonymous)', '$format'],
+                         [f.name for f in functions])
+
     def test_function_without_name_assign_to_field(self):
         functions = get_php_function_list("<?php a.b.c = function (a, b){} ?>")
         self.assertEqual('c', functions[0].name)
