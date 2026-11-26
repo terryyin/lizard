@@ -1279,6 +1279,28 @@ class TestJavaScriptArrowBodyInParentheses(unittest.TestCase):
 
 
 class TestCognitiveOptionalRecursion(unittest.TestCase):
+    def test_async_declarations_shadow_optional_recursion(self):
+        source = """
+            async function restore({restore: count}: {restore: number}): Promise<number> {
+              return restore?.(count);
+              async function restore<T>(value: T): Promise<T> { return value; }
+            }
+            async function recover({recover: count}: {recover: number}): Promise<number> {
+              {
+                return recover?.(count);
+                async function recover<T>(value: T): Promise<T> { return value; }
+              }
+            }
+            async function rebuild({rebuild: count}: {rebuild: number}): Promise<number> {
+              const previous = async function rebuild<T>(value: T): Promise<T> { return value; };
+              if (count > 0) return rebuild?.({rebuild: await previous(count - 1)});
+              return count;
+            }
+        """
+        for filename in ('workflow.ts', 'workflow.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 0, 0, 0, 0, 2], cogc(filename, source))
+
     def test_destructured_parameter_key_and_binding(self):
         source = """
             function run({run, n}) { if (n) run?.({run: n - 1}); }
