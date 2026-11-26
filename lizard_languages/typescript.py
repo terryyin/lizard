@@ -8,6 +8,7 @@ from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
+from .typescript_declarations import SplitTypeAliasName, has_split_alias_name
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
@@ -272,6 +273,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
+                    if token == 'type' and self.context.class_field_annotations:
+                        tokens, lookahead = tee(tokens)
+                        if has_split_alias_name(lookahead):
+                            token = SplitTypeAliasName(token)
+                        del lookahead
+                        member_access = False
+                        yield token
+                        break
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False

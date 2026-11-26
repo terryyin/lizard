@@ -1,7 +1,7 @@
 """TypeScript declarations and type syntax excluded from runtime functions."""
 
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
-from .javascript_expression import OPERAND_WORDS, ends_expression
+from .javascript_expression import OPERAND_WORDS, ends_expression, is_identifier, is_identifier_part
 from .js_style_regex_context import _EXPRESSION_KEYWORDS
 
 
@@ -14,6 +14,10 @@ DECLARATION_WORDS = frozenset((
 _EXPRESSION_PREFIXES = (
     _EXPRESSION_KEYWORDS | OPERAND_WORDS | {'default'}
 ) - {'as', 'satisfies', 'keyof'}
+
+
+class SplitTypeAliasName(str):
+    """The 'type' keyword before a name the lexer split into joined parts."""
 
 
 class TypeScriptDeclarationsMixin:
@@ -50,10 +54,11 @@ class TypeScriptDeclarationsMixin:
         # These contain arrow signatures that are not runtime functions.
         if token == 'type' and not self.as_object:
             name = []
+            split_name = isinstance(token, SplitTypeAliasName)
 
             def handle_type_alias(t):
                 if not name:
-                    if not self.context.newline and _starts_alias_name(t):
+                    if not self.context.newline and (is_identifier(t) or split_name and t == '\\'):
                         name.append(t)
                     else:
                         self.last_tokens = 'type'
@@ -71,7 +76,7 @@ class TypeScriptDeclarationsMixin:
                     elif t == ';':
                         self.next(self._state_global)
                         return True
-                    elif not self.context.newline and _continues_alias_name(name, t):
+                    elif split_name and not self.context.newline and _continues_alias_name(name, t):
                         name.append(t)
                     else:
                         # `type` was a value, e.g. `f(type as string)`:
@@ -181,20 +186,33 @@ class TypeScriptDeclarationsMixin:
         self._prev_token = ':'
 
 
-def _starts_alias_name(token):
-    return (token == '\\' or token[0] in '_$' or token[0].isalpha()
-            or token.isidentifier())
+def has_split_alias_name(tokens):
+    """Check the alias name and its delimiter with the original whitespace."""
+    name = []
+    gap = False
+    for token in tokens:
+        if token.isspace() or token.startswith(('//', '/*')):
+            if not name and '\n' in token:
+                return False
+            gap = True
+        elif not name:
+            if not gap or not (token == '\\' or is_identifier(token)):
+                return False
+            name.append(token)
+            gap = False
+        elif token in ('<', '=') or token.startswith('<') and token.endswith('>'):
+            return len(name) > 1
+        elif gap or not _continues_alias_name(name, token):
+            return False
+        else:
+            name.append(token)
+    return False
 
 
 def _continues_alias_name(name, token):
     """The tokenizer emits identifier escapes and some Unicode parts separately."""
-    if token == '\\' or token in ('\u200c', '\u200d'):
-        return True
-    identifier_part = ('_' + token.replace('$', '_')).isidentifier()
-    if len(name) == 1 and name[0] != '\\':
-        # Only a lexically split character can follow a complete word.
-        return len(token) == 1 and not token.isalnum() and token not in '_$' and identifier_part
-    return identifier_part or token in ('{', '}') and '\\' in name
+    return (token == '\\' or is_identifier_part(token)
+            or token in ('{', '}') and '\\' in name)
 
 
 class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
