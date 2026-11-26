@@ -113,9 +113,14 @@ class CLikeNestingStackStates(CodeStateMachine):
     __namespace_separators = ['<', ":", "final", "[", "extends", 'implements']
     _TYPE_KEYWORDS = ("struct", "class", "namespace", "union")
 
+    def __init__(self, context):
+        super().__init__(context)
+        # Uppercase .C and .mm can contain C++ templates.
+        self._recognize_templates = context is None or not context.fileinfo.filename.endswith((".c", ".m"))
+
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
-        if token == "template":
+        if token == "template" and self._recognize_templates:
             self._state = self._template_declaration
         elif token == ".":
             self._state = self._dot
