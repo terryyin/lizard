@@ -5,6 +5,34 @@ from .testJavaScriptBindingBoundaries import SUFFIXES, functions, summaries
 
 
 AFTER = 'function after(tail) {return tail?1:0;}\n'
+
+
+@pytest.mark.parametrize('suffix', ('ts', 'tsx', 'svelte'))
+@pytest.mark.parametrize('value_type', ['() => void', '(() => void)', 'Array<() => void>', '{ run: () => void }'])
+def test_constructor_type_arguments_keep_only_runtime_callbacks(suffix, value_type):
+    source = """const pending = new Map<string, %s>();
+const timers = new globalThis.Map<string, () => void>([["retry", () => close()]]);
+function close() { return pending.size }
+""" % value_type
+    offset = 0
+    if suffix == 'svelte':
+        source = '<script lang="ts">\n' + source + '</script>'
+        offset = 1
+    assert [(f.name, f.start_line, f.end_line) for f in functions(source, suffix)
+            if f.name != '(component)'] == [
+                ('(anonymous)', 2 + offset, 2 + offset), ('close', 3 + offset, 3 + offset)]
+
+
+@pytest.mark.parametrize('suffix', ('ts', 'tsx'))
+def test_constructor_comparison_keeps_a_runtime_arrow(suffix):
+    source = """function isLater(limit: any) {
+  return new Date < (() => new Date())() > limit
+}
+"""
+    assert summaries(functions(source, suffix)) == [
+        ('(anonymous)', 1, 2, 2, []), ('isLater', 1, 1, 3, ['limit'])]
+
+
 CALL_CONTEXTS = [('ternary', 'const result = flag ? CALL : value;\n', 1, None),
  ('logical', 'const result = flag || CALL;\n', 1, None),
  ('export-default', 'export default CALL;\n', 1, None),
@@ -75,29 +103,3 @@ def test_nested_generic_function_type_keeps_its_openers(suffix, type_, form):
         expected = ('(anonymous)', 1, 1, 1, ['arg'])
     assert summaries(functions(source, suffix)) == [
         expected, ('after', 2, 2, 2, ['tail'])]
-
-
-@pytest.mark.parametrize('suffix', ('ts', 'tsx', 'svelte'))
-@pytest.mark.parametrize('value_type', ['() => void', '(() => void)', 'Array<() => void>', '{ run: () => void }'])
-def test_constructor_type_arguments_keep_only_runtime_callbacks(suffix, value_type):
-    source = """const pending = new Map<string, %s>();
-const timers = new globalThis.Map<string, () => void>([["retry", () => close()]]);
-function close() { return pending.size }
-""" % value_type
-    offset = 0
-    if suffix == 'svelte':
-        source = '<script lang="ts">\n' + source + '</script>'
-        offset = 1
-    assert [(f.name, f.start_line, f.end_line) for f in functions(source, suffix)
-            if f.name != '(component)'] == [
-                ('(anonymous)', 2 + offset, 2 + offset), ('close', 3 + offset, 3 + offset)]
-
-
-@pytest.mark.parametrize('suffix', ('ts', 'tsx'))
-def test_constructor_comparison_keeps_a_runtime_arrow(suffix):
-    source = """function isLater(limit: any) {
-  return new Date < (() => new Date())() > limit
-}
-"""
-    assert summaries(functions(source, suffix)) == [
-        ('(anonymous)', 1, 2, 2, []), ('isLater', 1, 1, 3, ['limit'])]
