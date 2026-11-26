@@ -7,7 +7,6 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 ## Taken
 
 - [Preserve Ruby modulo alongside percent literals](seeds/SEED-075-reader-corrections.md#ruby-percent-literal-context) — SEED-075#ruby-percent-literal-context ([plan](slice-plans/036-ruby-percent-literal-context/PLAN.md))
-- [Keep Perl and Ruby documentation from acting as Lizard directives](seeds/SEED-075-reader-corrections.md#source-documentation-directives) — SEED-075#source-documentation-directives ([plan](slice-plans/037-source-documentation-directives/PLAN.md))
 
 ## Backlog list
 

@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-075_source-documentation-directives.json",
+      "identity": "SEED-075#source-documentation-directives",
+      "completedAt": "2026-11-26T00:04:41.026Z",
+      "blob": "c7b0ee269336ba531abcecbd0d1000e183f6c23b"
+    },
+    {
       "fileName": "SEED-074_process-prs-past-24h.json",
       "identity": "SEED-074#process-prs-past-24h",
       "completedAt": "2026-11-24T22:51:37.887Z",
