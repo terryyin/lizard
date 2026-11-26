@@ -34,6 +34,11 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
         super(ScalaReader, self).__init__(context)
         self.parallel_states = [ScalaStates(context)]
 
+    @staticmethod
+    def generate_tokens(source_code, addition='', token_class=None):
+        return CodeReader.generate_tokens(
+            source_code, r'|""".*?"""(?!")' + addition, token_class)
+
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
         function body that it may end, before any counter charges it.
