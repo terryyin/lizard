@@ -126,7 +126,7 @@ class CppRValueRefStates(CodeStateMachine):
         if not self._counts_and(token):
             return
         if self._lambda is not None and self._lambda.in_return_type:
-            self._lambda.references += 1
+            self._lambda.return_reference_pending = True
             self._initializer_deduction = False
             return
         if self._initializer_deduction is None:
@@ -224,6 +224,7 @@ class _LambdaHeader:
     def __init__(self):
         self.resume = None
         self.references = 0
+        self.return_reference_pending = False
         self._section = "["
         self._groups = ["]"]
 
@@ -272,6 +273,11 @@ class _LambdaHeader:
         return 0
 
     def _after_parameters(self, token, previous):
+        if self.return_reference_pending:
+            # A block call followed by pointer member access can look like a lambda.
+            self.return_reference_pending = False
+            if token in ("{", "requires"):
+                self.references += 1
         if token == "{":
             if self._section != "requires-expression":
                 return self.references
