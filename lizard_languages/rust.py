@@ -33,6 +33,7 @@ class RustReader(CodeReader, CCppCommentsMixin):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         addition = (
+            (_MACRO_HASH_TOKEN if '#' in source_code else '') +
             # char literals, before lifetimes, which also start with `'`
             r"|(?:'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])')"
             r"|(?:'\w+\b)")  # lifetimes, labels
@@ -192,3 +193,11 @@ def _flatten_nested_comments(source):
         out.append(source[i:end])
         i = end
     return ''.join(out)
+
+
+# A hash followed by a name or repetition can be a standalone macro token.
+# Keep the tokenizer's fallback around raw identifiers and raw strings.
+_MACRO_HASH_TOKEN = (
+    r"""|(?<![r"#])(?P<standalone_hash>#)"""
+    r"""(?=[^\S\n]*(?!(?:b|c)?r#*")(?:\(|[^\W\d]))"""
+)
