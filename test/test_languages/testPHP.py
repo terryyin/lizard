@@ -269,21 +269,27 @@ function ignored() {}
         functions = get_php_function_list("<?php function foo(){m;if(a);elseif(b);} ?>")
         self.assertEqual(3, functions[0].cyclomatic_complexity)
 
-    def test_parameter_count(self):
-        php_code = "<?php function foo($a, $b){} ?>"
-        functions = get_php_function_list(php_code)
-        # The current implementation counts $a and $b as 1 parameter
-        # This matches the behavior of the original implementation
-        self.assertEqual(1, functions[0].parameter_count)
-
-    def test_parameters_in_long_name(self):
+    def test_value_and_reference_parameters_have_separate_slots(self):
         functions = get_php_function_list("""<?php
-function cacheKey(string $prefix, string $key): string {
-    return $prefix . ':' . $key;
+function applyUpdates(array $source, array &$entries, array $options = [1, 2], string &...$keys): void {
+    foreach ($keys as $key) {
+        $entries[$key] = $source[$key];
+    }
 }
 """)
-        self.assertEqual(['cacheKey $prefix $key'],
-                         [f.long_name for f in functions])
+        self.assertEqual((4, ['$source', '$entries', '$options', '$keys']),
+                         (functions[0].parameter_count, functions[0].parameters))
+
+    def test_closure_parameters_exclude_nested_parameters_and_captures(self):
+        functions = get_php_function_list("""<?php
+$processed = 0;
+$update = function (
+    #[MapWith(static function ($item) { return $item; })] array &$entries,
+) use (&$processed): void {
+    $processed += count($entries);
+};
+""")
+        self.assertEqual((1, ['$entries']), (functions[0].parameter_count, functions[0].parameters))
 
     def test_function_assigning_to_a_name(self):
         functions = get_php_function_list("<?php $a = function ($a, $b){} ?>")
