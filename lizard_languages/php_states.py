@@ -28,7 +28,7 @@ class PHPLanguageStates(CodeStateMachine):
         self.last_token = ''
         self.last_tokens = ''
         self.is_function_declaration = False
-        self.assignments = []
+        self.assignment_name = ''
         self.in_match = False
         self.match_case_count = 0
 
@@ -67,9 +67,8 @@ class PHPLanguageStates(CodeStateMachine):
                     self.context.add_condition()
             self.match_case_count = 0
         elif token == '=':
-            # Handle function assignment
-            self.function_name = self.last_tokens.strip()
-            self.assignments.append(self.function_name)
+            self.assignment_name = self.last_tokens
+            self._state = self._assignment_value
         elif token == '{':
             self.brace_level += 1
         elif token == '}':
@@ -87,11 +86,16 @@ class PHPLanguageStates(CodeStateMachine):
         if token not in [' ', '\t', '\n']:
             if token not in ['=', ';', '{', '}', '(', ')', ',']:
                 self.last_tokens = token
-            elif token == '=' and self.last_tokens:
-                # Keep the last tokens for assignment
-                pass
             else:
                 self.last_tokens = ''
+
+    def _assignment_value(self, token):
+        if token == '\n' or token.lower() == 'static':
+            return
+        if token != 'function':
+            self.assignment_name = ''
+        self._state = self._state_global
+        self._state_global(token)
 
     def _state_use(self, token):
         """Handle use statements (use function, use const, etc.)"""
@@ -120,6 +124,7 @@ class PHPLanguageStates(CodeStateMachine):
 
     def _function_name(self, token):
         if token and not token.isspace() and token != '(':
+            self.assignment_name = ''
             method_name = token
             if self.in_class and self.class_name:
                 # In class, use ClassName::methodName format
@@ -143,11 +148,8 @@ class PHPLanguageStates(CodeStateMachine):
             elif self.in_trait:
                 self.function_name = f"{self.trait_name}::(anonymous)"
             else:
-                if self.assignments and self.assignments[-1]:
-                    self.function_name = self.assignments[-1]
-                    self.assignments.pop()
-                else:
-                    self.function_name = "(anonymous)"
+                self.function_name = self.assignment_name or "(anonymous)"
+            self.assignment_name = ''
             self.bracket_level = 1
             self._state = self._function_args_continue
             self.context.push_new_function(self.function_name)
