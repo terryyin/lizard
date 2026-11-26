@@ -38,7 +38,7 @@ class LuaStateMachine(RubylikeStateMachine):
 
     # Only tokens that can change scope need the shared Ruby state.
     _STATE_TOKENS = frozenset(BLOCK_KEYWORDS + LOOP_KEYWORDS + (
-        FUNC_KEYWORD, "end", "}", "if", "unless", "=begin"))
+        FUNC_KEYWORD, "end", "}", "if", "=begin"))
 
     def __init__(self, context):
         super(LuaStateMachine, self).__init__(context)

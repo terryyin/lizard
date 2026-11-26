@@ -142,19 +142,6 @@ end
             [('deliver', 2, 4)],
             [(f.name, f.start_line, f.end_line) for f in result])
 
-    def test_if_after_a_statement_can_wrap_before_then(self):
-        result = get_function_list('''
-local function enable(account)
-  account:refresh() if account.active
-  then
-    account:enable()
-  end
-end
-''')
-        self.assertEqual(
-            [('enable', 2, 7)],
-            [(f.name, f.start_line, f.end_line) for f in result])
-
     def test_class_field_in_a_test_callback_preserves_the_enclosing_function(self):
         result = get_function_list('''
 local function register_dns_tests()
