@@ -160,8 +160,9 @@ class CSharpStates(CLikeStates):
             self.context.pop_nesting()
         elif token == ';' and not self._expression_depth:
             closed = getattr(token, 'closed_before_alternate', None)
-            # An alternate within the body can supply its own terminator.
-            if closed is not None and closed < len(self._expression_branches):
+            # Keep the method open if the alternate must close an existing block.
+            if (closed is not None and closed < len(self._expression_branches)
+                    and self._expression_branches[-1 - closed][0]):
                 return
             if self._expression_method:
                 self.context.pop_nesting()
@@ -521,6 +522,7 @@ def _resolve_ternary(group, buffered):
 
 
 _CONDITIONAL_DIRECTIVE = re.compile(r'#\s*(if|elif|else|endif)\b')
+_ERROR_DIRECTIVE = re.compile(r'#\s*error\b')
 
 
 class _ConditionalCode(str):
@@ -552,14 +554,17 @@ def _mark_conditional_terminators(tokens):
     pending = None
     trailing = []
     closed = 0
+    alternate = False
     for token in tokens:
         if pending is not None:
             directive = _CONDITIONAL_DIRECTIVE.match(token) if token.startswith('#') else None
             directive = directive.group(1) if directive else None
-            if directive == 'endif':
+            if not alternate and directive == 'endif':
                 closed += 1
+            elif not alternate and directive in ('elif', 'else'):
+                alternate = True
             elif not (token.isspace() or token.startswith(('//', '/*'))):
-                if directive in ('elif', 'else'):
+                if alternate and directive not in ('endif', 'elif', 'else') and not _ERROR_DIRECTIVE.match(token):
                     pending = _ConditionalCode(pending, getattr(pending, 'directives', ()), closed)
                 yield pending
                 yield from trailing
@@ -572,6 +577,7 @@ def _mark_conditional_terminators(tokens):
         if token == ';' and not isinstance(token, _InterpolationPart):
             pending = token
             closed = 0
+            alternate = False
         else:
             yield token
 
