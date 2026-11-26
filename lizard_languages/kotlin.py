@@ -361,13 +361,18 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
         self._expression_bodies.append(self)
 
     def __call__(self, token, reader=None):
-        if not isinstance(self._state, CodeStateMachine):
-            if self._depth:
-                self._depth += self._BRACKET_CHANGES.get(token, 0)
-                self._closes_condition = self._depth == 0 and self._condition
-            else:
-                self._track_top_level(token)
-        return CodeStateMachine.__call__(self, token, reader)
+        state = self._state
+        if isinstance(state, CodeStateMachine):
+            return super().__call__(token, reader)
+        if self._depth:
+            self._depth += self._BRACKET_CHANGES.get(token, 0)
+            self._closes_condition = self._depth == 0 and self._condition
+        else:
+            self._track_top_level(token)
+        state(token)
+        self.last_token = token
+        if self.to_exit:
+            return True
 
     def next(self, state, token=None):
         # A state that passes its token on to the next state must not count
@@ -380,7 +385,14 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
     def _track_top_level(self, token):
         if self._annotation is not None or token == '@':
             self._track_annotation(token)
-        self._track_infix(token)
+        # An infix name can take its argument across a line break.
+        previous = self.last_token
+        self._infix = self._is_name(token) and not self._infix and (
+            self._is_name(previous)
+            or previous[0] in '"\'0123456789'
+            or previous in (']', '}')
+            or previous == ')' and not self._closes_condition
+            or previous == '!' and self._token_before_last == '!')
         self._closes_condition = False
         self._closes_type = False
         # A trailing lambda can attach to a generic call, such as
@@ -429,16 +441,6 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
             self._annotation = 'args'
         else:
             self._annotation = None
-
-    def _track_infix(self, token):
-        # A name right after an operand calls an infix function, like `or`
-        # in `flags or`, and its argument can be on the next line.
-        self._infix = self._is_name(token) and not self._infix and (
-            self._is_name(self.last_token)
-            or self.last_token[0] in '"\'0123456789'
-            or self.last_token in (']', '}')
-            or self.last_token == ')' and not self._closes_condition
-            or self.last_token == '!' and self._token_before_last == '!')
 
     def _is_name(self, token):
         return (token[0].isalpha() or token[0] in '_`') and token not in self._KEYWORDS
