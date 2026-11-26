@@ -330,6 +330,18 @@ class TestJavaScriptRegex(unittest.TestCase):
             (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
             for f in functions])
 
+    def test_call_division_does_not_hide_a_later_commented_regex(self):
+        source = '''
+function normalize(value, text) {
+  return total(value) / 2 + (/* alternate spelling */ /colou?r/.test(text) ? 1 : 0);
+}
+function report(text) {
+  if (ready(text)) /colou?r/.test(text) && print(text);
+}
+'''
+        self.assert_functions(source, [('normalize', 2, 4, 2), ('report', 5, 7, 3)],
+                              extensions=('js', 'ts'))
+
     def test_return_regex_exposes_following_condition(self):
         source = (
             'function a(s) { return /#/.test(s) || s === 1; }\n'
