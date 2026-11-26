@@ -112,7 +112,7 @@ class TypeScriptDeclarationsMixin:
             return True
 
         # Skip interface declarations — method signatures are not runtime functions
-        if token == 'interface':
+        if token == 'interface' and not self.as_class:
             brace_count = 0
             interface_started = False
 
@@ -129,7 +129,19 @@ class TypeScriptDeclarationsMixin:
                         return True
                 return False
 
-            self.next(skip_interface)
+            if self.as_object:
+                def expect_interface_name(t):
+                    if t in (':', '(', '=', '?') or t.startswith('<'):
+                        if not self._handle_object_member(token):
+                            self.last_tokens = token
+                        self._prev_token = token
+                        self.next(self._state_global, t)
+                    else:
+                        self.next(skip_interface, t)
+
+                self.next(expect_interface_name)
+            else:
+                self.next(skip_interface)
             return True
 
         # Track abstract modifier inside class bodies
