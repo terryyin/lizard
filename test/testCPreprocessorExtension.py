@@ -101,6 +101,23 @@ def analyze_with_extension(code):
 
 class Test_end_2_end(unittest.TestCase):
 
+    def test_skips_alternatives_with_spaces_after_hash(self):
+        result = analyze_with_extension("""# if THREADED
+#  if SHARED
+int lookup_shared() { return 1; }
+#  else
+int lookup_locked() { return 2; }
+#  endif
+# elif SHARED
+int lookup_other() { return 3; }
+# else
+int lookup_serial() { return 4; }
+# endif
+int neighbor() { return 0; }
+""")
+
+        self.assertEqual(["lookup_shared", "neighbor"], [fn.name for fn in result])
+
     def test_extension_in_user(self):
         result = analyze_with_extension("#if\nxxaa#else\nint a(){}\n#endif")
         self.assertEqual(0, len(result))
