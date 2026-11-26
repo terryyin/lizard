@@ -166,6 +166,13 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
             self._array_result_line = self.context.current_line
             self.sub_state(self.statemachine_clone())
 
+    def statemachine_before_return(self):
+        if self._array_result_line is not None and self._state == self._expect_function_impl:
+            token = self.last_token
+            if token in (')', ']', '}') or (
+                    token.isidentifier() and token not in ('chan', 'func', 'interface', 'map', 'struct')):
+                self._end_array_declaration()
+
     def _end_array_declaration(self):
         self.context.current_function.end_line = self._array_result_line
         self.context.end_of_function()
