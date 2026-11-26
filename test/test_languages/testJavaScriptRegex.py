@@ -376,7 +376,7 @@ function* matches(scale) {
   function normalize(yield, count) {
     return yield * yield / (count || 1) / 100;
   }
-  const callback = () => yield * yield / (scale || 1) / 100;
+  const callback = () => yield * yield / (scale || 1) / 100
   if (scale) {
     yield* yield /["]?colou?r/;
   }
@@ -386,6 +386,34 @@ function next() { return "color"; }
         self.assert_functions(source, [('normalize', 2, 4, 2), ('callback', 5, 5, 2),
                                        ('matches', 1, 9, 2), ('next', 10, 10, 1)],
                               extensions=('js',))
+
+    def test_nested_methods_keep_yield_division(self):
+        source = '''\
+function* matches(scale) {
+  const details = { read(yield, count) { return yield * yield / (count || 1) / 100; } };
+  if (scale) {
+    yield* yield /["]?colou?r/;
+  }
+}
+function next() { return "color"; }
+'''
+        self.assert_functions(source, [('read', 2, 2, 2), ('matches', 1, 6, 2),
+                                       ('next', 7, 7, 1)], extensions=('js',))
+
+    def test_nested_typed_functions_keep_yield_division(self):
+        source = '''\
+function* matches(scale: number) {
+  function normalize(yield: number, count: number): number {
+    return yield * yield / (count || 1) / 100;
+  }
+  if (scale) {
+    yield* yield /["]?colou?r/;
+  }
+}
+function next() { return "color"; }
+'''
+        self.assert_functions(source, [('normalize', 2, 4, 2), ('matches', 1, 8, 2),
+                                       ('next', 9, 9, 1)], extensions=('ts',))
 
     def test_generator_yield_after_instantiation_with_function_typed_parameter(self):
         source = '''\
