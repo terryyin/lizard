@@ -905,6 +905,20 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
             with self.subTest(filename=filename):
                 self.assertEqual([1, 1, 0], cogc(filename, source))
 
+    def test_interpolation_comment_does_not_stop_either_metric(self):
+        code = """
+            function label(ready) {
+              return `${ready /* GENERATED CODE is the banner text */ ? 'yes' : 'no'}`;
+            }
+        """
+        ordinary = analyze_file.analyze_source_code("label.js", code).function_list
+        measured = analyze("label.js", code).function_list
+
+        self.assertEqual([("label", 2)], [(f.name, f.cyclomatic_complexity) for f in ordinary])
+        self.assertEqual([("label", 2, 1)], [
+            (f.name, f.cyclomatic_complexity, f.cognitive_complexity) for f in measured
+        ])
+
     def test_template_literal_types_in_call_arguments_are_not_runtime(self):
         source = """
             function empty<T>(value: string) { return value; }
