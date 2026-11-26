@@ -59,20 +59,33 @@ class RubylikeStateMachine(CodeStateMachine):
                     self.is_newline() or self.last_token is None):
                 self._state = self._it
         elif token in self.BLOCK_KEYWORDS and self.last_token != ".":
-            self.sub_state(self.statemachine_clone())
-        elif token in self.LOOP_KEYWORDS:
-            if not getattr(token, 'is_member_name', False) and \
-                    not self.follows_value():
-                self.next(self._for_while)
+            self._start_block(token)
+        elif token in self.LOOP_KEYWORDS and not getattr(token, 'is_member_name', False):
+            if self.follows_value():
+                self._loop_modifier(token)
+            else:
+                self._start_loop(token, self._for_while)
         elif token in ("if", "unless"):
             if getattr(token, 'is_member_name', False):
                 pass
             elif self.follows_value():
-                self.next(self._if)
+                self._read_modifier(token)
             else:
-                self.sub_state(self.statemachine_clone())
+                self._start_block(token)
         elif token == "=begin":
             self.sub_state(state_embedded_doc)
+
+    def _start_block(self, opener, callback=None, token=None, function_body=False):
+        self.sub_state(self.statemachine_clone(), callback, token)
+
+    def _start_loop(self, opener, state):
+        self.next(state)
+
+    def _loop_modifier(self, _token):
+        pass
+
+    def _read_modifier(self, token):
+        self.next(self._if)
 
     def is_newline(self):
         return self.context.newline or self.last_token == ";"
@@ -143,7 +156,7 @@ class RubylikeStateMachine(CodeStateMachine):
             token, 'begin', None)
 
     def _def_body(self, token):
-        self.sub_state(self.statemachine_clone(), self._end_def, token)
+        self._start_block('def', self._end_def, token, function_body=True)
 
     def _end_def(self):
         self.context.end_of_function()
@@ -160,12 +173,12 @@ class RubylikeStateMachine(CodeStateMachine):
                 token in ("if", "unless") and not self.follows_value() and
                 not getattr(token, 'is_member_name', False)):
             self.context.at_line_end = None
-            self.sub_state(self.statemachine_clone(), self._endless_value)
+            self._start_block(token, self._endless_value, function_body=True)
             return
         elif token in self.LOOP_KEYWORDS and not self.follows_value() and \
                 not getattr(token, 'is_member_name', False):
             self.context.at_line_end = None
-            self.next(self._endless_loop)
+            self._start_loop(token, self._endless_loop)
             return
         elif token in ("}", ";") or (
                 token == "end" and
@@ -211,7 +224,7 @@ class RubylikeStateMachine(CodeStateMachine):
             self.next(self._state_global, token)
         elif token == "then" and not getattr(token, 'is_member_name', False):
             self.next(self._state_global)
-            self.sub_state(self.statemachine_clone())
+            self._start_block('if')
         elif token in ("{", "${"):
             self.br_count += 1
         elif token == "}":
@@ -228,11 +241,11 @@ class RubylikeStateMachine(CodeStateMachine):
             if token == "do" and \
                     not getattr(token, 'is_member_name', False):
                 self.next(state)
-                self.sub_state(self.statemachine_clone(), callback)
+                self._start_block('loop', callback, function_body=callback is not None)
                 return
             if self.is_newline():
                 self.next(state)
-                self.sub_state(self.statemachine_clone(), callback, token)
+                self._start_block('loop', callback, token, function_body=callback is not None)
                 return
         if token in ("(", "[", "${") or (
                 token == "{" and self.last_token != ")"):
@@ -244,6 +257,8 @@ class RubylikeStateMachine(CodeStateMachine):
 class RubylikeReader(CodeReader, ScriptLanguageMixIn):
     # pylint: disable=R0903
 
+    STATE_MACHINE = RubylikeStateMachine
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'elsif', 'elseif', 'until', 'for', 'while',
                               'rescue', 'ensure', 'when'}
@@ -253,4 +268,4 @@ class RubylikeReader(CodeReader, ScriptLanguageMixIn):
 
     def __init__(self, context):
         super(RubylikeReader, self).__init__(context)
-        self.parallel_states = [RubylikeStateMachine(context)]
+        self.parallel_states = [self.STATE_MACHINE(context)]
