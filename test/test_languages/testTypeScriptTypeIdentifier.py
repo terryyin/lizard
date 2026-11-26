@@ -75,6 +75,18 @@ function parse(input: unknown) {
         self.assertIn(('(anonymous)', 3, ['value']),
                       [(f.name, f.start_line, f.parameters) for f in functions])
 
+    def test_typed_arrow_inside_type_call_keeps_its_parameter(self):
+        code = """function type(arg: unknown) { return arg; }
+const schema = type({
+  parse: (value: string) => value || 'empty',
+});
+export function after() { return schema; }
+"""
+        functions = analyze_file.analyze_source_code('a.ts', code).function_list
+        self.assertIn((3, ['value'], 2),
+                      [(f.start_line, f.parameters, f.cyclomatic_complexity) for f in functions])
+        self.assertEqual('after', functions[-1].name)
+
     def test_type_cast_at_the_end_of_an_arrow_body(self):
         for ext in ('ts', 'tsx'):
             for alias in ('', 'type Tag = { run: (type: string) => string }\n'):
