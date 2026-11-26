@@ -265,12 +265,11 @@ def _svelte_script_blocks(source):
     last_script = source.rfind('<script')
     if last_script < 0:
         return ()
-    if source.find('{', 0, last_script) < 0:
-        return _find_script_blocks(source)
 
-    markup = _MarkupTokens(source, 0, len(source))
+    markup = None
 
     def search(source, pos):
+        nonlocal markup
         if pos > last_script:
             return None
         match = _MARKUP.search(source, pos)
@@ -278,6 +277,8 @@ def _svelte_script_blocks(source):
             brace = source.find('{', pos, match.start() + 1)
             if brace < 0:
                 return match
+            if markup is None:
+                markup = _MarkupTokens(source, 0, len(source))
             head = _TAG_HEAD.match(source, brace + 1)
             found = markup.code_end(head.end() if head else brace + 1)
             if found is None:
@@ -287,7 +288,33 @@ def _svelte_script_blocks(source):
                 match = _MARKUP.search(source, pos)
         return None
 
-    return _find_script_blocks(source, search)
+    def element_end(source, pos, name):
+        """Find an element's real close before the remaining script tags."""
+        first_close = source.find('</' + name, pos)
+        if first_close < 0:
+            return pos
+        if first_close > last_script or name in _RAW_TEXT_END:
+            return first_close
+        depth = 1
+        while True:
+            match = search(source, pos)
+            if match is None:
+                return len(source)
+            pos = match.end()
+            tag = match.group(2)
+            closing = match.group(1)
+            if match.group().endswith('/>'):
+                continue
+            if tag == name:
+                depth += -1 if closing else 1
+                if depth == 0:
+                    return pos
+            elif not closing and tag in _RAW_TEXT_END:
+                close = _RAW_TEXT_END[tag].search(source, pos)
+                if close is not None:
+                    pos = close.end()
+
+    return _find_script_blocks(source, search, element_end)
 
 
 class _MarkupTokens:

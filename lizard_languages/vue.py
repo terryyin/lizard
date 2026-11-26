@@ -68,7 +68,7 @@ def _script_blocks(source, find_blocks):
     return blocks
 
 
-def _find_script_blocks(source, search=_MARKUP.search):
+def _find_script_blocks(source, search=_MARKUP.search, element_end=None):
     """(tag start, code start, code end) of each top-level script block.
 
     As in the Vue compiler, a top-level HTML <template> holds nested markup,
@@ -82,15 +82,17 @@ def _find_script_blocks(source, search=_MARKUP.search):
         name = match.group(2)
         if name is None or match.group(1) or match.group().endswith('/>'):
             continue
-        if name == 'template' and _attribute(
+        if name == 'script':
+            end = _script_end(source, pos)
+            yield match.start(), pos, end
+            pos = end
+        elif element_end is not None:
+            pos = element_end(source, pos, name)
+        elif name == 'template' and _attribute(
                 match.group(), 'lang') in (None, 'html'):
             # Markup read wrongly can leave the template open; the scan then
             # goes on after its tag rather than losing the rest of the file.
             pos = _markup_end(source, pos) or pos
-        elif name == 'script':
-            end = _script_end(source, pos)
-            yield match.start(), pos, end
-            pos = end
         else:
             end = source.find('</' + name, pos)
             if end >= 0:
