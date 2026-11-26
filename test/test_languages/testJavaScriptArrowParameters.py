@@ -86,6 +86,29 @@ const load = (async (request) => request.value);
     ]
 
 
+@pytest.mark.parametrize('extension', ['js', 'ts'])
+def test_async_in_grouped_ternary_keeps_both_arrows(extension):
+    source = '''function choose(fallback, async) {
+  const normalize = (async ? (value) => value.trim() : (value) => fallback(value));
+  return normalize;
+}
+'''
+    result = functions(source, extension)
+
+    assert [(f.name, f.parameters, f.cyclomatic_complexity) for f in result] == [
+        ('(anonymous)', ['value'], 1), ('(anonymous)', ['value'], 1),
+        ('choose', ['fallback', 'async'], 2),
+    ]
+
+
+@pytest.mark.parametrize('space', ('', ' '))
+def test_async_can_name_an_optional_typescript_parameter(space):
+    result = functions(
+        f'const use = (async{space}?: (name: string) => string) => async?.("job");',
+        'ts')
+    assert [(f.name, f.parameters) for f in result] == [('use', ['async'])]
+
+
 def test_defaults_and_wrapper_call():
     default, wrapped = functions(
         'list.map((a = flag ? 1 : 2, b = make(1, 2), ...rest) => '
