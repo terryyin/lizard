@@ -4,10 +4,11 @@ Language parser for Apple Swift
 
 from itertools import compress
 
+from . import swift
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine, _previous_code
 from .golike import GoLikeStates
-from .swift import SwiftReplaceLabel, _is_local_name, _next_significant
+from .swift import SwiftReplaceLabel
 
 
 class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
@@ -80,9 +81,9 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
             previous = _previous_code(tokens, index, line_breaks=True)
             if previous < 0 or tokens[previous] not in ('(', ','):
                 continue
-            colon = _next_significant(tokens, index + 1)
-            if colon is not None and _is_local_name(tokens[colon]):
-                colon = _next_significant(tokens, colon + 1)
+            colon = swift._next_significant(tokens, index + 1)
+            if colon is not None and swift._is_local_name(tokens[colon]):
+                colon = swift._next_significant(tokens, colon + 1)
             if colon is not None and tokens[colon] == ':':
                 tokens[index] = '_' + tokens[index]
         return tokens
@@ -112,6 +113,10 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     _ACCESSORS = {'get', 'set'}
     _BEFORE_ACCESSOR_IDENTIFIER = {'.', '::', '@', ':', '=', 'typealias'}
     _ACCESSOR_MODIFIERS = {'public', 'protected', 'internal', 'private', 'inline', 'external'}
+    # The tokens that `_state_global` acts on.
+    _GLOBAL_TOKENS = _ACCESSORS | {
+        'class', 'object', '->', 'val', 'var', ',', 'interface', 'when', 'fun', '[', '{', '}',
+    }
     _EXPRESSION_BODY_ENDERS = {
         'fun', 'class', 'interface', 'val', 'var',
     }
@@ -125,10 +130,6 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         'actual', 'context', 'import', 'package',
     } | _ACCESSORS | _ACCESSOR_MODIFIERS
     _HEADER_OPERATORS = {':', 'where', '.', '->', ',', '<', '(', '&', 'suspend'}
-    # The tokens that `_state_global` acts on.
-    _GLOBAL_TOKENS = _ACCESSORS | {
-        'class', 'object', '->', 'val', 'var', ',', 'interface', 'when', 'fun', '{', '}',
-    }
 
     def __init__(self, context, in_when_cases=False, accessor_declaration_scope=None,
                  expression_bodies=None):
@@ -175,14 +176,26 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         if token == '(':
             self.next(self._local_class_parameters, token)
         elif token == '{':
-            # A local class can declare accessors while its enclosing function is active.
-            self.next(self._state_global)
-            self.sub_state(KotlinStates(
-                self.context, accessor_declaration_scope=self.context.current_function,
-                expression_bodies=self._expression_bodies,
-            ))
+            self._read_local_class_body()
         elif token in self._EXPRESSION_BODY_ENDERS or token in ('}', ';'):
             self.next(self._state_global, token)
+
+    def _read_local_class_body(self):
+        context = self.context
+        enclosing_forgiveness = context.forgive, context.forgive_directive
+
+        def restore_forgiveness():
+            context.forgive, context.forgive_directive = enclosing_forgiveness
+
+        # The class has its own declarations while the enclosing function
+        # remains active for metrics.
+        context.forgive = False
+        context.forgive_directive = None
+        self.next(self._state_global)
+        self.sub_state(KotlinStates(
+            context, accessor_declaration_scope=context.current_function,
+            expression_bodies=self._expression_bodies,
+        ), restore_forgiveness)
 
     @CodeStateMachine.read_inside_brackets_then("()", "_local_class_header")
     def _local_class_parameters(self, token):
@@ -228,6 +241,26 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             self.context.current_function.token_count -= 1
             self.next(self._state_global, token)
 
+    def _finish_declaration_forgiveness(self, token):
+        context = self.context
+        if not context.forgive or context.forgive_directive is None:
+            return
+        owner, line, token_count, follows_code = context.forgive_directive
+        declaration = context.current_function
+        if owner is self._accessor_declaration_scope and owner is context.stacked_functions[-1]:
+            context.forgive = False
+        elif owner is declaration:
+            # A comment between two accessors can introduce the next one
+            # even when both accessors are on the same line.
+            next_accessor = token in self._ACCESSORS and line == context.current_line
+            # The boundary token already counts. Any earlier token after
+            # the comment still belonged to this declaration.
+            more_header_tokens = context.fileinfo.token_count > token_count + 1
+            if (follows_code or more_header_tokens) and not next_accessor:
+                context.forgive = False
+            else:
+                context.forgive_directive = (context.stacked_functions[-1], line, token_count, follows_code)
+
     def _ends_declaration(self, token):
         # Kotlin semicolons are optional, so a declaration without a body
         # also ends where the next declaration starts a line, or where the
@@ -238,6 +271,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                 and (self.last_token == self._accessor_name
                      or self.last_token in self._ACCESSOR_MODIFIERS))))
         self._track_type(token)
+        if ends:
+            self._finish_declaration_forgiveness(token)
         return ends
 
     def _start_header(self):
@@ -267,10 +302,10 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _function_name(self, token):
         if token == "<":
             self.next(self._template, token)
-        elif token == "(":
-            self.next(self._anonymous_parameters, token)
         elif token == "@":
             self._state = self._receiver_annotation
+        elif token == "(":
+            self.next(self._anonymous_parameters, token)
         elif not self._receiver_type_end(token):
             return super(KotlinStates, self)._function_name(token)
 
@@ -300,6 +335,16 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         if not self._receiver_type_end(token):
             super()._expect_function_dec(token)
 
+    def _receiver_type_end(self, token):
+        # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
+        # is the receiver type. The function name comes after the dot.
+        # A type argument list with a `?`, such as `<T?>`, is one token.
+        if token == '.':
+            self.context.current_function.name = ''
+            self.context.current_function.long_name = ''
+            self._state = self._function_name
+        return token in ('.', '?') or token[:1] == '<' and token[-1:] == '>' and len(token) > 1
+
     @CodeStateMachine.read_inside_brackets_then("()", "_after_anonymous_parameters")
     def _anonymous_parameters(self, token):
         if token not in "()":
@@ -311,16 +356,6 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             self.context.current_function.full_parameters.clear()
         if not self._receiver_type_end(token):
             self.next(self._expect_function_impl, token)
-
-    def _receiver_type_end(self, token):
-        # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
-        # is the receiver type. The function name comes after the dot.
-        # A type argument list with a `?`, such as `<T?>`, is one token.
-        if token == '.':
-            self.context.current_function.name = ''
-            self.context.current_function.long_name = ''
-            self._state = self._function_name
-        return token in ('.', '?') or token[:1] == '<' and token[-1:] == '>' and len(token) > 1
 
     @CodeStateMachine.read_inside_brackets_then("<>", "_function_name")
     def _template(self, tokens):
@@ -530,7 +565,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
         depth = self._open_types
         groups = []
         previous = ','
-        index = _next_significant(tokens, index + 1)
+        index = swift._next_significant(tokens, index + 1)
         while index is not None:
             token = tokens[index]
             if token == '@':
@@ -547,7 +582,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
                     break
                 prefix = groups.pop()
                 if prefix in ('context', 'suspend'):
-                    index = _next_significant(tokens, index + 1)
+                    index = swift._next_significant(tokens, index + 1)
                     if index is None:
                         break
                     if prefix == 'suspend' and tokens[index] != '->':
@@ -567,13 +602,13 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
                   and not (token[0] == '<' and token[-1] == '>')):
                 break
             previous = token
-            index = _next_significant(tokens, index + 1)
+            index = swift._next_significant(tokens, index + 1)
         return -1
 
     def _has_type_argument_suffix(self, tokens, index):
         if self._type_operand:
             return True
-        suffix = _next_significant(tokens, index + 1)
+        suffix = swift._next_significant(tokens, index + 1)
         if suffix is None:
             return False
         return (tokens[suffix] in ('(', '{', '.', '?', '::', '@')
@@ -596,7 +631,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
             if (not (token[0].isalpha() or token[0] in '_`')
                     or index + 1 == len(tokens) or tokens[index + 1] != '@'):
                 return False
-            index = _next_significant(tokens, index + 2)
+            index = swift._next_significant(tokens, index + 2)
             if index is None or tokens[index] != '{':
                 return False
         # These tokens belong to the lambda prefix, even across line breaks.
@@ -607,16 +642,16 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
         # A trailing lambda may have annotations. A declaration after the
         # expression can also have annotations, so check what follows them.
         while index is not None and tokens[index] == '@':
-            index = _next_significant(tokens, index + 1)
+            index = swift._next_significant(tokens, index + 1)
             if index is None:
                 break
             if tokens[index] != '[':
-                index = _next_significant(tokens, index + 1)
+                index = swift._next_significant(tokens, index + 1)
                 while index is not None and tokens[index] == '.':
-                    name = _next_significant(tokens, index + 1)
+                    name = swift._next_significant(tokens, index + 1)
                     if name is None:
                         return None
-                    index = _next_significant(tokens, name + 1)
+                    index = swift._next_significant(tokens, name + 1)
             if index is not None and tokens[index] in ('(', '['):
                 index = self._after_annotation_group(tokens, index)
         return index
@@ -632,7 +667,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
             elif tokens[part] == closing:
                 depth -= 1
                 if depth == 0:
-                    return _next_significant(tokens, part + 1)
+                    return swift._next_significant(tokens, part + 1)
         return None
 
     def _track_types(self, token):

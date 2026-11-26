@@ -55,6 +55,8 @@ class FileInfoBuilder(object):
     the context information that's needed for the building.
     '''
 
+    forgive_directive = None
+
     def __init__(self, filename):
         self.fileinfo = FileInformation(filename, 0)
         self.current_line = 0
