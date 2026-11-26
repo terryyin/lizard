@@ -688,3 +688,37 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             filename, code).function_list
         return result[0].max_nesting_depth
+
+
+class TestKotlinUnbracedBranchNestingDepth(unittest.TestCase):
+
+    def test_else_if_with_unbraced_nested_if_body(self):
+        for nested_body in ("return false", "{ return false }"):
+            with self.subTest(nested_body=nested_body):
+                source = f"""
+                fun refresh(offline: Boolean, cached: Boolean, stale: Boolean): Boolean {{
+                    if (offline) {{ return false }}
+                    else if (cached)
+                        if (stale) {nested_body}
+                    return true
+                }}
+                """
+                self.assertEqual(2, self.nesting_depth(source))
+
+    def test_unbraced_nested_if_level_does_not_enter_sibling_if(self):
+        source = """
+        fun refresh(offline: Boolean, cached: Boolean, stale: Boolean): Boolean {
+            if (offline) { return false }
+            else if (cached)
+                if (stale) return false
+            if (cached) { return true }
+            return false
+        }
+        """
+        self.assertEqual(2, self.nesting_depth(source))
+
+    @staticmethod
+    def nesting_depth(source):
+        analyzer = FileAnalyzer(get_extensions(['nd']))
+        function, = analyzer.analyze_source_code('refresh.kt', source).function_list
+        return function.max_nesting_depth
