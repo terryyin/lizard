@@ -134,6 +134,50 @@ int f() {
         self.assertEqual(1, len(result))
         self.assertEqual(1, result[0].cyclomatic_complexity)
 
+    def test_nullable_generic_parameters_add_no_decisions(self):
+        result = lizard.FileAnalyzer(lizard.get_extensions(['nd', 'cognitive'])).analyze_source_code(
+            'counts.dart', """
+int? countItems(List<int>? items) => items?.length;
+
+bool hasCachedRows({Map<String, List<int?>?> /* cached */ ? rows}) {
+  return rows?.isNotEmpty == true;
+}
+
+bool hasDefaultItems([List<int>? items = const [1]]) {
+  return items?.isNotEmpty ?? false;
+}
+""")
+        self.assertEqual(
+            [('countItems', 1, 0, 0), ('hasCachedRows', 1, 0, 0), ('hasDefaultItems', 2, 0, 0)],
+            [(f.name, f.cyclomatic_complexity, f.max_nesting_depth, f.cognitive_complexity)
+             for f in result.function_list])
+
+    def test_nullable_generic_local_does_not_increase_cyclomatic_complexity(self):
+        result = get_dart_function_list("""
+int cachedCount(Map<String, List<int>> cache, String key) {
+  final List<int>? items = cache[key];
+  return items?.length ?? 0;
+}
+""")
+        function, = result
+        self.assertEqual(2, function.cyclomatic_complexity)
+
+    def test_ternaries_after_a_generic_type_still_count(self):
+        result = lizard.FileAnalyzer(lizard.get_extensions(['nd'])).analyze_source_code(
+            'counts.dart', """
+int chooseCount(Object value, int cached, int fallback) {
+  return value is List<int>? cached : fallback;
+}
+
+int chooseAndCache(Object value, int cached, int fallback) {
+  return value is! List<List<int?>?> ? cached = fallback : cached;
+}
+""")
+        self.assertEqual(
+            [('chooseCount', 2, 1), ('chooseAndCache', 2, 1)],
+            [(f.name, f.cyclomatic_complexity, f.max_nesting_depth)
+             for f in result.function_list])
+
     def test_spaced_ternary_still_counts(self):
         result = get_dart_function_list('''
 int f(x, y, z, w) {
