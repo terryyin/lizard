@@ -423,6 +423,10 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
 
         self.assertEqual(5, depth)
 
+    def else_fixture_depth(self, filename, code):
+        analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+        return analyzer.analyze_source_code(filename, code).function_list[-1].max_nesting_depth
+
     def test_sibling_braceless_ifs_do_not_nest(self):
         self.assertEqual(1, self.nesting_depth("""
         function role(user) {
@@ -769,10 +773,6 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
           return user?.[{ id: user && 1 }, user && 'name']
         }
         """))
-
-    def else_fixture_depth(self, filename, code):
-        analyzer = FileAnalyzer(get_extensions([NestDepth()]))
-        return analyzer.analyze_source_code(filename, code).function_list[-1].max_nesting_depth
 
     def nesting_depth(self, code, filename="a.js"):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
