@@ -223,6 +223,7 @@ class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
         super().__init__(context)
         self._after_type_parameters = False
         self._import_type = False
+        self._assertion_predicate = False
 
     def _state_global(self, token):
         if not self._brackets and not token.isspace():
@@ -232,10 +233,15 @@ class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
                 return
             self._after_type_parameters = self._expect_type and token[0] == '<'
             self._import_type = token == 'import' and not self._qualified_type
+            if token == 'asserts' and self._expect_type and self.last_token == '=>':
+                self._assertion_predicate = True
+                return
             if token in ('as', 'is') and (self._expect_type or self._qualified_type):
                 self._expect_type = self._qualified_type = self._closed_type = False
                 self._line_break = False
                 return
+            if token == 'is':
+                self._assertion_predicate = False
             if (token == 'new' and not self._qualified_type
                     and (self._expect_type or self.last_token == 'abstract')):
                 # A constructor type has its own parameters and return arrow.
@@ -251,4 +257,5 @@ class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
         # A line break ends a type before postfix brackets or type arguments.
         return self.context.newline and (
             token[0] in '[<\\'
+            or token == 'as' or token == 'is' and not self._assertion_predicate
             or token not in ('in', 'instanceof') and not starts_statement(token) and is_identifier(token))
