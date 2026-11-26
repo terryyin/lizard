@@ -3,6 +3,7 @@ This is an extension of lizard, that counts the 'Nesting Depth'
 in every function.
 """
 from lizard import FileInfoBuilder, FunctionInfo
+from lizard_languages.javascript_statements import ImpliedSemicolons
 
 DEFAULT_ND_THRESHOLD = 7
 
@@ -41,15 +42,13 @@ class LizardExtension(object):  # pylint: disable=R0903
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
-        if hasattr(reader, "indent_indicator"):
-            indent_indicator = reader.indent_indicator
-        else:
-            indent_indicator = ';'
+        indent_indicator = getattr(reader, 'indent_indicator', ';')
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
         context = reader.context
+        reader_owns_block_start = isinstance(implied_semicolons, ImpliedSemicolons)
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
@@ -93,6 +92,11 @@ class LizardExtension(object):  # pylint: disable=R0903
                     l_depth = context.open_level()
 
                 if token in block_starts:
+                    if reader_owns_block_start:
+                        # Reading an arrow's opening brace can start its function.
+                        yield token
+                        context.open_block()
+                        continue
                     context.open_block()
                 if token == indent_indicator and \
                         context.get_condition_depth() == 0:
