@@ -99,7 +99,10 @@ class LizardExtension(object):  # pylint: disable=R0903
                                else context.open_level())
 
                 if token in block_starts:
-                    context.open_block(opens_lambda)
+                    if keep_condition:
+                        context.open_header_block(opens_lambda)
+                    else:
+                        context.open_block()
                 if token == indent_indicator and \
                         context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
@@ -131,22 +134,11 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.levels_awaiting_body += 1
         return self.add_nd_condition()
 
-    def open_block(self, opens_lambda=False):
+    def open_block(self):
         """The block takes over the levels awaiting their body."""
         function = self.current_function
-        header_depth = function.control_header_depth
-        if header_depth is not None and function.condition_depth > header_depth:
-            if opens_lambda:
-                function.block_levels.append(_ConditionBrace(function))
-                function.levels_awaiting_body = 0
-                function.control_header_depth = None
-                self.reset_condition_tracking()
-            else:
-                function.block_levels.append(0)
-            return
         function.block_levels.append(function.levels_awaiting_body)
         function.levels_awaiting_body = 0
-        function.control_header_depth = None
 
     def close_block(self):
         """A block end releases the levels its block took over."""
@@ -211,6 +203,22 @@ class NDFileInfoAddition(FileInfoBuilder):
                 if enclosing.condition_depth == 0:
                     enclosing.in_condition = False
                     enclosing.logical_operator_added = False
+
+    def open_header_block(self, opens_lambda):
+        """Keep the control header open through an expression body."""
+        function = self.current_function
+        header_depth = function.control_header_depth
+        if header_depth is not None and function.condition_depth > header_depth:
+            if opens_lambda:
+                function.block_levels.append(_ConditionBrace(function))
+                function.levels_awaiting_body = 0
+                function.control_header_depth = None
+                self.reset_condition_tracking()
+            else:
+                function.block_levels.append(0)
+            return
+        self.open_block()
+        function.control_header_depth = None
 
     def open_control_level(self):
         """Open a control header whose body can contain expression braces."""
