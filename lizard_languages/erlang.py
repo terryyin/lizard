@@ -16,7 +16,7 @@ class ErlangReader(CodeReader):
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'catch', 'when'}  # when is used in guards
-    _logical_operators = {'and', 'or', 'not'}
+    _logical_operators = {'and', 'or', 'not', 'andalso', 'orelse'}
     _case_keywords = {'case'}
     # Note: '?' in Erlang is a macro expansion operator (e.g., ?MODULE, ?EMPTY_NODE)
     # Unlike C-style ternary, it's for compile-time macro substitution
@@ -29,8 +29,8 @@ class ErlangReader(CodeReader):
 
     @staticmethod
     def get_comment_from_token(token):
-        if token.startswith("%%"):
-            return token[2:]
+        if token.startswith("%"):
+            return token.lstrip("%")
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
@@ -40,7 +40,8 @@ class ErlangReader(CodeReader):
 class ErlangStates(CodeStateMachine):
     # pylint: disable=R0903
 
-    func_name_pattern = re.compile("[a-zA-Z]+[a-zA-Z0-9_]*")
+    func_name_pattern = re.compile(
+        r"[a-zA-Z]+[a-zA-Z0-9_]*|'(?:\\.|[^'\\])*'")
 
     def __init__(self, context):
         super(ErlangStates, self).__init__(context)
