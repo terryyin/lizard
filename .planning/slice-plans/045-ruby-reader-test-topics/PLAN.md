@@ -29,14 +29,27 @@ Maintainers changing the Ruby reader find and extend its tests in topic files of
 
 Type: Structure
 
-Status: planned
+Status: done
 
-Internal change: move every test in `test/test_languages/testRuby.py` into topic files as above, with unchanged test bodies. Unchanged external behavior: the reader is untouched, and the same 54 Ruby test methods run and pass. This directly owns the evidenced test-suite weakness from DD-490 (an oversized proof home that stalled a refactor gate); it enables no new Behavior.
+Internal change: move every test in `test/test_languages/testRuby.py` into topic files as above, preserving test bodies and Ruby reader behavior. This addresses the oversized proof home recorded in DD-490.
 
 Proof:
-- Before moving, save `pytest test/test_languages/testRuby.py --collect-only -q` test names (method names with their class) for comparison; after moving, collect the new files and the kept `testRuby.py` and compare method names: same 54, none duplicated, none missing.
+- Before moving, save `pytest test/test_languages/testRuby.py --collect-only -q` test names for comparison. After moving, collect the seven subject modules and compare method names against the start revision.
 - `wc -l test/test_languages/testRuby*.py`: every file at most 250 lines.
 - `nix --extra-experimental-features 'nix-command flakes' develop -c python -m pytest test/test_languages` passes, then `nix --extra-experimental-features 'nix-command flakes' develop -c make`.
+
+Execution evidence:
+- The established start at `1f2524f5` had 57 collected tests. The three added after the planning baseline in `0afbf41d` moved with the endless and special method cases.
+- The same 57 unique test method names collected and passed after the split. Source and AST comparison preserved all 61 class method definitions, including the two pre-existing same-named regex definitions and their discovery behavior.
+- The seven subject modules span 72–218 lines. The four named sibling modules matched the start revision. The independent refactor pass found no edits needed.
+- The language test suite passed with 3,069 tests and 5 skips.
+- `nix develop -c make` passed with 3,994 tests and 7 skips, followed by the project's pycodestyle and pylint checks.
+
+Execution context: Story Branch Mode in the established worktree on
+`codex/split-the-ruby-reader-tests-by-topic`. The published base is
+`1f2524f50a99eb64784c05a03e8d3da4500e7a25`. GitHub Actions observes
+`python-app.yml` on the remote story branch through coordinator
+`codex-seed076`, mailbox `/tmp/dough-ci-501/watch-aeZERp`.
 
 ## Concern evidence
 
