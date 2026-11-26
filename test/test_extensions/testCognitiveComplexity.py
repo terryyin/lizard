@@ -1003,6 +1003,23 @@ class TestJavaScriptGroupedExpressions(unittest.TestCase):
               return ok;
             }"""))
 
+    def test_logical_operator_before_object_in_grouped_initializer(self):
+        for operator in ('||', '&&'):
+            with self.subTest(operator=operator):
+                functions = analyze("select.js", """
+                    function select(value, fallback) {
+                      const selected = (value %s {value: fallback});
+                      {
+                        if (selected) use(selected)
+                      }
+                      return selected
+                    }
+                """ % operator).function_list
+                self.assertEqual([("select", 3, 2)], [
+                    (f.name, f.cyclomatic_complexity, f.cognitive_complexity)
+                    for f in functions
+                ])
+
     def test_statement_after_parentheses_on_same_line(self):
         self.assertEqual([3], cogc("a.js", """
             function sync(a, b, c) {
