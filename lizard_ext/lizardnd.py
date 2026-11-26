@@ -34,6 +34,10 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     @staticmethod
     def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
+        keep_condition = not _EXPRESSION_BLOCK_LANGUAGES.isdisjoint(
+            getattr(reader, 'language_names', ()))
+        lambda_brace = (_ConditionLambdaBrace('cpp' in reader.language_names)
+                        if keep_condition else None)
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -42,10 +46,6 @@ class LizardExtension(object):  # pylint: disable=R0903
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
         indent_indicator = getattr(reader, 'indent_indicator', ';')
-        keep_condition = not _EXPRESSION_BLOCK_LANGUAGES.isdisjoint(
-            getattr(reader, 'language_names', ()))
-        lambda_brace = (_ConditionLambdaBrace('cpp' in reader.language_names)
-                        if keep_condition else None)
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
