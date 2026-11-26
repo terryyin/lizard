@@ -62,3 +62,7 @@ Accepted proof: `test/test_languages/test_lizard_plsql_alternative_quotes.py` (`
 Slice-plan refinement: not needed. The plan has one Behavior slice, settled premises and mapped outside-in proof, with no cumulative design or sizing concern.
 
 Remaining slice-specific concerns: none.
+
+## Execution complete
+
+Product advice: no change. The delivered behavior matches the story's key examples, and #639's single alternative-quote pattern now covers the optional national-character prefix. The remaining queued PL/SQL corrections (formal-parameter boundaries, nonstrict case) keep their order.

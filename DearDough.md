@@ -183,8 +183,22 @@ Other. `testSvelte.py`'s linear-time tests assert under 1 s of wall-clock time. 
   - Observed effect: about 3 minutes of reruns and diagnosis; the full `make` gate stayed red locally for reasons unrelated to the change
   - Inference: concurrent worktree sessions sharing the machine make absolute wall-clock bounds unreliable as a local gate
 
+## DD-494 — `nix develop -c` from `AGENTS.md` fails on this host without flake features
+
+Concrete defect. `AGENTS.md` and `.agents/agent-map.md` tell agents to prefix tooling with `nix develop -c`. On this host `nix-command` is not enabled, so that literal command fails, and every execution has to rediscover `nix --extra-experimental-features 'nix-command flakes' develop -c`.
+
+### Occurrences
+- Execution: SEED-075#plsql-national-literals
+  - Timestamp: 2026-11-26T15:30:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: coordinator readiness check `nix develop -c python -m pytest test/test_languages/testPLSQL.py` failed with `experimental Nix feature 'nix-command' is disabled`; plan 041's premises already used the flag form; implementation `bcfcf39d`
+  - Observed effect: one failed readiness command, and every delegation brief had to carry the corrected wrapper
+  - Inference: the cost is small per execution but recurs. Enabling the features in the host's Nix config, or documenting the flag form, would remove it. Timestamp approximate within the session
+
 ## Retention
 
-- Highest allocated local number: 493
+- Highest allocated local number: 494
 - Shared-feedback adoption and compaction recovery (2026-11-07): `7129516bc5bd9ba57f370a6353ffe0e10eb1c861:DearDough.md`; its rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.
