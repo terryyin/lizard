@@ -88,8 +88,11 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                 self.context.add_condition()
             else:
                 self._state = self._function_type_result
-        elif token in ('val', 'var', ',', 'interface'):
-            self._state = self._expect_declaration_name
+        elif token in ('val', 'var', ',', 'interface', '['):
+            if token != '[':
+                self._state = self._expect_declaration_name
+            elif self.last_token in ('@', ':'):
+                self.next(self._annotation_group, token)
         elif token == 'when':
             self._start_when(self._state_global)
         else:
@@ -97,6 +100,11 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                 self._start_header()
                 self._accessor_name = None
             super(KotlinStates, self)._state_global(token)
+
+    @CodeStateMachine.read_inside_brackets_then("[]", "_state_global")
+    def _annotation_group(self, token):
+        # Names in `@get:[Trace set("count")]` cannot be accessors.
+        pass
 
     def _local_class_header(self, token):
         if token == '(':
