@@ -83,14 +83,14 @@ def _script_blocks(source, find_blocks, end_pattern):
 
 
 def _find_script_blocks(source, end_pattern):
-    return _find_component_scripts(source, end_pattern, template_v_pre=True)
-
-
-def _find_component_scripts(source, end_pattern, *, template_v_pre):
     """(tag start, code start, code end) of each top-level script block.
 
     As in the Vue compiler, a top-level HTML <template> holds nested markup,
     and the other top-level blocks hold text up to their closing tag."""
+    return _find_component_scripts(source, end_pattern, template_v_pre=True)
+
+
+def _find_component_scripts(source, end_pattern, *, template_v_pre):
     pos = 0
     template_v_pre = template_v_pre and _MAYBE_V_PRE.search(source) is not None
     while True:
