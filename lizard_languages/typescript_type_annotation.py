@@ -185,6 +185,8 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         return False
 
     def _ends_line(self, token):
+        if self.runtime_assertion and token in ('as', 'is'):
+            return token == 'as' or not self._assertion_predicate
         if self._class_member:
             # A postfix '[' stays on the same line. A wrapped 'extends'
             # can constrain an 'infer' variable in an open conditional type.
