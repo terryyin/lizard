@@ -135,6 +135,111 @@ class TestSvelte(unittest.TestCase):
 ''')
         self.assertEqual([('reset', 3, 5, 1)], function_summaries(functions))
 
+    def test_script_text_in_markup_expressions_is_not_a_script_block(self):
+        for expression in (
+                '{@html `<script>function init() { load(); }</script>`}',
+                '{"<script>function init() { load(); }</script>"}',
+                '{/* <script>function init() { load(); }</script> */ label}'):
+            with self.subTest(expression=expression):
+                functions = get_svelte_function_list(expression + '''
+<script>
+  const label = 'Preview';
+  function format(value) { return value.trim(); }
+</script>
+<p>{format(label)}</p>
+''')
+                self.assertEqual([('format', 4, 4, 1)],
+                                 function_summaries(functions))
+
+    def test_script_after_element_with_closing_tag_text(self):
+        for element in ('div', 'textarea'):
+            with self.subTest(element=element):
+                markup = '<%s>{`</%s>{`}</%s>' % (element, element, element)
+                functions = get_svelte_function_list(markup + '''
+<script>
+  function format() { return 'Preview'; }
+</script>
+{`}`}
+''')
+                self.assertEqual([('format', 3, 3, 1)], function_summaries(functions))
+
+    def test_closing_tag_text_in_quoted_attribute_keeps_static_markup(self):
+        source = '''\
+<noscript>
+  <a href="</noscript><script>console.log('preview')</script>">Preview</a>
+</noscript>
+'''
+        info = analyze_file.analyze_source_code('preview.svelte', source)
+        self.assertEqual((0, []), (info.nloc, info.function_list))
+
+    def test_script_after_implicitly_closed_elements(self):
+        for markup in ('<p>Intro<p>Details</p>', '<li>One<li>Two</li>'):
+            with self.subTest(markup=markup):
+                functions = get_svelte_function_list(markup + '''
+<script>function format() { return 'Preview'; }</script>
+''')
+                self.assertEqual([('format', 2, 2, 1)], function_summaries(functions))
+
+    def test_textarea_text_does_not_hide_script_or_expressions(self):
+        for text in ('<textarea>Paste here', '<!-- Paste a comment', '</div><div>'):
+            with self.subTest(text=text):
+                info = analyze_file.analyze_source_code('preview.svelte', f'''
+<div><textarea>{text}{{placeholder ? 'Type here' : ''}}</TEXTAREA></div>
+<script>
+  const placeholder = true;
+  function format() {{ return 'Preview'; }}
+</script>
+''')
+                self.assertEqual([('format', 5, 5, 1), (COMPONENT, 2, 5, 2)],
+                                 function_summaries(info.function_list))
+
+    def test_script_text_in_attributes_with_braces_is_not_code(self):
+        for attribute in (
+                'value={"} <script>function preview() {}</script>"}',
+                'value=\"{\"} <script>function preview() {}</script>\"}\"',
+                '{...{value: "} <script>function preview() {}</script>"}}'):
+            with self.subTest(attribute=attribute):
+                functions = get_svelte_function_list(
+                    '<input ' + attribute + '>\n'
+                    '<script>function format() { return "Preview"; }</script>')
+                self.assertEqual([('format', 2, 2, 1)], function_summaries(functions))
+
+    def test_script_inside_a_markup_block_is_text(self):
+        functions = get_svelte_function_list('''
+{#if showPreview}
+  <script>function preview() { return 0; }</script>
+{/if}
+<script>
+  const showPreview = true;
+  function format() { return 'Preview'; }
+</script>
+''')
+        self.assertEqual([('format', 7, 7, 1)], function_summaries(functions))
+
+    def test_brace_in_static_script_attribute_keeps_the_script(self):
+        functions = get_svelte_function_list('''
+<script data-label="{">
+function actual() { return 1 }
+</script>
+<p>{"}"}</p>
+''')
+        self.assertEqual([('actual', 3, 3, 1)], function_summaries(functions))
+
+    def test_static_style_attributes_are_text_before_a_script(self):
+        for label in ('{', '{disabled ? 1 : 0}'):
+            with self.subTest(label=label):
+                source = f'''
+<style data-label="{label}">p {{ color: red }}</style>
+{{@html `<script>function phantom() {{ return 2 }}</script>`}}
+<p>Text</p>
+<script>
+function actual() {{ return 1 }}
+</script>
+'''
+                info = analyze_file.analyze_source_code('preview.svelte', source)
+                self.assertEqual([('actual', 1), (COMPONENT, 1)],
+                                 [(f.name, f.cyclomatic_complexity) for f in info.function_list])
+
     def test_typescript_script_reads_class_field_annotations(self):
         typed = get_svelte_function_list(
             '<script lang="ts">'
