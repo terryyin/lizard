@@ -141,11 +141,20 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         self._state = self._state_global
 
     def _state_ternary_fallback(self, token):
+        if token == '-':
+            self._state = self._state_negative_ternary_fallback
+            return
         # An escaped text block is one token that keeps its raw opener.
         if token[0].isalnum() or token.startswith(('_', '$', "'", '"', r'\u')):
             self._state = self._state_after_ternary_value
         else:
             self.next(self._state_initialization_list, token)
+
+    def _state_negative_ternary_fallback(self, token):
+        if token[0].isdigit() or (token[0] == '.' and token[1:2].isdigit()):
+            self._state = self._state_after_ternary_value
+        else:
+            self.next(self._state_one_initialization, token)
 
     def _state_after_ternary_value(self, token):
         if token == ';':
