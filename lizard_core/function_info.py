@@ -33,8 +33,6 @@ class Namespace(Nesting):  # pylint: disable=R0903
 
 class FunctionInfo(Nesting):  # pylint: disable=R0902
 
-    explicit_parameter_slots = False
-
     def __init__(self, name, filename, start_line=0, ccn=1):
         self.cyclomatic_complexity = ccn
         self.nloc = 1
@@ -68,12 +66,13 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
     location = property(lambda self:
                         f" {self.name}@{self.start_line}-{self.end_line}@{self.filename}")
 
+    explicit_parameter_slots = False
+
     @property
     def parameter_count(self):
-        if self.explicit_parameter_slots:
-            # Some readers already split the signature into formal slots.
-            return sum(map(bool, self.full_parameters))
         # Binding patterns can occupy formal slots without introducing names.
+        if self.explicit_parameter_slots:
+            return sum(map(bool, self.full_parameters))
         return sum(
             bool(_PARAMETER_NAME.search(parameter))
             or parameter.strip() in ('{}', '[]', '()')
