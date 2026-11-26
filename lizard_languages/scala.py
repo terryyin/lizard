@@ -19,16 +19,14 @@ _CONTINUES_AT_LINE_END = frozenset((
     ',', '.', 'else', 'then', 'do', 'yield', 'try', 'finally', 'match',
     'catch', 'new', 'throw'))
 _CONDITION_KEYWORDS = frozenset(('if', 'while', 'for'))
-
-
-_OPERATOR_CHAR = r'[!#%&*+\-/:<=>?@\\^|~]'
-# Recognize a symbolic name before a signature with a visible body.
-_SYMBOLIC_DEF = (
-    r'|\bdef[^\S\n]+(?:(?!//|/\*)' + _OPERATOR_CHAR + r')+'
-    r'(?=[^\S\n]*(?:\[[^\[\]\n#]*\][^\S\n]*)?'
-    r'(?:\((?:(?!//|/\*)[^()\n#])*\)[^\S\n]*)+'
-    r"""(?:(?::(?:(?!//|/\*)[^=\n{}"'`#])+)?=(?!""" + _OPERATOR_CHAR + r')|\{))')
-_SYMBOLIC_NAME_START = re.compile(r'\bdef[^\S\n]+(?!//|/\*)' + _OPERATOR_CHAR)
+_SIGNATURE_CONTINUES = frozenset((
+    '(', '[', '{', '=', ':', '.', '@', 'with', 'match', 'case', '=>', '&', '|', '<', '>', '#'))
+_GROUP_STARTS = frozenset(('(', '[', '{'))
+_GROUP_ENDS = frozenset((')', ']', '}'))
+_DECLARATION_ENDS = frozenset((';', '}'))
+_DECLARATION_STARTS = frozenset(('def', 'val', 'var', 'class', 'object', 'trait', 'import', 'package'))
+_TYPE_NAME = re.compile(r'[\w$]+|`[^`]+`')
+_TYPE_OPERATORS = frozenset(('with', 'forSome', 'match', 'case'))
 
 
 _XML_NAME = r'[^\W\d][\w.:-]*'
@@ -39,9 +37,13 @@ _CONTENT_PART = re.compile(r'<!--.*?-->|<!\[CDATA\[.*?\]\]>|<\?.*?\?>|</?' + _XM
 
 
 _STRING_OPENERS = frozenset(('"', '"""'))
-_LOCATED_DELIMITERS = _STRING_OPENERS | {'}'}
+_LOCATED_DELIMITERS = _STRING_OPENERS | {'}', 'def', '$'}
 _STRING_DELIMITERS = r'|"""|(?<=[\w$`])"'
 _SCALA_QUOTES = r"|'[^\W\d][\w$]*(?![\w$'])|'(?=[{\[][^'])"
+_PROJECTED_MACRO = re.compile(r'#\s*[\w$]+\s*=\s*\$\{')
+_SYMBOLIC_TYPES = r'|=:=|<:<|=>>|\?=>'
+_SYMBOLIC_METHOD = re.compile(r'([ \t]+)((?:[^\W\d][\w$]*_)?(?:(?!/[*/])[!#%&*+\-/:<=>?@\\^|~])+)')
+_SYMBOLIC_DEF = re.compile(r'\bdef' + _SYMBOLIC_METHOD.pattern)
 _COMMENT_BRACKETS = re.compile(r'/\*|\*/')
 _RAW_END = re.compile(r'"""+')
 _RAW_INTERPOLATION = re.compile(r'\$\$|\$"|\$\{|"""+')
@@ -93,21 +95,15 @@ def _locate_delimiter(match):
     return text
 
 
-def _scala_tokens(patterns, source, pos=0, in_interpolation=False):
+def _scala_tokens(patterns, source, pos=0, in_interpolation=False, macro_splices=False):
     """Read code until the end of the file or the matching interpolation brace."""
     depth = 0
     end = len(source)
     xml_enabled = True
-    pattern = patterns[in_interpolation]
+    pattern = patterns[in_interpolation or macro_splices]
     while pos < end:
         for token in tokens_in_span(pattern, source, pos, end, _locate_delimiter,
-                                    macros=not in_interpolation):
-            if token.startswith('def') and token[3:4].isspace():
-                name = token[3:].lstrip()
-                yield 'def'
-                yield token[3:len(token) - len(name)]
-                yield name
-                continue
+                                    macros=False):
             if xml_enabled and token == '<' and isinstance(token, _LocatedToken):
                 xml_end, parts = _complete_xml(patterns, source, token.offset)
                 if xml_end is not None:
@@ -122,6 +118,22 @@ def _scala_tokens(patterns, source, pos=0, in_interpolation=False):
                 pos = _nested_comment_end(source, token.offset)
                 yield source[token.offset:pos]
                 break
+            if macro_splices and token == '$' and source.startswith('{', token.offset + 1):
+                # Read a Scala 3 splice as a balanced block. Quotes inside it
+                # can name values and do not always start character literals.
+                yield '$'
+                yield '{'
+                pos = yield from _scala_tokens(patterns, source, token.offset + 2, True, macro_splices)
+                yield '}'
+                break
+            if token == 'def':
+                name = _SYMBOLIC_METHOD.match(source, token.offset + 3)
+                if name:
+                    yield 'def'
+                    yield name.group(1)
+                    yield name.group(2)
+                    pos = name.end()
+                    break
             if in_interpolation:
                 if token == '{':
                     depth += 1
@@ -363,21 +375,21 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        addition = r'|`[^`\r\n]+`' + addition
-        if token_class is not None or not (
+        addition = r'|`[^`\r\n]+`' + _SYMBOLIC_TYPES + addition
+        if token_class is None and (
                 '"""' in source_code or '${' in source_code or '$"' in source_code
-                or _SYMBOLIC_NAME_START.search(source_code) or _XML_START.search(source_code)):
-            return CodeReader.generate_tokens(source_code, addition, token_class)
-        addition = _STRING_DELIMITERS + _SYMBOLIC_DEF + addition
-        patterns = (compiled_token_pattern(addition), compiled_token_pattern(_SCALA_QUOTES + addition))
-        tokens = _scala_tokens(patterns, source_code)
-        if 'case' in source_code and _XML_START.search(source_code):
-            return _xml_case_tokens(tokens)
-        return tokens
+                or _SYMBOLIC_DEF.search(source_code) or _XML_START.search(source_code)):
+            addition = _STRING_DELIMITERS + addition
+            patterns = (compiled_token_pattern(addition), compiled_token_pattern(_SCALA_QUOTES + addition))
+            tokens = _scala_tokens(patterns, source_code, macro_splices=bool(_PROJECTED_MACRO.search(source_code)))
+            if 'case' in source_code and _XML_START.search(source_code):
+                return _xml_case_tokens(tokens)
+            return tokens
+        pattern = compiled_token_pattern(addition)
+        return tokens_in_span(pattern, source_code, 0, len(source_code), token_class, macros=False)
 
     def preprocess(self, tokens):
-        """Drop spaces, and offer each line's first code token to the
-        function body that it may end, before any counter charges it.
+        """Drop spaces and close definitions before the next token counts.
         A '\n' is consumed by line_counter before the states see it."""
         open_bodies = self.parallel_states[0].open_bodies
         # 0: inside a line, 1: at a line start, 2: at a line start after a
@@ -389,7 +401,7 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
                 if line_start:
                     if not token.startswith(('//', '/*')):
                         if open_bodies:
-                            open_bodies[-1].end_body_before_line(
+                            open_bodies[-1].end_definition_before(
                                 token, line_start == 2)
                         line_start = 0
                     elif line_start == 1:
@@ -397,6 +409,8 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
                 elif token.startswith('/*') and '\n' in token:
                     # A block comment that ends on a later line.
                     line_start = 3
+                elif (token in _DECLARATION_ENDS or token in _DECLARATION_STARTS) and open_bodies:
+                    open_bodies[-1].end_signature_before(token, False)
                 if token == '?' and isinstance(token, _XmlIndentBoundary):
                     # Keep the reader's operator marker on a dedent token.
                     token.token = getattr(self, '_question_mark', token.token)
@@ -409,10 +423,15 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
 class ScalaStates(GoLikeStates):  # pylint: disable=R0903
 
     FUNC_KEYWORD = 'def'
+    TYPE_KEYWORD = None
 
     def __init__(self, context, open_bodies=None):
         super().__init__(context)
         self._brackets = 0
+        self._type_operand = False
+        self._type_infix = False
+        self._contextual_clause = False
+        self._contextual_parameter_named = False
         # (bracket depth, keyword) of each open `if (`, `while (`, `for (`.
         self._conditions = []
         # The keyword whose condition the last ')' closed, or None.
@@ -421,8 +440,7 @@ class ScalaStates(GoLikeStates):  # pylint: disable=R0903
         # The token before the last one in the body: `counter.+` selects a
         # member named `+`, which needs no right operand.
         self._previous = None
-        # The states, outermost first, that read an expression body or own
-        # an open brace body. All nested states of a file share this list.
+        # All nested states share the stack of open signatures and expression bodies.
         self.open_bodies = [] if open_bodies is None else open_bodies
 
     def statemachine_clone(self):
@@ -436,29 +454,89 @@ class ScalaStates(GoLikeStates):  # pylint: disable=R0903
             super()._function_name(token)
 
     def _expect_function_dec(self, token):
-        if token in ('(', '[', '<'):
+        if token == '(':
+            self._brackets = 1
+            self.open_bodies.append(self)
+            self._state = self._first_parameter_in_clause
+        elif token == '[':
             super()._expect_function_dec(token)
         else:
             # A definition without parameters, such as `def size = 1`, is
             # not a function. Its tokens count in the enclosing function.
-            self.fold_into_enclosing_function()
-            # The enclosing function already counted the `def` and its line.
-            self.context.current_function.nloc -= 1
-            self.context.current_function.token_count -= 1
-            self._state = self._state_global
+            self._fold_declaration()
+
+    def _function_parameters(self, token):
+        if self._contextual_clause and self._brackets == 1:
+            if token == ':':
+                self._contextual_parameter_named = True
+            elif token in (',', ')'):
+                self._finish_contextual_parameter()
+        if token in _GROUP_STARTS:
+            self._brackets += 1
+        elif token in _GROUP_ENDS:
+            self._brackets -= 1
+        if not self._brackets:
+            self._state = self._after_parameter_list
+        elif token == ',' and self._brackets > 1:
+            # Keep commas in a tuple, type application or default expression
+            # with their parameter.
+            self.context.current_function.full_parameters[-1] += ' ,'
+            self.context.add_to_long_function_name(' ,')
+        elif token not in ('(', ')'):
+            self.context.parameter(token)
+
+    def _after_parameter_list(self, token):
+        if token == '(':
+            self._brackets = 1
+            self._state = self._first_parameter_in_clause
+        else:
+            self.next(self._expect_function_impl, token)
+
+    def _first_parameter_in_clause(self, token):
+        self._contextual_clause = token == 'using'
+        self._contextual_parameter_named = False
+        params = self.context.current_function.full_parameters
+        if token != ')' and params and params[-1]:
+            self.context.parameter(',')
+        self.next(self._function_parameters, token)
+
+    def _finish_contextual_parameter(self):
+        parameters = self.context.current_function.full_parameters
+        if parameters and parameters[-1] and not self._contextual_parameter_named:
+            # FunctionInfo counts this slot without adding a binding name.
+            parameters[-1] = '()'
+        self._contextual_parameter_named = False
 
     def _expect_function_impl(self, token):
-        if token == "=":
+        if not self._brackets:
+            if token == ':':
+                self._type_operand = self._type_infix = False
+                self._state = self._read_result_type
+                return
+            if token == '{':
+                # Scala 2 also allows a procedure body without '='.
+                self.open_bodies.pop()
+                self.next(self._function_impl, token)
+                return
+        self._read_result_type(token)
+
+    def _read_result_type(self, token):
+        if token in _GROUP_STARTS:
+            self._brackets += 1
+        elif token in _GROUP_ENDS and self._brackets:
+            self._brackets -= 1
+        elif token == '=' and not self._brackets:
             self._state = self._expect_function_body
-        else:
-            super(ScalaStates, self)._expect_function_impl(token)
+        if not self._brackets:
+            is_name = token not in _TYPE_OPERATORS and bool(_TYPE_NAME.fullmatch(token))
+            self._type_infix = self._type_operand and is_name
+            self._type_operand = token in _GROUP_ENDS or (is_name and not self._type_infix)
 
     def _expect_function_body(self, token):
         """The body starts after '=', on the same line or the next."""
         self._brackets = 0
         self._conditions = []
         self._open_dos = 0
-        self.open_bodies.append(self)
         self.next(self._function_body, token)
 
     def _function_body(self, token):
@@ -493,10 +571,6 @@ class ScalaStates(GoLikeStates):  # pylint: disable=R0903
             # splits, or a name in backticks.
             self._end_function_body()
             self.next(self._state_global, token)
-        elif len(token) > 1 and token[0] == '#':
-            # The tokenizer reads the rest of the line after '#' as a
-            # preprocessor line, so its brackets cannot be counted.
-            self._brackets = 0
 
     def _open_bracket(self):
         if self.last_token in _CONDITION_KEYWORDS:
@@ -518,12 +592,32 @@ class ScalaStates(GoLikeStates):  # pylint: disable=R0903
         # `for { ... }` is a loop header, like `for (...)`.
         self._after_condition = 'for' if self._previous == 'for' else None
 
-    def end_body_before_line(self, token, after_blank_line):
-        """A body ends at a line break outside brackets, unless the
-        expression continues on the new line."""
-        if (self._state in (self._function_body,) and self._brackets <= 0
-                and not self._continues_on(token, after_blank_line)):
-            self._end_function_body()
+    def end_definition_before(self, token, after_blank_line):
+        """A line break can end a signature or expression outside brackets."""
+        if self._state in (self._function_body,):
+            if self._brackets <= 0 and not self._continues_on(token, after_blank_line):
+                self._end_function_body()
+        else:
+            self.end_signature_before(token, True)
+
+    def end_signature_before(self, token, at_line_start):
+        """Fold a declaration whose signature ends without an implementation."""
+        if self._brackets or self._state not in (
+                self._after_parameter_list, self._expect_function_impl, self._read_result_type):
+            return
+        if token in _DECLARATION_ENDS or token in _DECLARATION_STARTS or (
+                at_line_start and token not in _SIGNATURE_CONTINUES
+                and self.last_token not in _CONTINUES_AT_LINE_END
+                and not (self._type_infix and _TYPE_NAME.fullmatch(token))):
+            self.open_bodies.pop()
+            self._fold_declaration()
+
+    def _fold_declaration(self):
+        self.fold_into_enclosing_function()
+        # The enclosing function already counted the 'def' and its line.
+        self.context.current_function.nloc -= 1
+        self.context.current_function.token_count -= 1
+        self._state = self._state_global
 
     def _continues_on(self, token, after_blank_line):
         """Whether `token`, the first on a new line, continues the body."""
