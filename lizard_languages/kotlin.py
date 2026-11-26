@@ -101,13 +101,25 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         if token == '(':
             self.next(self._local_class_parameters, token)
         elif token == '{':
-            # A local class can declare accessors while its enclosing function is active.
-            self.next(self._state_global)
-            self.sub_state(KotlinStates(
-                self.context, accessor_declaration_scope=self.context.current_function,
-            ))
+            self._read_local_class_body()
         elif token in self._EXPRESSION_BODY_ENDERS or token in ('}', ';'):
             self.next(self._state_global, token)
+
+    def _read_local_class_body(self):
+        context = self.context
+        enclosing_forgiveness = context.forgive, context.forgive_directive
+
+        def restore_forgiveness():
+            context.forgive, context.forgive_directive = enclosing_forgiveness
+
+        # The class has its own declarations while the enclosing function
+        # remains active for metrics.
+        context.forgive = False
+        context.forgive_directive = None
+        self.next(self._state_global)
+        self.sub_state(KotlinStates(
+            context, accessor_declaration_scope=context.current_function,
+        ), restore_forgiveness)
 
     @CodeStateMachine.read_inside_brackets_then("()", "_local_class_header")
     def _local_class_parameters(self, token):
@@ -153,6 +165,26 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             self.context.current_function.token_count -= 1
             self.next(self._state_global, token)
 
+    def _finish_declaration_forgiveness(self, token):
+        context = self.context
+        if not context.forgive or context.forgive_directive is None:
+            return
+        owner, line, token_count, follows_code = context.forgive_directive
+        declaration = context.current_function
+        if owner is self._accessor_declaration_scope and owner is context.stacked_functions[-1]:
+            context.forgive = False
+        elif owner is declaration:
+            # A comment between two accessors can introduce the next one
+            # even when both accessors are on the same line.
+            next_accessor = token in self._ACCESSORS and line == context.current_line
+            # The boundary token already counts. Any earlier token after
+            # the comment still belonged to this declaration.
+            more_header_tokens = context.fileinfo.token_count > token_count + 1
+            if (follows_code or more_header_tokens) and not next_accessor:
+                context.forgive = False
+            else:
+                context.forgive_directive = (context.stacked_functions[-1], line, token_count, follows_code)
+
     def _ends_declaration(self, token):
         # Kotlin semicolons are optional, so a declaration without a body
         # also ends where the next declaration starts a line, or where the
@@ -163,6 +195,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                 and (self.last_token == self._accessor_name
                      or self.last_token in self._ACCESSOR_MODIFIERS))))
         self._track_type(token)
+        if ends:
+            self._finish_declaration_forgiveness(token)
         return ends
 
     def _start_header(self):
