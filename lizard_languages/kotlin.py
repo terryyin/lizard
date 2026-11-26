@@ -35,8 +35,9 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         return CodeReader.generate_tokens(
             source_code,
             r"|`\w+`" +
-            # Typed names may contain spaces or apparent delimiters.
-            r"|`[^`\r\n]+`(?=\s*:)" +
+            # A typed name may have a comment before its colon.
+            # The literal scanner can end the token span at that comment.
+            r"|`[^`\r\n]+`(?=\s*(?::|/[/*]|\Z))" +
             r"|\w+\?" +
             r"|\w+\!!" +
             r"|\?\?" +
