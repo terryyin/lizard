@@ -1352,6 +1352,42 @@ class TestMemberCallRecursion(unittest.TestCase):
             end"""))
 
 
+    def test_php_grouped_self_receiver_is_still_recursive(self):
+        self.assertEqual([2, 0], cogc("RetryPlan.php", """
+            <?php
+            class RetryPlan {
+                public function retry(int $remaining): bool {
+                    return $remaining > 0 && ($this)?->retry($remaining - 1);
+                }
+                public function refresh($fallback) {
+                    return getProvider($fallback)?->refresh(null);
+                }
+            }
+        """))
+
+    def test_groovy_grouped_foreign_receiver_is_not_recursive(self):
+        self.assertEqual([0, 0], cogc("RetryPlan.groovy", """
+            class RetryPlan {
+                def run(Plugin fallback) { (fallback)?.run() }
+                def refresh(Plugin fallback) { getProvider(fallback)?.refresh() }
+            }
+        """))
+
+    def test_lua_assigned_methods_can_call_their_own_receiver(self):
+        self.assertEqual([2, 2, 1], cogc("RetryPlan.lua", """
+            local RetryPlan = {}
+            RetryPlan.retry = function(self, remaining)
+                if remaining > 0 then return self:retry(remaining - 1) end
+            end
+            RetryPlan.wrapped = function(self, remaining)
+                if remaining > 0 then return ((self)):wrapped(remaining - 1) end
+            end
+            local function run(self, remaining)
+                if remaining > 0 then return self:run(remaining - 1) end
+            end
+        """))
+
+
 class TestFlatLanguages(unittest.TestCase):
     """Blocks are not brace-delimited: increments without nesting penalty."""
 
