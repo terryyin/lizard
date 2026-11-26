@@ -139,6 +139,24 @@ def mark_forward(source, js_family, *, jsx=False, operator_language=None):
         else:
             after_operand()
 
+    def operand_regex_span():
+        divisor = _REGEX_DIVISOR.match(source, i)
+        if type_comments is not None:
+            prev, _ = _before_comments(source, _skip_ws_back(source, i - 1), type_comments)
+            if prev >= 0 and source[prev] == '>':
+                literal = match_literal(source, i)
+                if literal or divisor:
+                    if _follows_type_arguments(source, prev, type_comments):
+                        return divisor.span(1) if divisor else None
+                    return literal.span() if literal else None
+        elif divisor is not None:
+            prev = _skip_ws_and_comments_back(source, i - 1)
+        if divisor is not None:
+            word, _ = _word_before(source, prev)
+            if prev == operand_close or _is_js_dividend(source, prev, word):
+                return divisor.span(1)
+        return None
+
     def advance():
         nonlocal i, can_regex, expect_property, pending_async, pending_for
         nonlocal paren_depth, async_nesting, operand_close
@@ -266,24 +284,6 @@ def mark_forward(source, js_family, *, jsx=False, operator_language=None):
             return
         i += 1
         after_operand()
-
-    def operand_regex_span():
-        divisor = _REGEX_DIVISOR.match(source, i)
-        if type_comments is not None:
-            prev, _ = _before_comments(source, _skip_ws_back(source, i - 1), type_comments)
-            if prev >= 0 and source[prev] == '>':
-                literal = match_literal(source, i)
-                if literal or divisor:
-                    if _follows_type_arguments(source, prev, type_comments):
-                        return divisor.span(1) if divisor else None
-                    return literal.span() if literal else None
-        elif divisor is not None:
-            prev = _skip_ws_and_comments_back(source, i - 1)
-        if divisor is not None:
-            word, _ = _word_before(source, prev)
-            if prev == operand_close or _is_js_dividend(source, prev, word):
-                return divisor.span(1)
-        return None
 
     if not js_family and may_have_documentation(source):
         from .ruby import _PERCENT_LITERAL

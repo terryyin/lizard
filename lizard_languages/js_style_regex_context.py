@@ -137,6 +137,7 @@ def _follows_type_arguments(source, close, comments):
     """Recognize a possible TypeScript angle group before a slash."""
     angles = 1
     group_depth = 0
+    conditional_types = 0
     pos = close - 1
     while pos >= 0:
         pos, _ = _before_comments(source, _skip_ws_back(source, pos), comments)
@@ -159,11 +160,18 @@ def _follows_type_arguments(source, close, comments):
             elif ch == '<':
                 angles -= 1
                 if angles == 0:
-                    return True
+                    return conditional_types == 0
             elif ch in ';=+*/%!^~':
                 return False
             elif ch in '&|?.' and source.endswith(('&&', '||', '??', '?.'), 0, pos + 1):
                 return False
+            elif ch == '?':
+                conditional_types += 1
+            elif conditional_types and ch == 's' and source.endswith('extends', 0, pos + 1):
+                word, before = _word_before(source, pos)
+                if word == 'extends':
+                    conditional_types -= 1
+                    pos = before + 1
         pos -= 1
     return False
 

@@ -240,12 +240,11 @@ def _consider_slash(source, i, marks, comments, literal_ends, closing=None, *,
             return divisor.end()
         return i + 1
     operand = source[prev]
-    previous_pair = source[max(0, prev - 1):prev + 1]
-    type_close = (operator_language == 'typescript' and operand == '>'
-                  and previous_pair != '=>' and _follows_type_arguments(source, prev, comments))
-    binary_operator = operand in '<>' or operand == '+' and previous_pair != '++'
-    if matched is not None and (previous_pair == '=>' or (
-            operator_language and binary_operator and not type_close)):
+    arrow = operand == '>' and prev > 0 and source[prev - 1] == '='
+    type_close = (operand == '>' and not arrow and operator_language == 'typescript'
+                  and _follows_type_arguments(source, prev, comments))
+    operator = operand in '<>' or operand == '+' and (prev == 0 or source[prev - 1] != '+')
+    if matched is not None and (arrow or operator_language and operator and not type_close):
         marks.append(i)
         literal_ends.add(matched.end() - 1)
         return matched.end()
