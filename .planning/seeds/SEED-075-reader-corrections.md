@@ -33,29 +33,6 @@ frozen master `6ff51711d14d7aebca1d72690130fab6e1889fe8`.
 **Plan:** [Count R variadic and quoted formals with nested defaults](../slice-plans/042-r-formal-parameter-boundaries/PLAN.md)
 
 
-<a id="plsql-formal-parameter-boundaries"></a>
-
-### Preserve quoted PL/SQL formals and their declarations
-
-**Identity:** SEED-075#plsql-formal-parameter-boundaries
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/043-plsql-formal-parameter-boundaries/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"8aa674ca3d8e4e4ad20448b67c06044b3cc7b20382efbcafa7fbdcec87810b41","plan":"d86c1c7fe719615cea87e8b9cff2e5406c6f74c0cd965399647f7164c1db3e6c"}}
-```
-
-**Goal:** PL/SQL users get reliable parameter counts for procedures and functions. API callers can read each formal's declared name and full declaration even when the signature contains quoted names or nested defaults.
-
-**Scope:** In a PL/SQL formal list, only commas at the outer level separate formals. Each formal contributes one count, its name in source spelling (including quotes for a quoted name), and its complete token-spaced declaration in `full_parameters`, with the mode, type, and default when present. Keep the declarations visible in `long_name` and keep the bodies and subsequent declarations discoverable at their source positions. The duplicated-parameter-list extension uses the resulting names under its existing policy. This story covers procedures and functions, including nested declarations. Package specifications, malformed-list recovery, and the separate nonstrict Boolean-casing story are outside its delivery scope. [Original proposal #644](https://github.com/terryyin/lizard/pull/644)
-
-**Key examples:**
-
-- Analyzing `PROCEDURE f("x name" IN NUMBER, b OUT VARCHAR2)` reports two names, `"x name"` and `b`, and the full declarations `"x name" IN NUMBER` and `b OUT VARCHAR2`.
-- Analyzing a function with `a NUMBER DEFAULT GREATEST(ABS(-1), 2), b NUMBER` reports two formals and keeps the whole call in the declaration for `a`. The following procedure `g()` is discovered on its own line with zero parameters and an empty declaration list.
-- Analyzing a nested procedure with `"a,)" IN NUMBER := GREATEST(1, 2), tail OUT VARCHAR2` reports two formals. The quoted punctuation and nested comma stay inside the first declaration. The enclosing and following procedures retain their own signatures and source boundaries.
-- With the duplicate-list extension enabled, two files with the same five names match even if their modes, types, or defaults differ. A third file with a different quoted name has its own match. The occurrence and file counts are both `2, 2, 1`.
-
-**Plan:** [Preserve quoted PL/SQL formals and their declarations](../slice-plans/043-plsql-formal-parameter-boundaries/PLAN.md)
-
-
 <a id="plsql-nonstrict-case"></a>
 
 ### Keep PL/SQL Boolean operator casing equivalent in nonstrict mode
