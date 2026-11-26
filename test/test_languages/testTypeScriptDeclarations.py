@@ -82,6 +82,12 @@ function local() { return "ready" }
 """
         self.assertEqual(['local'], [f.name for f in get_ts_function_list(code)])
 
+    def test_ambient_variable_named_global_keeps_following_runtime_function(self):
+        code = """declare const global: boolean
+function local() { return global }
+"""
+        self.assertEqual(['local'], [f.name for f in get_ts_function_list(code)])
+
 
 class Test_TypeScript_type_alias_no_false_positives(unittest.TestCase):
     """Tests that type aliases with arrow signatures are NOT detected as functions (Fix 2)."""
