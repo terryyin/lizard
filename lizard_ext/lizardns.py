@@ -77,6 +77,9 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             return self._indented_structures(tokens, reader)
         if hasattr(reader, 'implied_semicolons'):
             return self._unterminated_statements(tokens, reader)
+        languages = getattr(reader, 'language_names', ())
+        if languages and languages[0] in ('kotlin', 'scala'):
+            return _ConditionalExpressionStructures().read(tokens, reader)
         return super(LizardExtension, self).__call__(tokens, reader)
 
     def _start_file(self, reader):
@@ -232,3 +235,34 @@ def _init_nested_structure_data(self, *_):
 
 
 patch_append_method(_init_nested_structure_data, FunctionInfo, "__init__")
+
+
+class _ConditionalExpressionStructures(LizardExtension):
+    """Reuse an open if for a plain, unbraced alternative."""
+
+    def read(self, tokens, reader):
+        self._start_file(reader)
+        self._open_if = False
+        for token in tokens:
+            if token in ('{', '}', ';') or (self.br_count and token in self.structures):
+                self._open_if = False
+            self._state(token)
+            yield token
+
+    def _state_global(self, token):
+        if token in self.structures and not getattr(token, 'is_member_name', False):
+            if token == 'if':
+                self._open_if = self.structure_piles[-1] == 0
+            elif token != 'else':
+                self._open_if = False
+        super()._state_global(token)
+
+    def _after_else(self, token):
+        same_if = self._open_if and token not in ('if', '(', '->')
+        self._open_if = False
+        if same_if:
+            # The first clause has not ended with a brace or semicolon.
+            self._state = self._state_global
+            self._state(token)
+        else:
+            super()._after_else(token)
