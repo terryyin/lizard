@@ -367,6 +367,66 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
     """A statement that ends at a line break closes its levels,
     as a statement that ends with ';' does."""
 
+    def test_else_reuses_its_if_level_after_a_braceless_loop(self):
+        for filename in ("a.js", "a.ts"):
+            for terminator in ('', ';'):
+                with self.subTest(filename=filename, terminator=terminator):
+                    code = f"""
+                    function setup(useDefaults, jobs) {{
+                      if (useDefaults)
+                        for (const job of jobs) job.run = function () {{}}{terminator}
+                      else
+                        for (const job of jobs) job.run()
+                    }}
+                    """
+                    depth = self.else_fixture_depth(filename, code)
+
+                    self.assertEqual(2, depth)
+
+    def test_else_body_keeps_its_level_after_expression_braces(self):
+        cases = (
+            ('handlers.Job = class {}', 2),
+            ('handlers.run = function () {};', 2),
+            ('handlers.run = handlers.customRun || function () {}', 2),
+            ('for (const job of handlers) job.run = function () {}', 3),
+            ('for (const job of handlers) job.options = {}', 3),
+        )
+        for body, expected in cases:
+            with self.subTest(body=body):
+                else_body = 'use(handler)' if expected == 2 else 'while (handler.ready) use(handler)'
+                code = f"""
+                function configure(custom, handlers) {{
+                  if (custom) {body}
+                  else for (const handler of handlers) {else_body}
+                }}
+                """
+                depth = self.else_fixture_depth("a.js", code)
+
+                self.assertEqual(expected, depth)
+
+    def test_else_if_body_reuses_its_braced_if_level(self):
+        code = "function f(v) { if (v.a) { go(); } else if (v.b) { if (v.c) { go(); } } }"
+        depth = self.else_fixture_depth("a.js", code)
+
+        self.assertEqual(2, depth)
+
+    def test_nested_else_closes_only_its_matching_if(self):
+        code = """
+        function visit(need, ready, queue) {
+          if (need)
+            while (ready) if (queue.length) queue.pop();
+            else for (const job of queue) while (job.ready) job.stop();
+          else if (queue.length) queue.pop();
+        }
+        """
+        depth = self.else_fixture_depth("a.js", code)
+
+        self.assertEqual(5, depth)
+
+    def else_fixture_depth(self, filename, code):
+        analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+        return analyzer.analyze_source_code(filename, code).function_list[-1].max_nesting_depth
+
     def test_sibling_braceless_ifs_do_not_nest(self):
         self.assertEqual(1, self.nesting_depth("""
         function role(user) {
@@ -376,6 +436,19 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
           return 'user'
         }
         """))
+
+    def test_sibling_if_after_an_arrow_and_explicit_semicolon(self):
+        for value, separator in (('class {}', '\n'), ('make()', ' ')):
+            with self.subTest(value=value, separator=separator):
+                code = f"""
+                function setup(flag, ready) {{
+                  if (flag) create = () => {value};{separator}if (ready) use(create)
+                }}
+                """
+                analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+                functions = analyzer.analyze_source_code("a.js", code).function_list
+
+                self.assertEqual(1, functions[-1].max_nesting_depth)
 
     def test_braceless_body_on_the_next_line(self):
         self.assertEqual(1, self.nesting_depth("""
@@ -443,6 +516,36 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
           return 0
         }
         """))
+
+    def test_trailing_while_after_a_callback_fallback(self):
+        for filename in ("a.js", "a.ts"):
+            for terminator in ('', ';'):
+                with self.subTest(filename=filename, terminator=terminator):
+                    code = f"""
+                    function setup(options) {{
+                      do options.run = options.run || function () {{}}{terminator}
+                      while (options.retry)
+                    }}
+                    """
+                    analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+                    functions = analyzer.analyze_source_code(filename, code).function_list
+
+                    self.assertEqual(1, functions[-1].max_nesting_depth)
+
+    def test_do_while_tail_keeps_the_enclosing_if(self):
+        for terminator in ('', ';'):
+            with self.subTest(terminator=terminator):
+                code = f"""
+                function setup(enabled, options) {{
+                  if (enabled)
+                    do options.run = function () {{}}{terminator}
+                    while (options.retry && enabled)
+                }}
+                """
+                analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+                functions = analyzer.analyze_source_code("a.js", code).function_list
+
+                self.assertEqual(3, functions[-1].max_nesting_depth)
 
     def test_braces_on_their_own_line(self):
         self.assertEqual(2, self.nesting_depth("""
