@@ -14,7 +14,8 @@ from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
-from .typescript_signatures import TypeArgumentComma, call_type_argument_span
+from .typescript_signatures import (
+    TypeArgumentComma, call_type_argument_span, can_start_call_type_arguments)
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -118,11 +119,6 @@ def _ends_a_number(token):
     """Whether a '.' after this token is a decimal point, `1_000.`."""
     return bool(token) and token[0].isdigit() and token.replace(
         '_', '').isdigit()
-
-
-def _can_specialize(token):
-    return token and (token in (')', ']', '?.', '!') or
-                      token[0].isalpha() or token[0] in '_$#')
 
 
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
@@ -249,6 +245,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         A '\n' is consumed by line_counter, and comments by comment_counter,
         before the state machine sees them, so expression_arrows cannot
         change between a newline and the next code token."""
+        type_argument_span = 0
         arrows = self.context.expression_arrows = []
         signatures = self.context.ended_signatures = []
         line_start = False
@@ -262,15 +259,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         member_access = False
         before_dot = ''
         keyword = None      # waits for the next token: `{ if: a }`
-        type_argument_span = 0
         tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
-                if type_argument_span:
-                    type_argument_span -= 1
-                    if token == ',':
-                        token = _TYPE_ARGUMENT_COMMA
                 if not token.isspace():
+                    if type_argument_span:
+                        type_argument_span -= 1
+                        if token == ',':
+                            token = _TYPE_ARGUMENT_COMMA
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
                         if token in _NAME_FOLLOWERS or (
@@ -320,7 +316,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             continue
                     if (token == '<' and not type_argument_span
                             and self.context.class_field_annotations
-                            and _can_specialize(state.last_token)):
+                            and can_start_call_type_arguments(state.last_token)):
                         tokens, lookahead = tee(tokens)
                         type_argument_span = call_type_argument_span(lookahead)
                         del lookahead

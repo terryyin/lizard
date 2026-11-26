@@ -63,14 +63,21 @@ class TypeArgumentComma(str):
     is_type_argument_comma = True
 
 
+def can_start_call_type_arguments(previous):
+    """The callee before a possible '<'."""
+    return previous and (previous in (')', ']', '?.', '!') or
+                         previous[0].isalpha() or previous[0] in '_$#')
+
+
 def call_type_argument_span(tokens):
     """Return the span of comma-delimited reference types before a call."""
     depth = 1
     expects_type = True
     previous = '<'
     comma = False
-    for offset, token in enumerate(tokens, 1):
-        if token.isspace() or token.startswith(('//', '/*')):
+    code = (token for token in tokens if not token.isspace())
+    for offset, token in enumerate(code, 1):
+        if token.startswith(('//', '/*')):
             continue
         if previous == '[':
             if token != ']':
@@ -96,7 +103,7 @@ def call_type_argument_span(tokens):
         elif token != '[' and not _packed_type_reference(token):
             return 0
         if not depth:
-            return offset if comma and _next_code_token(tokens) == '(' else 0
+            return offset if comma and _next_code_token(code) == '(' else 0
         previous = token
     return 0
 
@@ -109,5 +116,5 @@ def _packed_type_reference(token):
 
 
 def _next_code_token(tokens):
-    return next((token for token in tokens if not (
-        token.isspace() or token.startswith(('//', '/*')))), None)
+    return next((token for token in tokens
+                 if not token.startswith(('//', '/*'))), None)
