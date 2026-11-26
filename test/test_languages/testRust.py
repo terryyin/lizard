@@ -340,6 +340,218 @@ class TestRust(unittest.TestCase):
                     [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
                      for f in result])
 
+    def test_hashed_attribute_in_const_argument_keeps_the_body(self):
+        attributes = (
+            r'#[doc = r#"quoted \" and ] or {"#]',
+            '''#[cfg_attr(all(), doc = r##"literal "# and ]
+                    more { documentation"##)]''',
+        )
+        for attribute in attributes:
+            with self.subTest(attribute=attribute):
+                result = get_rust_function_list('''struct Tag<const N: usize>;
+
+                fn header(present: bool) -> Tag<{
+                    %s
+                    { 1 }
+                }> {
+                    if present { Tag } else { Tag }
+                }
+
+                fn sibling() {}
+                ''' % attribute)
+                end = 8 + attribute.count('\n')
+                self.assertEqual(
+                    [('header', 3, end, 2), ('sibling', end + 2, end + 2, 1)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in result])
+
+    def test_split_attribute_in_const_argument_keeps_the_body(self):
+        for documentation in ('"a } in the docs"', 'r#"a } in the docs"#',
+                              'stringify!({ [Tag]; } > { Tag })'):
+            with self.subTest(documentation=documentation):
+                result = get_rust_function_list('''struct Tag<const N: usize>;
+
+                fn header(present: bool) -> Tag<{
+                    #[cfg_attr(
+                        all(),
+                        doc = %s
+                    )]
+                    { 1 }
+                }> {
+                    if present { Tag } else { Tag }
+                }
+
+                fn sibling() {}
+                ''' % documentation)
+                self.assertEqual(
+                    [('header', 3, 11, 2), ('sibling', 13, 13, 1)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in result])
+
+    def test_raw_attribute_leaves_the_inline_item_visible(self):
+        cases = (
+            ('''#[doc = r#"First paragraph with a ].
+Second paragraph."#] pub fn documented(yes: bool) { if yes {} }
+
+pub fn sibling() {}''', [('documented', 2, 2, 2), ('sibling', 4, 4, 1)]),
+            ('''pub struct Settings;
+impl Settings {
+    #[doc = r#"A configured value.
+    This value is cheap to read."#] pub fn load(reload: bool) {
+        if reload {}
+    }
+
+    pub fn sibling() {}
+}''', [('load', 4, 6, 2), ('sibling', 8, 8, 1)]),
+        )
+        for source, expected in cases:
+            with self.subTest(source=source):
+                self.assertEqual(
+                    expected,
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in get_rust_function_list(source)])
+
+    def test_nested_doc_attributes_keep_signature_boundaries(self):
+        cases = (
+            ('''pub struct Tag<const N: usize>;
+
+pub fn header(present: bool) -> Tag<{
+    #[doc = stringify!(
+        #[allow(dead_code)])]
+    let value = 1;
+    value
+}> {
+    if present { Tag } else { Tag }
+}
+pub fn sibling() {}''', [('header', 3, 10, 2), ('sibling', 11, 11, 1)]),
+            ('''pub struct Tag;
+macro_rules! result_type {
+    ($($t:tt)*) => { Tag };
+}
+pub fn header(present: bool) -> result_type!(
+    #[doc = stringify!(
+        #[doc = r#"] ["#])]
+) {
+    if present { Tag } else { Tag }
+}
+pub fn sibling() {}''', [('header', 5, 10, 2), ('sibling', 11, 11, 1)]),
+        )
+        for source, expected in cases:
+            with self.subTest(source=source):
+                self.assertEqual(
+                    expected,
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in get_rust_function_list(source)])
+
+    def test_split_doc_value_keeps_the_following_items(self):
+        for return_type in ('', ' -> Vec<'):
+            with self.subTest(return_type=return_type):
+                result = get_rust_function_list('''#[doc = stringify!(
+    #[allow(dead_code)] fn template()%s
+)]
+pub fn documented(flag: bool) { if flag {} }
+pub fn sibling() {}''' % return_type)
+                self.assertEqual(
+                    [('documented', 4, 4, 2), ('sibling', 5, 5, 1)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in result])
+
+    def test_split_doc_value_does_not_count_example_code(self):
+        result = get_rust_function_list('''fn outer(flag: bool) {
+    #[doc = stringify!(
+        #[allow(dead_code)] fn template() { if true {} }
+    )]
+    fn actual(flag: bool) { if flag {} }
+    if flag { actual(flag); }
+}
+fn sibling() {}''')
+        self.assertEqual(
+            [('actual', 5, 5, 2), ('outer', 1, 7, 2), ('sibling', 8, 8, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_split_doc_value_with_raw_attribute_name_keeps_items(self):
+        result = get_rust_function_list('''#[r#doc = stringify!(
+    #[allow(dead_code)] fn template() -> Vec<
+)]
+pub fn documented(flag: bool) { if flag {} }
+pub fn sibling() {}''')
+        self.assertEqual(
+            [('documented', 4, 4, 2), ('sibling', 5, 5, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_nested_attribute_preserves_the_outer_doc_boundary(self):
+        result = get_rust_function_list('''#[cfg_attr(all(), doc = stringify!(
+    #[allow(dead_code)] fn template() -> Vec<))] pub fn documented(flag: bool) { if flag {} }
+pub fn sibling() {}''')
+        self.assertEqual(
+            [('documented', 2, 2, 2), ('sibling', 3, 3, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_conditional_doc_value_keeps_executable_items(self):
+        for example in ('r#await', '# +', 'let'):
+            with self.subTest(example=example):
+                result = get_rust_function_list('''#[cfg_attr(all(), doc = stringify!(
+    %s fn template() -> Vec<
+))]
+pub fn documented(flag: bool) { if flag {} }
+pub fn sibling() {}''' % example)
+                self.assertEqual(
+                    [('documented', 4, 4, 2), ('sibling', 5, 5, 1)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in result])
+
+    def test_nested_conditional_doc_keeps_executable_items(self):
+        result = get_rust_function_list('''#[cfg_attr(all(), cfg_attr(all(), r#doc = stringify!(
+    r#await fn template() -> Vec<
+)))]
+pub fn documented(flag: bool) { if flag {} }
+pub fn sibling() {}''')
+        self.assertEqual(
+            [('documented', 4, 4, 2), ('sibling', 5, 5, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_comment_trivia_does_not_hide_a_procedural_attribute(self):
+        result = get_rust_function_list('''use thiserror::Error;
+
+#[derive(Debug, Error)]
+# // [doc = example
+[error("{}", {
+    fn describe() -> &'static str { "closed" }
+    describe()
+})]
+pub struct Closed;
+
+pub fn verify() -> String { Closed.to_string() }
+pub fn sibling() {}''')
+        self.assertEqual(
+            [('describe', 6, 6, 1), ('verify', 11, 11, 1), ('sibling', 12, 12, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_doc_values_keep_raw_literal_delimiters_opaque(self):
+        cases = (
+            '''#[doc = stringify!(
+    cr#"" ] "# "" fn fake() -> Vec<
+)]
+fn host(x: bool) { if x {} }
+fn sibling() {}''',
+            '''#[cfg_attr(all(), doc = stringify!(
+    #br#"" ] "# "" fn fake() -> Vec<
+))]
+fn host(x: bool) { if x {} }
+fn sibling() {}''',
+        )
+        for source in cases:
+            with self.subTest(source=source):
+                self.assertEqual(
+                    [('host', 4, 4, 2), ('sibling', 5, 5, 1)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in get_rust_function_list(source)])
+
     def test_nested_functions(self):
         result = get_rust_function_list('''
         fn main() {
