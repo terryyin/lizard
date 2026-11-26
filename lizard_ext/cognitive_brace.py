@@ -23,10 +23,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
 
     def __init__(self, reader, profile, gated):
         super(_BraceCounter, self).__init__(reader, profile, gated)
-        self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
-        self.actions = self._keyword_actions(profile)
-        if not profile.nesting:
-            self._process = self._process_flat
         language = reader.language_names[0]
         self.logical_statement_lines = language in ('kotlin', 'scala', 'swift')
         self.comment_line_count = 0
@@ -34,6 +30,10 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if language == 'kotlin':
             self.read_comment = reader.get_comment_from_token
             reader.get_comment_from_token = self._count_kotlin_comment
+        self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
+        self.actions = self._keyword_actions(profile)
+        if not profile.nesting:
+            self._process = self._process_flat
 
     def _process(self, token):  # pylint: disable=E0202
         if token == '?' and getattr(token, 'is_optional', False):

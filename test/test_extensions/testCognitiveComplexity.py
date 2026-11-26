@@ -564,6 +564,44 @@ def f(a):
 """))
 
 
+class TestLogicalStatementBoundaries(unittest.TestCase):
+
+    def test_kotlin_two_statements_with_a_multiline_and_sequence(self):
+        self.assertEqual([2], cogc("Permissions.kt", """
+            fun audit(enabled: Boolean, ready: Boolean, record: () -> Boolean) {
+                enabled && record()
+                    && ready
+                ready && record()
+            }"""))
+
+    def test_kotlin_block_comment_does_not_end_a_logical_sequence(self):
+        self.assertEqual([1], cogc("Permissions.kt", """
+            fun visible(enabled: Boolean, ready: Boolean, verified: Boolean, online: Boolean): Boolean =
+                enabled && ready /* The flag is combined with the test.
+                */ xor verified && online
+        """))
+
+    def test_swift_logical_sequence_before_if(self):
+        self.assertEqual([3], cogc("Permissions.swift", """
+            func visible(_ enabled: Bool, _ verified: Bool) -> Bool {
+                let ready = enabled && verified
+                if ready && enabled {
+                    return true
+                }
+                return false
+            }"""))
+
+    def test_scala_two_statements_with_a_multiline_and_sequence(self):
+        self.assertEqual([2], cogc("Permissions.scala", """
+            object Permissions {
+              def audit(enabled: Boolean, ready: Boolean, record: () => Boolean): Unit = {
+                enabled && record() &&
+                  ready
+                ready && record()
+              }
+            }"""))
+
+
 class TestOtherBraceLanguages(unittest.TestCase):
 
     def test_javascript(self):
@@ -678,44 +716,6 @@ class TestOtherBraceLanguages(unittest.TestCase):
                 } else {                    // +1
                     loop { break; }         // +2 (nesting=1)
                 }
-            }"""))
-
-
-class TestLogicalStatementBoundaries(unittest.TestCase):
-
-    def test_kotlin_two_statements_with_a_multiline_and_sequence(self):
-        self.assertEqual([2], cogc("Permissions.kt", """
-            fun audit(enabled: Boolean, ready: Boolean, record: () -> Boolean) {
-                enabled && record()
-                    && ready
-                ready && record()
-            }"""))
-
-    def test_kotlin_block_comment_does_not_end_a_logical_sequence(self):
-        self.assertEqual([1], cogc("Permissions.kt", """
-            fun visible(enabled: Boolean, ready: Boolean, verified: Boolean, online: Boolean): Boolean =
-                enabled && ready /* The flag is combined with the test.
-                */ xor verified && online
-        """))
-
-    def test_swift_logical_sequence_before_if(self):
-        self.assertEqual([3], cogc("Permissions.swift", """
-            func visible(_ enabled: Bool, _ verified: Bool) -> Bool {
-                let ready = enabled && verified
-                if ready && enabled {
-                    return true
-                }
-                return false
-            }"""))
-
-    def test_scala_two_statements_with_a_multiline_and_sequence(self):
-        self.assertEqual([2], cogc("Permissions.scala", """
-            object Permissions {
-              def audit(enabled: Boolean, ready: Boolean, record: () => Boolean): Unit = {
-                enabled && record() &&
-                  ready
-                ready && record()
-              }
             }"""))
 
 
