@@ -50,6 +50,8 @@ class JavaReader(CLikeReader):
 
     ext = ['java']
     language_names = ['java']
+    nested_structure_keywords = frozenset((
+        'if', 'else', 'for', 'while', 'do', 'try', 'catch', 'switch', 'finally'))
 
     def __init__(self, context):
         super(JavaReader, self).__init__(context)
