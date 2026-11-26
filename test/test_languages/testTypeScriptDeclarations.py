@@ -237,7 +237,7 @@ class Test_TypeScript_template_literal_types_in_declarations(unittest.TestCase):
                 functions = analyzer.analyze_source_code(
                     'a.ts', source).function_list
                 self.assertEqual(
-                    [('choose', 4, 1), ('run', 3, 2), ('*global*', 1, 0)],
+                    [('choose', 4, 3), ('run', 3, 2), ('*global*', 1, 0)],
                     [(f.name, f.cyclomatic_complexity,
                       f.cognitive_complexity) for f in functions])
 
