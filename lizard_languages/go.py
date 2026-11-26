@@ -10,6 +10,9 @@ from .go_function import (
 from .token_pattern import compiled_token_pattern
 
 
+_PARAMETER_BRACKETS = {'(': 1, ')': -1, '[': 1, ']': -1, '{': 1, '}': -1}
+
+
 class GoReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -96,11 +99,24 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
         if not self._signature_tokens:
             self._state = self._state_global
 
+    def _function_dec(self, token):
+        self._go_parameter(token)
+        if not self.br_count:
+            self.next(self._expect_function_impl)
+
+    def _go_parameter(self, token):
+        self.br_count += _PARAMETER_BRACKETS.get(token, 0)
+        if token == ',' and self.br_count > 1:
+            function = self.context.current_function
+            function.add_to_long_name(' ,')
+            function.full_parameters[-1] += ' ,'
+        elif token not in '()':
+            self.context.parameter(token)
+
     def _literal_signature(self, token):
         if self._parameter_tokens:
             self._parameter_tokens -= 1
-            if token not in '()':
-                self.context.parameter(token)
+            self._go_parameter(token)
         self._signature_tokens -= 1
         if not self._signature_tokens:
             self._state = self._expect_function_impl
