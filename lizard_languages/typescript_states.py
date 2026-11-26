@@ -26,7 +26,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._signature = False     # the "(" of _function can't open a group
         self.as_object = False
         self.as_class = False
-        self._class_body_pending = False
+        self._pending_class_bodies = 0
         self._declaration_binding = None
         self._getter_setter_prefix = None
 
@@ -159,7 +159,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             name = self.last_tokens
             if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
                 self.function_name = name
-        elif token == '<' and self._class_body_pending:
+        elif token == '<' and self._pending_class_bodies:
             self._consume_generic_type_params()
         elif token == "(":
             self._parenthesis_prefix = self._prev_token
