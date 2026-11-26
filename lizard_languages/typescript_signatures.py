@@ -17,9 +17,10 @@ CALL_TYPE_ARGUMENTS_START = _CallTypeArgumentsStart('<')
 
 
 def type_arguments_followed_by_call(tokens):
-    """Confirm an angle group without passing a property boundary."""
+    """Confirm type argument separators without passing a property boundary."""
     annotation = TypeScriptTypeAnnotationStates(None)
     consumed_type = False
+    has_separator = False
     for token in tokens:
         if token.isspace() or token.startswith(('//', '/*')):
             continue
@@ -29,10 +30,12 @@ def type_arguments_followed_by_call(tokens):
         if not consumed_type:
             return False
         if token == '>':
-            return next((item for item in tokens if not item.isspace()
-                         and not item.startswith(('//', '/*'))), None) == '('
+            return has_separator and next(
+                (item for item in tokens if not item.isspace()
+                 and not item.startswith(('//', '/*'))), None) == '('
         if token != ',':
             return False
+        has_separator = True
         annotation = TypeScriptTypeAnnotationStates(None)
         consumed_type = False
     return False
