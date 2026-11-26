@@ -220,3 +220,29 @@ function afterMarkup(bool $left, bool $right): bool {
 """)
         self.assertEqual([('render', 1, 0), ('status', 2, 1), ('afterMarkup', 2, 1)],
                          [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
+
+    def test_word_operators_skip_xml_processing_instructions(self):
+        metrics = php_metrics("""<?php
+function renderFilter(): void {
+    ?>
+    <filter><?condition enabled and visible ?></filter>
+    <?php
+}
+
+function isVisible(bool $enabled, bool $visible): bool {
+    return $enabled and $visible;
+}
+""")
+        self.assertEqual([('renderFilter', 1, 0), ('isVisible', 2, 1)],
+                         [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
+
+    def test_word_operator_can_touch_a_numeric_operand(self):
+        for expression in ('1and', '0or', '1_000and', '.5and', '1e2and', '0x1or', '0b10and', '0o7or'):
+            with self.subTest(expression=expression):
+                metrics = php_metrics(f"""<?php
+function isAvailable(bool $available): bool {{
+    return {expression} $available;
+}}
+""")
+                self.assertEqual([('isAvailable', 2, 1)],
+                                 [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
