@@ -663,6 +663,158 @@ class TestScala(unittest.TestCase):
                          [(f.name, f.end_line, f.cyclomatic_complexity)
                           for f in result])
 
+    def test_function_with_a_symbolic_name(self):
+        result = get_scala_function_list('''
+            final class Division(numerator: Int) {
+              def /%(divisor: Int): (Int, Int) =
+                (numerator / divisor, numerator % divisor)
+              def value(): Int = numerator
+            }
+            ''')
+        self.assertEqual([("/%", 3, 4, 1), ("value", 5, 5, 0)],
+                         [(f.name, f.start_line, f.end_line, f.parameter_count)
+                          for f in result])
+
+    def test_abstract_symbolic_method_keeps_following_method(self):
+        result = get_scala_function_list('''
+            trait Output {
+              def >>(path: String): Unit
+              def >>(code: Int): Int =:= Int
+              def extension(path: String): String = path.split('.').last
+            }
+            ''')
+        self.assertEqual([("extension", 5, 5)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_symbolic_method_example_in_a_string_is_literal_text(self):
+        result = get_scala_function_list('''
+            object Examples {
+              def docs(): String = """Divider operator: "
+                def /%(x: Int): Int = x
+                """
+              def follow(x: Int): Int = x
+            }
+            ''')
+        self.assertEqual([("docs", 3, 5), ("follow", 6, 6)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_symbolic_methods_inside_xml_are_scala_only_in_splices(self):
+        result = get_scala_function_list('''
+            object Template {
+              def documentation(): scala.xml.Elem =
+                <pre label="if (ready)">
+                  def /%(n: Int): Int = n
+                  <![CDATA[def /%(n: Int): Int = n]]>
+                  <!-- def /%(n: Int): Int = n -->
+                  {{ def /%(n: Int): Int = n }}
+                  <span>{def /%(n: Int): Int = n; /%(3)}</span>
+                </pre>
+              def after(): Int = 42
+            }
+            ''')
+        self.assertEqual([("/%", 9, 9), ("documentation", 3, 10), ("after", 11, 11)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_xml_patterns_keep_sibling_case_depth(self):
+        analyzer = FileAnalyzer(get_extensions(['ND']))
+        source = """
+            import scala.xml.Elem
+
+            object XmlMatchDepth {
+              def plain(node: Elem): Int = node match {
+                case <item>{ _ }</item> => 1
+                case <literal>2</literal> => 2
+                case <empty/> => 3
+                case <check>{ _ }</check> if node.label.nonEmpty => 4
+                case _ => 0
+              }
+
+              def nested(node: Elem): Int = node match {
+                case <item>{ _ }</item> => 1
+                case <box>{ _ }</box> => if (node.label == "box") 2 else 3
+                case _ => 0
+              }
+            }
+            """
+
+        functions = analyzer.analyze_source_code('XmlMatchDepth.scala', source).function_list
+
+        self.assertEqual([('plain', 1), ('nested', 2)],
+                         [(function.name, function.max_nesting_depth) for function in functions])
+
+    def test_indented_xml_match_keeps_sibling_case_depth(self):
+        analyzer = FileAnalyzer(get_extensions(['ND']))
+        source = """
+            import scala.xml.Elem
+
+            object XmlMatchIndentBody {
+              def classify(node: Elem): Int = {
+                node match
+                  case <item>{ _ }</item> => 1
+                  case <box>{ _ }</box> => 2
+                  case _ => 0
+              }
+
+              def braced(node: Elem): Int = {
+                node match {
+                  case <item>{ _ }</item> => 1
+                  case <box>{ _ }</box> => 2
+                  case _ => 0
+                }
+              }
+            }
+            """
+
+        functions = analyzer.analyze_source_code('XmlMatchIndentBody.scala', source).function_list
+
+        self.assertEqual([('classify', 1), ('braced', 1)],
+                         [(function.name, function.max_nesting_depth) for function in functions])
+
+    def test_xml_literal_keeps_ordinary_indented_match_depth(self):
+        analyzer = FileAnalyzer(get_extensions(['ND']))
+        source = """
+            object OrdinaryMatch {
+              def decide(value: Int): Int = {
+                if (value > 0)
+                  value match
+                    case 1 => { 1 }
+                    case 2 => 2
+                    case _ => 3
+                else 0
+              }
+              def xml(): scala.xml.Elem = <note/>
+            }
+            """
+
+        functions = analyzer.analyze_source_code('OrdinaryMatch.scala', source).function_list
+
+        self.assertEqual([('decide', 2), ('xml', 0)],
+                         [(function.name, function.max_nesting_depth) for function in functions])
+
+    def test_xml_match_end_marker_keeps_outer_case_depth(self):
+        analyzer = FileAnalyzer(get_extensions(['ND']))
+        source = """
+            import scala.xml.Elem
+
+            object XmlEdges {
+              def nestedEnd(node: Elem, other: Elem): Int = {
+                node match
+                  case <item>{ _ }</item> =>
+                    other match
+                      case <box>{ _ }</box> => 1
+                      case _ => 0
+                    end match
+                  case _ => if (other.label.nonEmpty) 1 else 0
+              }
+            }
+            """
+
+        functions = analyzer.analyze_source_code('XmlEdges.scala', source).function_list
+
+        self.assertEqual([('nestedEnd', 5, 13, 2)],
+                         [(function.name, function.start_line, function.end_line, function.max_nesting_depth)
+                          for function in functions])
+
     def test_hash_in_a_backtick_name_keeps_the_next_method(self):
         result = get_scala_function_list('''
             object Requests {
@@ -672,3 +824,12 @@ class TestScala(unittest.TestCase):
             ''')
         self.assertEqual([("request#42 keeps the default status", 3, 3), ("timeout", 4, 4)],
                          [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_symbolic_method_example_in_a_backtick_identifier_is_opaque(self):
+        functions = get_scala_function_list(
+            "object QuotedSymbolicText {\n"
+            "  val `sample def /%(n: Int): Int = n` = 1\n"
+            "  def after(): Int = 42\n"
+            "}\n"
+        )
+        self.assertEqual([("after", 3, 3)], [(f.name, f.start_line, f.end_line) for f in functions])
