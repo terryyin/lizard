@@ -192,3 +192,31 @@ function status() { return 'ready'; }
 """)
         self.assertEqual([('render', 2, 1), ('status', 1, 0)],
                          [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
+
+    def test_word_operator_inside_a_unicode_identifier_does_not_count(self):
+        metrics = php_metrics("""<?php
+define("RE\\u{0301}SUME\\u{0301}OR", true);
+function hasFallback(): bool {
+    return RÉSUMÉOR ? true : false;
+}
+""")
+        self.assertEqual([('hasFallback', 2, 1)],
+                         [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
+
+    def test_word_operators_resume_after_template_string(self):
+        metrics = php_metrics("""<?php
+function render(Preview $view): string {
+    return "Preview: {$view->capture(function () { ?><? echo 'preview'; ?><?php })}";
+}
+function status(bool $left, bool $right): bool {
+    return $left and $right;
+}
+?>
+<p>and or</p>
+<?php
+function afterMarkup(bool $left, bool $right): bool {
+    return $left or $right;
+}
+""")
+        self.assertEqual([('render', 1, 0), ('status', 2, 1), ('afterMarkup', 2, 1)],
+                         [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
