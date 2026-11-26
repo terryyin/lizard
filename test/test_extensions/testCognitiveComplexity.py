@@ -1007,6 +1007,42 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
                 with self.subTest(expression=expression, suffix=suffix):
                     self.assertEqual([1], cogc(f'compare.{suffix}', source))
 
+    def test_runtime_groups_in_template_comparisons_keep_their_decisions(self):
+        expressions = (
+            "low < `${(class<T extends unknown> extends Base {} ? 'yes' : 'no')}` >\n high",
+            "`${low < `${(class<T extends unknown> extends Base {} ? 'yes' : 'no')}` >\n high}`",
+            "`${low < (enabled ? `${word}` : 'no') >\n high}`",
+            "`${low < (enabled && `${word}`) >\n high}`",
+        )
+        for expression in expressions:
+            runtime = ('class Base {}\nfunction compare(low, high, enabled, word) {'
+                       f'return {expression.replace("<T extends unknown>", "")}; }}')
+            self.assertEqual([1], cogc('compare.js', runtime))
+            source = ('class Base {}\nfunction compare('
+                      'low: any, high: any, enabled: boolean, word: string) {'
+                      f'return {expression}; }}')
+            for suffix in ('ts', 'tsx'):
+                with self.subTest(expression=expression, suffix=suffix):
+                    self.assertEqual([1], cogc(f'compare.{suffix}', source))
+
+    def test_template_type_after_comparisons_is_independent_of_padding(self):
+        prefix = 'read() < (' * 8 + 'read()' + ')' * 8
+        erased = (
+            'const format = (value) => value;\n'
+            f'function probe(read) {{ return `${{({prefix}, format("yes"))}}`; }}'
+        )
+        self.assertEqual([0, 0], cogc('probe.js', erased))
+        for suffix in ('ts', 'tsx'):
+            for spaces in (0, 129, 130, 134, 135, 1000):
+                with self.subTest(suffix=suffix, spaces=spaces):
+                    source = (
+                        'const format = <T,>(value: string) => value;\n'
+                        'function probe<T>(read: () => number) { return `${('
+                        f'{prefix}, format<`${{T extends true ? "yes" : "no"}}`>("yes"))'
+                        + ' ' * spaces + '}`; }'
+                    )
+                    self.assertEqual([0, 0], cogc(f'probe.{suffix}', source))
+
     def test_template_statement_after_a_type_alias(self):
         source = """
             function label(value: boolean) {
