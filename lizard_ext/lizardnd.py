@@ -96,8 +96,9 @@ class LizardExtension(object):  # pylint: disable=R0903
                 elif token in loops and token not in ('&&', '||') \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
-                    l_depth = context.open_level(
-                        token if keep_condition and token in _CONTROL_HEADERS else None)
+                    l_depth = (context.open_control_level(token)
+                               if keep_condition and token in _CONTROL_HEADERS
+                               else context.open_level())
 
                 if token in block_starts:
                     context.open_block(opens_lambda)
@@ -127,13 +128,9 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.prev_was_else = False
         self.reset_condition_tracking()
 
-    def open_level(self, header=None):
+    def open_level(self):
         """A structure opens a level that its body will close."""
-        function = self.current_function
-        function.levels_awaiting_body += 1
-        if header is not None:
-            function.control_header_depth = function.condition_depth
-            function.in_control_header = header in ('if', 'while')
+        self.current_function.levels_awaiting_body += 1
         return self.add_nd_condition()
 
     def open_block(self, opens_lambda=False):
@@ -215,6 +212,13 @@ class NDFileInfoAddition(FileInfoBuilder):
             if enclosing.condition_depth > 0:
                 enclosing.condition_depth -= 1
                 _close_logical_condition(enclosing)
+
+    def open_control_level(self, header):
+        """Open a control header whose body can contain expression braces."""
+        function = self.current_function
+        function.control_header_depth = function.condition_depth
+        function.in_control_header = header in ('if', 'while')
+        return self.open_level()
 
     def get_condition_depth(self):
         return self.current_function.condition_depth
