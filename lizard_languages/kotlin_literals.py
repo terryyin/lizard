@@ -17,6 +17,7 @@ _EXPRESSION_MARK = re.compile(_CODE_MARKS + r'|[{}]', re.S)
 _RAW_MARK = re.compile(r'"{3,}|\$+')
 _LINE_MARK = re.compile(r'\\.|"|\$+', re.S)
 _COMMENT_MARK = re.compile(r'/\*|\*/')
+_TYPE_TRIVIA = re.compile(r'\s*(/\*|//[^\r\n]*|:)')
 
 
 class TemplateTokens(chain):  # pylint: disable=R0903
@@ -70,6 +71,11 @@ def literal_tokens(source, addition):
             break
         mark = opening.group()
         pos = opening.end()
+        if mark[0] == '`' and _type_follows_block_comment(source, pos):
+            yield from tokens_in_span(pattern, source, code_start, opening.start())
+            yield mark
+            code_start = pos
+            continue
         if mark != '/*' and not mark.startswith(('"', '$')):
             continue
         yield from tokens_in_span(pattern, source, code_start, opening.start())
@@ -80,6 +86,20 @@ def literal_tokens(source, addition):
             pos = yield from _string_tokens(source, opening, pattern)
         code_start = pos
     yield from tokens_in_span(pattern, source, code_start, len(source))
+
+
+def _type_follows_block_comment(source, pos):
+    # A block comment can end the code span before the type colon.
+    has_block_comment = False
+    while match := _TYPE_TRIVIA.match(source, pos):
+        token = match.group(1)
+        if token == ':':
+            return has_block_comment
+        pos = match.end()
+        if token == '/*':
+            has_block_comment = True
+            pos = _block_comment_end(source, pos)
+    return False
 
 
 def _string_mode(opening, start):
