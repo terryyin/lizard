@@ -113,10 +113,10 @@ class _Counter(object):  # pylint: disable=R0902
                 in_brackets = (candidates and
                                len(self.openers) >= candidates[-1].depth)
                 read = token
-                if token in _BRACKETS:
-                    function, token = self._route(function, token)
-                elif token == ':' and getattr(token, 'ends_arrow_body', False):
+                if token == ':' and getattr(token, 'ends_arrow_body', False):
                     function = context.stacked_functions[-1]
+                elif token in _BRACKETS:
+                    function, token = self._route(function, token)
                 held = candidates and self._involved(function)
                 if held:
                     self._hold(function, token)

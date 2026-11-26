@@ -174,6 +174,20 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             return True
         return False
 
+    def _conditional_alternate(self):
+        """Close complete conditionals in the current true arm."""
+        state = self.state
+        frames = state.frames
+        for index in range(len(frames) - 1, -1, -1):
+            frame = frames[index]
+            if (frame.kind != 'ternary' or frame.pdepth != state.pdepth
+                    or frame.depth != state.depth):
+                return
+            if not frame.conditional_alternate:
+                del frames[index + 1:]
+                frame.conditional_alternate = True
+                return
+
     def _bind(self, kinds):
         """Pop the innermost finished frame of the given kinds, and the
         finished frames above it.  Returns False if there is none."""
@@ -252,17 +266,3 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     def _semicolon(self):
         if not self.state.pdepth:
             self._statement_end()
-
-    def _conditional_alternate(self):
-        """Close complete conditionals in the current true arm."""
-        state = self.state
-        frames = state.frames
-        for index in range(len(frames) - 1, -1, -1):
-            frame = frames[index]
-            if (frame.kind != 'ternary' or frame.pdepth != state.pdepth
-                    or frame.depth != state.depth):
-                return
-            if not frame.conditional_alternate:
-                del frames[index + 1:]
-                frame.conditional_alternate = True
-                return
