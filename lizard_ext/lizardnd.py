@@ -115,7 +115,7 @@ def _python_depth(tokens, reader):
         yield token
 
 
-class _PythonDepth:  # pylint: disable=R0903
+class _PythonDepth:  # pylint: disable=R0902,R0903
     """Track Python suites and the expressions that run inside them."""
 
     def __init__(self, reader):
@@ -124,6 +124,8 @@ class _PythonDepth:  # pylint: disable=R0903
         self.last_line = None
         self.statement_start = True
         self.in_header = False
+        self.header_logic = False
+        self.word_expression = None
         self.declaring_function = None
         self.expressions = [_PythonExpression()]
 
@@ -146,6 +148,8 @@ class _PythonDepth:  # pylint: disable=R0903
             depth = _increase_python_depth(function)
             function.block_levels.append((self.context.current_nesting_level, depth))
             self.in_header = True
+        elif token in self.reader.logical_operators and self.word_expression is None:
+            self._add_word_level(function)
         elif token in ('if', 'for'):
             self.expressions[-1].add_decision(function, token)
         self.statement_start = False
@@ -162,15 +166,29 @@ class _PythonDepth:  # pylint: disable=R0903
         self._end_expression(function)
         self.statement_start = True
 
+    def _add_word_level(self, function):
+        _increase_python_depth(function)
+        self.word_expression = self.expressions[-1]
+        if self.in_header and not self.header_logic:
+            indent, depth = function.block_levels[-1]
+            function.block_levels[-1] = (indent, depth + 1)
+            self.header_logic = True
+
     def _read_delimiter(self, function, token):
         expression = self.expressions[-1]
         if token in ('(', '[', '{'):
             self.expressions.append(_PythonExpression())
         elif token in (')', ']', '}') and len(self.expressions) > 1:
             self.expressions.pop().finish(function)
-            self.expressions[-1].include_group(expression.peak)
+            parent = self.expressions[-1]
+            parent.include_group(expression.peak)
+            if self.word_expression is expression:
+                self.word_expression = parent
         elif token == ',' and not expression.comprehension and not expression.lambda_heads:
             expression.finish(function)
+            if self.word_expression is expression:
+                function.nesting_depth -= 1
+                self.word_expression = None
         elif token == 'else':
             expression.prefix = 0
         elif token == 'lambda':
@@ -187,6 +205,8 @@ class _PythonDepth:  # pylint: disable=R0903
         function.nesting_depth = suites[-1][1] if suites else 0
         self.expressions = [_PythonExpression()]
         self.in_header = False
+        self.header_logic = False
+        self.word_expression = None
 
 
 class _PythonExpression:
