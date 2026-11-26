@@ -10,9 +10,6 @@ from .go_function import (
 from .token_pattern import compiled_token_pattern
 
 
-_PARAMETER_BRACKETS = {'(': 1, ')': -1, '[': 1, ']': -1, '{': 1, '}': -1}
-
-
 class GoReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -54,6 +51,8 @@ class GoReader(CodeReader, CCppCommentsMixin):
 
 class GoStates(GoLikeStates):  # pylint: disable=R0903
     """Distinguish declarations, literals and function types before opening one."""
+
+    _PARAMETER_BRACKETS = {'(': 1, ')': -1, '[': 1, ']': -1, '{': 1, '}': -1}
 
     def _state_global(self, token):
         if token == 'func':
@@ -105,7 +104,7 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
             self.next(self._expect_function_impl)
 
     def _go_parameter(self, token):
-        self.br_count += _PARAMETER_BRACKETS.get(token, 0)
+        self.br_count += self._PARAMETER_BRACKETS.get(token, 0)
         if token == ',' and self.br_count > 1:
             function = self.context.current_function
             function.add_to_long_name(' ,')
