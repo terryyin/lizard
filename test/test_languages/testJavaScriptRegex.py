@@ -330,6 +330,32 @@ class TestJavaScriptRegex(unittest.TestCase):
             (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
             for f in functions])
 
+    def test_delegated_yield_regex_preserves_following_functions(self):
+        source = '''
+function* delegation() {
+  yield* yield /["]?colou?r/;
+}
+function next() {
+  return "ok";
+}
+function multiply(yield, scale) {
+  return yield * yield / (scale || 1) / 100;
+}
+'''
+        self.assert_functions(source, [('delegation', 2, 4, 1), ('next', 5, 7, 1),
+                                       ('multiply', 8, 10, 2)], extensions=('js',))
+
+    def test_generator_yield_after_a_typescript_instantiation(self):
+        source = '''
+declare function parse<T>(): T;
+
+export function* afterInstantiation() {
+  parse<number>
+  yield /colou?r/;
+}
+'''
+        self.assert_functions(source, [('afterInstantiation', 4, 7, 1)], extensions=('ts',))
+
     def test_return_regex_exposes_following_condition(self):
         source = (
             'function a(s) { return /#/.test(s) || s === 1; }\n'
