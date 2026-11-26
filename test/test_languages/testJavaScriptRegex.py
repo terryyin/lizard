@@ -75,6 +75,35 @@ class TestJavaScriptRegex(unittest.TestCase):
         )
         self.assert_functions(source, [('a', 1, 7, 2), ('b', 8, 8, 1)])
 
+    def test_regex_literals_as_right_operands(self):
+        source = '''\
+function isInPrefix(label, offset) {
+  return offset >= 0 && offset < /^[a-z]+ ?/i.exec(label)?.[0].length;
+}
+function exceedsPrefix(label, offset) {
+  return offset > /^[a-z]+ ?/i.exec(label)?.[0].length;
+}
+function averageWords(length, label, fallback) {
+  return length / /^[a-z]+ ?/i.exec(label)?.[0].length || fallback;
+}
+'''
+        for suffix in ('js', 'cjs', 'mjs'):
+            with self.subTest(suffix=suffix):
+                functions = analyze_file.analyze_source_code('label.' + suffix, source).function_list
+                self.assertEqual(
+                    [('isInPrefix', 2, 27), ('exceedsPrefix', 1, 23), ('averageWords', 2, 27)],
+                    [(f.name, f.cyclomatic_complexity, f.token_count) for f in functions])
+
+    def test_division_after_a_generic_type_assertion(self):
+        source = '''\
+type Unit<T> = number;
+function proportion(total: number, scale: number) {
+  return total as Unit<'cent'> / (scale || 1) / 100;
+}
+'''
+        function, = analyze_file.analyze_source_code('amount.ts', source).function_list
+        self.assertEqual((2, 27), (function.cyclomatic_complexity, function.token_count))
+
     def test_whitespace_before_regex_preserves_lines(self):
         source = (
             'function a(x) {\n'
