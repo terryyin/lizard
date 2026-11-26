@@ -310,10 +310,8 @@ class _Counter(object):  # pylint: disable=R0902
                     self.profile.reserved_structures
                     and self._is_structure(token))
             if calls:
-                if (not self.php_member_access or state.prev in self.php_member_access
-                        or '::' not in function.name):
-                    state.pending_call = True
-                    state.pending += 1
+                state.pending_call = True
+                state.pending += 1
         if token in self.profile.jumps and \
                 not getattr(token, 'is_member_name', False):
             state.pending_jump_line = self.line
@@ -324,7 +322,16 @@ class _Counter(object):  # pylint: disable=R0902
         return (token in profile.ifs or token in profile.loops
                 or token in profile.switches or token in profile.catches)
 
+    def _discard_bare_php_method_call(self):
+        state = self.state
+        if (state.pending_call and state.prev2 not in self.php_member_access
+                and '::' in self.function.name):
+            state.pending_call = False
+            state.pending -= 1
+
     def _resolve_pending(self, token):
+        if self.php_member_access:
+            self._discard_bare_php_method_call()
         state = self.state
         if state.pending_call:
             state.pending_call = False
