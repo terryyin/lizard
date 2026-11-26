@@ -6,11 +6,6 @@ from .cognitive_counter import (
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 
 
-# These infix tokens need an operand on each side. A bare '>' can also end
-# TypeScript type arguments, so it cannot supply the same guarantee.
-_JS_INFIX_CONTINUATIONS = frozenset(('&&', '||', '??', '==', '!=', '===', '!==', '<=', '>='))
-
-
 class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     """Nesting from braces, parentheses and semicolons (C-like languages).
 
@@ -19,6 +14,9 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     token before its frame is popped, so that ``else``, ``catch``,
     ``finally`` and the ``while`` of a ``do`` bind to the right structure.
     """
+
+    # A bare '>' can also end TypeScript type arguments.
+    _JS_INFIX_CONTINUATIONS = frozenset(('&&', '||', '??', '==', '!=', '===', '!==', '<=', '>='))
 
     def __init__(self, reader, profile, gated):
         super(_BraceCounter, self).__init__(reader, profile, gated)
@@ -99,8 +97,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if token in ('?', ':') or state.prev in ('?', ':'):
             return True
         return (bool(state.frames) and state.frames[-1].kind == 'ternary'
-                and (token in _JS_INFIX_CONTINUATIONS
-                     or state.prev in _JS_INFIX_CONTINUATIONS))
+                and (token in self._JS_INFIX_CONTINUATIONS
+                     or state.prev in self._JS_INFIX_CONTINUATIONS))
 
     def _top_structure(self):
         for frame in reversed(self.state.frames):
