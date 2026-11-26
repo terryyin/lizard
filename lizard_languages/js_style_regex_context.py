@@ -4,7 +4,7 @@ import re
 
 # A dot touches the digits of a decimal integer. A dot after a fraction,
 # an exponent or an identifier names a member instead.
-_DECIMAL_DOT = re.compile(r'(?<![\w$.])(?<![eE][+-])(?:0|[1-9](?:_?[0-9])*)\.')
+_DECIMAL_DOT = re.compile(r'(?:0|[1-9](?:_?[0-9])*)\.')
 
 # One literal grammar shared with balanced template scanning; context decides
 # whether a slash opens that literal or remains division.
@@ -139,4 +139,35 @@ def _is_property_before(source, i):
     start = j
     while start and source[start - 1] in '0123456789_':
         start -= 1
-    return _DECIMAL_DOT.fullmatch(source, start, j + 1) is None
+    if _DECIMAL_DOT.fullmatch(source, start, j + 1) is None:
+        return True
+    if not _separate_decimal(source, start):
+        return True
+    return _follows_exponent_sign(source, start)
+
+
+def _separate_decimal(source, start):
+    if not start:
+        return True
+    before = source[start - 1]
+    if before.isalnum() or before in '_$.':
+        return False
+    if not before.isascii():
+        return before.isspace() or before == '\ufeff'
+    if before == '}':
+        # An escape at the end of an identifier can precede these digits.
+        escape = start - 2
+        while escape >= 0 and source[escape] in '0123456789abcdefABCDEF':
+            escape -= 1
+        if escape < start - 2 and escape >= 2 and source.startswith(r'\u{', escape - 2):
+            return False
+    return True
+
+
+def _follows_exponent_sign(source, start):
+    if start < 3 or source[start - 1] not in '+-' or source[start - 2] not in 'eE':
+        return False
+    mantissa = start - 2
+    while mantissa and source[mantissa - 1] in '0123456789_.':
+        mantissa -= 1
+    return mantissa < start - 2 and _separate_decimal(source, mantissa)
