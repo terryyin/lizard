@@ -40,11 +40,13 @@ class LizardExtension(object):  # pylint: disable=R0903
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
+        go_if = 'go' in getattr(reader, 'language_names', ())
+        if go_if:
+            from .nd_go import end_go_statement, go_nesting_tokens
+
+            tokens = go_nesting_tokens(tokens, reader)
         block_starts = getattr(reader, "block_starts", ('{',))
-        if hasattr(reader, "indent_indicator"):
-            indent_indicator = reader.indent_indicator
-        else:
-            indent_indicator = ';'
+        indent_indicator = getattr(reader, 'indent_indicator', ';')
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
@@ -96,7 +98,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     context.open_block()
                 if token == indent_indicator and \
                         context.get_condition_depth() == 0:
-                    l_depth = context.end_statement()
+                    l_depth = end_go_statement(context) if go_if else context.end_statement()
             if l_depth < 0:
                 l_depth = 0
                 context.reset_nd_complexity()
@@ -116,17 +118,45 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.nesting_depth = 0
         self.current_function.levels_awaiting_body = 0
         self.current_function.block_levels = []
+        self.current_function.go_if_levels = None
+        self.current_function.go_initializer = False
+        self.current_function.go_statement_logical_levels = 0
         self.current_function.prev_was_else = False
         self.reset_condition_tracking()
 
     def open_level(self):
         """A structure opens a level that its body will close."""
-        self.current_function.levels_awaiting_body += 1
+        function = self.current_function
+        if function.go_starts_if:
+            # The if starts after the preceding expression.
+            logical_levels = function.go_statement_logical_levels
+            if logical_levels:
+                function.levels_awaiting_body -= logical_levels
+                self.add_nd_condition(-logical_levels)
+                function.go_statement_logical_levels = 0
+            function.in_condition = True
+            function.go_if_levels = function.levels_awaiting_body + 1
+            function.logical_operator_added = False
+        function.levels_awaiting_body += 1
         return self.add_nd_condition()
 
     def open_block(self):
         """The block takes over the levels awaiting their body."""
         function = self.current_function
+        if function.go_if_levels is not None:
+            if (function.go_composite_literal_brace or
+                    (function.block_levels and
+                     function.block_levels[-1] is False)):
+                # False is a distinct zero-level marker for a literal block.
+                function.block_levels.append(False)
+                return
+            if function.condition_depth or function.go_initializer:
+                # An initializer still needs its semicolon before the if body.
+                function.block_levels.append(0)
+                return
+            function.go_if_levels = None
+            self.reset_condition_tracking()
+        function.go_statement_logical_levels = 0
         function.block_levels.append(function.levels_awaiting_body)
         function.levels_awaiting_body = 0
 
@@ -152,13 +182,14 @@ class NDFileInfoAddition(FileInfoBuilder):
         function = self.current_function
         function.in_condition = True
         function.condition_depth += 1
-        function.logical_operator_added = False
+        if function.go_if_levels is None:
+            function.logical_operator_added = False
 
     def close_condition(self):
         """A ")" closes a level, and the condition with its last level."""
         self.decrement_condition_depth()
         function = self.current_function
-        if function.condition_depth == 0:
+        if function.condition_depth == 0 and function.go_if_levels is None:
             function.in_condition = False
             function.logical_operator_added = False
 
@@ -175,7 +206,7 @@ class NDFileInfoAddition(FileInfoBuilder):
             enclosing = self.stacked_functions[-1]
             if enclosing.condition_depth > 0:
                 enclosing.condition_depth -= 1
-                if enclosing.condition_depth == 0:
+                if enclosing.condition_depth == 0 and enclosing.go_if_levels is None:
                     enclosing.in_condition = False
                     enclosing.logical_operator_added = False
 
@@ -230,6 +261,11 @@ def patch_append_method(frm, accept_class, method_name):
 
 def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
+    self.go_if_levels = None
+    self.go_initializer = False
+    self.go_starts_if = False
+    self.go_composite_literal_brace = False
+    self.go_statement_logical_levels = 0
     self.max_nesting_depth = 0
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close

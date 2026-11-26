@@ -6,7 +6,8 @@ from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
 from .go_function import (
-    GoToken, function_signature, starts_declaration, variable_declaration)
+    CompositeLiteralBrace, GoToken, composite_literal_braces, composite_literal_starts,
+    function_signature, starts_declaration, variable_declaration)
 from .token_pattern import compiled_token_pattern
 
 
@@ -25,6 +26,8 @@ class GoReader(CodeReader, CCppCommentsMixin):
         addition += r"|`[^`]*`"
         pattern = compiled_token_pattern(addition)
 
+        literal_braces = set()
+        last_token = None
         for match in pattern.finditer(source_code):
             token = token_class(match) if token_class else match.group(0)
             if token == 'func':
@@ -36,6 +39,14 @@ class GoReader(CodeReader, CCppCommentsMixin):
                 declaration = variable_declaration(
                     pattern.finditer(source_code, match.end()))
                 token = GoToken(token, declaration)
+            elif composite_literal_starts(token, last_token):
+                literal_braces.update(composite_literal_braces(
+                    pattern.finditer(source_code, match.start())))
+            elif token == '{' and match.start() in literal_braces:
+                literal_braces.remove(match.start())
+                token = CompositeLiteralBrace(token)
+            if not token.isspace() and not token.startswith(('//', '/*')):
+                last_token = token
             yield token
 
     def __call__(self, tokens, reader):

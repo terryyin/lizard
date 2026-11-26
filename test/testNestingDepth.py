@@ -231,6 +231,124 @@ class TestCppNestingDepth(unittest.TestCase):
         self.assertEqual(2, result[0].max_nesting_depth)
 
 
+class TestGoNestingDepth(unittest.TestCase):
+
+    def test_if_test_keeps_composite_types_and_comparison_operands(self):
+        code = """
+        package work
+
+        func fromMap(ready, cached, enabled, online bool, key string) {
+            if map
+                [string]bool{key: ready && cached}[key] && enabled {
+                if online { println(key) }
+            }
+        }
+        func fromStruct(ready, cached, enabled, online bool) {
+            if struct{ active bool }{active: ready && cached}.active && enabled {
+                if online { println("online") }
+            }
+        }
+        func samePlans(ready, cached, enabled, online bool) {
+            if [1]bool{true} == [1]bool{ready && cached} && enabled {
+                if online { println("online") }
+            }
+        }
+        """
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'work.go', code).function_list
+        self.assertEqual([('fromMap', 3), ('fromStruct', 3), ('samePlans', 3)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_if_body_starts_after_boolean_composite_literal(self):
+        code = """
+        package work
+
+        func allowed(a, b, c, fallback, cached bool) bool {
+            if []bool{a && b, c}[0] && fallback {
+                if cached { return true }
+            }
+            return false
+        }
+
+        func allowedAt(a, b, c, fallback, cached bool) bool {
+            if slot := 0; [2]bool{a && b, c}[slot] && fallback {
+                if cached { return true }
+            }
+            return false
+        }
+
+        func allowedBy(a, b, c, cached bool) bool {
+            if a && []struct{ Ready bool }{{b && c}}[0].Ready {
+                if cached { return true }
+            }
+            return false
+        }
+        """
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'work.go', code).function_list
+        self.assertEqual([('allowed', 3), ('allowedAt', 3), ('allowedBy', 3)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_if_initializer_keeps_only_its_own_levels(self):
+        code = """
+        package work
+
+        func notify(events chan<- bool, active, verified, cached bool) bool {
+            select {
+            case events <- true:
+            default:
+            }
+            if ready := active; ready && verified {
+                if cached { return true }
+            }
+            return false
+        }
+
+        func choose(active, verified, cached bool) bool {
+            earlier := active && verified
+            if ready := cached; ready {
+                if active { return true }
+            }
+            return earlier
+        }
+
+        func chooseSlice(active, checked, verified, cached bool) bool {
+            if cfg := []bool{active}; cfg[0] && (checked || verified) && cached {
+                if checked { return true }
+            }
+            return false
+        }
+        """
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'work.go', code).function_list
+        self.assertEqual([('notify', 3), ('choose', 2), ('chooseSlice', 3)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_if_condition_keeps_one_logical_level(self):
+        code = """
+        package work
+        type Job struct { Active, Enabled bool }
+
+        func schedule(jobs []Job, cached, forced bool) bool {
+            if len(jobs) > 0 && (jobs[0].Active || cached) && forced {
+                return true
+            }
+            return false
+        }
+
+        func scheduleFirst(jobs []Job, cached, forced bool) bool {
+            if first := jobs[0]; (first.Active && first.Enabled) || cached && forced {
+                if first.Enabled { return true }
+            }
+            return false
+        }
+        """
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'work.go', code).function_list
+        self.assertEqual([('schedule', 2), ('scheduleFirst', 3)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
+
 class TestJavaScriptNestingDepth(unittest.TestCase):
 
     def test_sibling_braceless_ifs_do_not_nest(self):
