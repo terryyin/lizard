@@ -2,6 +2,8 @@
 Language parser for Lua
 '''
 
+import re
+
 from .rubylike import RubylikeReader, RubylikeStateMachine
 from .token_pattern import compiled_token_pattern, tokens_in_span
 
