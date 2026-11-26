@@ -159,3 +159,36 @@ class Test_Python_fstring_complexity(unittest.TestCase):
         tokens = list(PythonReader.generate_tokens(
             'f"status: {value}"', token_class=lambda match: match.group().upper()))
         self.assertEqual(['F', '"STATUS: "', 'VALUE'], tokens)
+
+    def test_token_factory_transforms_nested_quoted_tokens_in_order(self):
+        from lizard_languages.python import PythonReader
+
+        calls = []
+
+        def rename_label(match):
+            text = match.group()
+            calls.append((text, match.span()))
+            return text.replace('ready', 'available') if text.startswith("'") else text
+
+        tokens = list(PythonReader.generate_tokens(
+            'f"{f\'{ready}\'}"', token_class=rename_label))
+
+        self.assertEqual(['f', 'f', 'available'], tokens)
+        self.assertEqual([
+            ('f', (0, 1)), ('"{f\'{ready}\'}"', (1, 15)),
+            ('f', (0, 1)), ("'{ready}'", (1, 10)), ('available', (0, 9)),
+        ], calls)
+
+    def test_token_factory_can_replace_an_fstring_prefix(self):
+        from lizard_languages.python import PythonReader
+
+        def replace_prefix(match):
+            text = match.group()
+            return 'prefix' if text == 'f' else text
+
+        for source, expected in (
+                ('f"{ready}"', ['prefix', '"{ready}"']),
+                ('F"{f\'{ready}\'}"', ['F', 'prefix', "'{ready}'"])):
+            with self.subTest(source=source):
+                tokens = list(PythonReader.generate_tokens(source, token_class=replace_prefix))
+                self.assertEqual(expected, tokens)
