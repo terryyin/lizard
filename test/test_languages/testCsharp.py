@@ -481,6 +481,66 @@ class Labels
         self.assertEqual(4, build.cyclomatic_complexity)
         self.assertEqual([['?', 6], ['?', 7], ['??', 7]], build.complex_tags)
 
+    def test_expression_method_ends_after_the_outer_semicolon(self):
+        source = """
+using System;
+class Job
+{
+    static Func<string> Render(string[] labels) => () =>
+    {
+        return $@"{string.Join("item{", labels)}";
+    };
+    static int Read() => 1;
+    static int Count() { return 2; }
+}
+"""
+        functions = get_csharp_function_list(source)
+        self.assertEqual([
+            ('Job::Render', 5, 8), ('Job::Read', 9, 9), ('Job::Count', 10, 10),
+        ], [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_expression_object_initializer_does_not_emit_global_function(self):
+        source = """
+class Job
+{
+    int Count;
+    Job Copy() => new Job { Count = Count };
+    int Read() => Count;
+}
+"""
+        functions = get_csharp_function_list(source)
+        self.assertEqual([('Job::Copy', 5, 5), ('Job::Read', 6, 6)], [
+            (f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_expression_property_does_not_report_object_constructor_call(self):
+        source = """
+class Job
+{
+    int Count;
+    Job Copy => new Job() { Count = Count };
+    int Read() => Count;
+}
+"""
+        functions = get_csharp_function_list(source)
+        self.assertEqual([('Job::Read', 6, 6)], [
+            (f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_expression_method_after_generic_constraint_keeps_its_name(self):
+        source = """
+class Labels
+{
+    string Label<T>(T item) where T : class => item switch
+    {
+        null => "missing",
+        _ => nameof(T)
+    };
+    int Read() => 1;
+}
+"""
+        functions = get_csharp_function_list(source)
+        self.assertEqual([('Labels::Label<T>', 4, 8), ('Labels::Read', 9, 9)], [
+            (f.name, f.start_line, f.end_line) for f in functions])
+
     def test_nullable_generic_local_return_type_is_not_a_condition(self):
         source = """
 #nullable enable
