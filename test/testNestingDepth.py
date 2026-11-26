@@ -688,3 +688,21 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             filename, code).function_list
         return result[0].max_nesting_depth
+
+
+class TestKotlinNestingDepth(unittest.TestCase):
+
+    def test_nullable_types_do_not_add_depth(self):
+        code = """
+        fun estimatedTotal(values: List<Int>?): Int {
+            if (values == null) return 0
+            return values.sum()
+        }
+        fun label(value: Any?): String? {
+            return value as? String ?
+        }
+        """
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            "report.kt", code).function_list
+        self.assertEqual([('estimatedTotal', 1), ('label', 0)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
