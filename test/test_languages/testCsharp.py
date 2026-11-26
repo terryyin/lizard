@@ -369,6 +369,24 @@ class Labels
         render, = get_csharp_function_list(source)
         self.assertEqual((4, 11, 6), (render.start_line, render.end_line, render.nloc))
 
+    def test_csharp_line_endings_end_comments_inside_and_outside_interpolation(self):
+        source = '''class Labels
+{
+    static string Render(bool ready)
+    {
+        return $"{( // Choose a label.<newline>ready ? "{" : "}")}";
+    }
+    // Keep the following method visible.<newline>static int Next() { return 1; }
+}'''
+        for ending in ('\n', '\r\n', '\r', '\x85', '\u2028', '\u2029'):
+            with self.subTest(ending=repr(ending)):
+                functions = get_csharp_function_list(source.replace('<newline>', ending))
+                self.assertEqual([
+                    ('Labels::Render', 3, 7, 2, 5),
+                    ('Labels::Next', 9, 9, 1, 1),
+                ], [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity, f.nloc)
+                    for f in functions])
+
     def test_nested_interpolation_keeps_following_method(self):
         source = """
 using System;
