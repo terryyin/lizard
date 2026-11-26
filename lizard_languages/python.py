@@ -104,6 +104,61 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         return False  # Continue with normal processing
 
     def _soft_keyword_lookahead(self, tokens):
+        if 'python' not in self.language_names:
+            yield from self._gdscript_soft_keyword_lookahead(tokens)
+            return
+
+        at_line_start = True
+        tokens = iter(tokens)
+        for token in tokens:
+            if token.isspace():
+                if not isinstance(token, FStringExpressionToken) and (
+                        token == '\n' or '\r' in token):
+                    at_line_start = True
+                yield token
+                continue
+            if token in ('case', 'match'):
+                if at_line_start:
+                    is_keyword, header = self._read_soft_keyword_header(tokens)
+                    self._keyword_case = is_keyword and token == 'case'
+                    self._keyword_match = is_keyword and token == 'match'
+                    yield MemberName(token) if token == 'case' and not is_keyword else token
+                    self._keyword_case = self._keyword_match = False
+                    for part in header:
+                        yield MemberName(part) if part == 'case' else part
+                    at_line_start = bool(header and (
+                        header[-1].isspace() and ('\n' in header[-1] or '\r' in header[-1])))
+                    continue
+                if token == 'case':
+                    token = MemberName(token)
+            at_line_start = False
+            yield token
+
+    def _read_soft_keyword_header(self, tokens):
+        """Recognize a suite colon at the end of a match or case header."""
+        header = []
+        depth = 0
+        started = False
+        for token in tokens:
+            header.append(token)
+            if isinstance(token, FStringExpressionToken):
+                continue
+            if token.isspace() or token.startswith('#'):
+                if depth == 0 and ('\n' in token or '\r' in token):
+                    break
+                continue
+            if not started and token in self._SOFT_KW_VARIABLE_NEXT:
+                break
+            started = True
+            if token in ('(', '[', '{'):
+                depth += 1
+            elif token in (')', ']', '}'):
+                depth -= 1
+            elif depth == 0 and token in (':', ';'):
+                return token == ':', header
+        return False, header
+
+    def _gdscript_soft_keyword_lookahead(self, tokens):
         """Wrap the token stream to pre-detect Python soft keywords.
 
         Yields tokens in the original order.  Before yielding 'case' or
@@ -122,7 +177,6 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
           (function call or subscript).
         - Any other following token → keyword.
         """
-        python_keywords = 'python' in self.language_names
         at_line_start = True
         tokens_iter = iter(tokens)
         for token in tokens_iter:
@@ -135,15 +189,11 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                 # Buffer this token; peek at next non-whitespace.
                 lookahead = []
                 next_real = None
-                on_header_line = python_keywords
                 for t in tokens_iter:
                     lookahead.append(t)
                     if t != '\n' and not t.isspace():
                         next_real = t
                         break
-                    if on_header_line and ('\n' in t or '\r' in t):
-                        on_header_line = False
-                wrapped_header = False
                 if next_real in self._SOFT_KW_VARIABLE_NEXT:
                     is_keyword = False
                 elif next_real in ('(', '['):
@@ -156,7 +206,6 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                     # ('case (x, y) if cond:') are handled naturally because
                     # the scan continues until it finds the ':'.
                     is_keyword = False
-                    wrapped_header = on_header_line
                     depth = 1  # the opening bracket is already in lookahead
                     for t in tokens_iter:
                         lookahead.append(t)
@@ -164,64 +213,29 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                             depth += 1
                         elif t in (')', ']', '}'):
                             depth -= 1
-                            if depth < 0:
-                                wrapped_header = False
                         elif t == ':' and depth == 0:
                             is_keyword = True
                             break
                         elif t == '\n' and depth == 0:
                             break  # end of statement — no pattern colon found
-                        # Interpolated strings can expose delimiters from their text.
-                        # A comment can hide a line break on a bare CR.
-                        if wrapped_header and (
-                                isinstance(t, (FStringExpressionToken, FStringLiteralToken)) or
-                                (isinstance(t, PrefixedStringToken) and
-                                 lookahead[-2].lower() in ('f', 'fr', 'rf', 't', 'tr', 'rt')) or
-                                ((depth == 0 and t.isspace() or t.startswith('#')) and '\r' in t)):
-                            wrapped_header = False
                 else:
                     is_keyword = True
                 if token == 'case':
                     self._keyword_case = is_keyword
-                    if python_keywords and not is_keyword:
-                        token = MemberName(token)
                 else:
                     self._keyword_match = is_keyword
                 at_line_start = False
-                if python_keywords and 'case' in lookahead:
-                    self._mark_case_operands(lookahead, wrapped_header)
                 yield token
-                if python_keywords and is_keyword and self._keyword_match:
-                    # A buffered name in the header cannot start another match.
-                    self._keyword_match = False
-                    if wrapped_header:
-                        yield from lookahead
-                    else:
-                        for t in lookahead:
-                            if t == '\n' or (t.isspace() and '\r' in t):
-                                self._keyword_match = True
-                            yield t
-                    self._keyword_match = True
-                else:
-                    yield from lookahead
+                for t in lookahead:
+                    yield t
             else:
                 # Not a soft keyword at line start — clear stale flags.
                 if token == 'case':
                     self._keyword_case = False
-                    if python_keywords:
-                        token = MemberName(token)
                 elif token == 'match':
                     self._keyword_match = False
                 at_line_start = False
                 yield token
-
-    @staticmethod
-    def _mark_case_operands(lookahead, wrapped_header):
-        for index, token in enumerate(lookahead):
-            if not wrapped_header and (token == '\n' or (token.isspace() and '\r' in token)):
-                break
-            if token == 'case':
-                lookahead[index] = MemberName(token)
 
     def preprocess(self, tokens):
         indents = PythonIndents(self.context)
