@@ -9,6 +9,8 @@ The code borrows heavily from implementation of Nesting Depth extension
 originally written by Mehrdad Meh and Terry Yin.
 """
 
+from functools import wraps
+
 from lizard import FunctionInfo
 from lizard_ext.lizardnd import patch_append_method
 from lizard_languages.code_reader import CodeStateMachine
@@ -16,6 +18,18 @@ from .extension_base import ExtensionBase
 
 
 DEFAULT_NS_THRESHOLD = 3
+
+
+def _with_expression_counter(read):
+    @wraps(read)
+    def dispatch(self, tokens, reader=None):
+        languages = getattr(reader, 'language_names', ())
+        if languages and languages[0] in ('kotlin', 'scala'):
+            counter = _ConditionalExpressionStructures()
+            return read(counter, counter.track(tokens, reader), reader)
+        return read(self, tokens, reader)
+
+    return dispatch
 
 
 class LizardExtension(ExtensionBase):  # pylint: disable=R0903
@@ -72,14 +86,12 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self._global_tokens = frozenset(self.structures) | frozenset((
             '{', ';', '}', 'else', '.', '?.'))
 
+    @_with_expression_counter
     def __call__(self, tokens, reader=None):
         if 'python' in getattr(reader, 'language_names', ()):
             return self._indented_structures(tokens, reader)
         if hasattr(reader, 'implied_semicolons'):
             return self._unterminated_statements(tokens, reader)
-        languages = getattr(reader, 'language_names', ())
-        if languages and languages[0] in ('kotlin', 'scala'):
-            return _ConditionalExpressionStructures().read(tokens, reader)
         return super(LizardExtension, self).__call__(tokens, reader)
 
     def _start_file(self, reader):
@@ -240,14 +252,37 @@ patch_append_method(_init_nested_structure_data, FunctionInfo, "__init__")
 class _ConditionalExpressionStructures(LizardExtension):
     """Reuse an open if for a plain, unbraced alternative."""
 
-    def read(self, tokens, reader):
-        self._start_file(reader)
+    def __init__(self):
+        super().__init__()
         self._open_if = False
+
+    def track(self, tokens, reader):
+        scala_interpolation = getattr(reader, 'has_scala_interpolation', False)
+        braces = getattr(reader, 'interpolation_braces', None)
+        scopes = []
         for token in tokens:
-            if token in ('{', '}', ';') or (self.br_count and token in self.structures):
-                self._open_if = False
-            self._state(token)
+            interpolation = (
+                (scala_interpolation and getattr(token, 'is_scala_interpolation', False))
+                or (braces and (token is braces[0] or token is braces[1])))
+            if interpolation:
+                self._track_interpolation_scope(scopes, token)
+            else:
+                if scopes and token in self.structures:
+                    scopes[-1][2] = True
+                if token in ('{', '}', ';') or (self.br_count and token in self.structures):
+                    self._open_if = False
             yield token
+
+    def _track_interpolation_scope(self, scopes, token):
+        if token == '{':
+            scopes.append([self._open_if, self.br_count, False])
+            self._open_if = False
+        elif scopes:
+            open_if, brackets, has_structure = scopes.pop()
+            # A decision in a condition's splice needs its own depth.
+            self._open_if = open_if and not (brackets and has_structure)
+            if scopes and has_structure:
+                scopes[-1][2] = True
 
     def _state_global(self, token):
         if token in self.structures and not getattr(token, 'is_member_name', False):
