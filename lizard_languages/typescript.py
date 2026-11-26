@@ -26,6 +26,7 @@ OPTIONAL_NAME = (r"|(?:(?:\w+|\"(?:\\.|[^\"\\])*\"|\'(?:\\.|[^\'\\])*\')"
                  r"\?(?=\s*(?:[:,)]|\Z)))")
 # JavaScript identifiers can contain dollar signs as well as word characters.
 JS_IDENTIFIER = r"|(?:[\w$]+)"
+_TYPE_ARGUMENT_COMMA = TypeArgumentComma(',')
 
 
 class Tokenizer(object):
@@ -85,7 +86,6 @@ class _OptionalMemberQuestion(str):
 
 
 _OPTIONAL_MEMBER_QUESTION = _OptionalMemberQuestion('?')
-_TYPE_ARGUMENT_COMMA = TypeArgumentComma(',')
 _ANNOTATION_PUNCTUATION = frozenset(('?', ':'))
 
 
@@ -99,7 +99,7 @@ class _MemberName(str):
 _MEMBER_ACCESS = ('.', '?.')
 _COMMENT_STARTS = ('//', '/*')
 # The tokens that preprocess looks at, in one set for the hot loop.
-_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset(_MEMBER_ACCESS)
+_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset((*_MEMBER_ACCESS, '<'))
 # With the reader's conditions: the keywords that a metric counts as a
 # structure or a jump.
 _STRUCTURE_KEYWORDS = frozenset((
@@ -307,6 +307,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     break
                         elif member_access:
                             before_dot = token == '.' and state.last_token
+                        elif (token == '<' and not type_argument_span
+                              and self.context.class_field_annotations
+                              and can_start_call_type_arguments(state.last_token)):
+                            tokens, lookahead = tee(tokens)
+                            type_argument_span = call_type_argument_span(lookahead)
+                            del lookahead
+                            yield token
+                            break
                     else:
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
@@ -314,14 +322,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         if token in name_keywords:
                             keyword = token
                             continue
-                    if (token == '<' and not type_argument_span
-                            and self.context.class_field_annotations
-                            and can_start_call_type_arguments(state.last_token)):
-                        tokens, lookahead = tee(tokens)
-                        type_argument_span = call_type_argument_span(lookahead)
-                        del lookahead
-                        yield token
-                        break
                     yield token
                 elif token == '\n':
                     if keyword is not None:
