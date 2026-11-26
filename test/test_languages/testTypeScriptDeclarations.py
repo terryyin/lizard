@@ -311,7 +311,8 @@ class Registry {
     }
 }
 """
-        for name in ('value', r'\u0076alue'):
+        for name in ('value', r'\u0076alue', r'\u{76}alue', r'v\u{61}lue',
+                     r'\u{76}\u{61}lue'):
             with self.subTest(name=name):
                 functions = get_ts_function_list(code % {'value': name})
                 self.assertEqual([('check', 2, 5, 2)], [
