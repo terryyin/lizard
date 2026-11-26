@@ -1,6 +1,6 @@
 ''' Language parser for Python '''
 
-from .code_reader import CodeReader
+from .code_reader import CodeReader, MemberName
 from .script_language import ScriptLanguageMixIn
 from .python_structure import PythonIndents, PythonStates, count_spaces
 from .python_tokens import FStringExpressionToken, FStringLiteralToken, PrefixedStringToken, \
@@ -71,7 +71,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         """
         # --- Soft keyword: case ---
         # _keyword_case is pre-set by _soft_keyword_lookahead in preprocess().
-        if token == 'case' and self._keyword_case:
+        if token == 'case' and self._keyword_case and not isinstance(token, MemberName):
             self.context.add_condition()
 
         # --- Triple-quoted string comment suppression ---
@@ -183,9 +183,13 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                     is_keyword = True
                 if token == 'case':
                     self._keyword_case = is_keyword
+                    if python_keywords and not is_keyword:
+                        token = MemberName(token)
                 else:
                     self._keyword_match = is_keyword
                 at_line_start = False
+                if python_keywords and 'case' in lookahead:
+                    self._mark_case_operands(lookahead, wrapped_header)
                 yield token
                 if python_keywords and is_keyword and self._keyword_match:
                     # A buffered name in the header cannot start another match.
@@ -204,10 +208,20 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                 # Not a soft keyword at line start — clear stale flags.
                 if token == 'case':
                     self._keyword_case = False
+                    if python_keywords:
+                        token = MemberName(token)
                 elif token == 'match':
                     self._keyword_match = False
                 at_line_start = False
                 yield token
+
+    @staticmethod
+    def _mark_case_operands(lookahead, wrapped_header):
+        for index, token in enumerate(lookahead):
+            if not wrapped_header and (token == '\n' or (token.isspace() and '\r' in token)):
+                break
+            if token == 'case':
+                lookahead[index] = MemberName(token)
 
     def preprocess(self, tokens):
         indents = PythonIndents(self.context)
