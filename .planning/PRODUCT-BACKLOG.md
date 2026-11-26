@@ -7,7 +7,6 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 ## Taken
 
 - [Process open PRs and issues from the past 48 hours](seeds/SEED-077-process-prs-past-48h.md#process-prs-past-48h) — SEED-077#process-prs-past-48h
-- [Resume Kotlin tokenization after each complete block comment](seeds/SEED-075-reader-corrections.md#kotlin-adjacent-nested-comments) — SEED-075#kotlin-adjacent-nested-comments ([plan](slice-plans/039-kotlin-adjacent-nested-comments/PLAN.md))
 - [Keep valid R raw-string delimiter forms opaque](seeds/SEED-075-reader-corrections.md#r-raw-literal-delimiters) — SEED-075#r-raw-literal-delimiters ([plan](slice-plans/040-r-raw-literal-delimiters/PLAN.md))
 
 ## Backlog list

@@ -140,6 +140,14 @@ When slice planning names an already-oversized suite as the only proof home and 
   - Evidence: plan 038 Current decisions allowed extending shared `mark_member_names` or a Perl-local wrap and settled only "no reader-file split"; implementation edited `lizard_languages/code_reader.py` (269 lines); conversation `89a21532-f79f-4cc8-900e-cda83a0a689d` refactor subagent `4b02ce7d-0671-4a00-9681-6e7785f4398d` returned `## REFACTOR JIDOKA STOP`; 2026-11-26 07:21-07:58 +08:00
   - Observed effect: Production helper over 250 lines had no size decision; the refactor pass stopped, the coordinator settled keep-without-split from the plan's own helper-extension decision, and the pass resumed
   - Inference: Same gap as above on a shared production file rather than a proof home; naming each alternative's target file size and keep-or-extract decision in the plan would have avoided one stop and resume round trip
+- Execution: SEED-075#kotlin-adjacent-nested-comments at `09437ff0`
+  - Timestamp: unknown
+  - Tool: Codex
+  - Model: gpt-6.2-sol
+  - Open Dough release: 0.3.116
+  - Evidence: The execution-ready plan at `75d72bc2` selected `lizard_languages/kotlin.py` (271 lines) for the scanner and recorded no reorganization. The execution preflight measured the file, but delegated the edit before settling that decision on 2026-11-26.
+  - Observed effect: The independent refactor stopped at 310 lines. The coordinator settled a same-reader split using the existing Perl and Fortran pattern, then the pass moved `KotlinStates` byte for byte and reran affected proof. The scanner stayed in `kotlin.py`.
+  - Inference: Recording the tokenizer and state-machine seam at preparation would have avoided the mid-delivery stop and the repeated focused verification.
 
 ## DD-491 — Black assumed as selective formatter, then `git checkout` wiped the slice
 
