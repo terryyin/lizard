@@ -5,7 +5,8 @@ Language parser for Apple Swift
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine
 from .golike import GoLikeStates
-from .kotlin_literals import INTERPOLATION_CLOSE, INTERPOLATION_OPEN, TemplateText, TemplateTokens, string_tokens
+from .kotlin_literals import (INTERPOLATION_CLOSE, INTERPOLATION_OPEN, TemplateText,
+                              TemplateTokens, literal_tokens, may_have_nested_comment)
 from .swift import SwiftReplaceLabel
 
 
@@ -48,9 +49,9 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
             addition
         )
         if '${' in source_code:
-            return TemplateTokens(string_tokens(source_code, addition))
-        if '"""' in source_code or '$$"' in source_code:
-            return string_tokens(source_code, addition)
+            return TemplateTokens(literal_tokens(source_code, addition))
+        if '"""' in source_code or '$$"' in source_code or may_have_nested_comment(source_code):
+            return literal_tokens(source_code, addition)
         return CodeReader.generate_tokens(source_code, addition)
 
 
