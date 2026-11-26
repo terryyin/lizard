@@ -1091,6 +1091,34 @@ class TestJavaScriptGroupedExpressions(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptConditionalLineBreaks(unittest.TestCase):
+
+    def test_conditional_delimiters_can_start_lines(self):
+        self.assertEqual([3], cogc("labels.js", """
+            function label(ready, retry) { return ready
+              ? 1
+              : retry ? 2 : 3; }
+        """))
+
+    def test_conditional_branch_operands_can_start_lines(self):
+        self.assertEqual([6], cogc("labels.ts", """
+            function label(enabled: boolean, ready: boolean, retry: boolean) {
+              if (enabled)
+                return ready ?
+                  1 :
+                  retry ? 2 : 3;
+            }
+        """))
+
+    def test_next_statement_ends_the_conditional(self):
+        self.assertEqual([2], cogc("labels.js", """
+            function label(ready, retry) {
+              const first = ready ? 1 : 2
+              return retry ? first : 3
+            }
+        """))
+
+
 class TestJavaScriptCallsInCaseBlocks(unittest.TestCase):
 
     def test_ternary_after_a_call_in_a_case_block(self):
