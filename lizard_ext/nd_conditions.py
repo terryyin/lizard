@@ -1,5 +1,5 @@
 """Track the ends of Rust and Swift conditions for nesting depth."""
-from lizard_languages.swift_conditions import _brace_is_body
+from lizard_languages.swift_conditions import _EXPRESSION_CONTINUATIONS, _brace_is_body
 
 
 _STARTS = frozenset(('if', 'while'))
@@ -13,6 +13,11 @@ _RUST_BLOCK_PREFIX = frozenset((
 ))
 _EXPRESSION = 1
 _SWIFT_TRAILING = 2
+_SWIFT_TAIL_PREFIX = _EXPRESSION_CONTINUATIONS | {'while', 'as', 'is', 'try', 'await'}
+_SWIFT_STATEMENT_STARTS = frozenset((
+    'if', 'while', 'repeat', 'let', 'var', 'guard', 'switch', 'return', 'throw',
+    'for', 'do', 'defer', 'break', 'continue',
+))
 _RUST_VALUE_BLOCK = 3
 
 
@@ -43,13 +48,15 @@ class ConditionHeaders:  # pylint: disable=too-many-instance-attributes
             return False
         repeat_tail = self._closed is not None and self._resume_condition(token)
         head = self._head()
-        starts = token in _STARTS and not repeat_tail and not getattr(token, 'is_member_name', False)
+        if head and head.post_test_line is not None and self._end_post_test(head, token):
+            head = self._head()
+        starts = token in _STARTS and not getattr(token, 'is_member_name', False)
         if self._swift_logical is not None:
             self._swift_logical.advance(self._context, token, self._groups, starts, head is not None)
         expression = self._rust_expression(token)
         handled = token in _LOGICAL and self._read_logical(head, expression)
         if not handled:
-            self._advance_structure(token, head, starts)
+            self._advance_structure(token, head, starts, repeat_tail)
         if token == '!' and not self._swift:
             self._rust_unary_not = self._previous in _RUST_GROUP_PREFIX or self._previous in _RUST_BLOCK_PREFIX
         self._previous = token
@@ -90,7 +97,7 @@ class ConditionHeaders:  # pylint: disable=too-many-instance-attributes
                     return brace
         return None
 
-    def _advance_structure(self, token, head, starts):
+    def _advance_structure(self, token, head, starts, repeat_tail):
         if token in ('(', '['):
             if token == '(' and not self._swift and head and self._previous in _RUST_GROUP_PREFIX:
                 if head.is_rust_operand_group(self._groups):
@@ -107,12 +114,27 @@ class ConditionHeaders:  # pylint: disable=too-many-instance-attributes
         elif token == '}':
             self._close_brace()
         elif starts:
-            self._heads.append(_Header(self._context.current_function, self._groups))
+            self._heads.append(_Header(
+                self._context.current_function, self._groups,
+                post_test_line=self._context.current_line if repeat_tail else None))
         elif head and self._groups == head.groups:
             if token in (';', '=>'):
                 self._heads.pop()
             elif not self._swift:
                 head.read_rust_token(token)
+
+    def _end_post_test(self, head, token):
+        line = self._context.current_line
+        starts_statement = token in _SWIFT_STATEMENT_STARTS and not getattr(token, 'is_member_name', False)
+        line_ends_expression = line != head.post_test_line and (
+            starts_statement or self._previous not in _SWIFT_TAIL_PREFIX and token not in ('.', '>', ','))
+        # A comma at the predicate's depth can separate generic arguments.
+        if self._groups == head.groups and (line_ends_expression or token in (';', '}', ')', ']')):
+            self._heads.pop()
+            self._context.end_statement()
+            return True
+        head.post_test_line = line
+        return False
 
     def _head(self):
         if self._heads and self._heads[-1].owner is self._context.current_function:
@@ -121,8 +143,11 @@ class ConditionHeaders:  # pylint: disable=too-many-instance-attributes
 
     def _open_brace(self, head):
         if head is None:
-            self._braces.append(self._swift and self._previous == 'repeat'
-                                and not getattr(self._previous, 'is_member_name', False))
+            repeat_body = self._swift and self._previous == 'repeat' and not getattr(
+                self._previous, 'is_member_name', False)
+            if repeat_body:
+                self._context.open_level()
+            self._braces.append(repeat_body)
             return
         role = self._brace_role(head)
         self._braces.append(_ConditionBrace(
@@ -134,7 +159,7 @@ class ConditionHeaders:  # pylint: disable=too-many-instance-attributes
         if not self._swift and head.is_rust_operand_group(self._groups) and (
                 self._previous in _RUST_VALUE_PREFIX or self._previous == '!' and self._rust_unary_not):
             return _RUST_VALUE_BLOCK
-        if self._groups > head.groups:
+        if self._groups > head.groups or head.post_test_line is not None:
             return _EXPRESSION
         if self._swift:
             return _SWIFT_TRAILING
@@ -147,7 +172,9 @@ class ConditionHeaders:  # pylint: disable=too-many-instance-attributes
         if not self._braces:
             return
         self._closed = self._braces.pop()
-        if isinstance(self._closed, _ConditionBrace) and self._closed.owner is self._context.current_function:
+        if self._closed is True:
+            self._context.end_statement()
+        elif isinstance(self._closed, _ConditionBrace) and self._closed.owner is self._context.current_function:
             # Any pending levels from inside this brace end here.
             self._closed.close(self._context.current_line)
             self._context.end_statement()
@@ -168,6 +195,8 @@ class ConditionHeaders:  # pylint: disable=too-many-instance-attributes
         if not expression:
             finished = self._heads.pop()
             levels = finished.outer_levels if self._heads else 0
+        elif self._heads[-1].post_test_line is not None:
+            self._heads[-1].post_test_line = brace.closing_line
         if levels:
             function.levels_awaiting_body += levels
             self._context.add_nd_condition(levels)
@@ -200,9 +229,9 @@ class _SwiftGroupedLogic:  # pylint: disable=too-few-public-methods
             self._before_operator = function.levels_awaiting_body
 
 
-class _Header:
+class _Header:  # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, owner, groups):
+    def __init__(self, owner, groups, post_test_line=None):
         self.owner = owner
         self.groups = groups
         self.outer_levels = owner.levels_awaiting_body
@@ -210,6 +239,7 @@ class _Header:
         self.pattern = False
         self.match = False
         self.operand_groups = set()
+        self.post_test_line = post_test_line
 
     def is_rust_operand_group(self, depth):
         return depth == self.groups or depth in self.operand_groups
