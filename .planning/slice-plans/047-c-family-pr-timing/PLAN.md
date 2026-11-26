@@ -80,7 +80,7 @@ Behavior: Build the combined candidate (master + #681 + #619) and freeze the cor
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 Behavior: For each qualified PR, in the order #688, #681, #619: refresh its head, base and hosted checks, and confirm that the head matches the timed candidate. Merge it with an exact head-SHA guard, confirm the merge on `origin/master`, then post the thank-you. A PR deferred in slice 1 stays open with a link to its correction story.
 
@@ -88,6 +88,13 @@ Behavior: For each qualified PR, in the order #688, #681, #619: refresh its head
 | --- | --- |
 | Users get the fixes | After merging, `origin/master` contains each merged head, and hosted CI on the merge commits is green. |
 | Disposition recorded | The seed records merged, corrected or deferred for each of the three PRs. Each merged PR has the acknowledgement comment URL. |
+
+#### Accepted proof (2026-11-27)
+
+- **Before each merge:** the head was unchanged from the timed one, `mergeStateStatus` was `CLEAN`, and the hosted checks on that head had succeeded (any others were skipped). Master was still the timed baseline, `5294e585`.
+- **Merges:** each used `gh pr merge --merge --match-head-commit <head>`. #688 merged as `d1a7a651`. #681 merged as `6d9718f6`, giving tree `e1829811`, the timed intermediate. #619 merged as `6065b3df`, giving tree `0f6daf21`, the exact timed candidate.
+- **Hosted CI** (`python-app.yml`) succeeded on all three merge commits: runs 45871359146, 45871439140 and 45871546557.
+- **Disposition:** the seed records all three as merged without correction, with the thank-you comment URLs.
 
 ## Concern evidence
 

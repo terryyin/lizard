@@ -80,3 +80,9 @@ Source review: SEED-077#process-prs-past-48h at frozen master `f7a11e5248a388c1c
 - Combined candidate vs master, C++ API: an upper bound of 2.1% passes. When every workload passes, #688, then #681, then #619 merge.
 - The same workload at −2% to +5% under load misses the bound. The profile finds no added cost in `CppRValueRefStates`, so nothing is corrected, and the run is retried in a quieter window.
 - A miss where the profile shows the rvalue scan's per-token cost: correct #688 on its branch and merge that correction into #681. #619 may merge alone if its own run passes.
+
+**Disposition (2026-11-27):** All three were merged without correction after every workload passed the timing gate. See the [plan's accepted proof](../slice-plans/047-c-family-pr-timing/PLAN.md#accepted-proof-2026-11-27).
+
+- [#688](https://github.com/terryyin/lizard/pull/688) at head `352020cf` merged as `d1a7a651` ([thanks](https://github.com/terryyin/lizard/pull/688#issuecomment-7199824520)).
+- [#681](https://github.com/terryyin/lizard/pull/681) at head `ec3d383a` merged as `6d9718f6` ([thanks](https://github.com/terryyin/lizard/pull/681#issuecomment-7199824949)).
+- [#619](https://github.com/terryyin/lizard/pull/619) at head `e4679972` merged as `6065b3df` ([thanks](https://github.com/terryyin/lizard/pull/619#issuecomment-7199825409)). The resulting master tree `0f6daf21` is the timed candidate.
