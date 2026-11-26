@@ -20,7 +20,7 @@ class Test_parser_for_Kotlin(unittest.TestCase):
         functions = get_kotlin_function_list('''\
 fun notice(
     `subject  line`: String,
-    `retry-count (max), !`: Int,
+    `retry-count (max), !` /* Maximum attempts. */ : Int,
     message: String = """Try
 later""".trimIndent(),
 ): String {
