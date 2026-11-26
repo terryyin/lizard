@@ -103,6 +103,7 @@ function averageWords(length, label, fallback) {
             ('n / /colou?r/.source.length', 1, 14, 0),
             ('n > /colou?r/.source.length ? n : 0', 2, 18, 1),
             ('n < 10 && n > /colou?r/.source.length', 2, 18, 1),
+            ('n < 10 ? true : n > /colou?r/.source.length', 2, 20, 1),
             ('n++ / (n || 1) / 100', 2, 17, 1),
             ('n > 1 && n < 4 ? n / 2 : 0', 3, 20, 2),
         )
