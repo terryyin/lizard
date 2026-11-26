@@ -6,8 +6,6 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
-- [Keep PL/SQL Boolean operator casing equivalent in nonstrict mode](seeds/SEED-075-reader-corrections.md#plsql-nonstrict-case) — SEED-075#plsql-nonstrict-case ([plan](slice-plans/044-plsql-nonstrict-case/PLAN.md))
-
 ## Backlog list
 
 - [Qualify and merge the held C-family PRs](seeds/SEED-078-pr-batch-follow-ups.md#c-family-pr-timing) — SEED-078#c-family-pr-timing

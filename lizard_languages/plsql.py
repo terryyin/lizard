@@ -11,10 +11,8 @@ This module implements complexity analysis for PL/SQL code, supporting:
 - Cursor declarations and cursor FOR loops
 
 Design Decisions:
-- EXIT WHEN: The WHEN keyword is filtered out by the preprocessor because
-  "EXIT WHEN condition" is not a branching construct - it's a conditional
-  exit that doesn't create alternate execution paths. The LOOP itself adds
-  complexity.
+- Keyword casing, compound END keywords and EXIT WHEN: handled by token
+  preprocessing in plsql_keywords.
 
 - CONTINUE WHEN: Similar to EXIT WHEN, the WHEN is counted as it does create
   a branch in the loop execution.
@@ -35,6 +33,7 @@ Design Decisions:
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .plsql_declarations import PLSQLDeclarationStates
+from .plsql_keywords import merge_compound_keywords
 
 
 class PLSQLReader(CodeReader, CCppCommentsMixin):
@@ -58,64 +57,16 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super(PLSQLReader, self).__init__(context)
         self.parallel_states = [PLSQLStates(context)]
-        # PL/SQL is case-insensitive, so add both lowercase and uppercase versions
-        # of keywords to the conditions set for the automatic condition counter
-        self.conditions = self.conditions | {c.upper() for c in self.conditions}
+        self._keyword_tokens = {
+            keyword.upper() for keyword in self._build_conditions()}
 
     def preprocess(self, tokens):
         """
-        Preprocess tokens to handle PL/SQL-specific constructs.
-        Merge compound keywords to prevent the condition counter from double-counting:
-        - "END IF", "END LOOP", "END CASE", "END WHILE", "END FOR" -> single tokens
-        - "EXIT WHEN" -> remove the WHEN keyword (EXIT doesn't create a branch)
+        Apply PL/SQL keyword preprocessing (see plsql_keywords). Keywords
+        come from the reader's condition categories, not from the current
+        conditions that extensions such as nonstrict change.
         """
-        last_nonwhitespace_token = None
-        pending_tokens = []
-
-        for token in tokens:
-            if not token.isspace() or token == "\n":
-                token_upper = token.upper()
-
-                # Handle "END IF", "END LOOP", etc.
-                if (
-                    last_nonwhitespace_token
-                    and last_nonwhitespace_token.upper() == "END"
-                ):
-                    if token_upper in ("IF", "LOOP", "CASE", "WHILE", "FOR"):
-                        # Merge into "END_IF", "END_LOOP", etc.
-                        yield "END_" + token_upper
-                        last_nonwhitespace_token = None
-                        pending_tokens = []
-                        continue
-
-                # Handle "EXIT WHEN" - skip the WHEN keyword
-                if (
-                    last_nonwhitespace_token
-                    and last_nonwhitespace_token.upper() == "EXIT"
-                    and token_upper == "WHEN"
-                ):
-                    # Skip this WHEN keyword
-                    pending_tokens = []
-                    continue
-
-                # Yield any pending tokens
-                if last_nonwhitespace_token:
-                    yield last_nonwhitespace_token
-                for pending in pending_tokens:
-                    yield pending
-                pending_tokens = []
-
-                # Update tracking
-                last_nonwhitespace_token = token
-            else:
-                # Accumulate whitespace
-                pending_tokens.append(token)
-
-        # Don't forget the last tokens
-        if last_nonwhitespace_token:
-            yield last_nonwhitespace_token
-        for pending in pending_tokens:
-            yield pending
+        return merge_compound_keywords(tokens, self._keyword_tokens)
 
     @staticmethod
     def generate_tokens(source_code, addition="", token_class=None):

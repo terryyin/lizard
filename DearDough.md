@@ -204,9 +204,31 @@ Concrete defect. `AGENTS.md` and `.agents/agent-map.md` tell agents to prefix to
   - Evidence: coordinator readiness check `nix develop -c python -m pytest test/test_languages/testPLSQL.py` failed with `experimental Nix feature 'nix-command' is disabled`; plan 041's premises already used the flag form; implementation `bcfcf39d`
   - Observed effect: one failed readiness command, and every delegation brief had to carry the corrected wrapper
   - Inference: the cost is small per execution but recurs. Enabling the features in the host's Nix config, or documenting the flag form, would remove it. Timestamp approximate within the session
+- Execution: SEED-075#plsql-nonstrict-case
+  - Timestamp: 2026-11-26T21:55:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: coordinator readiness `nix develop -c python -m pytest …` failed with `experimental Nix feature 'nix-command' is disabled`; the slice-2 implementer's first `slice-clock.mjs run` passed the flag form as one string and failed with `spawn nix --extra-experimental-features … ENOENT` (job evidence `slice2/corrected-test.log`), then wrote an `nx.sh` wrapper; implementation `3eb7f65d`
+  - Observed effect: one failed readiness command, the corrected wrapper carried in every brief, and one wasted implementer proof run
+  - Inference: the longer flag form makes quoting mistakes more likely when commands are passed as argument arrays
+
+## DD-495 — Coordinator acceptance and paired timing caught two defects after green implementer proof
+
+Other. In slice 2 the implementer's tests, full suite and CLI proof all passed. Two defects were found only after that. A coordinator probe of a plan decision ("declaration and long-name text in source spelling") showed lowercased keywords in `long_name`. The plan's paired-runner qualification then measured a +5.9% slowdown on the PL/SQL API workload. Both were fixed within the slice before delivery.
+
+### Occurrences
+- Execution: SEED-075#plsql-nonstrict-case
+  - Timestamp: 2026-11-26T22:12:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: plan 044 Story obligations G1; job evidence `slice2/longname.py` printed `TRUE or FALSE`; `perf/out/api-plsql.json` +5.9%, 95% CI [-0.5, 12.7]; after the fix `api-plsql-r2.json` CI [-3.7, 2.6]; implementation `34a6d195`
+  - Observed effect: two short correction rounds (about 2 slice-clock minutes) instead of a follow-up correction story
+  - Inference: the implementer had flagged the long-name risk as an untested gap in its return. Reading a return's "unexpected" items against the plan's Current decisions is what turned that flag into a proved obligation
 
 ## Retention
 
-- Highest allocated local number: 494
+- Highest allocated local number: 495
 - Shared-feedback adoption and compaction recovery (2026-11-07): `7129516bc5bd9ba57f370a6353ffe0e10eb1c861:DearDough.md`; its rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.
