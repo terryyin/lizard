@@ -32,6 +32,12 @@ class JavaScriptFunctionsMixin:
                     group._empty_parenthesis or getattr(group, '_typed_parameters', False))
         return None
 
+    def pending_async_parameter(self):
+        state = active_js_state(self)
+        if state._state == state._after_possible_async_parameter:
+            return state
+        return None
+
     def _push_function_to_stack(self):
         if self._in_abstract_context:
             return
@@ -67,13 +73,15 @@ class JavaScriptFunctionsMixin:
         before it is counted.  A token that cannot start the body shows that
         the signature was an expression, `x = (a)` + `if (b)`: the function
         is discarded now, so the token counts for the function around it."""
-        if self._state == self._after_possible_async_parameter:
-            if not self._follows_async_parameter(token):
-                self._begin_grouped_async_expression()
-            return
         if token in ('{', '=>', ':') or (
                 token == ';' and self.as_object and self._in_abstract_context):
             return      # for _expecting_func_opening_bracket
+        if self._state == self._after_possible_async_parameter:
+            if token == '?' and self.context.class_field_annotations:
+                return  # Preprocessing distinguishes a spaced optional marker.
+            if not self._follows_async_parameter(token):
+                self._begin_grouped_async_expression()
+            return
         self._discard_signature()
 
     def _discard_signature(self):
