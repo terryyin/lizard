@@ -137,6 +137,22 @@ class Memoized(private val enabled: Boolean) {
             [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in result],
         )
 
+    def test_annotation_groups_do_not_start_accessors(self):
+        result = get_kotlin_function_list('''\
+@Target(AnnotationTarget.PROPERTY_GETTER)
+annotation class Trace
+@Target(AnnotationTarget.PROPERTY_GETTER)
+annotation class set(val name: String)
+class Counter(@get:[Trace set("count")] val count: Int) {
+    val doubled: Int
+        get() { return count * 2 }
+}
+        ''')
+        self.assertEqual(
+            [("get", 7, 7)],
+            [(f.name, f.start_line, f.end_line) for f in result],
+        )
+
     def test_getter_setter(self):
         result = get_kotlin_function_list('''
             class Time
