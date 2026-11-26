@@ -257,6 +257,37 @@ class Test_parser_for_Kotlin(unittest.TestCase):
         self.assertEqual("sayGoodbye", result[0].name)
         self.assertEqual(2, result[0].parameter_count)
 
+    def test_multiline_default_keeps_its_parameter_name(self):
+        functions = get_kotlin_function_list('''\
+fun readNotice(locale: String, notice: String = """
+    Service is unavailable.
+    Try again later.
+"""): String {
+    return "$locale: $notice"
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["locale", "notice"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_multiline_annotation_argument_keeps_the_formal_parameter_name(self):
+        functions = get_kotlin_function_list('''\
+annotation class Note(val text: String)
+
+fun readNotice(
+    @Note(text = """First line
+second line""") value: Int,
+    last: Int,
+): Int {
+    return value + last
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["value", "last"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_parameters_ignore_commas_inside_parentheses(self):
         functions = get_kotlin_function_list('''\
 fun applyOffset(

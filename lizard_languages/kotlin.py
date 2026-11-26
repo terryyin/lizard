@@ -213,6 +213,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         self._type_annotated = False
         self._parameter_angles = 0
         self._parameter_comma = None
+        self._parameter_default = False
 
     def _type_is_open(self):
         # The next token continues a type that has an open `<` or `(`, that
@@ -301,6 +302,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             function = self.context.current_function
             if self.br_count == 1 and token in ('<', '>', ':'):
                 self._parameter_type_token(function, token)
+            elif self.br_count == 1 and token == '=':
+                self._parameter_default = True
             if token == ',' and (self.br_count > 1 or self._parameter_angles):
                 # A type or default expression can have its own commas.
                 if self.br_count == 1:
@@ -308,7 +311,13 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                 function.add_to_long_name(" ,")
                 function.full_parameters[-1] += " ,"
             else:
-                function.add_parameter(token)
+                if token == ',':
+                    self._parameter_default = False
+                if self._parameter_default and '\n' in token:
+                    function.add_to_long_name(" " + token)
+                    function._append_parameter(function.full_parameters, token.replace('\n', ' '))
+                else:
+                    function.add_parameter(token)
 
     def _parameter_type_token(self, function, token):
         if token == '<':
@@ -326,6 +335,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             function.full_parameters.append(text[index + len(" ,"):])
             self._parameter_comma = None
             self._parameter_angles = 0
+            self._parameter_default = False
 
     def _receiver_type_end(self, token):
         # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
