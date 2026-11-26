@@ -770,6 +770,30 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
               }
             }"""))
 
+    def test_quoted_arrow_default_belongs_to_the_callback(self):
+        self.assertEqual([2, 1, 2], cogc("a.js", """
+            function configure(ready) {
+              return {
+                'write': ({ttl = ready ? 10 : 20} = {}) => ready ? ttl : 0,
+                read: ({ttl = ready ? 10 : 20} = {}) => ttl,
+                'value': (ready ? 1 : 2) || 0,
+              };
+            }"""))
+
+    def test_quoted_arrow_return_type_keeps_the_default_in_the_callback(self):
+        self.assertEqual([1, 0], cogc("a.ts", """
+            function configure(ready: boolean) {
+              return {
+                'write': ({ttl = ready ? 10 : 20}: {ttl?: number} = {}): number => ttl,
+              };
+            }"""))
+
+    def test_quoted_grouped_value_keeps_its_decision_in_the_factory(self):
+        self.assertEqual([2], cogc("a.js", """
+            function configure(ready) {
+              return {'value': (ready ? 1 : 2) || 0};
+            }"""))
+
     def test_nested_function_keeps_its_own_score(self):
         self.assertEqual([3, 2], cogc("a.js", """
             function report(errors) {
