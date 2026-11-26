@@ -1,9 +1,9 @@
 ''' Language parser for Python '''
 
-from .code_reader import CodeReader
+from .code_reader import CodeReader, MemberName
 from .script_language import ScriptLanguageMixIn
 from .python_structure import PythonIndents, PythonStates, count_spaces
-from .python_tokens import FStringLiteralToken, PrefixedStringToken, \
+from .python_tokens import FStringExpressionToken, FStringLiteralToken, PrefixedStringToken, \
     generate_tokens as generate_python_tokens
 
 
@@ -71,7 +71,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         """
         # --- Soft keyword: case ---
         # _keyword_case is pre-set by _soft_keyword_lookahead in preprocess().
-        if token == 'case' and self._keyword_case:
+        if token == 'case' and self._keyword_case and not isinstance(token, MemberName):
             self.context.add_condition()
 
         # --- Triple-quoted string comment suppression ---
@@ -104,6 +104,70 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         return False  # Continue with normal processing
 
     def _soft_keyword_lookahead(self, tokens):
+        if 'python' not in self.language_names:
+            yield from self._gdscript_soft_keywords(tokens)
+            return
+
+        at_line_start = True
+        tokens = iter(tokens)
+        for token in tokens:
+            if token.isspace():
+                if ((token == '\n' or '\r' in token) and
+                        not isinstance(token, FStringExpressionToken) and
+                        not getattr(token, 'is_continuation', False)):
+                    at_line_start = True
+                yield token
+                continue
+            if token in ('case', 'match'):
+                if at_line_start:
+                    is_keyword, header = self._read_soft_keyword_header(tokens)
+                    self._keyword_case = is_keyword and token == 'case'
+                    self._keyword_match = is_keyword and token == 'match'
+                    yield MemberName(token) if token == 'case' and not is_keyword else token
+                    self._keyword_case = self._keyword_match = False
+                    for part in header:
+                        yield MemberName(part) if part == 'case' else part
+                    at_line_start = bool(header and (
+                        header[-1].isspace() and ('\n' in header[-1] or '\r' in header[-1])))
+                    continue
+                if token == 'case':
+                    token = MemberName(token)
+            at_line_start = False
+            yield token
+
+    def _read_soft_keyword_header(self, tokens):
+        """Recognize a suite colon at the end of a match or case header."""
+        header = []
+        depth = 0
+        started = continued = False
+        for token in tokens:
+            header.append(token)
+            if isinstance(token, FStringExpressionToken):
+                continue
+            if token in ('\\', '\\\n'):
+                # The older lexer splits a CRLF join into three tokens.
+                continued = token == '\\'
+                continue
+            if token.isspace() or token.startswith('#'):
+                if '\n' in token or '\r' in token:
+                    if not continued and depth == 0:
+                        break
+                    if '\n' in token:
+                        continued = False
+                continue
+            continued = False
+            if not started and token in self._SOFT_KW_VARIABLE_NEXT:
+                break
+            started = True
+            if token in ('(', '[', '{'):
+                depth += 1
+            elif token in (')', ']', '}'):
+                depth -= 1
+            elif depth == 0 and token in (':', ';'):
+                return token == ':', header
+        return False, header
+
+    def _gdscript_soft_keywords(self, tokens):
         """Wrap the token stream to pre-detect Python soft keywords.
 
         Yields tokens in the original order.  Before yielding 'case' or
