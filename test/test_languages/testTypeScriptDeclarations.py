@@ -257,6 +257,61 @@ function last<T>(array: readonly T[], fallback?: T): T | undefined {
                     (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
                     for f in functions])
 
+    def test_semicolonless_abstract_method_keeps_the_following_method(self):
+        code = """abstract class Box {
+  abstract read(): number
+  static create(n: number): number {
+    return n ? n : 0;
+  }
+  protected echo(n: number): number {
+    return n ? n : 0;
+  }
+}
+"""
+        for suffix in ('ts', 'tsx'):
+            with self.subTest(suffix=suffix):
+                functions = analyze_file.analyze_source_code('example.' + suffix, code).function_list
+                self.assertEqual([('create', 3, 5, 1, 2), ('echo', 6, 8, 1, 2)], [
+                    (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                    for f in functions])
+
+    def test_abstract_method_returning_constructor_type_has_no_row(self):
+        code = """abstract class Base {
+  abstract make(): abstract new () => Base%s
+  static create(n: number): number {
+    return n ? n : 0
+  }
+}
+if (Base.create(2) !== 2) throw new Error("abstract constructor control")
+"""
+        for suffix in ('ts', 'tsx'):
+            for separator in (';', ''):
+                with self.subTest(suffix=suffix, separator=separator):
+                    functions = analyze_file.analyze_source_code(
+                        'example.' + suffix, code % separator).function_list
+                    self.assertEqual([('create', 3, 5, 1, 2)], [
+                        (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                        for f in functions])
+
+    def test_abstract_constructor_type_can_wrap_before_new(self):
+        code = """abstract class Base {
+  abstract make(): abstract
+    new () => Base%s
+  static create(n: number) {
+    return n ? n : 0
+  }
+}
+if (Base.create(2) !== 2) throw Error()
+"""
+        for suffix in ('ts', 'tsx'):
+            for separator in (';', ''):
+                with self.subTest(suffix=suffix, separator=separator):
+                    functions = analyze_file.analyze_source_code(
+                        'example.' + suffix, code % separator).function_list
+                    self.assertEqual([('create', 4, 6, 1, 2)], [
+                        (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                        for f in functions])
+
     def test_semicolonless_method_overloads_keep_only_body_parameters(self):
         code = """class Registry {
   get(key: string): string | undefined
