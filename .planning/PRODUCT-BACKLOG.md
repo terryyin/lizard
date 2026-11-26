@@ -6,6 +6,8 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
+- [Process open PRs and issues from the past 48 hours](seeds/SEED-077-process-prs-past-48h.md#process-prs-past-48h) — SEED-077#process-prs-past-48h
+
 ## Backlog list
 
 - [Resume Kotlin tokenization after each complete block comment](seeds/SEED-075-reader-corrections.md#kotlin-adjacent-nested-comments) — SEED-075#kotlin-adjacent-nested-comments
