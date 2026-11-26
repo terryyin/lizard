@@ -258,14 +258,42 @@ def _java_lambda_expressions(tokens, context):
     """An expression lambda owns the operators up to its argument boundary."""
     expressions = []
     after_arrow = False
+    type_arguments = _JavaTypeArguments()
     for token in tokens:
-        if expressions and token in (')', ',', '?', ':'):
-            while expressions and expressions[-1].ends_at(token, context.current_function):
-                expressions.pop().close(context)
         if after_arrow and token != '{':
             expressions.append(_JavaLambdaExpression(context.current_function))
+        if expressions and not type_arguments.read(token) and token in (')', ',', '?', ':'):
+            while expressions and expressions[-1].ends_at(token, context.current_function):
+                expressions.pop().close(context)
         after_arrow = token == '->' and context.current_function.in_control_header
         yield token
+
+
+class _JavaTypeArguments:  # pylint: disable=R0903
+    """Recognize invocation and construction type arguments in an expression."""
+
+    def __init__(self):
+        self.previous = None
+        self.constructed_type = False
+        self.angles = 0
+        self.annotation_groups = 0
+
+    def read(self, token):
+        previous, self.previous = self.previous, token
+        if self.angles:
+            if token == '(':
+                self.annotation_groups += 1
+            elif token == ')':
+                self.annotation_groups -= 1
+            elif not self.annotation_groups and token[0] in '<>':
+                self.angles += token.count('<') - token.count('>')
+            return True
+        if token.startswith('<') and (self.constructed_type or previous in ('.', '::')):
+            self.angles = token.count('<') - token.count('>')
+            return True
+        self.constructed_type = (token == 'new' or
+                                 self.constructed_type and (token == '.' or token.isidentifier()))
+        return False
 
 
 class _JavaLambdaExpression:  # pylint: disable=R0903
