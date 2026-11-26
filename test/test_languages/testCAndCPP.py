@@ -1,4 +1,5 @@
 import unittest
+from lizard import analyze_file
 from lizard_languages import CLikeReader
 from ..testHelpers import get_cpp_fileinfo, get_cpp_function_list
 
@@ -9,6 +10,20 @@ class Test_C_Token_extension(unittest.TestCase):
         #tbd
 
 class Test_c_cpp_lizard(unittest.TestCase):
+
+    def test_c_template_identifier_at_end_of_initializer(self):
+        source = """int pattern_length(int pattern, int template) {
+    int lengths[] = {pattern, template};
+    return lengths[0] + lengths[1];
+}
+int header_length(void) { return 2; }
+"""
+
+        result = analyze_file.analyze_source_code("pattern.c", source).function_list
+
+        self.assertEqual(
+            [("pattern_length", 1, 4), ("header_length", 5, 5)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
 
     def test_empty(self):
         result = get_cpp_function_list("")
