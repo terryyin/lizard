@@ -532,6 +532,15 @@ fun choose(limit: Int, strict: Boolean): Pair<(Int) -> Boolean, Int> {
         ''')
         self.assertEqual([("", 3, 3, 1), ("choose", 2, 4, 2)], rows(result))
 
+    def test_uppercase_comparison_keeps_the_following_argument_in_the_caller(self):
+        for next_argument in ("if (flag) 1 else 0", "run { if (flag) 1 else 0 }"):
+            with self.subTest(next_argument=next_argument):
+                result = get_kotlin_function_list(f'''\
+private const val LIMIT = 4
+fun classify(flag: Boolean) = Pair(fun(n: Int) = n < LIMIT, {next_argument})
+                ''')
+                self.assertEqual([("", 2, 2, 1), ("classify", 2, 2, 2)], rows(result))
+
     def test_expression_body_ends_after_nested_type_arguments_with_a_nullable_type(self):
         result = get_kotlin_function_list('''
 fun decode(value: Any) = value as? List<Pair<String, Int?>>
