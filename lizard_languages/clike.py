@@ -116,7 +116,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         super(CLikeReader, self).__init__(context)
         self.parallel_states = (
                 CppStates(context),
-                CppNestingStackStates(context),
+                CLikeNestingStackStates(context),
                 CppRValueRefStates(context))
 
     @staticmethod
@@ -235,7 +235,7 @@ class CppRValueRefStates(CodeStateMachine):
 
 
 # pylint: disable=R0903
-class CLikeNestingStackStates(CodeStateMachine):
+class CLikeNestingStackStates(CodeStateMachine, _CppTemplateAngles):
     """Machinery to track nesting levels of tokens.
 
     The main indicators of nesting are braces: '{' and '}'.
@@ -293,21 +293,14 @@ class CLikeNestingStackStates(CodeStateMachine):
             self._state = self._state_global
         self._state(token)
 
-    @CodeStateMachine.read_inside_brackets_then("<>", "_state_global")
-    def _read_template_parameters(self, _):
-        """Ignores template parameters."""
-        pass
-
-    @CodeStateMachine.read_inside_brackets_then("[]", "_read_namespace")
-    def _read_attribute(self, _):
-        """Ignores C++11 attributes inside [[ ]]."""
-        pass
-
-
-class CppNestingStackStates(CLikeNestingStackStates, _CppTemplateAngles):
     def _read_template_parameters(self, token):
         if self._read_template_angle(token):
             self._state = self._state_global
             self._state_global(token)
         elif not self.br_count:
             self._state = self._state_global
+
+    @CodeStateMachine.read_inside_brackets_then("[]", "_read_namespace")
+    def _read_attribute(self, _):
+        """Ignores C++11 attributes inside [[ ]]."""
+        pass
