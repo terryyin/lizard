@@ -87,14 +87,14 @@ end
     assert function.cyclomatic_complexity == 2
 
 
-def test_heredoc_with_a_constant_keeps_following_method():
+def test_heredoc_with_simple_references_keeps_following_method():
     source = '''
-def overview
+def overview(label)
   help = <<~HELP
     You'll see your version in the settings.
   HELP
   info = <<~INFO
-    Here's the installed release: #{Bundle::VERSION}
+    Here's the #{label}: #{Bundle::VERSION}
   INFO
   [help, info]
 end
