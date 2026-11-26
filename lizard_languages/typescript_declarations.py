@@ -192,7 +192,7 @@ class TypeScriptDeclarationsMixin:
                     self.next(self._state_global)
                     self._prev_token = token
                     return
-                if class_field:
+                if class_field or self.as_class and self._in_prop_value:
                     self._read_class_new(token, after_field_type=True)
                     return
             if token:
