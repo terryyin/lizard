@@ -41,8 +41,6 @@ class LizardExtension(object):  # pylint: disable=R0903
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
-        if 'php' in getattr(reader, 'language_names', ()):
-            tokens = _php_elseif_branches(tokens, reader.context)
         if hasattr(reader, "indent_indicator"):
             indent_indicator = reader.indent_indicator
         else:
@@ -51,6 +49,8 @@ class LizardExtension(object):  # pylint: disable=R0903
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
+        if 'php' in getattr(reader, 'language_names', ()):
+            tokens = _php_elseif_branches(tokens, reader.context)
         context = reader.context
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
@@ -220,6 +220,16 @@ def patch(frm, accept_class):
         setattr(accept_class, method, get_method(frm, method))
 
 
+def _php_elseif_branches(tokens, context):
+    """An elseif header reuses its branch level or reopens a closed one."""
+    after_elseif = False
+    for token in tokens:
+        if after_elseif and token == '(' and not context.current_function.levels_awaiting_body:
+            context.open_level()
+        after_elseif = token == 'elseif' and not getattr(token, 'is_member_name', False)
+        yield token
+
+
 def patch_append_method(frm, accept_class, method_name):
     old_method = get_method(accept_class, method_name)
 
@@ -243,13 +253,3 @@ def _init_nesting_depth_data(self, *_):
 
 patch(NDFileInfoAddition, FileInfoBuilder)
 patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")
-
-
-def _php_elseif_branches(tokens, context):
-    """An elseif header reuses its branch level or reopens a closed one."""
-    after_elseif = False
-    for token in tokens:
-        if after_elseif and token == '(' and not context.current_function.levels_awaiting_body:
-            context.open_level()
-        after_elseif = token == 'elseif' and not getattr(token, 'is_member_name', False)
-        yield token
