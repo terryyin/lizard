@@ -133,7 +133,7 @@ class Test_Python_fstring_complexity(unittest.TestCase):
         def uppercase(match):
             text = match.group()
             positions[text] = match.span()
-            return text.upper()
+            return text if text.startswith('"') else text.upper()
 
         tokens = list(PythonReader.generate_tokens(
             'f"{ready if enabled else fallback}"', token_class=uppercase))
@@ -152,3 +152,10 @@ class Test_Python_fstring_complexity(unittest.TestCase):
         tokens = list(PythonReader.generate_tokens(source))
         self.assertIn('\\\n', tokens)
         self.assertNotIn('\\', tokens)
+
+    def test_token_factory_transforms_fstring_literal_text(self):
+        from lizard_languages.python import PythonReader
+
+        tokens = list(PythonReader.generate_tokens(
+            'f"status: {value}"', token_class=lambda match: match.group().upper()))
+        self.assertEqual(['F', '"STATUS: "', 'VALUE'], tokens)
