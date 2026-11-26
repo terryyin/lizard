@@ -124,11 +124,12 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
         - Single-line comments: --
         - Multi-line comments: /* */
         - String literals: 'text' (with '' for escaping)
+        - Alternative quoting: q'[text]', with an optional national prefix: nq'[text]'
         - Assignment operator: :=
         """
         # Add PL/SQL-specific patterns
         addition = (
-            r"|[qQ]'(?:\[.*?\]'|\{.*?\}'|\(.*?\)'|<.*?>'|"
+            r"|[nN]?[qQ]'(?:\[.*?\]'|\{.*?\}'|\(.*?\)'|<.*?>'|"
             r"(?P<sql_quote>[^\s\[({<]).*?(?P=sql_quote)')"
             r"|--[^\n]*" + addition)  # Single-line comment starting with --
         return CodeReader.generate_tokens(source_code, addition, token_class)
