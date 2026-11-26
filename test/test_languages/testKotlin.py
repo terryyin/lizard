@@ -16,6 +16,22 @@ class Test_tokenizing_Kotlin(unittest.TestCase):
 
 class Test_parser_for_Kotlin(unittest.TestCase):
 
+    def test_multiline_default_keeps_escaped_parameter_names(self):
+        functions = get_kotlin_function_list('''\
+fun notice(
+    `subject  line`: String,
+    `retry-count (max), !`: Int,
+    message: String = """Try
+later""".trimIndent(),
+): String {
+    return "$message!"
+}
+''')
+        self.assertEqual(
+            [("notice", ["subject  line", "retry-count (max), !", "message"], 3)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_empty(self):
         functions = get_kotlin_function_list("")
         self.assertEqual(0, len(functions))
@@ -142,22 +158,6 @@ failed""",
             [("formatNotice", ["title", "detail"], 2),
              ("fromCall", ["message", "retries"], 2),
              ("fromAnnotation", ["message", "retries"], 2)],
-            [(f.name, f.parameters, f.parameter_count) for f in functions],
-        )
-
-    def test_multiline_default_keeps_escaped_parameter_names(self):
-        functions = get_kotlin_function_list('''\
-fun notice(
-    `subject  line`: String,
-    `retry-count (max), !`: Int,
-    message: String = """Try
-later""".trimIndent(),
-): String {
-    return "$message!"
-}
-''')
-        self.assertEqual(
-            [("notice", ["subject  line", "retry-count (max), !", "message"], 3)],
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
