@@ -68,6 +68,202 @@ sub another_method {
         method2 = next(f for f in result.function_list if f.name == 'MyPackage::another_method')
         self.assertEqual(1, method2.cyclomatic_complexity)
 
+    def test_qualified_package_names_prefix_subroutines(self):
+        code = """package Site::Routes v1.2.3;
+sub import { return 1; }
+package Site::Admin;
+sub import { return 2; }
+package Reset;
+sub import { return 3; }
+1;
+"""
+        functions = analyze_file.analyze_source_code("routes.pm", code).function_list
+
+        self.assertEqual(
+            [('Site::Routes::import', 2, 2), ('Site::Admin::import', 4, 4), ('Reset::import', 6, 6)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_package_prefix_is_restored_after_a_block(self):
+        code = """package Site;
+package Site::Admin v1.2.3 {
+    sub install { return 1; }
+}
+sub install { return 2; }
+{
+    package Site::Routes;
+    sub install { return 3; }
+}
+sub reset { return 4; }
+1;
+"""
+        functions = analyze_file.analyze_source_code("routes.pm", code).function_list
+
+        self.assertEqual(
+            [('Site::Admin::install', 3), ('Site::install', 5),
+             ('Site::Routes::install', 8), ('Site::reset', 10)],
+            [(f.name, f.start_line) for f in functions])
+
+    def test_package_names_in_expressions_keep_following_functions(self):
+        code = """package Example;
+sub package { 1 }
+{ Example->package() }
+sub after { return 1; }
++{ package => 'Example::Other' };
+sub tail { return 2; }
+1;
+"""
+        functions = analyze_file.analyze_source_code("routes.pm", code).function_list
+
+        self.assertEqual(
+            [('Example::package', 2, 2), ('Example::after', 4, 4), ('Example::tail', 6, 6)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_package_declaration_can_end_at_closing_brace(self):
+        code = """package Outer;
+{ package Inner }
+sub after { return 1; }
+sub tail { return 2; }
+"""
+        functions = analyze_file.analyze_source_code("routes.pm", code).function_list
+
+        self.assertEqual(
+            [('Outer::after', 3, 3), ('Outer::tail', 4, 4)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_do_block_keeps_the_enclosing_package(self):
+        code = """package Outer;
+{
+    package Inner;
+    my $x = do { 1; };
+    sub inside { return 1; }
+}
+sub after { return 2; }
+"""
+        functions = analyze_file.analyze_source_code("routes.pm", code).function_list
+
+        self.assertEqual(
+            [('Inner::inside', 5, 5), ('Outer::after', 7, 7)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_format_picture_braces_keep_the_enclosing_package(self):
+        template = """package Outer;
+{
+    package Inner;
+    my $value = do {
+        {header}
+{brace}
+.
+        1
+    };
+    sub inside { return 1; }
+}
+sub after { return 2; }
+"""
+        cases = (
+            ('format STDOUT =', '{', 10),
+            ('format STDOUT =', '}', 10),
+            ('format # heading comment\n        STDOUT =', '}', 11),
+            ("format Current'FMT =", '}', 10),
+        )
+        for header, brace, inside_line in cases:
+            with self.subTest(header=header, brace=brace):
+                code = template.replace('{header}', header).replace('{brace}', brace)
+                functions = analyze_file.analyze_source_code("report.pl", code).function_list
+
+                self.assertEqual(
+                    [('Inner::inside', inside_line, inside_line),
+                     ('Outer::after', inside_line + 2, inside_line + 2)],
+                    [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_package_declaration_after_format_keeps_its_name(self):
+        code = """format STDOUT =
+text
+.
+package Report;
+sub render { 1 }
+"""
+        functions = analyze_file.analyze_source_code("report.pl", code).function_list
+
+        self.assertEqual(
+            [('Report::render', 5, 5)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_format_value_keeps_its_named_subroutine(self):
+        code = """format STDOUT =
+@<<<
+do {
+    sub value { return 42; }
+    value()
+}
+.
+sub render { 1 }
+write;
+"""
+        functions = analyze_file.analyze_source_code("report.pl", code).function_list
+
+        self.assertEqual(
+            [('value', 4, 4, 1, 5), ('render', 8, 8, 1, 3)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity, f.token_count)
+             for f in functions])
+
+    def test_format_scalar_values_keep_following_declarations(self):
+        template = """our $value = 42;
+format STDOUT =
+@<<<
+{value}
+.
+{package}sub render { 1 }
+write;
+"""
+        for value in ('$value', 'do { my $value = 42 }'):
+            for package in ('', 'package Report;\n'):
+                with self.subTest(value=value, package=package):
+                    code = template.replace('{value}', value).replace('{package}', package)
+                    functions = analyze_file.analyze_source_code("report.pl", code).function_list
+
+                    name, line = ('Report::render', 7) if package else ('render', 6)
+                    self.assertEqual(
+                        [(name, line, line)],
+                        [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_format_special_scalar_brackets_keep_picture_text_opaque(self):
+        template = """format STDOUT =
+@<<<<<<<<
+{value}
+sub fake { 1 }
+.
+sub render { 1 }
+write;
+"""
+        for value in ('$]', '$[', 'do { [$$]->[0]; }', 'do { [$$[0]]->[0]; }', "[\n  42\n]->[0]"):
+            with self.subTest(value=value):
+                code = template.replace('{value}', value)
+                functions = analyze_file.analyze_source_code("report.pl", code).function_list
+
+                line = 6 + value.count('\n')
+                self.assertEqual(
+                    [('render', line, line)],
+                    [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_format_method_keeps_its_assignment_expression(self):
+        code = """package Report;
+sub format : lvalue { our $slot; $slot }
+sub update {
+    Report->
+    format =
+        (1 ? 'left' : 'fallback')
+.
+        'right';
+    return Report->format;
+}
+die unless Report::update() eq 'leftright';
+"""
+        functions = analyze_file.analyze_source_code("report.pl", code).function_list
+
+        self.assertEqual(
+            [('Report::format', 2, 2, 1), ('Report::update', 3, 10, 3)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in functions])
+
     def test_perl_method_attributes(self):
         code = '''#!/usr/bin/perl
 
@@ -769,12 +965,7 @@ class TestPerlCoverageGaps(unittest.TestCase):
         )
         funcs = self._funcs(code)
         names = [f.name for f in funcs]
-        # Current parser behavior: inner anonymous sub is captured as
-        # <anonymous>, and the outer "sub outer" is lost (surfaces as
-        # *global*). Locking in the observed set so regressions in the
-        # _state_nested_call 'sub' branch are caught.
-        # TODO: outer sub should be named "outer" — pending parser fix.
-        self.assertEqual(["<anonymous>", "*global*"], names)
+        self.assertEqual(["<anonymous>", "outer"], names)
 
     def test_nested_call_with_extra_parens(self):
         # _state_nested_call '(' nesting branch
@@ -969,4 +1160,147 @@ class TestPerlCoverageGaps(unittest.TestCase):
         # nested-anon-body state actually processed its contents
         # (not exited early on the inner '{').
         anon = next(f for f in funcs if f.name == "<anonymous>")
-        self.assertGreaterEqual(anon.cyclomatic_complexity, 2) 
+        self.assertGreaterEqual(anon.cyclomatic_complexity, 2)
+
+
+class TestPerlDefinedOr(unittest.TestCase):
+    def test_defined_or_keeps_the_rest_of_the_line(self):
+        code = """sub retry_count {
+    my ($count, $override) = @_;
+    return ($count // 3) if $override;
+    $count //= 3 if defined $override;
+    return $count;
+}
+sub reset_count { return 0; }
+"""
+        functions = analyze_file.analyze_source_code("retries.pl", code).function_list
+
+        self.assertEqual(
+            [('retry_count', 6, 3), ('reset_count', 7, 1)],
+            [(f.name, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_slashes_in_regexes_keep_the_rest_of_the_line(self):
+        code = r"""sub clean_name {
+    my ($name) = @_;
+    $name =~ s/\(discard\)// if length $name;
+    $name =~ tr/[]//d;
+    return $name if $name =~ //;
+    return split //, $name;
+}
+sub default_name { return 'guest'; }
+"""
+        functions = analyze_file.analyze_source_code("names.pl", code).function_list
+
+        self.assertEqual(
+            [('clean_name', 7, 3), ('default_name', 8, 1)],
+            [(f.name, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_optional_callback_keeps_enclosing_subroutine(self):
+        code = """sub queue_update {
+    my ($queue, $priority) = @_;
+    if ($queue) {
+        $queue->schedule($priority // 1, sub { return 1; });
+    }
+}
+sub clear_updates { return 0; }
+"""
+        functions = analyze_file.analyze_source_code("updates.pl", code).function_list
+
+        self.assertEqual(
+            [('<anonymous>', 4, 1), ('queue_update', 6, 2), ('clear_updates', 7, 1)],
+            [(f.name, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_subroutine_variable_is_not_a_declaration(self):
+        code = """sub run_task {
+    my ($sub, $fallback) = @_;
+    return ($sub // $fallback)->();
+}
+sub cancel_task { return 0; }
+"""
+        functions = analyze_file.analyze_source_code("tasks.pl", code).function_list
+
+        self.assertEqual(
+            [('run_task', 4), ('cancel_task', 5)],
+            [(f.name, f.end_line) for f in functions])
+
+    def test_defined_or_next_to_a_heredoc(self):
+        code = """sub format_notice
+{
+    my ($notice) = @_;
+    return $notice // <<'NOTICE';
+The warning includes a literal unmatched brace {
+and an example URL https://example.org/
+NOTICE
+}
+sub clear_notice { return ''; }
+"""
+        functions = analyze_file.analyze_source_code("notices.pl", code).function_list
+
+        self.assertEqual(
+            [('format_notice', 1, 8, 1), ('clear_notice', 9, 9, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_defined_or_after_a_filehandle_read(self):
+        code = """sub read_item {
+    my $line = <STDIN> // /[}]/;
+    return $line if defined $line;
+    return '';
+}
+sub reset_reader { return 0; }
+"""
+        functions = analyze_file.analyze_source_code("reader.pl", code).function_list
+
+        self.assertEqual(
+            [('read_item', 5, 2), ('reset_reader', 6, 1)],
+            [(f.name, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_file_size_check_before_defined_or(self):
+        code = """sub read_size {
+    my ($path) = @_;
+    my $size = -s $path;
+    warn 'File size missing' and return 0 unless $size;
+    return $size // 0 if $path;
+}
+sub reset_size { return 0; }
+"""
+        functions = analyze_file.analyze_source_code("sizes.pl", code).function_list
+
+        self.assertEqual(
+            [('read_size', 6, 4), ('reset_size', 7, 1)],
+            [(f.name, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_only_evaluated_replacements_contribute_decisions(self):
+        template = """sub expand_name {
+    my ($text, $name) = @_;
+    $text =~ s{NAME}{$name || 'guest'}g%s;
+    return $text;
+}
+sub marker { return 1; }
+"""
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        for flags, ccn, cognitive in [('e', 2, 1), ('', 1, 0)]:
+            with self.subTest(flags=flags):
+                functions = analyzer.analyze_source_code(
+                    "names.pl", template % flags).function_list
+
+                self.assertEqual(
+                    [('expand_name', 5, ccn, cognitive), ('marker', 6, 1, 0)],
+                    [(f.name, f.end_line, f.cyclomatic_complexity, f.cognitive_complexity) for f in functions])
+
+    def test_paired_substitution_skips_comments_before_replacement(self):
+        code = """sub replace_name {
+    my ($text, $name) = @_;
+    $text =~ s{NAME} # Match the placeholder
+              {$name}g;
+    return $text if defined $name;
+    # The caller did not supply a name.
+    return '';
+}
+sub marker { return 1; }
+"""
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        functions = analyzer.analyze_source_code("names.pl", code).function_list
+
+        self.assertEqual(
+            [('replace_name', 8, 2, 1), ('marker', 9, 1, 0)],
+            [(f.name, f.end_line, f.cyclomatic_complexity, f.cognitive_complexity) for f in functions])

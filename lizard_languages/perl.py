@@ -5,7 +5,7 @@ Language parser for Perl
 from .code_reader import CodeReader
 from .perl_states import PerlStates
 from .script_language import ScriptLanguageMixIn
-from .source_documentation import tokens_ignoring_documentation
+from .perl_tokens import perl_tokens
 
 
 _DOCUMENTATION = (
@@ -78,7 +78,4 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        may_have_documentation = (source_code.startswith('=') or '\n=' in source_code
-                                  or '__DATA__' in source_code or '__END__' in source_code)
-        return tokens_ignoring_documentation(
-            source_code, addition, token_class, _DOCUMENTATION, may_have_documentation)
+        return perl_tokens(source_code, addition, token_class, _DOCUMENTATION)
