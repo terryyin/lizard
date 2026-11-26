@@ -1,5 +1,7 @@
 import unittest
 
+from lizard import FileAnalyzer, get_extensions
+
 from .testTypeScript import get_ts_function_list
 
 
@@ -169,3 +171,42 @@ class Test_ts_class_field_arrow_naming(unittest.TestCase):
         self.assertIn("process", names)
         anon_count = sum(1 for n in names if n == "(anonymous)")
         self.assertGreaterEqual(anon_count, 2)
+
+
+class Test_GenericAsyncAwait(unittest.TestCase):
+    def test_generic_async_arrow_reports_awaited_keyword_methods(self):
+        source = '''export const generic = async <T,>(value: T) => {
+  await
+  { catch() {}, done() {} };
+  return value;
+};
+'''
+        for filename in ('sample.ts', 'sample.tsx'):
+            with self.subTest(filename=filename):
+                analyzer = FileAnalyzer(get_extensions(['cognitive', 'nd', 'ns']))
+                functions = analyzer.analyze_source_code(filename, source).function_list
+                self.assertEqual(
+                    [('catch', 3, [], 1, 0, 0, 0),
+                     ('done', 3, [], 1, 0, 0, 0),
+                     ('generic', 1, ['value'], 1, 0, 0, 0)],
+                    [(f.name, f.start_line, f.parameters, f.cyclomatic_complexity,
+                      f.cognitive_complexity, f.max_nesting_depth, f.max_nested_structures)
+                     for f in functions])
+
+    def test_generic_async_property_arrow_preserves_member_access(self):
+        source = '''const routes = {
+  load: async <T>(value: T) => {
+    const state = { await: true };
+    state.await
+    { if (state.await) { consume(value); } }
+    return await
+    { catch() { return value; } };
+  },
+};
+'''
+        functions = FileAnalyzer(get_extensions(['nd', 'ns'])).analyze_source_code(
+            'sample.ts', source).function_list
+        self.assertEqual(
+            [('catch', 7, [], 1), ('load', 2, ['value'], 2)],
+            [(f.name, f.start_line, f.parameters, f.cyclomatic_complexity)
+             for f in functions])
