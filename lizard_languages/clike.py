@@ -53,6 +53,8 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 
     def preprocess(self, tokens):
         tilde = False
+        reference_reader = next(
+            (state for state in self.parallel_states if isinstance(state, CppRValueRefStates)), None)
         for token in tokens:
             if token == '~':
                 tilde = True
@@ -64,6 +66,8 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 if macro:
                     if macro.group(1) in ('if', 'ifdef', 'elif'):
                         self.context.add_condition()
+                    elif macro.group(1) in ('define', 'undef') and reference_reader is not None:
+                        reference_reader.read_macro_directive(macro.group(1), macro.group(2))
                     elif macro.group(1) == 'include':
                         yield "#include"
                         yield macro.group(2) or "\"\""
@@ -88,6 +92,10 @@ class CppRValueRefStates(CodeStateMachine):
     _LAMBDA_IDLE_TOKENS = _LAMBDA_GROUP_TOKENS | _IDLE_TOKENS
     _LAMBDA_SCAN_TOKENS = _LAMBDA_GROUP_TOKENS | _REFERENCE_SCAN_TOKENS
 
+    _PREFIX_MACRO = re.compile(
+        r"(?P<name>\w+)\(\s*(?P<left>\w+)\s*,\s*(?P<right>\w+)\s*\)"
+        r"\s*\(\s*(?P=left)\s+(?P=right)\s*\)\s*(?://[^\n]*)?\Z")
+
     def __init__(self, context, conditions):
         super().__init__(context)
         self._conditions = conditions
@@ -97,12 +105,40 @@ class CppRValueRefStates(CodeStateMachine):
         self._type_before_paren = False
         self._lambda = None
         self._events = self._IDLE_TOKENS
+        self._prefix_macros = set()
+        self._macro_candidate = False
+        self._macro_prefix_depth = 0
+
+    def read_macro_directive(self, directive, definition):
+        if not self._recognize_references:
+            return
+        macro = self._PREFIX_MACRO.match(definition) if directive == "define" else None
+        if macro:
+            self._prefix_macros.add(macro["name"])
+        elif self._prefix_macros:
+            name = re.match(r"\w+", definition)
+            if name:
+                self._prefix_macros.discard(name[0])
 
     def __call__(self, token, reader=None):
         events = self._events
         if events is None or token in events:
             self._state(token)
+        if self._prefix_macros:
+            self._track_macro_prefix(token)
         self.last_token = token
+
+    def _track_macro_prefix(self, token):
+        if self._macro_prefix_depth:
+            if token == "," and self._macro_prefix_depth == 1:
+                self._macro_prefix_depth = 0
+            elif token == "(":
+                self._macro_prefix_depth += 1
+            elif token == ")":
+                self._macro_prefix_depth -= 1
+        elif token == "(" and self._macro_candidate:
+            self._macro_prefix_depth = 1
+        self._macro_candidate = token in self._prefix_macros and self.last_token in self._LAMBDA_BEFORE
 
     def _set_state(self, state, events=None):
         self._state = state
@@ -147,12 +183,22 @@ class CppRValueRefStates(CodeStateMachine):
     def _read_reference_end(self, token):
         if token == "...":
             return
+        if token == "," and self._macro_prefix_depth == 1:
+            self._set_state(self._read_macro_prefix_suffix)
+            return
         # The ellipsis before a closing parenthesis can belong to a logical fold.
         if token in self._REFERENCE_END and (self.last_token != "..." or token in (">", ",")):
             self.context.add_condition(-1)
             self._initializer_deduction = False
         elif self._lambda is not None and self._lambda.in_parameter and token.isidentifier():
             self._lambda.references += 1
+        self._continue_reference(token)
+
+    def _read_macro_prefix_suffix(self, token):
+        # With an empty suffix, the first argument can be a cast type.
+        if token == ")":
+            self.context.add_condition(-1)
+        self._initializer_deduction = False
         self._continue_reference(token)
 
     def _continue_reference(self, token):
