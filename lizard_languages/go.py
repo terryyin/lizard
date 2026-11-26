@@ -119,6 +119,29 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
             self._state_global(token)
 
     def _expect_function_impl(self, token):
+        if token == '[':
+            self.br_count = 1
+            self._state = self._array_result_length
+        elif token == '{':
+            self._expect_braced_function_impl(token)
+
+    def _array_result_length(self, token):
+        if token == 'func':
+            # A function type and a literal can share the same prefix.
+            # Keep the existing function handling when the roles are ambiguous.
+            self.br_count = 0
+            self._state = self._expect_braced_function_impl
+        elif token == '[':
+            self.br_count += 1
+        elif token == ']':
+            self.br_count -= 1
+            if not self.br_count:
+                self._state = self._expect_function_impl
+        elif token == '{':
+            # Keep the enclosing function open and parse the contents normally.
+            self.sub_state(self.statemachine_clone())
+
+    def _expect_braced_function_impl(self, token):
         if token == '{':
             if self.last_token in ('struct', 'interface'):
                 self.next(self._inline_result_type, token)
