@@ -1301,6 +1301,35 @@ class TestCognitiveOptionalRecursion(unittest.TestCase):
             with self.subTest(filename=filename):
                 self.assertEqual([0, 0, 0, 0, 0, 2], cogc(filename, source))
 
+    def test_async_declaration_after_switch_label_shadows_optional_call(self):
+        for label, score in (('case 1', 1), ('case count ? 1 : 2', 3), ('default', 1)):
+            source = """
+                async function restore<T>(count: number): Promise<number> {
+                  switch (count) {
+                    %s: async function restore<U>(value: U): Promise<U> { return value; }
+                      return restore?.(count);
+                  }
+                  return 0;
+                }
+            """ % label
+            for filename in ('workflow.ts', 'workflow.tsx'):
+                with self.subTest(filename=filename, label=label):
+                    self.assertEqual([0, score], cogc(filename, source))
+
+    def test_async_function_expression_in_case_preserves_recursion(self):
+        source = """
+            async function repeat(count: number): Promise<number> {
+              switch (count) {
+                case 1:
+                  const next = count ? count - 1 : async function repeat<T>(value: T) { return value; };
+                  return repeat?.(Number(next));
+                default:
+                  return count;
+              }
+            }
+        """
+        self.assertEqual([0, 4], cogc('workflow.ts', source))
+
     def test_destructured_parameter_key_and_binding(self):
         source = """
             function run({run, n}) { if (n) run?.({run: n - 1}); }
