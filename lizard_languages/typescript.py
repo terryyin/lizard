@@ -233,24 +233,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         state.statemachine_before_return()
         self.eof()
 
-    def _mark_optional_call_binding(self, token, state):
-        functions = getattr(self.context, 'bare_recursive_functions', ())
-        name = state.last_token
-        if not functions or not name:
-            return token
-        function = self.context.current_function
-        if getattr(function, 'optimistic', False) and function not in functions:
-            function = self.context.stacked_functions[-1]
-        if name != function.unqualified_name or function not in functions:
-            return token
-        scopes = [self.context.recursive_var_shadows]
-        while isinstance(state, TypeScriptStates):
-            scopes.append(state.recursive_local_scope())
-            if state.recursive_statement_scope:
-                scopes.append(state.recursive_statement_scope)
-            state = state._state
-        return OptionalCallBinding(token, function, scopes)
-
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
         innermost open expression arrow (or optimistic signature) before
@@ -343,6 +325,24 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 if keyword is not None:
                     yield keyword
                 return
+
+    def _mark_optional_call_binding(self, token, state):
+        functions = getattr(self.context, 'bare_recursive_functions', ())
+        name = state.last_token
+        if not functions or not name:
+            return token
+        function = self.context.current_function
+        if getattr(function, 'optimistic', False) and function not in functions:
+            function = self.context.stacked_functions[-1]
+        if name != function.unqualified_name or function not in functions:
+            return token
+        scopes = [self.context.recursive_var_shadows]
+        while isinstance(state, TypeScriptStates):
+            scopes.append(state.recursive_local_scope())
+            if state.recursive_statement_scope:
+                scopes.append(state.recursive_statement_scope)
+            state = state._state
+        return OptionalCallBinding(token, function, scopes)
 
     @staticmethod
     def code_tokens(tokens):

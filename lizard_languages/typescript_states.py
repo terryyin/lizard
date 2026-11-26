@@ -48,11 +48,11 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_condition = False  # Inside `if (...)` / `for (...)`
 
     def __call__(self, token, reader=None):
-        if self._recursive_local_pattern is not None:
-            self._read_recursive_local_pattern(token)
         if self._binding_candidate:
             # Only named-formal readers need events for initializer dispatch.
             self._binding_candidate.read_token(token, report=False)
+        if self._recursive_local_pattern is not None:
+            self._read_recursive_local_pattern(token)
         return CodeStateMachine.__call__(self, token, reader)
 
     def next(self, state, token=None):
