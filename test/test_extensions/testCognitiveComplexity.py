@@ -681,6 +681,19 @@ class TestOtherBraceLanguages(unittest.TestCase):
             }"""))
 
 
+class TestScalaLogicalOperatorSequences(unittest.TestCase):
+
+    def test_infix_question_mark_does_not_end_a_sequence(self):
+        self.assertEqual([0, 1], cogc("Permissions.scala", """
+            object PermissionCheck {
+              final class Permissions {
+                def ?(action: String): Boolean = action.startsWith("r")
+              }
+              def canRun(enabled: Boolean, permissions: Permissions, ready: Boolean): Boolean =
+                enabled && permissions ? "run" && ready
+            }"""))
+
+
 class TestJavaScriptNestedFunctions(unittest.TestCase):
     """A nested function is measured on its own.  Its brackets must not
     change how the rest of the enclosing function is counted."""
