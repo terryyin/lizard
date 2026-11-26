@@ -4,6 +4,8 @@ in every function.
 """
 from lizard import FileInfoBuilder, FunctionInfo
 
+from .nd_conditions import ConditionHeaders
+
 DEFAULT_ND_THRESHOLD = 7
 
 
@@ -30,10 +32,11 @@ class LizardExtension(object):  # pylint: disable=R0903
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
-        return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
+        headers = ConditionHeaders.for_reader(reader)
+        return self._nesting_depth(tokens, reader, l_depth, implied_semicolons, headers)
 
     @staticmethod
-    def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
+    def _nesting_depth(tokens, reader, l_depth, implied_semicolons, headers):  # pylint: disable=R0912,R0915
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -51,6 +54,9 @@ class LizardExtension(object):  # pylint: disable=R0903
         ).union(block_ends, block_starts, loops)
         context = reader.context
         for token in tokens:
+            if headers is not None and headers.advance(token):
+                yield token
+                continue
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
                 context.clear_prev_was_else()
