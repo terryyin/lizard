@@ -126,3 +126,24 @@ func reset(flags uint32) uint32 {
 ''')
         assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
                 for f in result] == [('encodeHeader', 7, 7, 1), ('reset', 9, 14, 2)]
+
+
+def test_bodyless_array_result_at_end_of_file():
+    source = '''package wire
+
+import "unsafe"
+
+type Header struct{ Version, Flags uint32 }
+
+func reset(flags uint32) uint32 {
+    if flags == 0 {
+        return 1
+    }
+    return 0
+}
+
+func encodeHeader(header Header) [unsafe.Sizeof(Header{})]byte'''
+    for suffix in ('', '\n', ' // implemented in assembly\n', ';'):
+        result = get_go_function_list(source + suffix)
+        assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                for f in result] == [('reset', 7, 12, 2), ('encodeHeader', 14, 14, 1)]
