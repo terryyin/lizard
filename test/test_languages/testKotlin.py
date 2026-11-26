@@ -76,6 +76,43 @@ second line""") value: Int,
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
+    def test_named_call_argument_is_not_a_formal_parameter(self):
+        functions = get_kotlin_function_list('''\
+fun render(title: String, detail: String): String { return "$title: $detail" }
+
+fun readNotice(
+    label: String = render(
+        title = "Service unavailable",
+        detail = """Try again
+later.""",
+    ),
+    retries: Int = 2,
+): String {
+    return "$label ($retries)"
+}
+''')
+        self.assertEqual(
+            [("render", ["title", "detail"], 2), ("readNotice", ["label", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_multiline_default_keeps_the_name_after_an_annotation(self):
+        functions = get_kotlin_function_list('''\
+annotation class Description(val text: String)
+
+fun readNotice(
+    @Description(text = "Public status") status: String = """Service unavailable
+Try again later.""",
+    retries: Int = 2,
+): String {
+    return "$status ($retries)"
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["status", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_one_function_with_return_value(self):
         result = get_kotlin_function_list('''
             fun sayGoodbye(): String {return "bye"}
