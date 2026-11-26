@@ -52,8 +52,6 @@ class GoReader(CodeReader, CCppCommentsMixin):
 class GoStates(GoLikeStates):  # pylint: disable=R0903
     """Distinguish declarations, literals and function types before opening one."""
 
-    _array_result_line = None
-
     def _state_global(self, token):
         if token == 'func':
             self._start_function(token)
@@ -119,6 +117,8 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
             self._start_function(token, self._var_name)
         else:
             self._state_global(token)
+
+    _array_result_line = None
 
     def _expect_function_impl(self, token):
         if self._array_result_line is not None:
