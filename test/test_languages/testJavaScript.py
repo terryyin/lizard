@@ -364,6 +364,27 @@ class PointFactory {
                     [('constructor', 1), ('new', 2), ('new', 1), ('get new', 1)],
                     [(f.name, f.cyclomatic_complexity) for f in functions])
 
+    def test_bare_generator_methods_named_new(self):
+        code = '''
+class EventStream {
+  *new(events) {
+    for (const event of events) yield event;
+  }
+  close() {}
+}
+class Replay {
+  constructor(events) { this.events = events; }
+  *new() { yield* this.events; }
+}
+'''
+        for filename in ('a.js', 'a.ts'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(filename, code).function_list
+                self.assertEqual(
+                    [('new', 2, ['events']), ('close', 1, []),
+                     ('constructor', 1, ['events']), ('new', 1, [])],
+                    [(f.name, f.cyclomatic_complexity, f.parameters) for f in functions])
+
     def test_multiline_class_heritage_reads_nested_method(self):
         code = '''
 class Registry {
