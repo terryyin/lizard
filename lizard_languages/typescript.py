@@ -5,6 +5,8 @@ Language parser for TypeScript
 from itertools import tee
 
 from .code_reader import CodeReader, CodeStateMachine, MemberName
+from .typescript_signatures import (
+    TypeArgumentComma, call_type_argument_span, can_start_call_type_arguments)
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
@@ -24,6 +26,7 @@ OPTIONAL_NAME = (r"|(?:(?:\w+|\"(?:\\.|[^\"\\])*\"|\'(?:\\.|[^\'\\])*\')"
                  r"\?(?=\s*(?:[:,)]|\Z)))")
 # JavaScript identifiers can contain dollar signs as well as word characters.
 JS_IDENTIFIER = r"|(?:[\w$]+)"
+_TYPE_ARGUMENT_COMMA = TypeArgumentComma(',')
 
 
 class Tokenizer(object):
@@ -242,6 +245,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         A '\n' is consumed by line_counter, and comments by comment_counter,
         before the state machine sees them, so expression_arrows cannot
         change between a newline and the next code token."""
+        type_argument_span = 0
         arrows = self.context.expression_arrows = []
         signatures = self.context.ended_signatures = []
         line_start = False
@@ -257,6 +261,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         keyword = None      # waits for the next token: `{ if: a }`
         tokens = iter(self.code_tokens(tokens))
         while True:
+            replay_arguments = False
             for token in tokens:
                 if not token.isspace():
                     if keyword is not None:
@@ -267,6 +272,16 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             keyword = _MemberName(keyword)
                         yield keyword
                         keyword = None
+                    if type_argument_span:
+                        type_argument_span -= 1
+                        if token == ',':
+                            token = _TYPE_ARGUMENT_COMMA
+                    elif (token == '<' and self.context.class_field_annotations
+                          and can_start_call_type_arguments(state.last_token)):
+                        tokens, lookahead = tee(tokens)
+                        type_argument_span = call_type_argument_span(lookahead)
+                        del lookahead
+                        replay_arguments = True
                     if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
                         end_before_line_token(state, arrows, token)
@@ -307,6 +322,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             keyword = token
                             continue
                     yield token
+                    if replay_arguments:
+                        break
                 elif token == '\n':
                     if keyword is not None:
                         yield keyword

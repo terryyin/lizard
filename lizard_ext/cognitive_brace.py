@@ -23,7 +23,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             self._process = self._process_flat
 
     def _process(self, token):  # pylint: disable=E0202
-        if token == '?' and getattr(token, 'is_optional', False):
+        if (token == '?' and getattr(token, 'is_optional', False)
+                or token == ',' and getattr(token, 'is_type_argument_comma', False)):
             return
         state = self.state
         line = self.line

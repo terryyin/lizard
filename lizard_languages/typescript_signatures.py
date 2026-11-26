@@ -5,6 +5,82 @@ from .javascript_expression import ends_expression, starts_statement
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 
 
+class TypeArgumentComma(str):
+    """A comma within a TypeScript call's type arguments."""
+
+    is_type_argument_comma = True
+
+
+# The type parser reads these as complete types. Their value forms can
+# still have members in comparisons, such as `score < this.min`.
+_UNQUALIFIED_TYPE_ATOMS = frozenset(('this', 'true', 'false', 'null', 'void'))
+
+
+def can_start_call_type_arguments(previous):
+    """The callee before a possible '<'."""
+    return previous and (previous in (')', ']', '?.', '!') or
+                         previous[0].isalpha() or previous[0] in '_$#')
+
+
+def call_type_argument_span(tokens):
+    """Return the span of comma-delimited reference types before a call."""
+    depth = 1
+    expects_type = True
+    reference_name = False
+    previous = '<'
+    comma = False
+    code = (token for token in tokens if not token.isspace())
+    for offset, token in enumerate(code, 1):
+        if token.startswith(('//', '/*')):
+            continue
+        if previous == '[':
+            if token != ']':
+                return 0
+        elif token == '>' and (not expects_type or previous == ','):
+            depth -= 1
+            if not depth:
+                return offset if comma and _next_code_token(code) == '(' else 0
+            expects_type = False
+            reference_name = False
+        elif expects_type:
+            if previous not in ('.', 'typeof') and token in ('keyof', 'readonly', 'typeof'):
+                previous = token
+                continue
+            identifier = token.replace('$', '_').isidentifier()
+            qualified = previous in ('.', 'typeof')
+            if not identifier and (qualified or token[0] not in "'\""):
+                return 0
+            expects_type = False
+            reference_name = identifier and (qualified or token not in _UNQUALIFIED_TYPE_ATOMS)
+        elif token in ('.', '<') or _packed_type_reference(token):
+            if not reference_name:
+                return 0
+            depth += token == '<'
+            expects_type = token in ('.', '<')
+            reference_name = False
+        elif token in (',', '|', '&'):
+            comma |= token == ','
+            expects_type = True
+        elif token == '[':
+            reference_name = False
+        else:
+            return 0
+        previous = token
+    return 0
+
+
+def _packed_type_reference(token):
+    # The TSX lexer emits a simple '<Name>' as one token.
+    return token[0] == '<' and token.endswith('>') and (
+        token[1:-1].replace('.', '_').isidentifier()
+        and not getattr(token, 'is_jsx_markup', False))
+
+
+def _next_code_token(tokens):
+    return next((token for token in tokens
+                 if not token.startswith(('//', '/*'))), None)
+
+
 class ReturnTypeColon(str):
     """A colon confirmed to belong to an arrow's return annotation."""
 
