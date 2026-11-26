@@ -82,7 +82,14 @@ class _OptionalMemberQuestion(str):
     is_optional = True
 
 
+class _MappedTypeQuestion(_OptionalMemberQuestion):
+    """A mapped type modifier that also stays out of the CCN counter."""
+
+    is_member_name = True
+
+
 _OPTIONAL_MEMBER_QUESTION = _OptionalMemberQuestion('?')
+_MAPPED_TYPE_QUESTION = _MappedTypeQuestion('?')
 _ANNOTATION_PUNCTUATION = frozenset(('?', ':'))
 
 
@@ -278,11 +285,16 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     elif token in marked_punctuation:
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens
-                        if token == '?':
-
-                            if (self.context.class_field_annotations
-                                    and state.optional_member_context()):
+                        if token == '?' and self.context.class_field_annotations:
+                            if state.optional_member_context():
                                 token = _OPTIONAL_MEMBER_QUESTION
+                            elif state.last_token in (']', '+', '-'):
+                                tokens, lookahead = tee(tokens)
+                                if _mapped_type_modifier(lookahead):
+                                    token = _MAPPED_TYPE_QUESTION
+                                del lookahead
+                                yield token
+                                break
                         elif token == ':' and state.last_token == ')':
                             annotation = state.return_annotation_context()
                             if annotation is not None:
@@ -337,3 +349,11 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     + OPTIONAL_NAME + JS_IDENTIFIER + NULLISH_COALESCING
                     + OPTIONAL_ACCESS)
         yield from template_tokens(source_code, addition, token_class)
+
+
+def _mapped_type_modifier(tokens):
+    # A ternary must have an operand before its colon or closing delimiter.
+    for token in tokens:
+        if not token.isspace() and not token.startswith(_COMMENT_STARTS):
+            return token in (':', ';', '}')
+    return False
