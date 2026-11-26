@@ -42,8 +42,10 @@ _STRING_DELIMITERS = r'|"""|(?<=[\w$`])"'
 _SCALA_QUOTES = r"|'[^\W\d][\w$]*(?![\w$'])|'(?=[{\[][^'])"
 _PROJECTED_MACRO = re.compile(r'#\s*[\w$]+\s*=\s*\$\{')
 _SYMBOLIC_TYPES = r'|=:=|<:<|=>>|\?=>'
-_SYMBOLIC_METHOD = re.compile(r'([ \t]+)((?:[^\W\d][\w$]*_)?(?:(?!/[*/])[!#%&*+\-/:<=>?@\\^|~])+)')
-_SYMBOLIC_DEF = re.compile(r'\bdef' + _SYMBOLIC_METHOD.pattern)
+_SYMBOLIC_NAME = r'(?:[^\W\d][\w$]*_)?(?:(?!/[*/])[!#%&*+\-/:<=>?@\\^|~])+'
+_DOLLAR_NAME = r'[^\W\d]\w*\$[\w$]*|\$[\w$]+'
+_SPECIAL_METHOD = re.compile(r'([ \t]+)(' + _SYMBOLIC_NAME + '|' + _DOLLAR_NAME + ')')
+_SPECIAL_DEF = re.compile(r'\bdef' + _SPECIAL_METHOD.pattern)
 _COMMENT_BRACKETS = re.compile(r'/\*|\*/')
 _RAW_END = re.compile(r'"""+')
 _RAW_INTERPOLATION = re.compile(r'\$\$|\$"|\$\{|"""+')
@@ -127,7 +129,7 @@ def _scala_tokens(patterns, source, pos=0, in_interpolation=False, macro_splices
                 yield '}'
                 break
             if token == 'def':
-                name = _SYMBOLIC_METHOD.match(source, token.offset + 3)
+                name = _SPECIAL_METHOD.match(source, token.offset + 3)
                 if name:
                     yield 'def'
                     yield name.group(1)
@@ -378,7 +380,7 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
         addition = r'|`[^`\r\n]+`' + _SYMBOLIC_TYPES + addition
         if token_class is None and (
                 '"""' in source_code or '${' in source_code or '$"' in source_code
-                or _SYMBOLIC_DEF.search(source_code) or _XML_START.search(source_code)):
+                or _SPECIAL_DEF.search(source_code) or _XML_START.search(source_code)):
             addition = _STRING_DELIMITERS + addition
             patterns = (compiled_token_pattern(addition), compiled_token_pattern(_SCALA_QUOTES + addition))
             tokens = _scala_tokens(patterns, source_code, macro_splices=bool(_PROJECTED_MACRO.search(source_code)))
