@@ -79,14 +79,14 @@ def call_type_argument_span(tokens):
     for offset, token in enumerate(code, 1):
         if token.startswith(('//', '/*')):
             continue
-        if token == '>' and (not expects_type or previous == ','):
+        if previous == '[':
+            if token != ']':
+                return 0
+        elif token == '>' and (not expects_type or previous == ','):
             depth -= 1
             if not depth:
                 return offset if comma and _next_code_token(code) == '(' else 0
             expects_type = False
-        elif previous == '[':
-            if token != ']':
-                return 0
         elif expects_type:
             if token in ('keyof', 'readonly', 'typeof'):
                 continue
