@@ -36,7 +36,6 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     @staticmethod
     def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
-        else_if_chain = 'ruby' not in getattr(reader, 'language_names', ())
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -67,7 +66,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 # Don't add nesting for "if" when it immediately follows "else" (else if)
                 # Syntactically else if is equivalent to else {if} but should not increase depth
                 if token == 'else' and not getattr(token, 'is_member_name', False):
-                    context.set_prev_was_else(else_if_chain)
+                    context.set_prev_was_else(True)
                 elif token == 'if' and token in loops and context.get_prev_was_else():
                     context.clear_prev_was_else()
                 # Handle opening parenthesis - start of condition
@@ -88,7 +87,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     else:
                         # Not in a condition, treat as regular nesting
                         l_depth = context.open_level()
-                    if not else_if_chain and context.get_in_condition():
+                    if getattr(context, 'ruby_tracks_depth', False) and context.get_in_condition():
                         function = context.current_function
                         function.ruby_statement_peak = max(function.ruby_statement_peak, l_depth)
 

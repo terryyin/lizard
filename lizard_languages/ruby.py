@@ -268,6 +268,8 @@ class _NestingSemicolons:
     def read(self, tokens):
         previous = None
         for token in tokens:
+            if previous == 'else':
+                self.context.clear_prev_was_else()
             self.before_token = (self.context.newline and previous is not None
                                  and token not in ('.', '&')
                                  and (previous in ('do', 'then') or _ends_value(previous)))

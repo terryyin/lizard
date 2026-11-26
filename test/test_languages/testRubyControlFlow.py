@@ -275,3 +275,83 @@ end
             end
                 ''')
         self.assertEqual(0, len(result))
+
+
+def test_postfix_guards_keep_the_depth_of_the_expression_they_wrap():
+    source = '''
+def rendered_jobs(jobs, ready)
+  jobs.map do |job|
+    job.render if job.active?
+  end.compact if ready
+end
+
+def retry_jobs(left, right, enabled)
+  begin
+    return true if left.empty? && right.empty?
+  end while left == right if enabled
+end
+
+def run_jobs(jobs, ready, enabled)
+  jobs.each do |job|
+    job.run if job.active?
+  end if ready while enabled
+end
+
+def later_guard(jobs, ready)
+  jobs.map do |job|
+    job.render if job.active?
+  end.compact
+  log_jobs if ready
+end
+
+def grouped_jobs(jobs, ready)
+  (jobs.each do |job|
+    job.run if job.active?
+  end) if ready
+end
+'''
+    analyzer = FileAnalyzer(get_extensions(['nd']))
+
+    functions = analyzer.analyze_source_code('jobs.rb', source).function_list
+
+    assert [(f.name, f.max_nesting_depth) for f in functions] == [
+        ('rendered_jobs', 2), ('retry_jobs', 4), ('run_jobs', 3),
+        ('later_guard', 1), ('grouped_jobs', 2),
+    ]
+
+
+def test_postfix_guards_keep_independent_statements_at_the_same_depth():
+    source = '''
+def append_actions(key)
+  columns = Array(key.column).map { |column| quote(column) }
+  sql = +<<~SQL
+    FOREIGN KEY (#{columns.join(", ")})
+  SQL
+  sql << " #{action_sql('DELETE', key.on_delete)}" if key.on_delete
+  sql << " #{action_sql('UPDATE', key.on_update)}" if key.on_update
+end
+
+def schedule(jobs, ready)
+  if ready then jobs.each do |job|
+    job.run if job.active?
+  end else warn('No jobs') if jobs.empty?
+  end
+end
+
+def assign_layout_data(layout)
+  payload[:layout] = merge(layout.data, payload[:layout] || {}) if layout
+end
+
+def association_type(options)
+  type = -(options[:foreign_type]&.to_s || "#{options[:as]}_type") if options[:as]
+end
+
+'''
+    analyzer = FileAnalyzer(get_extensions(['nd']))
+
+    functions = analyzer.analyze_source_code('jobs.rb', source).function_list
+
+    assert [(f.name, f.max_nesting_depth) for f in functions] == [
+        ('append_actions', 1), ('schedule', 2), ('assign_layout_data', 2),
+        ('association_type', 2),
+    ]
