@@ -15,6 +15,68 @@ _CPP_RAW_STRING_TOKEN = r"|(?:u8|u|U|L)?R\"\((?:[^)]|\)(?!\"))*\)\""
 _C_LINE_COMMENT = r"|\/\/(?:\\\n|[^\n])*"
 
 
+_ANGLE_CHANGE = {"<": 1, ">": -1}
+# The preprocessor can join a tilde to the following delimiter.
+_GROUP_CHANGE = {"(": 1, ")": -1, "~(": 1, "~)": -1, "[": 1, "]": -1, "~[": 1, "~]": -1}
+
+
+class _CppTemplateAngles:
+    _template_group_depth = 0
+    _at_template_argument = False
+    _after_template_group = False
+    _in_comparison_operand = False
+    _template_braces = 0
+    _grouped_angle = False
+
+    def _read_template_angle(self, token):
+        if self._after_template_group:
+            if token == "<":
+                # A parenthesized left operand cannot introduce another angle list.
+                self._at_template_argument = True
+                self._in_comparison_operand = True
+                return False
+            self._after_template_group = False
+            if token in ("&&", "||", "and", "or"):
+                self._at_template_argument = True
+                return False
+        if self._template_group_depth:
+            self._template_group_depth += _GROUP_CHANGE.get(token, 0)
+            if token in _ANGLE_CHANGE:
+                self._grouped_angle = True
+            if not self._template_group_depth:
+                self._after_template_group = True
+        elif ((self._at_template_argument and token in ("(", "~(")) or
+              (self._in_comparison_operand and token in ("[", "~["))):
+            self._template_group_depth = 1
+            self._at_template_argument = False
+        elif token == "{":
+            self._template_braces += 1
+        elif token == "}" and self._template_braces:
+            self._template_braces -= 1
+        elif token in (";", "}") and self._grouped_angle and not self._template_braces:
+            # A comparison such as width < (height > 0) can resemble a template.
+            self.br_count = 0
+            self._reset_template_angles()
+            return True
+        else:
+            self.br_count += _ANGLE_CHANGE.get(token, 0)
+            if self.br_count == 1 and token == ",":
+                self._in_comparison_operand = False
+            # A second '<' could be part of an ungrouped comparison.
+            self._at_template_argument = (
+                token in ("<", "=", ",") and (self.br_count == 1 or self._in_comparison_operand))
+        if not self.br_count:
+            self._reset_template_angles()
+        return False
+
+    def _reset_template_angles(self):
+        self._at_template_argument = False
+        self._after_template_group = False
+        self._in_comparison_operand = False
+        self._template_braces = 0
+        self._grouped_angle = False
+
+
 class CCppCommentsMixin(object):  # pylint: disable=R0903
 
     @staticmethod
@@ -44,7 +106,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         super(CLikeReader, self).__init__(context)
         self.parallel_states = (
                 CppStates(context),
-                CLikeNestingStackStates(context),
+                CppNestingStackStates(context),
                 CppRValueRefStates(context))
 
     @staticmethod
@@ -73,7 +135,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                     yield token
 
 
-class CppStates(CLikeStates):  # pylint: disable=R0903
+class CppStates(CLikeStates, _CppTemplateAngles):  # pylint: disable=R0903
     _initializer_type = None
 
     def _state_function(self, token):
@@ -98,12 +160,11 @@ class CppStates(CLikeStates):  # pylint: disable=R0903
             super()._state_dec_to_imp(token)
 
     def _state_template_in_name(self, token):
-        if token == "<":
-            if not self.br_count:
-                self._state = self._state_template_start
-            self.br_count += 1
-        elif token == ">":
-            self.br_count -= 1
+        if token == "<" and not self.br_count:
+            self._state = self._state_template_start
+        if self._read_template_angle(token):
+            self._state = self._state_global
+            return
         self.context.add_to_function_name(token)
         if not self.br_count:
             self._state = self._state_function
@@ -122,6 +183,7 @@ class CppStates(CLikeStates):  # pylint: disable=R0903
             self._state = self._state_template_in_name
         else:
             self.br_count = 0
+            self._reset_template_angles()
             self._state = self._state_initializer
         self._state(token)
 
@@ -224,3 +286,12 @@ class CLikeNestingStackStates(CodeStateMachine):
     def _read_attribute(self, _):
         """Ignores C++11 attributes inside [[ ]]."""
         pass
+
+
+class CppNestingStackStates(CLikeNestingStackStates, _CppTemplateAngles):
+    def _read_template_parameters(self, token):
+        if self._read_template_angle(token):
+            self._state = self._state_global
+            self._state_global(token)
+        elif not self.br_count:
+            self._state = self._state_global
