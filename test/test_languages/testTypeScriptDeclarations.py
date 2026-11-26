@@ -1,6 +1,6 @@
 import unittest
 
-from lizard import FileAnalyzer, get_extensions
+from lizard import FileAnalyzer, analyze_file, get_extensions
 from .testTypeScript import get_ts_function_list
 
 
@@ -240,3 +240,294 @@ class Test_TypeScript_template_literal_types_in_declarations(unittest.TestCase):
                     [('choose', 4, 1), ('run', 3, 2), ('*global*', 1, 0)],
                     [(f.name, f.cyclomatic_complexity,
                       f.cognitive_complexity) for f in functions])
+
+
+class Test_TypeScript_bodyless_signatures(unittest.TestCase):
+    def test_overloads_report_only_the_implementation(self):
+        code = """function last<T>(array: readonly T[]): T | undefined;
+function last<T>(array: readonly T[], fallback: T): T;
+function last<T>(array: readonly T[], fallback?: T): T | undefined {
+    return array.length ? array[array.length - 1] : fallback;
+}
+"""
+        for suffix in ('ts', 'tsx'):
+            with self.subTest(suffix=suffix):
+                functions = analyze_file.analyze_source_code('example.' + suffix, code).function_list
+                self.assertEqual([('last', 3, 5, 2, 2)], [
+                    (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                    for f in functions])
+
+    def test_semicolonless_abstract_method_keeps_the_following_method(self):
+        code = """abstract class Box {
+  abstract read(): number
+  static create(n: number): number {
+    return n ? n : 0;
+  }
+  protected echo(n: number): number {
+    return n ? n : 0;
+  }
+}
+"""
+        for suffix in ('ts', 'tsx'):
+            with self.subTest(suffix=suffix):
+                functions = analyze_file.analyze_source_code('example.' + suffix, code).function_list
+                self.assertEqual([('create', 3, 5, 1, 2), ('echo', 6, 8, 1, 2)], [
+                    (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                    for f in functions])
+
+    def test_abstract_method_returning_constructor_type_has_no_row(self):
+        code = """abstract class Base {
+  abstract make(): abstract new () => Base%s
+  static create(n: number): number {
+    return n ? n : 0
+  }
+}
+if (Base.create(2) !== 2) throw new Error("abstract constructor control")
+"""
+        for suffix in ('ts', 'tsx'):
+            for separator in (';', ''):
+                with self.subTest(suffix=suffix, separator=separator):
+                    functions = analyze_file.analyze_source_code(
+                        'example.' + suffix, code % separator).function_list
+                    self.assertEqual([('create', 3, 5, 1, 2)], [
+                        (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                        for f in functions])
+
+    def test_abstract_constructor_type_can_wrap_before_new(self):
+        code = """abstract class Base {
+  abstract make(): abstract
+    new () => Base%s
+  static create(n: number) {
+    return n ? n : 0
+  }
+}
+if (Base.create(2) !== 2) throw Error()
+"""
+        for suffix in ('ts', 'tsx'):
+            for separator in (';', ''):
+                with self.subTest(suffix=suffix, separator=separator):
+                    functions = analyze_file.analyze_source_code(
+                        'example.' + suffix, code % separator).function_list
+                    self.assertEqual([('create', 4, 6, 1, 2)], [
+                        (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                        for f in functions])
+
+    def test_semicolonless_method_overloads_keep_only_body_parameters(self):
+        code = """class Registry {
+  get(key: string): string | undefined
+  get(key: string, defaultValue: string): string
+  get(key: string, defaultValue?: string): string | undefined
+  {
+    return this.entries.get(key) ?? defaultValue
+  }
+
+  constructor(private readonly entries: Map<string, string>) {}
+}
+"""
+        method, constructor = get_ts_function_list(code)
+        self.assertEqual(('get', 4, 7, ['key', 'defaultValue']),
+                         (method.name, method.start_line, method.end_line, method.parameters))
+        self.assertEqual('constructor', constructor.name)
+
+    def test_semicolonless_overload_before_computed_method(self):
+        code = """const read = Symbol();
+class Registry {
+  [read](key: string): string
+  [read](key: string, fallback?: string): string {
+    return key ? key : fallback ?? "";
+  }
+}
+"""
+        functions = get_ts_function_list(code)
+        self.assertEqual([('read', 4, 6, 2, 3)], [
+            (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+            for f in functions])
+
+    def test_semicolonless_overload_before_keyword_method(self):
+        code = """class Filter {
+  %s(value: string): boolean
+  %s(value: string, expected?: string): boolean {
+    return expected ? value === expected : Boolean(value);
+  }
+}
+"""
+        for name in ('is', 'as', 'in', 'extends'):
+            with self.subTest(name=name):
+                functions = get_ts_function_list(code % (name, name))
+                self.assertEqual([(name, 3, 5, 2, 2)], [
+                    (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                    for f in functions])
+
+    def test_assertion_method_can_wrap_before_is(self):
+        code = """class Validator {
+  check(%(value)s: unknown): asserts %(value)s
+    is string {
+      if (typeof %(value)s !== "string") throw new TypeError();
+    }
+}
+"""
+        for name in ('value', r'\u0076alue'):
+            with self.subTest(name=name):
+                functions = get_ts_function_list(code % {'value': name})
+                self.assertEqual([('check', 2, 5, 2)], [
+                    (f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_overload_return_type_can_wrap_before_infer_constraint(self):
+        code = """class Registry {
+  read(value: string): string extends infer U
+    extends string ? U : never
+  read(value: unknown, fallback?: string): string extends infer U
+    extends string ? U : never {
+    return typeof value === "string" ? value : fallback ?? "";
+  }
+}
+"""
+        functions = get_ts_function_list(code)
+        self.assertEqual([('read', 4, 7, 2, 4)], [
+            (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+            for f in functions])
+
+    def test_type_query_can_end_with_a_keyword_property(self):
+        code = """const predicates = { %(key)s: (value: unknown) => typeof value === "string" };
+
+function getPredicate(): typeof predicates.%(key)s {
+  return predicates.%(key)s;
+}
+"""
+        for key in ('is', 'in', 'instanceof'):
+            with self.subTest(key=key):
+                functions = get_ts_function_list(code % {'key': key})
+                self.assertEqual([(key, 1, 1), ('getPredicate', 3, 5)],
+                                 [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_assertion_method_accepts_as_as_the_parameter(self):
+        code = """class Validator {
+  check(as: unknown): asserts as {
+    if (!as) throw new TypeError();
+  }
+}
+"""
+        functions = get_ts_function_list(code)
+        self.assertEqual([('check', 2, 4, 2)],
+                         [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_overload_before_an_escaped_method_name(self):
+        code = r"""class Registry {
+  \u0072ead(key: string): string
+  \u0072ead(key: string, fallback?: string): string {
+    return key ? key : fallback ?? "";
+  }
+}
+"""
+        functions = get_ts_function_list(code)
+        self.assertEqual([(3, 5, 2, 3)], [
+            (f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity) for f in functions])
+
+    def test_overload_before_a_unicode_method_name(self):
+        code = """class Registry {
+  ゛get(value: unknown): boolean
+  ゛get(value: unknown, message?: string): boolean {
+    return message ? Boolean(value) : false;
+  }
+}
+const keep = () => true;
+"""
+        for suffix in ('ts', 'tsx'):
+            with self.subTest(suffix=suffix):
+                functions = analyze_file.analyze_source_code('example.' + suffix, code).function_list
+                self.assertEqual([(3, 5, 2, 2), (7, 7, 0, 1)], [
+                    (f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                    for f in functions])
+
+    def test_predicate_can_return_a_type_named_is(self):
+        code = """type is = string;
+function check(value: unknown): value is is {
+  return typeof value === "string";
+}
+const is = "ready";
+function getState(): typeof is {
+  return is;
+}
+"""
+        functions = get_ts_function_list(code)
+        self.assertEqual([('check', 2, 4), ('getState', 6, 8)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_type_predicate_can_name_a_parameter_with_a_contextual_keyword(self):
+        code = """function matches(%(key)s: unknown): %(key)s is { value: string } {
+  return %(key)s !== null && typeof %(key)s === "object" && "value" in %(key)s;
+}
+class Validator {
+  check(%(key)s: unknown): %(key)s is { value: string };
+  check(%(key)s: unknown, label?: string): %(key)s is { value: string } {
+    return %(key)s !== null && typeof %(key)s === "object" && "value" in %(key)s;
+  }
+}
+"""
+        for key in ('asserts', 'keyof', 'infer', 'readonly', 'unique'):
+            with self.subTest(key=key):
+                functions = get_ts_function_list(code % {'key': key})
+                self.assertEqual([('matches', 1, 3, 1, 3), ('check', 6, 8, 2, 3)], [
+                    (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                    for f in functions])
+
+    def test_return_predicates_in_runtime_arrows_and_object_methods(self):
+        code = """const matches = (%(key)s: unknown): %(key)s is { value: string } => {
+  return %(key)s !== null && typeof %(key)s === "object" && "value" in %(key)s;
+};
+const validator = {
+  check(%(key)s: unknown): %(key)s is { value: string } {
+    return %(key)s !== null && typeof %(key)s === "object" && "value" in %(key)s;
+  }
+};
+"""
+        for key in ('asserts', 'keyof', 'infer', 'readonly', 'unique'):
+            for filename in ('guards.ts', 'guards.tsx'):
+                with self.subTest(key=key, filename=filename):
+                    functions = analyze_file.analyze_source_code(filename, code % {'key': key}).function_list
+                    self.assertEqual([('matches', 1, 3, 1, 3), ('check', 5, 7, 1, 3)], [
+                        (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                        for f in functions])
+
+    def test_bodyless_declaration_at_end_of_file_is_not_a_function(self):
+        code = """export function decode(input: string): Uint8Array
+"""
+        result = analyze_file.analyze_source_code('example.d.ts', code)
+        self.assertEqual([], result.function_list)
+
+    def test_overload_return_type_does_not_add_a_decision_to_the_parent(self):
+        code = """function converter(value: string | number) {
+  function read<T extends string | number>(input: T): T extends string ? string : number;
+  function read(input: string | number): string | number {
+    return input;
+  }
+  return read(value);
+}
+"""
+        functions = get_ts_function_list(code)
+        self.assertEqual([('read', 1), ('converter', 1)],
+                         [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_typed_arrow_returns_an_array_in_a_namespace(self):
+        code = """namespace Completion {
+  export const names = (plus: readonly string[], options?: { noLib?: boolean }): readonly string[] =>
+    [
+      ...plus,
+      ...options?.noLib ? [] : ['name'],
+    ].sort();
+}
+"""
+        functions = get_ts_function_list(code)
+        self.assertEqual([('names', 2, 6)], [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_computed_method_after_bodyless_signature(self):
+        code = """abstract class Cursor {
+  return?(): void;
+  [Symbol.iterator]() {
+    return this;
+  }
+}
+"""
+        functions = get_ts_function_list(code)
+        self.assertEqual([('symbol.iterator', 3, 5)], [
+            (f.name, f.start_line, f.end_line) for f in functions])
