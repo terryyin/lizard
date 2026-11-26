@@ -279,17 +279,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     elif token in marked_punctuation:
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens
-                        if (token == '<' and self.context.class_field_annotations
-                                and not getattr(token, 'is_jsx_markup', False)
-                                and state.generic_arrow_type_context()):
-                            tokens, lookahead = tee(tokens)
-                            if generic_arrow_has_function_constraint(lookahead):
-                                token = GenericArrowTypeOpen(token)
-                            del lookahead
-                            member_access = False
-                            yield token
-                            break
-                        elif token == '?':
+                        if token == '?':
 
                             if (self.context.class_field_annotations
                                     and state.optional_member_context()):
@@ -308,6 +298,16 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     yield token
                                     # Resume with the buffered iterator.
                                     break
+                        elif (token == '<' and self.context.class_field_annotations
+                                and not getattr(token, 'is_jsx_markup', False)
+                                and state.generic_arrow_type_context()):
+                            tokens, lookahead = tee(tokens)
+                            if generic_arrow_has_function_constraint(lookahead):
+                                token = GenericArrowTypeOpen(token)
+                            del lookahead
+                            member_access = False
+                            yield token
+                            break
                         elif member_access:
                             before_dot = token == '.' and state.last_token
                     else:
