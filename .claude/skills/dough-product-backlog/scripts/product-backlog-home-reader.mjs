@@ -18,8 +18,6 @@ import {
   splitHref,
 } from "./product-backlog-identity.mjs";
 
-export { identityLine } from "./product-backlog-identity.mjs";
-
 // The whole document, or just the story section the anchor names.
 function regionFor(lines, relative, anchor) {
   if (anchor === "") {
@@ -191,8 +189,8 @@ export function readHome(source, href) {
 // the seed's own document ID composed with the anchor — the same evidence a
 // work item's identity is first taken from. A whole-document home, or an
 // anchored home whose seed carries no "id:" of its own, implies none this
-// way. Both adoption and the canonical-home check at `add` read this same
-// implied identity when nothing has been recorded yet.
+// way. The canonical-home check at `add` reads this implied identity when
+// nothing has been recorded yet.
 export function impliedIdentity(home) {
   if (home.anchor === "" || home.documentId === "") {
     return undefined;

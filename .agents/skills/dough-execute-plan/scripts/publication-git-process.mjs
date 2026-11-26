@@ -1,6 +1,7 @@
 // Local Git subprocesses and the bounded process group for remote transport.
 import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
+import { gitExecutable } from "./git-executable.mjs";
 
 export const exec = promisify(execFile);
 
@@ -41,8 +42,10 @@ function transportOf([subcommand, ...operands]) {
 export async function git(cwd, ...args) {
   const { signal } = typeof args.at(-1) === "object" ? args.pop() : {};
   const transport = transportOf(args);
-  if (transport) return boundedTransport(cwd, args, transport, signal);
-  return exec("git", args, { cwd });
+  const executable = await gitExecutable({ cwd });
+  if (transport)
+    return boundedTransport(executable, cwd, args, transport, signal);
+  return exec(executable, args, { cwd });
 }
 
 function signalProcessGroup(pid, signal) {
@@ -60,12 +63,18 @@ function signalProcessGroup(pid, signal) {
 // `code: "transport-timeout"`, an abort with the signal's reason, and other
 // failures with the shape `exec` gives a failed command.
 /** @returns {Promise<{ stdout: string, stderr: string }>} */
-function boundedTransport(cwd, args, { subcommand, remote }, signal) {
+function boundedTransport(
+  executable,
+  cwd,
+  args,
+  { subcommand, remote },
+  signal,
+) {
   const boundMs = transportBoundMs();
   const cmd = `git ${args.join(" ")}`;
   return new Promise((resolve, reject) => {
     if (signal?.aborted) return reject(signal.reason);
-    const child = spawn("git", args, {
+    const child = spawn(executable, args, {
       cwd,
       detached: true,
       stdio: ["ignore", "pipe", "pipe"],

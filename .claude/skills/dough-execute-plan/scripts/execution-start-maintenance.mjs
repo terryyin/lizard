@@ -50,7 +50,7 @@ export function reportedMaintenance(latest, earlier) {
 // Withdrawal preserves the index; ordinary refresh still requires a clean
 // checkout, so staged content and later source edits stay local.
 export async function acceptedMaintenance(request, publishedSha) {
-  if (request.admit && request.integration) {
+  if (request.admit && !request.ownedDraft && request.integration) {
     try {
       await withdrawPublishedDrafts(request, publishedSha);
     } catch (error) {

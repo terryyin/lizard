@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "sessionId": "a4891dfe-0be4-48f7-bca5-12e96d9c3519",
+  "workflow": "dough-story-refinement",
+  "closedAt": "2026-11-25T05:06:16.447Z",
+  "story": "SEED-075#ruby-percent-literal-context",
+  "ranges": [
+    {
+      "base": "1660636fa778e067a08cdc5546f938cb715296c1",
+      "candidate": "f3868d520b63f2ad7f89204755a9060542b499d0"
+    }
+  ]
+}

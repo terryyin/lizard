@@ -2,7 +2,10 @@
 // Resolve runtime and observation, publish an authorized increment, and attach
 // acceptance. Held proof stops before push; local-only authority never pushes.
 import { prepareAndDeliverFreshIncrement } from "./execution-increment-fresh.mjs";
-import { resolveCheckoutRuntime } from "./ci-checkout-runtime.mjs";
+import {
+  checkoutRuntimeReceipt,
+  resolveCheckoutRuntime,
+} from "./ci-checkout-runtime.mjs";
 import {
   registerPushedRevision,
   recordDeliveryProgress,
@@ -19,6 +22,29 @@ import {
   managedIncrementRequestRefusal,
   readIncrementCliRequest,
 } from "./execution-increment-request.mjs";
+
+const managedStopFields = [
+  "ok",
+  "publication",
+  "status",
+  "receipt",
+  "candidate",
+  "preRebaseSha",
+  "remoteTip",
+  "previouslyPublishedBase",
+  "suffixBase",
+  "reconciliations",
+  "problem",
+  "stage",
+  "pushIssued",
+  "boundMs",
+  "remote",
+  "target",
+  "replay",
+  "validation",
+  "ownership",
+  "error",
+];
 
 // Existing-candidate delivery and recovery intentionally require no fresh commit.
 export function deliverFreshExecutionIncrement(request) {
@@ -75,8 +101,7 @@ export async function deliverManagedExecutionIncrement(request) {
   }
 
   const runtime = resolveCheckoutRuntime(workspace, { host });
-  const { alias, skillRoot, entrypoint } = runtime;
-  const runtimeSummary = { alias, skillRoot, entrypoint };
+  const runtimeSummary = checkoutRuntimeReceipt(runtime);
   const observerRoot = root ?? runtime.checkout;
   const observerStorage = storage ?? mailboxRoot;
   const targetBranch = targetBranchName(targetRef);
@@ -140,75 +165,38 @@ export async function deliverManagedExecutionIncrement(request) {
     established.directory && established.observation.state === "unobserved"
       ? { ...established.observation, directory: established.directory }
       : established.observation;
-  if (!published.ok) {
-    // Live owner is kept for later validated resume; no SHA registered yet.
-    return {
-      ok: false,
-      publication: published.publication,
-      status: published.status,
-      report: published.status,
-      receipt: null,
-      candidate: published.candidate,
-      preRebaseSha: published.preRebaseSha,
-      remoteTip: published.remoteTip,
-      previouslyPublishedBase: published.previouslyPublishedBase,
-      suffixBase: published.suffixBase,
-      reconciliations: published.reconciliations,
-      // An unresolvable-base stop names why the base names no single commit.
-      problem: published.problem,
-      // A transport-timeout stop names the stalled stage and its bound.
-      stage: published.stage,
-      pushIssued: published.pushIssued,
-      boundMs: published.boundMs,
-      remote: published.remote,
-      target: published.target,
-      replay: published.replay,
-      validation: published.validation,
-      ownership: published.ownership,
-      error: published.error,
-      observation,
-      runtime: runtimeSummary,
-      startReceipt: established.startReceipt,
-      maintenance: published.maintenance ?? null,
-    };
+  if (published.ok) {
+    recordAcceptedIncrement(workspace, {
+      base: published.suffixBase,
+      candidate: published.receipt.sha,
+      reference,
+    });
+
+    if (observation.directory && observation.state !== "unobserved") {
+      registerPushedRevision(observation.directory, published.receipt.sha);
+      if (host === "claude" && request.mode === "story-branch")
+        recordDeliveryProgress(observation.directory, {
+          acceptedPublication: {
+            sha: published.receipt.sha,
+            mode: request.mode,
+            targetRef,
+          },
+        });
+    }
   }
 
-  recordAcceptedIncrement(workspace, {
-    base: published.suffixBase,
-    candidate: published.receipt.sha,
-    reference,
-  });
-
-  if (observation.directory && observation.state !== "unobserved") {
-    registerPushedRevision(observation.directory, published.receipt.sha);
-    if (host === "claude" && request.mode === "story-branch")
-      recordDeliveryProgress(observation.directory, {
-        acceptedPublication: {
-          sha: published.receipt.sha,
-          mode: request.mode,
-          targetRef,
-        },
-      });
-  }
-
+  // Keep the established managed stop surface, including absent values.
+  const result = published.ok
+    ? published
+    : Object.fromEntries(
+        managedStopFields.map((field) => [field, published[field]]),
+      );
   return {
-    ok: true,
-    publication: "accepted",
-    report: "accepted",
-    // A retry whose candidate the remote already held pushed nothing.
-    ...(published.classification && {
-      classification: published.classification,
-    }),
-    receipt: published.receipt,
-    ...(published.landing === undefined ? {} : { landing: published.landing }),
-    preRebaseSha: published.preRebaseSha,
-    remoteTip: published.remoteTip,
-    suffixBase: published.suffixBase,
-    reconciliations: published.reconciliations,
+    ...result,
+    report: published.ok ? "accepted" : published.status,
     observation,
     runtime: runtimeSummary,
     startReceipt: established.startReceipt,
-    // Deferred local refresh is independent of remote acceptance.
     maintenance: published.maintenance ?? null,
   };
 }

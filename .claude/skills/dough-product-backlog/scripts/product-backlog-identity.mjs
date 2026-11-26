@@ -11,13 +11,12 @@
 import { BacklogError } from "./product-backlog-refusal.mjs";
 import { splitSource } from "./product-backlog-source.mjs";
 
-export const adoptionHint =
-  "Identities are never allocated here; take one from the work item's " +
-  "canonical home or from the separate identity-adoption operation.";
+export const identityHint =
+  "Use the identity established by the work item's canonical home.";
 
 export function ambiguousHome(reason) {
   return new BacklogError(
-    `Ambiguous canonical home: ${reason} ${adoptionHint}`,
+    `Ambiguous canonical home: ${reason} ${identityHint}`,
   );
 }
 
@@ -48,9 +47,7 @@ function decodePath(path) {
 }
 
 // How an identity is spelled when it is first taken from a canonical home: the
-// ID that home carries, narrowed by the story anchor when there is one. Only
-// adoption composes an identity; everything afterwards carries the composed
-// value about unchanged.
+// ID that home carries, narrowed by the story anchor when there is one.
 export function composeIdentity(token, anchor) {
   return anchor ? `${token}#${anchor}` : token;
 }
@@ -68,7 +65,7 @@ export function recordsIdentityInFull(recorded) {
 // entry written before identities were recorded in full carries only the seed
 // token, which is still read against the link's anchor so that such an entry
 // names the same work item it always named. An entry that records nothing is
-// still identified by the link it carries, as it was before adoption.
+// identified by the link it carries.
 export function identityFor(href, recorded) {
   if (!recorded) {
     return href;
@@ -82,8 +79,8 @@ export function identityFor(href, recorded) {
 // Whether an entry carries a name of its own for the work, rather than being
 // identified by the link beside it. A link that spells the identity exactly
 // leaves nothing to record, so such an entry names the work only as wherever
-// its home currently is, and it gains a name of its own by adopting one. This
-// is not `recordsIdentityInFull`, which asks how a recorded value is spelled:
+// its home currently is. This is distinct from `recordsIdentityInFull`,
+// which asks how a recorded value is spelled:
 // an identity taken from a bounded correction's plan path is a name of its own
 // and carries no anchor at all.
 export function recordsOwnIdentity(identity, href) {
