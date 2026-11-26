@@ -167,6 +167,22 @@ unavailable""", detail = "Maintenance") message: String,
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
+    def test_named_annotations_preserve_anonymous_parameter_count(self):
+        functions = get_kotlin_function_list('''\
+annotation class Tuning(val description: String)
+
+fun render(): String {
+    val convert: (Int, String) -> String = fun(
+        @Tuning(description = "value") number,
+        label: String,
+    ): String {
+        return "$label: $number"
+    }
+    return convert(1, "x")
+}
+''')
+        self.assertEqual([2, 0], [f.parameter_count for f in functions])
+
     def test_one_function_with_return_value(self):
         result = get_kotlin_function_list('''
             fun sayGoodbye(): String {return "bye"}

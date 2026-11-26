@@ -275,7 +275,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                 self._can_read_parameter_name = True
                 self._parameter_annotation = False
             elif token == '@' and self._can_read_parameter_name:
-                self._parameter_annotation = True
+                # Anonymous functions can omit parameter types.
+                self._parameter_annotation = bool(self.context.current_function.name)
             elif token == ':' and self._can_read_parameter_name:
                 name = self.last_token
                 # Skip annotation use-site targets and anonymous object types.
