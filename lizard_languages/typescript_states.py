@@ -48,6 +48,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_condition = False  # Inside `if (...)` / `for (...)`
 
     def __call__(self, token, reader=None):
+        if self._recursive_local_pattern is not None:
+            self._read_recursive_local_pattern(token)
         if self._binding_candidate:
             # Only named-formal readers need events for initializer dispatch.
             self._binding_candidate.read_token(token, report=False)
@@ -79,6 +81,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._pop_function_from_stack()
 
     def _state_global(self, token):
+        if self._declaration_binding and self.last_token in ('const', 'let', 'var'):
+            self._record_recursive_local(token, self.last_token)
         if self._pending_bindings:
             self._resolve_pending_bindings(token)
         if self._ts_declare or token in _SPECIAL_TOKENS:

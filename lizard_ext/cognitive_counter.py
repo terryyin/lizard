@@ -68,6 +68,7 @@ class _FunctionState(object):  # pylint: disable=R0902,R0903
         self.pending_logical_word = False
         self.pending_jump_line = None
         self.pending_call = False
+        self.pending_optional_scopes = None
         self.pending_ifs = []   # python: bracket depth of unclassified 'if's
         self.lambda_scan = None
         self.lambda_pdepth = 0
@@ -91,6 +92,7 @@ class _Counter(object):  # pylint: disable=R0902
         self.states = WeakKeyDictionary()
         if profile.nested_functions:
             self.context.bare_recursive_functions = WeakSet()
+            self.context.recursive_var_shadows = WeakSet()
         self.function = None
         self.state = None
         self.line = None
@@ -100,6 +102,7 @@ class _Counter(object):  # pylint: disable=R0902
         self.candidates = []    # functions the reader can still abandon
         self.held = {}          # function -> lists of (order, token, line)
         self.order = 0          # number of tokens held so far
+        self.optional_recursions = []
 
     def process(self, token, line=None, function=None):
         """Count the token for its function.  The held tokens come back with
@@ -146,6 +149,11 @@ class _Counter(object):  # pylint: disable=R0902
             self._settle()
             del self.candidates[:]
             self._release(*list(self.held))
+        # A local declaration can bind a name before the declaration's token.
+        for function, state, scopes in self.optional_recursions:
+            if not state.recursed and not any(function in scope for scope in scopes):
+                state.recursed = True
+                function.cognitive_complexity += 1
 
     def _route(self, function, token):
         """The function that counts the bracket, and the token to count.
@@ -325,9 +333,16 @@ class _Counter(object):  # pylint: disable=R0902
 
     def _resolve_pending(self, token):
         state = self.state
+        scopes = state.pending_optional_scopes
+        if scopes is not None:
+            if token == '(' and not state.recursed:
+                self.optional_recursions.append((self.function, state, scopes))
+            state.pending_optional_scopes = None
+            state.pending -= 1
         if (state.pending_call and token == '?.' and state.prev2 not in ('.', '?.')
-                and self.function in getattr(self.context, 'bare_recursive_functions', ())):
-            return   # A following '(' confirms an optional call.
+                and getattr(token, 'function', None) is self.function):
+            state.pending_call = False
+            state.pending_optional_scopes = token.scopes
         if state.pending_call:
             state.pending_call = False
             state.pending -= 1

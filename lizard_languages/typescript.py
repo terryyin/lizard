@@ -7,7 +7,7 @@ from itertools import tee
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
-from .javascript_bindings import JavaScriptBindings
+from .javascript_bindings import JavaScriptBindings, OptionalCallBinding
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
@@ -232,6 +232,22 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         state.statemachine_before_return()
         self.eof()
 
+    def _mark_optional_call_binding(self, token, state):
+        functions = getattr(self.context, 'bare_recursive_functions', ())
+        name = state.last_token
+        if not functions or not name:
+            return token
+        function = self.context.current_function
+        if getattr(function, 'optimistic', False) and function not in functions:
+            function = self.context.stacked_functions[-1]
+        if name != function.unqualified_name or function not in functions:
+            return token
+        scopes = [self.context.recursive_var_shadows]
+        while isinstance(state, TypeScriptStates):
+            scopes.append(state.recursive_local_scope())
+            state = state._state
+        return OptionalCallBinding(token, function, scopes)
+
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
         innermost open expression arrow (or optimistic signature) before
@@ -299,6 +315,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     break
                         elif member_access:
                             before_dot = token == '.' and state.last_token
+                            if token == '?.':
+                                token = self._mark_optional_call_binding(token, state)
                     else:
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
