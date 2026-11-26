@@ -3,6 +3,7 @@
 import re
 
 from .js_style_regex_context import (
+    REGEX_LITERAL,
     _EXPRESSION_KEYWORDS,
     _LINE_ENDS,
     _REGEX_LITERAL_RE,
@@ -11,6 +12,10 @@ from .js_style_regex_context import (
     _apply_marks,
 )
 from .ruby_documentation import match_opaque_span, may_have_documentation
+
+
+_RUBY_APPEND = re.compile(r"<<[^\S\r\n]*/")
+_RUBY_APPEND_REGEX = re.compile(r"[^\S\r\n]*(" + REGEX_LITERAL + ")")
 
 
 def mark_forward(source, js_family):
@@ -28,6 +33,7 @@ def mark_forward(source, js_family):
     match_literal = _REGEX_LITERAL_RE.match
     keywords = _EXPRESSION_KEYWORDS if js_family else _RUBY_EXPRESSION_KEYWORDS
     line_ends = _LINE_ENDS
+    ruby_append = not js_family and _RUBY_APPEND.search(source) is not None
 
     def after_operand(next_can_regex=False, next_expect_property=False):
         nonlocal can_regex, expect_property, pending_async
@@ -156,10 +162,15 @@ def mark_forward(source, js_family):
             skip_string(ch)
             after_operand()
             return
-        if ch == '`' and js_family:
-            scan_template()
-            pending_async = False
-            return
+        if ch == '`':
+            if js_family:
+                scan_template()
+                pending_async = False
+                return
+            if ruby_append:
+                skip_string(ch)
+                after_operand()
+                return
         if source.startswith('=>', i):
             i += 2
             after_operand(next_can_regex=True)
@@ -210,6 +221,15 @@ def mark_forward(source, js_family):
                 i += 1
             after_operand(next_expect_property=True)
             return
+        if ch == '<' and ruby_append and not expect_property and source.startswith('<<', i):
+            matched = _RUBY_APPEND_REGEX.match(source, i + 2)
+            # The literal pattern cannot find the end of an executable
+            # interpolation that itself contains a slash.
+            if matched and '#{' not in matched[1]:
+                marks.append(matched.start(1))
+                i = matched.end()
+                after_operand()
+                return
         if ch in '=,({[?:!&|;':
             i += 1
             after_operand(next_can_regex=True)
@@ -231,7 +251,7 @@ def mark_forward(source, js_family):
         i += 1
         after_operand()
 
-    if not js_family and may_have_documentation(source):
+    if not js_family and (ruby_append or may_have_documentation(source)):
         from .ruby import _PERCENT_LITERAL
         percent_literal = re.compile(_PERCENT_LITERAL, re.S)
         # A quote in documentation must not hide a later regex.
