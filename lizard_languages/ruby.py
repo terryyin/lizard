@@ -4,7 +4,7 @@ Language parser for Ruby
 
 import re
 
-from .rubylike import RubylikeReader
+from .rubylike import RubylikeReader, RubylikeStateMachine
 from .js_style_regex_expression import js_style_regex_expression
 from .ruby_documentation import may_have_documentation, pattern_for_fragment
 from .source_documentation import tokens_ignoring_documentation
@@ -74,11 +74,31 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
                     r"[a-z]*)")
 
 
+class RubyStateMachine(RubylikeStateMachine):
+
+    def _if(self, token):
+        # A modifier predicate can open a block: `return if jobs.any? do`.
+        if token == 'do' and not self.br_count and not getattr(token, 'is_member_name', False):
+            self.next(self._modifier_do)
+        else:
+            super()._if(token)
+
+    def _modifier_do(self, token):
+        # A block with parameters or a body on the next line has a
+        # distinct opening. Keep reading the predicate on other tokens.
+        if self.is_newline() or token in ('|', '||', ';'):
+            self.next(self._state_global)
+            self.sub_state(self.statemachine_clone(), token=token)
+        else:
+            self.next(self._if, token)
+
+
 class RubyReader(RubylikeReader):
     # pylint: disable=R0903
 
     ext = ['rb']
     language_names = ['ruby']
+    STATE_MACHINE = RubyStateMachine
 
     def preprocess(self, tokens):
         """Drop spaces, and mark a keyword right after '.', '&.' or 'def'
