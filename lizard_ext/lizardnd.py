@@ -271,10 +271,6 @@ def _init_nesting_depth_data(self, *_):
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
 
 
-patch(NDFileInfoAddition, FileInfoBuilder)
-patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")
-
-
 _GO_COMPOSITE_LITERAL = object()
 
 
@@ -311,3 +307,7 @@ def _start_go_if(function, context):
     function.in_condition = True
     function.go_if_levels = function.levels_awaiting_body + 1
     function.logical_operator_added = False
+
+
+patch(NDFileInfoAddition, FileInfoBuilder)
+patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")
