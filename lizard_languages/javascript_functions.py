@@ -29,17 +29,6 @@ _ARROW_ENDING_COLON = _ArrowEndingColon(':')
 
 
 class JavaScriptFunctionsMixin:
-    def conditional_colon(self, token):
-        """Mark the runtime colon and whether it ends an expression arrow."""
-        state = active_js_state(self)
-        if (state._state == state._state_global
-                and state._ternary_depth and state.last_tokens != 'default'):
-            if (state._expression_body and
-                    state._ternary_depth == state._expression_ternary_depth):
-                return _ARROW_ENDING_COLON
-            return _CONDITIONAL_COLON
-        return token
-
     def _read_parenthesis_group(self):
         """Only possible signatures need provisional binding frames."""
         if parameter_group(self._prev_token):
@@ -277,6 +266,17 @@ class JavaScriptFunctionsMixin:
         elif token != '{' and token != '=>':
             self._discard_signature()
         self.next(self._state_global, token)
+
+    def conditional_colon(self, token):
+        """Mark the runtime colon and whether it ends an expression arrow."""
+        state = active_js_state(self)
+        if (state._state == state._state_global
+                and state._ternary_depth and state.last_tokens != 'default'):
+            if (state._expression_body and
+                    state._ternary_depth == state._expression_ternary_depth):
+                return _ARROW_ENDING_COLON
+            return _CONDITIONAL_COLON
+        return token
 
     def _field(self, token):
         if token in ('(', '['):
