@@ -34,6 +34,7 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     @staticmethod
     def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
+        interpolations = [] if getattr(reader, 'has_scala_interpolation', False) else None
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -51,6 +52,10 @@ class LizardExtension(object):  # pylint: disable=R0903
         ).union(block_ends, block_starts, loops)
         context = reader.context
         for token in tokens:
+            if interpolations is not None and getattr(token, 'is_scala_interpolation', False):
+                l_depth = _interpolation_depth(token, context, interpolations)
+                yield token
+                continue
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
                 context.clear_prev_was_else()
@@ -241,3 +246,28 @@ def _init_nesting_depth_data(self, *_):
 
 patch(NDFileInfoAddition, FileInfoBuilder)
 patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")
+
+
+def _interpolation_depth(token, context, open_scopes):
+    """A substitution preserves the depth of its containing expression."""
+    function = context.current_function
+    if token == '{':
+        open_scopes.append((
+            function, function.nesting_depth, function.levels_awaiting_body,
+            function.block_levels, function.prev_was_else, function.in_condition,
+            function.condition_depth, function.logical_operator_added))
+        function.levels_awaiting_body = 0
+        function.block_levels = []
+        function.prev_was_else = False
+        context.reset_condition_tracking()
+    elif open_scopes:
+        (owner, depth, awaiting_body, blocks, prev_else, in_condition,
+         condition_depth, has_logical) = open_scopes.pop()
+        owner.nesting_depth = depth
+        owner.levels_awaiting_body = awaiting_body
+        owner.block_levels = blocks
+        owner.prev_was_else = prev_else
+        owner.in_condition = in_condition
+        owner.condition_depth = condition_depth
+        owner.logical_operator_added = has_logical
+    return function.nesting_depth

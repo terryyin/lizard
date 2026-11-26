@@ -1,9 +1,12 @@
 '''
 Language parser for Scala
 '''
+import re
+
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
+from .token_pattern import compiled_token_pattern, tokens_in_span
 __author__ = 'David Baum'
 
 # A line break inside a body does not end it before a token that cannot
@@ -18,11 +21,121 @@ _CONTINUES_AT_LINE_END = frozenset((
 _CONDITION_KEYWORDS = frozenset(('if', 'while', 'for'))
 
 
+_STRING_OPENERS = frozenset(('"', '"""'))
+_LOCATED_DELIMITERS = _STRING_OPENERS | {'}'}
+_STRING_DELIMITERS = r'|"""|(?<=[\w$`])"'
+_SCALA_QUOTES = r"|'[^\W\d][\w$]*(?![\w$'])|'(?=[{\[][^'])"
+_COMMENT_BRACKETS = re.compile(r'/\*|\*/')
+_RAW_END = re.compile(r'"""+')
+_RAW_INTERPOLATION = re.compile(r'\$\$|\$"|\$\{|"""+')
+_INTERPOLATION = re.compile(r'\\[\\"]|\$\$|\$"|\$\{|"|\n')
+
+
+class _InterpolationBrace(str):
+    is_scala_interpolation = True
+
+
+class _MultilineStringPart(str):
+    is_scala_string_part = True
+
+
+_INTERPOLATION_OPEN = _InterpolationBrace('{')
+_INTERPOLATION_CLOSE = _InterpolationBrace('}')
+
+
+def _string_part(text):
+    return _MultilineStringPart(text) if '\n' in text else text
+
+
+class _LocatedToken(str):
+    def __new__(cls, text, offset):
+        token = super().__new__(cls, text)
+        token.offset = offset
+        return token
+
+
+def _locate_delimiter(match):
+    text = match.group()
+    if text in _LOCATED_DELIMITERS or (text.startswith('/*') and '/*' in text[2:]):
+        return _LocatedToken(text, match.start())
+    return text
+
+
+def _scala_tokens(patterns, source, pos=0, in_interpolation=False):
+    """Read code until the end of the file or the matching interpolation brace."""
+    depth = 0
+    end = len(source)
+    pattern = patterns[in_interpolation]
+    while pos < end:
+        for token in tokens_in_span(pattern, source, pos, end, _locate_delimiter,
+                                    macros=not in_interpolation):
+            if token in _STRING_OPENERS:
+                pos = yield from _string_tokens(patterns, source, token)
+                break
+            if isinstance(token, _LocatedToken) and token.startswith('/*'):
+                pos = _nested_comment_end(source, token.offset)
+                yield source[token.offset:pos]
+                break
+            if in_interpolation:
+                if token == '{':
+                    depth += 1
+                elif token == '}':
+                    if not depth:
+                        return token.offset + 1
+                    depth -= 1
+            yield token
+        else:
+            return end
+    return end
+
+
+def _nested_comment_end(source, start):
+    depth = 1
+    for marker in _COMMENT_BRACKETS.finditer(source, start + 2):
+        depth += 1 if marker.group() == '/*' else -1
+        if not depth:
+            return marker.end()
+    return len(source)
+
+
+def _string_tokens(patterns, source, opener):
+    """Yield literal text and read each interpolation as a block of Scala code."""
+    start = opener.offset
+    pos = start + len(opener)
+    interpolated = start > 0 and (
+        source[start - 1].isalnum() or source[start - 1] in '_$`')
+    if opener == '"""':
+        special = _RAW_INTERPOLATION if interpolated else _RAW_END
+    else:
+        special = _INTERPOLATION
+    segment = start
+    while True:
+        match = special.search(source, pos)
+        if match is None:
+            end = len(source)
+            yield _string_part('"' + source[segment:end] + '"')
+            return end
+        marker = match.group()
+        pos = match.end()
+        if marker == '${':
+            prefix = '' if segment == start else '"'
+            yield _string_part(prefix + source[segment:match.start()] + '$')
+            yield _INTERPOLATION_OPEN
+            pos = segment = yield from _scala_tokens(patterns, source, pos, True)
+            yield _INTERPOLATION_CLOSE
+        elif marker[0] == '"' or marker == '\n':
+            end = match.start() if marker == '\n' else pos
+            prefix = '' if segment == start else '"'
+            yield _string_part(prefix + source[segment:end])
+            return end
+
+
 class ScalaReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
     ext = ['scala']
     language_names = ['scala']
+    has_scala_interpolation = True
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'for', 'while', 'catch', 'do'}
@@ -33,6 +146,15 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super(ScalaReader, self).__init__(context)
         self.parallel_states = [ScalaStates(context)]
+
+    @staticmethod
+    def generate_tokens(source_code, addition='', token_class=None):
+        addition = r'|`[^`\r\n]+`' + addition
+        if token_class is not None or not ('"""' in source_code or '${' in source_code or '$"' in source_code):
+            return CodeReader.generate_tokens(source_code, addition, token_class)
+        addition = _STRING_DELIMITERS + addition
+        patterns = (compiled_token_pattern(addition), compiled_token_pattern(_SCALA_QUOTES + addition))
+        return _scala_tokens(patterns, source_code)
 
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
@@ -85,20 +207,11 @@ class ScalaStates(GoLikeStates):  # pylint: disable=R0903
         return ScalaStates(self.context, self.open_bodies)
 
     def _function_name(self, token):
-        if token == '`':
-            self._state = self._quoted_function_name
+        if token.startswith('`') and len(token) > 2:
+            self.context.add_to_function_name(token[1:-1])
+            self._state = self._expect_function_dec
         else:
             super()._function_name(token)
-
-    def _quoted_function_name(self, token):
-        """A name in backticks, such as `match`. As for other names, only
-        its first word is kept."""
-        self.context.add_to_function_name(token)
-        self._state = self._rest_of_quoted_name
-
-    def _rest_of_quoted_name(self, token):
-        if token == '`':
-            self._state = self._expect_function_dec
 
     def _expect_function_dec(self, token):
         if token in ('(', '[', '<'):
