@@ -288,6 +288,8 @@ class _ScalaBraceCounter(_BraceCounter):
             owner.depth = depth
             owner.pdepth = pdepth
             owner.logical = logical
+            # Line breaks inside the substitution belong to the string.
+            owner.line = self.line
 
     def _structural(self):
         state = self.state
