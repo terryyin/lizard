@@ -360,6 +360,38 @@ Try again later.""",
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
+    def test_multiline_defaults_count_each_declared_parameter_once(self):
+        functions = get_kotlin_function_list('''\
+annotation class NotePair(val title: String, val detail: String)
+
+fun formatNotice(title: String, detail: String): String { return "$title $detail" }
+
+fun fromCall(
+    message: String = formatNotice(
+        title = """Connection
+failed""",
+        detail = "Try later",
+    ),
+    retries: Int = 2,
+): String {
+    return "$message ($retries)"
+}
+
+fun fromAnnotation(
+    @NotePair(title = "Public", detail = "Warning") message: String = """Connection
+failed""",
+    retries: Int = 2,
+): String {
+    return "$message ($retries)"
+}
+''')
+        self.assertEqual(
+            [("formatNotice", ["title", "detail"], 2),
+             ("fromCall", ["message", "retries"], 2),
+             ("fromAnnotation", ["message", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_parameters_ignore_commas_inside_parentheses(self):
         functions = get_kotlin_function_list('''\
 fun applyOffset(
