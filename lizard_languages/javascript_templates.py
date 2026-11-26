@@ -18,9 +18,11 @@ _OPAQUE_CODE = (
 _TEMPLATE_START = re.compile(_OPAQUE_CODE + r'|`', re.S)
 # A comment can separate a regular expression from the punctuation that
 # starts its operand. A postfix operator or a completed operand cannot.
+# Stop at the first closing delimiter even when the regex alternative fails.
+_TRIVIA_COMMENT = r'/\*(?:[^*]|\*(?!/))*\*/|' + LINE_COMMENT
 _COMMENTED_REGEX = (
-    r'(?:\A|(?<=[=,({[?:;]))\s*(?:' + _COMMENT + r')'
-    r'(?:\s|' + _COMMENT + r')*' + REGEX_LITERAL
+    r'(?:\A|(?<=[=,({[?:;]))\s*(?:' + _TRIVIA_COMMENT + r')'
+    r'(?:\s|' + _TRIVIA_COMMENT + r')*' + REGEX_LITERAL
 )
 _EXPRESSION_SPECIAL = re.compile(
     r'(?P<commented_regex>' + _COMMENTED_REGEX + r')|' + _OPAQUE_CODE + r'|[`{}]', re.S)
