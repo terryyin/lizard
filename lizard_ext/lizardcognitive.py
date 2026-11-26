@@ -34,9 +34,16 @@ The extension never changes the token stream or the language readers, so
 enabling it leaves every other metric untouched.
 """
 import sys
+from functools import partial
 
 from lizard import FunctionInfo
+from lizard_core.file_analyzer import line_counter, token_counter
+from lizard_core.file_info_builder import FileInfoBuilder
+from lizard_languages.javascript import JavaScriptReader
+from lizard_languages.typescript import TypeScriptReader
 
+from .cognitive_brace import _BraceCounter
+from .cognitive_counter import _MeasuredInterpolation
 from .cognitive_indent import _counter_for
 
 DEFAULT_COGNITIVE_THRESHOLD = 15
@@ -65,11 +72,55 @@ class LizardExtension(object):  # pylint: disable=R0903
         _add_default_field(type(reader.context.global_pseudo_function))
         counter = _counter_for(reader)
         if counter.profile.nested_functions:
-            tokens = counter.measure_templates(tokens)
+            tokens = _measure_templates(tokens, counter)
         for token in tokens:
             counter.process(token)
             yield token
         counter.finish()
+
+
+def _measure_templates(tokens, counter):
+    atomic = type(counter.reader)._scan_atomic_templates  # pylint: disable=protected-access
+    read_interpolation = counter.reader._count_interpolation_conditions  # pylint: disable=protected-access
+    measure = partial(_measure_interpolation, counter)
+    for token in tokens:
+        in_expression = counter.previous == '${'
+        if (in_expression or (atomic and token[:1] == '`' and '${' in token)) and (
+                '?' in token or '&&' in token or '||' in token):
+            score, structures = read_interpolation(token, in_expression, measure)
+            token = _MeasuredInterpolation(token, score, structures)
+        yield token
+
+
+def _measure_interpolation(counter, tokens):
+    context = FileInfoBuilder(counter.context.fileinfo.filename)
+    reader_class = (TypeScriptReader if counter.context.class_field_annotations
+                    else JavaScriptReader)
+    reader = reader_class(context)
+    expression = _InterpolationCounter(reader, counter.profile, gated=False)
+    tokens = reader.preprocess(tokens)
+    tokens = token_counter(line_counter(tokens, reader), reader)
+    for token in reader(expression.measure(tokens), reader):
+        pass
+    expression.finish()
+    return context.global_pseudo_function.cognitive_complexity, expression.structures
+
+
+class _InterpolationCounter(_BraceCounter):
+    """Measure an expression without adding its nested functions to the file."""
+
+    structures = 0
+
+    def measure(self, tokens):
+        for token in tokens:
+            if token != '?' or not self.reader.type_annotation_owns_question_mark():
+                self.process(token)
+            yield token
+
+    def _structural(self):
+        if self.function is self.context.global_pseudo_function:
+            self.structures += 1
+        super()._structural()
 
 
 def _add_default_field(function_info_class):
