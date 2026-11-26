@@ -1,7 +1,7 @@
 """Per-function cognitive-complexity state and shared increments."""
 
 from itertools import chain
-from weakref import WeakKeyDictionary
+from weakref import WeakKeyDictionary, WeakSet
 
 from .cognitive_profile import (
     _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
@@ -68,6 +68,7 @@ class _FunctionState(object):  # pylint: disable=R0902,R0903
         self.pending_logical_word = False
         self.pending_jump_line = None
         self.pending_call = False
+        self.pending_optional_scopes = None
         self.pending_ifs = []   # python: bracket depth of unclassified 'if's
         self.lambda_scan = None
         self.lambda_pdepth = 0
@@ -89,6 +90,10 @@ class _Counter(object):  # pylint: disable=R0902
         self.logical_ops = frozenset(
             getattr(reader, 'logical_operators', ())) - _UNARY_OR_COALESCING
         self.states = WeakKeyDictionary()
+        self.optional_recursions = []
+        if profile.nested_functions:
+            self.context.bare_recursive_functions = WeakSet()
+            self.context.recursive_var_shadows = WeakSet()
         self.function = None
         self.state = None
         self.line = None
@@ -323,6 +328,21 @@ class _Counter(object):  # pylint: disable=R0902
 
     def _resolve_pending(self, token):
         state = self.state
+        scopes = state.pending_optional_scopes
+        if scopes is not None:
+            if token == '(' and not state.recursed:
+                self.optional_recursions.append((self.function, state, scopes))
+            state.pending_optional_scopes = None
+            state.pending -= 1
+        if (state.pending_call and token == '?.' and state.prev2 not in ('.', '?.')
+                and getattr(token, 'function', None) is self.function):
+            state.pending_call = False
+            if token.has_type_arguments:
+                if not state.recursed:
+                    self.optional_recursions.append((self.function, state, token.scopes))
+                state.pending -= 1
+            else:
+                state.pending_optional_scopes = token.scopes
         if state.pending_call:
             state.pending_call = False
             state.pending -= 1
@@ -335,3 +355,10 @@ class _Counter(object):  # pylint: disable=R0902
                 self._fundamental()
             state.pending_jump_line = None
             state.pending -= 1
+
+    def finish_optional_calls(self):
+        """Resolve optional calls after all of their bindings are known."""
+        for function, state, scopes in self.optional_recursions:
+            if not state.recursed and not any(function in scope for scope in scopes):
+                state.recursed = True
+                function.cognitive_complexity += 1

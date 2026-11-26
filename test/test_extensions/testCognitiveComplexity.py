@@ -1347,6 +1347,256 @@ class TestJavaScriptArrowBodyInParentheses(unittest.TestCase):
         self.assertEqual(0, outer)
 
 
+class TestCognitiveOptionalRecursion(unittest.TestCase):
+    def test_async_declarations_shadow_optional_recursion(self):
+        source = """
+            async function restore({restore: count}: {restore: number}): Promise<number> {
+              return restore?.(count);
+              async function restore<T>(value: T): Promise<T> { return value; }
+            }
+            async function recover({recover: count}: {recover: number}): Promise<number> {
+              {
+                return recover?.(count);
+                async function recover<T>(value: T): Promise<T> { return value; }
+              }
+            }
+            async function rebuild({rebuild: count}: {rebuild: number}): Promise<number> {
+              const previous = async function rebuild<T>(value: T): Promise<T> { return value; };
+              if (count > 0) return rebuild?.({rebuild: await previous(count - 1)});
+              return count;
+            }
+        """
+        for filename in ('workflow.ts', 'workflow.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 0, 0, 0, 0, 2], cogc(filename, source))
+
+    def test_async_declaration_after_switch_label_shadows_optional_call(self):
+        for label, score in (('case 1', 1), ('case count ? 1 : 2', 3), ('default', 1)):
+            source = """
+                async function restore<T>(count: number): Promise<number> {
+                  switch (count) {
+                    %s: async function restore<U>(value: U): Promise<U> { return value; }
+                      return restore?.(count);
+                  }
+                  return 0;
+                }
+            """ % label
+            for filename in ('workflow.ts', 'workflow.tsx'):
+                with self.subTest(filename=filename, label=label):
+                    self.assertEqual([0, score], cogc(filename, source))
+
+    def test_async_function_expression_in_case_preserves_recursion(self):
+        source = """
+            async function repeat(count: number): Promise<number> {
+              switch (count) {
+                case 1:
+                  const next = count ? count - 1 : async function repeat<T>(value: T) { return value; };
+                  return repeat?.(Number(next));
+                default:
+                  return count;
+              }
+            }
+        """
+        self.assertEqual([0, 4], cogc('workflow.ts', source))
+
+    def test_async_declaration_in_switch_case_block_shadows_optional_call(self):
+        source = """
+            async function restore(count: number): Promise<number> {
+              switch (count) {
+                case 1: {
+                  async function restore<T>(value: T): Promise<T> { return value; }
+                  return restore?.(count);
+                }
+                default: return 0;
+              }
+            }
+        """
+        self.assertEqual([0, 1], cogc('workflow.ts', source))
+
+    def test_destructured_parameter_key_and_binding(self):
+        source = """
+            function run({run, n}) { if (n) run?.({run: n - 1}); }
+            function retry({retry: n}) { if (n) retry?.({retry: n - 1}); }
+        """
+        self.assertEqual([1, 2], cogc('retry.js', source))
+
+    def test_nested_typed_binding_and_renamed_callback(self):
+        source = """
+            function retry({state: {retry}}: {state: {retry?: () => void}}) {
+                retry?.();
+            }
+            function refresh({state: {refresh: attempts}}: {state: {refresh: number}}) {
+                if (attempts) refresh?.({state: {refresh: attempts - 1}});
+            }
+        """
+        self.assertEqual([0, 2], cogc('retry.ts', source))
+
+    def test_recursion_through_an_optional_call_with_type_arguments(self):
+        source = """
+            function retry<T>(count: number): number {
+              if (count > 0) return retry?.<number>(count - 1);
+              return count;
+            }
+            function replay<T>(count: number): number {
+              if (count > 0) {
+                return replay?.<Readonly<{status: 'pending'}>>(count - 1);
+              }
+              return count;
+            }
+        """
+        for filename in ('retry.ts', 'retry.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([2, 2], cogc(filename, source))
+
+    def test_optional_generic_call_still_needs_the_function_binding(self):
+        source = """
+            function identity<T>(value: T): T { return value; }
+            function retry(value: number) {
+              const offset = 1, retry = identity;
+              return retry?.<number>(value + offset);
+            }
+            function closest(target: Element | null) {
+              return target?.closest?.<SVGGraphicsElement>('[data-v-map-region]');
+            }
+            function dispatch() {
+              return dispatch?.name;
+            }
+        """
+        for filename in ('retry.ts', 'retry.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 0, 0, 0], cogc(filename, source))
+
+    def test_using_declarations_shadow_optional_calls(self):
+        source = """
+            interface Reader { read<T>(id: string): T | undefined }
+            type ReaderLease = Reader['read'] & Disposable;
+
+            function recover<T>(id: string, lease: ReaderLease): T | undefined {
+              using recover = lease;
+              return recover?.<T>(id);
+            }
+            function restore<T>(id: string, lease: ReaderLease): T | undefined {
+              using restore: ReaderLease = lease;
+              return restore?.(id);
+            }
+            async function rotate<T>(leases: ReaderLease[], id: string): Promise<T | undefined> {
+              await using first = leases[0], rotate = leases[1];
+              return rotate?.<T>(id);
+            }
+            function scan<T>(leases: ReaderLease[], id: string): T | undefined {
+              for (using scan of leases) return scan?.<T>(id);
+              return undefined;
+            }
+            function of<T>(count: number): number {
+              let using = 0;
+              for (using of [1]) {
+                return count > 0 ? of?.<T>(count - using) : count;
+              }
+              return count;
+            }
+        """
+        for filename in ('lease.ts', 'lease.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 0, 0, 1, 4], cogc(filename, source))
+
+    def test_other_optional_accesses_do_not_recurse(self):
+        source = """
+            function run(plugin) {
+                plugin?.run?.();
+                plugin.run?.();
+                return run?.name;
+            }
+            const client = { run() { run?.(); } };
+            function wrap(run) { return { run() { run?.(); } }; }
+        """
+        self.assertEqual([0, 0, 0, 0], cogc('retry.js', source))
+
+    def test_local_callable_shadows_the_function_name(self):
+        for filename, parameter, callback in (
+                ('retry.js', '{retry: count}', 'value'),
+                ('retry.ts', '{retry: count}: {retry: number}', 'value: number')):
+            with self.subTest(filename=filename):
+                source = """
+                    function retry(%s) {
+                      const retry = (%s) => value + 1;
+                      return retry?.(count);
+                    }
+                """ % (parameter, callback)
+                self.assertEqual([0, 0], cogc(filename, source))
+
+    def test_block_local_binding_does_not_shadow_another_block(self):
+        source = """
+            function retry({retry: count}) {
+              if (count < 0) {
+                const retry = (value) => value + 1;
+                return retry?.(count);
+              }
+              if (count) return retry?.({retry: count - 1});
+            }
+            function start({start: count}, callback) {
+              if (count) {
+                const start = callback;
+                start?.();
+              }
+            }
+        """
+        self.assertEqual([0, 3, 1], cogc('retry.js', source))
+
+    def test_local_pattern_distinguishes_property_keys_and_bindings(self):
+        source = """
+            function retry({retry: count}, handlers) {
+              const { retry } = handlers;
+              return retry?.(count);
+            }
+            function start({start: count}, handlers) {
+              const { start: callback } = handlers;
+              if (count) return start?.({start: count - 1}, handlers);
+            }
+        """
+        self.assertEqual([0, 2], cogc('retry.js', source))
+
+    def test_var_binding_applies_before_its_declaration(self):
+        source = """
+            function retry({retry: count}) {
+              if (count) return retry?.(count);
+              var retry = (value) => value + 1;
+              return retry?.(count);
+            }
+        """
+        self.assertEqual([0, 1], cogc('retry.js', source))
+
+    def test_additional_declarators_and_statement_bindings(self):
+        source = """
+            function retry({retry: count}, callback) {
+              const offset = 1, retry = callback;
+              return retry?.(count + offset);
+            }
+            function recover({recover: count}, callback) {
+              try { throw {handler: callback}; }
+              catch ({handler: recover}) { return recover?.(count); }
+            }
+            function schedule({schedule: count}, callback) {
+              for (const schedule of [callback]) {
+                return schedule?.(count);
+              }
+            }
+        """
+        self.assertEqual([0, 1, 1], cogc('retry.js', source))
+
+    def test_scoped_bindings_leave_enclosing_function_visible(self):
+        source = """
+            function repeat({repeat: count}, callback) {
+              const handle = function repeat(value) { return value + 1; };
+              for (const repeat of [callback]) repeat?.(count);
+              if (count) return repeat?.({repeat: count - 1}, handle);
+            }
+            function schedule({schedule: count}, callback) {
+              for (const schedule of [callback]) schedule?.(count);
+            }
+        """
+        self.assertEqual([0, 3, 1], cogc('retry.js', source))
+
+
 class TestJavaScriptReaderFailure(unittest.TestCase):
     """The reader stops at code that nests too deep.  The functions that
     ended before it keep their score."""

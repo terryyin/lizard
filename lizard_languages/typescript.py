@@ -4,6 +4,7 @@ Language parser for TypeScript
 
 from itertools import tee
 
+from .javascript_bindings import OptionalCallBinding, UsingDeclaration
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
@@ -299,6 +300,23 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     break
                         elif member_access:
                             before_dot = token == '.' and state.last_token
+                            if token == '?.':
+                                token = self._mark_optional_call_binding(token, state)
+                                if (self.context.class_field_annotations
+                                        and isinstance(token, OptionalCallBinding)):
+                                    tokens, lookahead = tee(tokens)
+                                    token.has_type_arguments = self._optional_type_argument_call(lookahead)
+                                    del lookahead
+                                    yield token
+                                    break
+                    elif (token == 'using' and not member_access
+                          and self.context.class_field_annotations):
+                        tokens, lookahead = tee(tokens)
+                        if self._starts_using_declaration(lookahead, state):
+                            token = UsingDeclaration(token)
+                        del lookahead
+                        yield token
+                        break
                     else:
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
@@ -322,6 +340,69 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 if keyword is not None:
                     yield keyword
                 return
+
+    @staticmethod
+    def _optional_type_argument_call(tokens):
+        """After `?.`, check that the type arguments end at a call."""
+        code = (token for token in tokens
+                if not token.isspace() and not token.startswith(('//', '/*')))
+        first = next(code, '')
+        if first != '<':
+            # TSX can tokenize a simple type argument as a single token.
+            return first.startswith('<') and first.endswith('>') and next(code, '') == '('
+
+        pairs = TypeScriptTypeAnnotationStates.BRACKETS
+        closing = ['>']
+        for token in code:
+            if token in pairs:
+                closing.append(pairs[token])
+            elif token == closing[-1]:
+                closing.pop()
+                if not closing:
+                    return next(code, '') == '('
+            elif token in (')', ']', '}', '>') or (token == ';' and len(closing) == 1):
+                break
+        return False
+
+    @staticmethod
+    def _starts_using_declaration(tokens, state):
+        for binding in tokens:
+            if any(line_break in binding for line_break in ('\n', '\r', '\u2028', '\u2029')):
+                return False
+            if not binding.isspace() and not binding.startswith(_COMMENT_STARTS):
+                break
+        else:
+            return False
+        if not binding.replace('$', '_').isidentifier():
+            return False
+        follower = next((token for token in tokens
+                         if not token.isspace() and not token.startswith(_COMMENT_STARTS)), '')
+        if follower != 'of' or binding == 'of':
+            return follower in ('=', ':')
+        while isinstance(state._state, TypeScriptStates):
+            condition = state._state
+            if state._condition_kind == 'for' and condition._in_condition:
+                return condition.last_token in (None, 'await')
+            state = condition
+        return False
+
+    def _mark_optional_call_binding(self, token, state):
+        functions = getattr(self.context, 'bare_recursive_functions', ())
+        name = state.last_token
+        if not functions or not name:
+            return token
+        function = self.context.current_function
+        if getattr(function, 'optimistic', False) and function not in functions:
+            function = self.context.stacked_functions[-1]
+        if name != function.unqualified_name or function not in functions:
+            return token
+        scopes = [self.context.recursive_var_shadows]
+        while isinstance(state, TypeScriptStates):
+            scopes.append(state.recursive_local_scope())
+            if state.recursive_statement_scope:
+                scopes.append(state.recursive_statement_scope)
+            state = state._state
+        return OptionalCallBinding(token, function, scopes)
 
     @staticmethod
     def code_tokens(tokens):

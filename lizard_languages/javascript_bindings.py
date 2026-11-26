@@ -21,12 +21,37 @@ class BindingFrame:
         self.initializing = False
 
 
+class OptionalCallBinding(str):
+    """A bare optional callee and the scopes that can bind its name."""
+
+    has_type_arguments = False
+
+    def __new__(cls, token, function, scopes):
+        reference = super().__new__(cls, token)
+        reference.function = function
+        reference.scopes = scopes
+        return reference
+
+
+class UsingDeclaration(str):
+    """A contextual `using` keyword that introduces a resource binding."""
+
+
+def read_recursive_local_bindings(read_token):
+    def read(self, token, reader=None):
+        if self._recursive_local_pattern is not None:
+            self._read_recursive_local_pattern(token)
+        return read_token(self, token, reader)
+
+    return read
+
+
 class JavaScriptBindings:
     """Recognize defaults in binding patterns, excluding initializer expressions."""
 
     BRACKETS = {'(': ')', '[': ']', '{': '}', '${': '}'}
 
-    def __init__(self, closing, function=None, parameters=None):
+    def __init__(self, closing, function=None, parameters=None, recursive_name=''):
         self._frames = [BindingFrame(closing)]
         self._expression_brackets = []
         self.previous = ''
@@ -41,6 +66,8 @@ class JavaScriptBindings:
                 if parameters is not None else None)
         self._in_parameter_type = False
         self._generic_depth = 0
+        self.recursive_name = recursive_name
+        self._possible_shadow = False
 
     @property
     def in_expression(self):
@@ -60,6 +87,10 @@ class JavaScriptBindings:
             return (BindingEvent(True, False, False, False, False)
                     if report else None)
         frame = self._frames[-1]
+        if self._possible_shadow:
+            if token != ':':
+                self.recursive_name = ''
+            self._possible_shadow = False
         expression_brackets = self._expression_brackets
         initializing = frame.initializing or bool(expression_brackets)
         if token == 'this' and self.at_start:
@@ -127,10 +158,18 @@ class JavaScriptBindings:
             if name.isidentifier() or (
                     '$' in name and name.replace('$', '_').isidentifier()):
                 self._add_parameter(name)
+                if name == self.recursive_name:
+                    if self._frames[-1].closing == '}':
+                        # A colon makes this token a property key.
+                        self._possible_shadow = True
+                    else:
+                        self.recursive_name = ''
 
 
 class JavaScriptBindingsMixin:
     """Keep provisional bindings with the function that owns their CCN."""
+
+    _recursive_local_pattern = None
 
     def __init__(self, context):
         super().__init__(context)
@@ -138,6 +177,37 @@ class JavaScriptBindingsMixin:
         self._pending_bindings = None
         self._initializer_reader = None
         self._confirmed_binding_defaults = 0
+
+    def recursive_local_scope(self):
+        shadows = getattr(self, '_recursive_local_shadows', None)
+        if shadows is None:
+            shadows = self._recursive_local_shadows = set()
+        return shadows
+
+    def _record_recursive_local(self, token, kind):
+        function = self.context.current_function
+        if function not in getattr(self.context, 'bare_recursive_functions', ()):
+            return
+        name = function.unqualified_name
+        if token == name:
+            self._shadow_recursive_function(function, kind)
+        elif token in ('{', '['):
+            binding = JavaScriptBindings('', parameters=[], recursive_name=name)
+            binding.read_token(token, report=False)
+            self._recursive_local_pattern = binding, function, kind
+
+    def _read_recursive_local_pattern(self, token):
+        binding, function, kind = self._recursive_local_pattern
+        binding.read_token(token, report=False)
+        if binding.at_root:
+            if not binding.recursive_name:
+                self._shadow_recursive_function(function, kind)
+            self._recursive_local_pattern = None
+
+    def _shadow_recursive_function(self, function, kind):
+        shadows = (self.context.recursive_var_shadows if kind == 'var'
+                   else self.recursive_local_scope())
+        shadows.add(function)
 
     def _resolve_pending_bindings(self, token):
         pending = self._pending_bindings
@@ -191,7 +261,10 @@ class JavaScriptBindingsMixin:
             self.context.add_condition(pending.defaults + pending.expression_complexity)
 
     def _read_parameter_binding(self, token):
-        event = self._parameter_bindings.read_token(token)
+        bindings = self._parameter_bindings
+        event = bindings.read_token(token)
+        if event.ended and bindings.recursive_name:
+            self.context.bare_recursive_functions.add(self.context.current_function)
         if event.initializer_started:
             self.context.add_condition()
             self._initializer_reader = self.__class__(self.context)
