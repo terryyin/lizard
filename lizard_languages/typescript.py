@@ -12,8 +12,9 @@ from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
-from .javascript_expression import active_js_state, awaiting_function_body, end_before_line_token
+from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
+from .javascript_expression import active_js_state
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
