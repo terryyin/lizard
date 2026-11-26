@@ -66,7 +66,7 @@ def check(a, b)
   a and /(z)?/.match?(b)
 end
 ''')
-        self.assertEqual([4], [f.cyclomatic_complexity for f in functions])
+        self.assertEqual([5], [f.cyclomatic_complexity for f in functions])
 
     def test_regex_after_each_keyword_is_one_token(self):
         for keyword in ('if', 'unless', 'elsif', 'when', 'while', 'until',
