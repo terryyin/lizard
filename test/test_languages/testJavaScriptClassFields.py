@@ -37,3 +37,21 @@ class Test_JavaScript_member_modifier_after_a_field(unittest.TestCase):
         )
         self.assertEqual(['handler'],
                          [f.name for f in get_js_function_list(code)])
+
+    def test_multiline_field_keeps_grouped_constructor_callback(self):
+        code = '''
+class Metric {
+  constructor(normalize) { this.normalize = normalize; }
+  valueOf() { return this.normalize(0); }
+}
+class Dashboard {
+  score = 1
+    + new (Metric)(value => value || 3);
+  read() { return this.score; }
+}
+'''
+        functions = get_js_function_list(code)
+        self.assertEqual(
+            [('constructor', 1, ['normalize']), ('valueOf', 1, []),
+             ('(anonymous)', 2, ['value']), ('read', 1, [])],
+            [(f.name, f.cyclomatic_complexity, f.parameters) for f in functions])
