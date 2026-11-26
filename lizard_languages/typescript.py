@@ -16,6 +16,7 @@ from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
 from .javascript_expression import active_js_state, ends_expression, starts_statement
 from .typescript_signatures import template_call_type_arguments
+from . import javascript_templates
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -178,18 +179,50 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     def _count_interpolation_conditions(self, token, in_expression, measure=None):
         if getattr(token, 'interpolation_measured', False):
             return None
-        tokens = self._interpolation_tokens(token, in_expression, measure is not None)
+        emit = measure is not None
+        track_nested = emit and self.context.class_field_annotations and '<' in token
+        tokens = self._interpolation_tokens(token, in_expression, emit, track_nested)
+        if track_nested:
+            tokens = self._erase_template_types(tokens)
         result = measure(tokens) if measure is not None else None
         for _ in tokens:
             pass
         return result
 
-    def _interpolation_tokens(self, token, in_expression, emit):
+    def _erase_template_types(self, tokens):
+        """Remove confirmed template type arguments from a measurement stream."""
+        previous = ''
+        while True:
+            for token in tokens:
+                if token is javascript_templates.NESTED_TEMPLATE_END:
+                    continue
+                if token == '<' and (previous == '?.' or ends_expression(previous)):
+                    tokens, lookahead = tee(tokens)
+                    count = template_call_type_arguments(
+                        lookahead, self.script_tokens, optional=previous == '?.')
+                    del lookahead
+                    if count:
+                        for part in tokens:
+                            count -= not part.isspace()
+                            if not count:
+                                break
+                    else:
+                        yield token
+                        previous = token
+                    break
+                if not token.isspace():
+                    previous = token
+                yield str(token) if isinstance(token, javascript_templates.TemplateBoundary) else token
+            else:
+                return
+
+    def _interpolation_tokens(self, token, in_expression, emit, track_nested=False):
         # Re-tokenize opaque interpolation spans; keyword members stay non-
         # conditions the same way as on the outer token stream (#546).
         conditions = self.conditions
         earlier = previous = None
-        for part in interpolation_code(token, in_expression, delimiters=emit):
+        for part in interpolation_code(token, in_expression, delimiters=emit,
+                                       track_nested=track_nested):
             if isinstance(part, str):
                 yield part
                 continue
@@ -304,6 +337,17 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         self._in_call_type_arguments = bool(type_tokens)
                         if type_tokens:
                             type_tokens -= 1
+                        checked_template_types = (
+                            token == '<' and not self._in_call_type_arguments
+                            and (state.last_token == '?.'
+                                 or ends_expression(state.last_token or '')))
+                        if checked_template_types:
+                            # Check before other readers can claim this angle.
+                            tokens, lookahead = tee(tokens)
+                            type_tokens = template_call_type_arguments(
+                                lookahead, self.script_tokens,
+                                optional=state.last_token == '?.')
+                            del lookahead
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
                         if token in _NAME_FOLLOWERS or (
@@ -320,11 +364,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False
-                    elif (track_templates and token == '<' and not self._in_call_type_arguments
-                          and ends_expression(state.last_token or '')):
-                        tokens, lookahead = tee(tokens)
-                        type_tokens = template_call_type_arguments(lookahead, self.script_tokens)
-                        del lookahead
+                    elif track_templates and checked_template_types:
                         member_access = False
                         yield token
                         break

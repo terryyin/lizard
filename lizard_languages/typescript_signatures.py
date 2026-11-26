@@ -2,7 +2,9 @@
 
 from .javascript_bindings import JavaScriptBindings
 from .javascript_expression import ends_expression, starts_statement
-from .javascript_templates import interpolation_code
+from .javascript_templates import (
+    NESTED_SUBSTITUTION_END, NESTED_SUBSTITUTION_START, NESTED_TEMPLATE_END,
+    NESTED_TEMPLATE_START, interpolation_code)
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 
 
@@ -58,12 +60,14 @@ def _has_branch_separators(tokens, required):
     return False
 
 
-def template_call_type_arguments(tokens, tokenize):
-    """Confirm template literal types before the opening '(' of a call."""
+def template_call_type_arguments(tokens, tokenize, optional=False):
+    """Confirm template literal types in calls and instantiation expressions."""
     annotation = TypeScriptTypeAnnotationStates(None)
     saw_template = in_interpolation = False
     count = 0
     for token in tokens:
+        if token is NESTED_TEMPLATE_END or token is NESTED_SUBSTITUTION_END:
+            return 0
         if token.isspace():
             continue
         count += 1
@@ -75,6 +79,12 @@ def template_call_type_arguments(tokens, tokenize):
             in_interpolation = False
         elif token == '${':
             saw_template = in_interpolation = True
+        elif token is NESTED_TEMPLATE_START:
+            size = _nested_template_size(tokens)
+            if size is None:
+                return 0
+            count += size
+            saw_template = True
         elif token.startswith('`') and '${' in token:
             if not all(_interpolation_is_type(token[start:end], tokenize)
                        for start, end in interpolation_code(token, False)):
@@ -86,11 +96,55 @@ def template_call_type_arguments(tokens, tokenize):
             if token == ',':
                 annotation = TypeScriptTypeAnnotationStates(None)
             elif token == '>' and saw_template:
-                following = next((part for part in tokens if not _type_whitespace(part)), None)
-                return count if following == '(' else 0
+                return count if _follows_type_arguments(tokens, optional) else 0
             else:
                 return 0
     return 0
+
+
+def _nested_template_size(tokens):
+    """Validate each substitution and count the flattened template tokens."""
+    depth = 1
+    substitutions = []
+    count = 0
+    for token in tokens:
+        if token is NESTED_TEMPLATE_END:
+            depth -= 1
+            if not depth:
+                return count
+            continue
+        if token.isspace():
+            continue
+        count += 1
+        if token is NESTED_SUBSTITUTION_START:
+            substitutions.append(TypeScriptTypeAnnotationStates(None))
+        elif token is NESTED_SUBSTITUTION_END:
+            if not _complete_template_type(substitutions.pop()):
+                return None
+        elif not _type_whitespace(token):
+            if substitutions[-1](token):
+                return None
+            if token is NESTED_TEMPLATE_START:
+                depth += 1
+    return None
+
+
+def _follows_type_arguments(tokens, optional):
+    newline = False
+    for token in tokens:
+        if _type_whitespace(token):
+            newline |= '\n' in token
+            continue
+        if token == '(':
+            return True
+        if optional or token in ('<', '>', '+', '-'):
+            return False
+        return (newline or token is NESTED_TEMPLATE_START or token.startswith('`')
+                or token in (')', ']', '}', ',', ';', ':', '?', '.', '?.',
+                             '=', '&&', '||', '??', '==', '===', '!=', '!==',
+                             '|', '&', '^', '*', '/', '%', '**', 'as', 'satisfies',
+                             'in', 'instanceof'))
+    return not optional
 
 
 def _interpolation_is_type(source, tokenize):

@@ -80,15 +80,22 @@ class LizardExtension(object):  # pylint: disable=R0903
 
 
 def _measure_templates(tokens, counter):
-    counter.reader.measure_template_types = True
-    atomic = type(counter.reader)._scan_atomic_templates  # pylint: disable=protected-access
-    read_interpolation = counter.reader._count_interpolation_conditions  # pylint: disable=protected-access
+    reader = counter.reader
+    reader.measure_template_types = True
+    atomic = type(reader)._scan_atomic_templates  # pylint: disable=protected-access
+    read_interpolation = reader._count_interpolation_conditions  # pylint: disable=protected-access
     measure = partial(_measure_interpolation, counter)
+    split_types = not atomic and counter.context.class_field_annotations
+    open_template = type_template = False
     for token in tokens:
+        if split_types and token == '`':
+            # A line break can leave the alias state before the first ${.
+            open_template = not open_template
+            type_template = open_template and reader.in_template_literal_type()
         in_expression = counter.previous == '${'
         if (in_expression or (atomic and token[:1] == '`' and '${' in token)) and (
-                '?' in token or '&&' in token or '||' in token) and (
-                not counter.reader.in_template_literal_type()):
+                '?' in token or '&&' in token or '||' in token) and not (
+                type_template or atomic and reader.in_template_literal_type()):
             score, structures = read_interpolation(token, in_expression, measure)
             token = _MeasuredInterpolation(token, score, structures)
         yield token
