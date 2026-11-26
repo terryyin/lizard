@@ -10,6 +10,23 @@ def get_scala_function_list(source_code):
 
 
 class TestScala(unittest.TestCase):
+    def test_source_written_dollar_method_name(self):
+        source = '''object SnapshotMetadata {
+  // From Apache Pekko's SnapshotProtocol.scala.
+  def apply$default$3(): Long = 0L
+  def `<init>$default$3`: Long = 0L
+  def label(snapshot: String): String = s"${snapshot}"
+}
+'''
+
+        functions = get_scala_function_list(source)
+
+        self.assertEqual(
+            [('apply$default$3', 3, 3, 0, []),
+             ('label', 5, 5, 1, ['snapshot'])],
+            [(f.name, f.start_line, f.end_line, f.parameter_count, f.parameters)
+             for f in functions])
+
     def test_empty(self):
         functions = get_scala_function_list("")
         self.assertEqual(0, len(functions))
