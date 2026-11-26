@@ -127,6 +127,26 @@ class Parser:
             (f.name, f.end_line) for f in functions
         ])
 
+    def test_interpolated_return_annotation_preserves_function_bounds(self):
+        source = """\
+class Parser:
+    def read(self, value) -> (
+        PREFIX"{types["["]}"
+    ):
+        if value:
+            return 1
+        return 0
+    def fallback(self):
+        return 2
+"""
+        for prefix in ("f", "t"):
+            with self.subTest(prefix=prefix):
+                functions = get_python_function_list(source.replace("PREFIX", prefix))
+                self.assertEqual([("read", 7, 2), ("fallback", 9, 1)], [
+                    (f.name, f.end_line, f.cyclomatic_complexity)
+                    for f in functions
+                ])
+
     def test_function_surrounded_by_global_statements(self):
         source = """
         s1 = 'global statement'
