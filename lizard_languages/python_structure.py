@@ -153,15 +153,26 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
         self.inline_suite = (
             self.supports_inline_suites and token != '\n' and
             self.context.pending_function is self.context.current_function)
-        if token.startswith('"""') or token.startswith("'" * 3):
-            self.context.add_nloc(-token.count('\n') - (not self.inline_suite))
         if self.inline_suite:
             self.ignore_indentation = True
             self.br_count = 0
-            self.next(self._state_inline_suite, token)
-        else:
-            self.inline_suite = False
-            self.next(self._state_global, token)
+        body_state = self._state_inline_suite if self.inline_suite else self._state_global
+        if token.startswith('"""') or token.startswith("'" * 3):
+            newlines = token.count('\n')
+            self.context.add_nloc(-newlines - (not self.inline_suite))
+            if self.inline_suite and newlines:
+                self.next(body_state)
+                self.sub_state(self._state_after_inline_docstring)
+                return
+        self.next(body_state, token)
+
+    def _state_after_inline_docstring(self, token):
+        if token == ';':
+            return
+        if token not in ('\n', '\\\n'):
+            # The docstring excluded this line, which also contains code.
+            self.context.add_nloc(1)
+        self.next(self.saved_state, token)
 
     def _state_inline_suite(self, token):
         if not isinstance(token, FStringExpressionToken):
