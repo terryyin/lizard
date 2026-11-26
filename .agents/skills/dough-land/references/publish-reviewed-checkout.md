@@ -6,7 +6,7 @@ Choose the publisher by the first row that fits the checkout:
 | --- | --- |
 | Completed selected work | Its [visit forms](#land-completed-selected-work) |
 | Published prefix | [Preserve published history](../../dough-execute-plan/references/preserve-published-history.md) |
-| Ordinary reviewed work with a Dashboard landing context or a retained native session UUID and title, or a story preparation | [Session close](#publish-a-session-close) |
+| Ordinary reviewed work with the launch's Dashboard landing context, or a story preparation | [Session close](#publish-a-session-close) |
 | Any other wholly unpublished suffix | [Publish the candidate](../../dough-execute-plan/references/publish-the-candidate.md) for that suffix and target |
 
 For a published prefix, establish that the recorded published tip is an
@@ -61,20 +61,12 @@ Call the installed `publishSessionClose` API from
 `publishExecutionIncrement` request, the project's backlog path as
 `backlogPath`, and `session: { workflow, story }`. `workflow` is
 `dough-story-refinement` for a story preparation's landing and `ad-hoc`
-otherwise. `story` is the identity this session's context names, such as a
-follow-up's Done story. Omit it when the context names none. For a native
-ad hoc session, pass its retained UUID as `session.sessionId` and its title
-as `session.title`. A Dashboard launch supplies the UUID and its label
-through its landing context.
-
-The API publishes the work, then its session record in a separate commit.
-A titled ad hoc close with no story also publishes its [Done
-story](../../dough-product-backlog/references/identity.md#completed-ad-hoc-work)
-and the updated catalog in that commit. When another writer has already
-published that originating close, use its recorded title, time and
-comparison. Report `work` as the publication result and `record.status` as
-the close result. Accepted work stays in place whatever the record's status.
-Other publishers write no session record.
+otherwise. `story` is the story identity this session's context names, such as
+a follow-up's done story; omit it when the context names none. The API
+publishes the work, then the session's record as its own commit along the same
+route. Report `work` as the publication result and `record.status`; accepted
+work stays in place whatever the record's status. Other publishers write no
+session record; for ordinary reviewed work, report that none was written.
 
 A `published` record settles the close. Otherwise, including after an
 interruption or an unanswered push such as `transport-timeout`, call

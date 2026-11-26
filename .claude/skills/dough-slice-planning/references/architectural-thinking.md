@@ -81,6 +81,17 @@ command adapters thin over strongly typed handlers, and share or generate one
 typed contract across internal boundaries rather than duplicating payload
 shapes by hand.
 
+### Runtime failure handling
+
+Follow this project's failure-reporting and recovery conventions. When
+designing a failure path, prefer these options in order:
+
+1. **Prevent** the failure by making invalid states unrepresentable.
+2. **Propagate** the failure so it stays visible in tests and production.
+3. **Enrich** an unclear failure with context and preserve the original cause.
+4. **Catch** only for a deliberate outcome, such as recovery, retry,
+   compensation, or containment of explicitly best-effort work.
+
 ### Decide cohesive reorganization for already-oversized expected edits
 
 When expected edits touch a file already over this project's

@@ -4,7 +4,12 @@
 import { existsSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { rebaseInProgress } from "../../dough-product-backlog/scripts/product-backlog-git-operation-state.mjs";
-import { git, inspectCheckout, revParse } from "./publication-git.mjs";
+import {
+  git,
+  inspectCheckout,
+  revParse,
+  verifyRef,
+} from "./publication-git.mjs";
 
 const IN_PROGRESS_REFS = ["MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD"];
 
@@ -21,30 +26,9 @@ async function isAncestor(checkout, ancestor, descendant) {
   }
 }
 
-// Whether `git rev-parse -q --verify ref` succeeds: the ref resolves, even
-// to a missing object. `extra` options run in the same process; their output
-// precedes the verified object name. Failures other than an unresolved ref
-// are thrown.
-async function verifies(checkout, ref, ...extra) {
-  try {
-    const { stdout } = await git(
-      checkout,
-      "rev-parse",
-      ...extra,
-      "-q",
-      "--verify",
-      ref,
-    );
-    return { verified: true, stdout };
-  } catch (error) {
-    if (error.code !== 1) throw error;
-    return { verified: false, stdout: error.stdout };
-  }
-}
-
 async function present(checkout, ref) {
   try {
-    return (await verifies(checkout, ref)).verified;
+    return (await verifyRef(checkout, ref)).verified;
   } catch {
     // Any other failure also leaves this ref absent.
     return false;
@@ -60,7 +44,7 @@ function lockPath(checkout, printed) {
 // when it can answer both; otherwise by separate reads.
 async function lockAndFirstRef(checkout, ref) {
   try {
-    const { verified, stdout } = await verifies(
+    const { verified, stdout } = await verifyRef(
       checkout,
       ref,
       "--git-path",

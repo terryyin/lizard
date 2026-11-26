@@ -1,25 +1,12 @@
 #!/usr/bin/env node
-// The Git repository primitives the Git-aware backlog adapters share:
-// resolving the real repository root a caller means, running real `git`
-// commands against it while collecting what Git writes to stderr for the
-// operation that ran them, and registering a custom merge driver for one
-// attributed path, the shared resolver's for the backlog among them. Nothing
-// here knows about the backlog's own content or invariants;
-// `product-backlog-git-merge.mjs` and its driver own that, as
-// `product-backlog-git-done-catalog.mjs` owns the done catalog's. A stopped
-// rebase's or cherry-pick's own state is read in
-// `product-backlog-git-operation-state.mjs`.
+// Shared Git commands, diagnostics, checkout paths and backlog driver setup.
 import { AsyncLocalStorage } from "node:async_hooks";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
+import { dirname, isAbsolute, posix, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { doneCatalogPath } from "./product-backlog-done-catalog.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
-
-const driverName = "dough-product-backlog";
-const driverScript = fileURLToPath(
-  new URL("./product-backlog-git-driver.mjs", import.meta.url),
-);
 
 const gitDiagnostics = new AsyncLocalStorage();
 
@@ -139,11 +126,7 @@ export function gitPath(repoRoot, name) {
 // while Git runs drivers at the current checkout root: an installed script
 // follows that checkout, not the registering worktree. Explicit external
 // runtimes retain their absolute location.
-export function registerMergeDriver(
-  repoRoot,
-  path,
-  { name, description, script },
-) {
+function registerMergeDriver(repoRoot, path, { name, description, script }) {
   const attributesPath = gitPath(repoRoot, "info/attributes");
   const line = `/${path} merge=${name}`;
   const existing = existsSync(attributesPath)
@@ -172,26 +155,27 @@ export function registerMergeDriver(
   );
 }
 
-// Registers the backlog path itself to be reconciled by the shared resolver.
-export function ensureDriverRegistered(repoRoot, file) {
+export function doneCatalogBeside(file) {
+  return posix.join(posix.dirname(file), doneCatalogPath);
+}
+
+export function registerBacklogDrivers(repoRoot, file) {
   registerMergeDriver(repoRoot, file, {
-    name: driverName,
+    name: "dough-product-backlog",
     description: "Reconcile the product backlog through its shared resolver",
-    script: driverScript,
+    script: fileURLToPath(
+      new URL("./product-backlog-git-driver.mjs", import.meta.url),
+    ),
+  });
+  registerMergeDriver(repoRoot, doneCatalogBeside(file), {
+    name: "dough-done-catalog",
+    description: "Combine done catalog rows until the adapter rebuilds it",
+    script: fileURLToPath(
+      new URL("./product-backlog-git-done-catalog-driver.mjs", import.meta.url),
+    ),
   });
 }
 
-// The recoverable shape of a stop neither adapter itself decided: something
-// other than this path is still unresolved, so nothing about this path's own
-// content is judged. `product-backlog-git-rebase.mjs` and
-// `product-backlog-git-cherry-pick-stop.mjs` independently reached this exact
-// wording, differing only in the operation noun, once cherry-pick's own
-// "blocked" case existed alongside rebase's; expressed once here rather than
-// duplicated a second time.
-export function blockedStopMessage(operationNoun, file, stderr) {
-  return (
-    `The ${operationNoun} stopped, but ${file} is not the unresolved path; ` +
-    `something unrelated needs human resolution first. This gate leaves ` +
-    `the ${operationNoun} exactly as it is.\n${stderr}`
-  );
+export function backlogIsUnmerged(repoRoot, file) {
+  return gitLine(["ls-files", "-u", "--", file], repoRoot) !== "";
 }

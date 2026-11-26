@@ -1,13 +1,7 @@
-#!/usr/bin/env node
-// Whether a candidate's bytes are a backlog `product-backlog-git-merge.mjs`
-// can read back — the same invariants every version this tool reads is
-// already held to — without repeating the three-way reconciliation a
-// human's decision may deliberately differ from. This is the whole of what
-// "accepting a human resolution" means: whether the result is readable, not
-// whether it matches what the automatic merge would have produced.
+// Validate the backlog bytes a Git operation is about to accept.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { git } from "./product-backlog-git-repository.mjs";
+import { backlogIsUnmerged, git } from "./product-backlog-git-repository.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
 import { readVersion } from "./product-backlog-version.mjs";
 
@@ -23,11 +17,7 @@ export function validateCandidate(contents, label) {
   }
 }
 
-// The bytes about to be accepted, read from the index rather than assumed
-// from the working tree, so a worktree file a human forgot to `git add`, or
-// one that no longer matches what actually got staged, cannot pass by
-// coincidence. Both are inspected, and a mismatch between them is refused in
-// its own right before either is judged against the backlog's invariants.
+// Read both copies so an unstaged edit cannot be accepted by coincidence.
 export function acceptStaged(repoRoot, file) {
   let staged;
   try {
@@ -48,4 +38,19 @@ export function acceptStaged(repoRoot, file) {
     };
   }
   return validateCandidate(staged, "the staged candidate");
+}
+
+// Read back a human's decision without reconsidering automatic reconciliation.
+export function stagedResolutionRefusal(repoRoot, file) {
+  if (backlogIsUnmerged(repoRoot, file)) {
+    throw new BacklogError(
+      `${file} is still unresolved in ${repoRoot}. Edit it by hand, then ` +
+        `\`git add ${file}\`, before continuing.`,
+    );
+  }
+  const outcome = acceptStaged(repoRoot, file);
+  if (!outcome.valid) {
+    return { status: "refused", message: outcome.reason };
+  }
+  return undefined;
 }
