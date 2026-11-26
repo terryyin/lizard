@@ -10,6 +10,22 @@ def get_cpp_with_nestdepth(source):
 
 class TestCppNestingDepth(unittest.TestCase):
 
+    def test_parentheses_keep_operators_in_the_same_standalone_chain(self):
+        functions = get_cpp_with_nestdepth("""
+        bool check(bool);
+        bool isNameStart(char c) {
+            return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') || c == '_';
+        }
+        bool isReady(bool ready, bool cached, bool stale, bool allowed) {
+            return ready && ((cached || stale) && allowed);
+        }
+        bool hasAccess(bool ready, bool cached, bool stale) {
+            return ready && check(cached || stale);
+        }
+        """)
+        self.assertEqual([('isNameStart', 1), ('isReady', 1), ('hasAccess', 2)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_standalone_logical_chain_has_one_level_with_or_without_parentheses(self):
         functions = get_cpp_with_nestdepth("""
         bool enabled(bool present, bool active, bool ready) {
