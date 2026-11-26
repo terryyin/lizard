@@ -994,6 +994,7 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
         expressions = (
             "low < `${(enabled ? 'yes' : 'no')}` >\n    high",
             "`${low < `${(enabled ? 'yes' : 'no')}` >\n    high}`",
+            "low < `${(class Label extends (class {}) {} ? 'yes' : 'no')}` >\n    high",
         )
         for expression in expressions:
             runtime = f"function compare(enabled, low, high) {{ return {expression}; }}"
