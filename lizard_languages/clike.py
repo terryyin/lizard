@@ -51,10 +51,14 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     def generate_tokens(source_code, addition='', token_class=None):
         return clike_tokens(source_code, addition + _C_LINE_COMMENT, token_class)
 
+    def _read_macro_directive(self, directive, definition):
+        for state in self.parallel_states:
+            if isinstance(state, CppRValueRefStates):
+                state.read_macro_directive(directive, definition)
+                break
+
     def preprocess(self, tokens):
         tilde = False
-        reference_reader = next(
-            (state for state in self.parallel_states if isinstance(state, CppRValueRefStates)), None)
         for token in tokens:
             if token == '~':
                 tilde = True
@@ -66,13 +70,13 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                 if macro:
                     if macro.group(1) in ('if', 'ifdef', 'elif'):
                         self.context.add_condition()
-                    elif macro.group(1) in ('define', 'undef') and reference_reader is not None:
-                        reference_reader.read_macro_directive(macro.group(1), macro.group(2))
                     elif macro.group(1) == 'include':
                         yield "#include"
                         yield macro.group(2) or "\"\""
                     for _ in macro.group(2).split('\n')[1:]:
                         yield '\n'
+                    if macro.group(1) in ('define', 'undef'):
+                        self._read_macro_directive(macro.group(1), macro.group(2))
                 else:
                     yield token
 
