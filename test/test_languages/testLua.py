@@ -339,6 +339,21 @@ end
             [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
              for f in result])
 
+    def test_table_loop_header_keeps_the_enclosing_test_callback(self):
+        result = get_function_list('''
+describe('marks', function()
+  it('opens a mark', function() open_mark() end)
+  for _, entry in ipairs({
+    { name = 'mark' },
+  }) do
+    eq({ entry.name }, { 'mark' })
+  end
+end)
+''')
+        self.assertEqual(
+            [('(anonymous)', 3, 3), ('(anonymous)', 2, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
     def test_loop_header_keeps_the_callback_and_loop_body(self):
         result = get_function_list('''
 local function visit(root)
