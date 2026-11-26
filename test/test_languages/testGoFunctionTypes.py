@@ -134,3 +134,19 @@ func run(fs ...func()) {
 }
 ''')
     assert [f.name for f in result] == ['anonymous__0', 'run']
+
+
+@pytest.mark.parametrize('signature', [
+    'func combine(operation func(int, int) int, value int)',
+    'var combine = func(operation func(int, int) int, value int)',
+    'func combine(operation func() func(int, int) int, value int)',
+])
+def test_only_top_level_commas_split_function_parameters(signature):
+    result = get_go_function_list('package p\n' + signature + ''' {
+    _ = operation
+    _ = value
+}
+func after() {}
+''')
+    assert [(fn.name, fn.parameter_count) for fn in result] == [
+        ('combine', 2), ('after', 0)]
