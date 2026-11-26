@@ -77,6 +77,30 @@ end
             [('destructure', 2, []), ('default_forward', 2, ['source'])],
             [(fn.name, fn.parameter_count, fn.parameters) for fn in functions])
 
+    def test_template_text_does_not_hide_a_later_method(self):
+        source = '''
+def register(name)
+  class_eval <<-RUBY, __FILE__, __LINE__ + 1
+    def #{name}(...)
+      activate(Registry[:#{name}], ...)
+    end
+  RUBY
+end
+
+Registry.watch do |name|
+  register(name)
+end
+
+def fallback(value)
+  value
+end
+'''
+
+        functions = get_ruby_function_list(source)
+
+        self.assertIn(('fallback', 14, 16),
+                      [(fn.name, fn.start_line, fn.end_line) for fn in functions])
+
     def test_one_function_loc(self):
         result = get_ruby_function_list('''
             def f

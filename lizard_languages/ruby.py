@@ -174,17 +174,31 @@ class RubyStateMachine(RubylikeStateMachine):
     _parameter_depth = 0
     _parameter_start = None
     _parameter_has_group = False
+    _parameter_allows_group = False
 
     def _def_parameters(self, token):
+        if self.context.current_function.name == '(anonymous)':
+            super()._def_parameters(token)
+            return
         if self._parameter_depth:
             self._read_grouped_parameter(token)
             return
         if token in (',', ')'):
             self._finish_parameter()
+        elif token == 'end' and not self._parameter_allows_group:
+            # An end outside a default can come from a generated method
+            # whose header was cut short by a comment.
+            self._finish_parameter()
+            self.next(super()._def_parameters, token)
+            return
         else:
             if self._parameter_start is None:
                 self._parameter_start = token
-            if token in ('(', '[', '{', '${'):
+                self._parameter_allows_group = (
+                    token == '(' or (token.endswith(':') and token[:-1].isidentifier()))
+            elif token == '=' and self.last_token is self._parameter_start:
+                self._parameter_allows_group = self._parameter_start.isidentifier()
+            if self._parameter_allows_group and token in ('(', '[', '{', '${'):
                 self._parameter_depth = 1
                 self._parameter_has_group = True
         super()._def_parameters(token)
@@ -212,3 +226,4 @@ class RubyStateMachine(RubylikeStateMachine):
                 parameters[-1] = FormalParameter(parameters[-1])
         self._parameter_start = None
         self._parameter_has_group = False
+        self._parameter_allows_group = False
