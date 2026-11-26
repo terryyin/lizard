@@ -89,6 +89,7 @@ class CppRValueRefStates(CodeStateMachine):
     _LAMBDA_IDLE_TOKENS = _LAMBDA_GROUP_TOKENS | _IDLE_TOKENS
     _LAMBDA_SCAN_TOKENS = _LAMBDA_GROUP_TOKENS | _REFERENCE_SCAN_TOKENS
     _LABEL_ADDRESS_PREFIX = {"(", "==", "!=", "not_eq", "!", "not", "sizeof", "__extension__"}
+    _LABEL_OPERAND_PREFIX = {"=", "==", "!=", "not_eq", "{", ",", "return", "?", ":", "&&", "||"}
     _PARAMETER_TYPE_KEYWORDS = _REFERENCE_TYPE_KEYWORDS | {"bool", "wchar_t", "char8_t", "char16_t", "char32_t"}
     _NON_LOGICAL_AND = "operator or label"
     _GROUPED_OPERAND = "grouped operand"
@@ -100,6 +101,7 @@ class CppRValueRefStates(CodeStateMachine):
         self._recognize_references = context is not None and not context.fileinfo.filename.lower().endswith(".c")
         # Track whether a counted && can still be deducted at an initializer.
         self._initializer_deduction = None
+        self._label_probe_fallback = None
         self._type_before_paren = False
         self._call_depth = 0
         self._lambda = None
@@ -141,6 +143,12 @@ class CppRValueRefStates(CodeStateMachine):
         if (self._initializer_deduction is not False and
                 (previous in self._LABEL_ADDRESS_PREFIX or (previous == "operator" and self._recognize_references))):
             self._initializer_deduction = self._NON_LOGICAL_AND
+        if previous in self._LABEL_OPERAND_PREFIX:
+            self._label_probe_fallback = (self._read_reference_end
+                                          if self._recognize_references and previous != ","
+                                          else self._continue_reference)
+            self._set_state(self._read_label_operand)
+            return
         # A stand-alone && can be a macro argument. An operator name is also separate.
         if not self._recognize_references or previous in ("operator", ","):
             return
@@ -152,6 +160,13 @@ class CppRValueRefStates(CodeStateMachine):
             self._initializer_deduction = False
         else:
             self._set_state(self._read_reference_end)
+
+    def _read_label_operand(self, token):
+        if token.isidentifier():
+            self.context.add_condition(-1)
+            self._end_reference_scan()
+        else:
+            self._label_probe_fallback(token)
 
     def _read_unnamed_reference_end(self, token):
         if token == ")":
