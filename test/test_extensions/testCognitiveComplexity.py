@@ -1384,6 +1384,38 @@ class TestCognitiveOptionalRecursion(unittest.TestCase):
         """
         self.assertEqual([0, 1], cogc('retry.js', source))
 
+    def test_additional_declarators_and_statement_bindings(self):
+        source = """
+            function retry({retry: count}, callback) {
+              const offset = 1, retry = callback;
+              return retry?.(count + offset);
+            }
+            function recover({recover: count}, callback) {
+              try { throw {handler: callback}; }
+              catch ({handler: recover}) { return recover?.(count); }
+            }
+            function schedule({schedule: count}, callback) {
+              for (const schedule of [callback]) {
+                return schedule?.(count);
+              }
+            }
+            function dispatch({dispatch: count}) {
+              function dispatch(value) { return value + 2; }
+              return dispatch?.(count);
+            }
+        """
+        self.assertEqual([0, 1, 1, 0, 0], cogc('retry.js', source))
+
+    def test_scoped_bindings_leave_enclosing_function_visible(self):
+        source = """
+            function repeat({repeat: count}, callback) {
+              const handle = function repeat(value) { return value + 1; };
+              for (const repeat of [callback]) repeat?.(count);
+              if (count) return repeat?.({repeat: count - 1}, handle);
+            }
+        """
+        self.assertEqual([0, 3], cogc('retry.js', source))
+
 
 class TestFlatLanguages(unittest.TestCase):
     """Blocks are not brace-delimited: increments without nesting penalty."""
