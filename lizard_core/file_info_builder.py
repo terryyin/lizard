@@ -121,8 +121,8 @@ class FileInfoBuilder(object):
     def add_to_function_name(self, app):
         self.current_function.add_to_function_name(app)
 
-    def parameter(self, token):
-        self.current_function.add_parameter(token)
+    def parameter(self, token, name=None):
+        self.current_function.add_parameter(token, name=name)
 
     def add_parameter_declaration(self, name, declaration):
         self.current_function.add_parameter_declaration(name, declaration)

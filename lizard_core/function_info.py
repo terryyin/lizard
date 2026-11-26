@@ -104,7 +104,16 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
                 self.long_name += ' '
         self.long_name += app
 
-    def add_parameter(self, token):
+    def add_parameter(self, token, name=None):
+        if name is not None:
+            if self._parameter_names is None:
+                self._parameter_names = []
+            if self.full_parameters:
+                self.add_to_long_name(" ,")
+            self.add_to_long_name(" " + token)
+            self.full_parameters.append(token)
+            self._parameter_names.append(name)
+            return
         self.add_to_long_name(" " + token)
         self._append_parameter(self.full_parameters, token)
 

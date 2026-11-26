@@ -1,3 +1,5 @@
+import os
+import tempfile
 import unittest
 from unittest.mock import patch
 from ..testHelpers import get_cpp_fileinfo_with_extension
@@ -93,3 +95,30 @@ void funcY(int p, int q, int r, int s, int t) { return 2; }
             parameters = ["int a", "int b", "int c"]
         result = LizardExtension._parameters(FakeFunc())
         self.assertEqual("int a,int b,int c", result)
+
+    def test_r_cross_file_variadic_and_quoted_param_list_duplicates(self):
+        ext = LizardExtension()
+        files_content = {
+            'f1.r': 'f1 <- function(a = list(1, 2), b = 1, c = {list(3, 4)[1]}, ..., `x y` = list(5, 6)) { a }\n',
+            'f2.r': 'f2 <- function(a = c(9, 8), b = 2, c = 3, ..., `x y` = 4) { a }\n',
+            'f3.r': 'f3 <- function(a = list(1, 2), b = 1, c = 2, ..., `x z` = list(5, 6)) { a }\n',
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            paths = []
+            for filename, content in sorted(files_content.items()):
+                path = os.path.join(tmpdir, filename)
+                with open(path, 'w', encoding='utf-8') as handle:
+                    handle.write(content)
+                paths.append(path)
+            extensions = get_extensions([ext])
+            fileinfos = list(analyze_files(paths, exts=extensions))
+
+        functions = [fi.function_list[0] for fi in fileinfos]
+        self.assertEqual(
+            [2, 2, 1],
+            [f.parameter_list_duplicates for f in functions],
+        )
+        self.assertEqual(
+            [2, 2, 1],
+            [f.parameter_list_duplicated_in_files for f in functions],
+        )
