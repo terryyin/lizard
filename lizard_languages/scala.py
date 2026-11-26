@@ -22,11 +22,6 @@ _CONDITION_KEYWORDS = frozenset(('if', 'while', 'for'))
 _QUESTION_MARK = MemberName('?')
 
 
-def _scala_token(match):
-    token = match.group()
-    return _QUESTION_MARK if token == '?' else token
-
-
 class ScalaReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -42,12 +37,6 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super(ScalaReader, self).__init__(context)
         self.parallel_states = [ScalaStates(context)]
-
-    @staticmethod
-    def generate_tokens(source_code, addition='', token_class=None):
-        if token_class is None and '?' in source_code:
-            token_class = _scala_token
-        return CodeReader.generate_tokens(source_code, addition, token_class)
 
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
@@ -71,7 +60,7 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
                 elif token.startswith('/*') and '\n' in token:
                     # A block comment that ends on a later line.
                     line_start = 3
-                yield token
+                yield _QUESTION_MARK if token == '?' else token
             elif token == '\n':
                 line_start = after_line_break[line_start]
                 yield token
