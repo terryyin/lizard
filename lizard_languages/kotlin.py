@@ -46,7 +46,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
 
     FUNC_KEYWORD = 'fun'
     _ACCESSORS = {'get', 'set'}
-    _BEFORE_ACCESSOR_IDENTIFIER = {'.', '::', '@', ':', '=', 'typealias'}
+    _BEFORE_ACCESSOR_IDENTIFIER = {'.', '::', '@', ':', '=', 'typealias', '(', '[', '?:'}
     _ACCESSOR_MODIFIERS = {'public', 'protected', 'internal', 'private', 'inline', 'external'}
     _EXPRESSION_BODY_ENDERS = {
         'fun', 'class', 'interface', 'val', 'var',
