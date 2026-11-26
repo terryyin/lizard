@@ -2,9 +2,9 @@
 Language parser for C, C++ -like languages.
 '''
 
+from collections import deque
 import re
 import itertools
-from collections import deque
 from .code_reader import CodeStateMachine, CodeReader
 from .clike_states import CLikeStates, CPP_CONDITIONAL_DIRECTIVES
 
