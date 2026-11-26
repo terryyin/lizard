@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "sessionId": "75f0204f-8c69-4941-843f-ae3b0705132b",
+  "workflow": "dough-story-refinement",
+  "closedAt": "2026-11-26T23:47:54.937Z",
+  "story": "SEED-078#cognitive-ternary-in-control-headers",
+  "ranges": [
+    {
+      "base": "f6ca11d0815cecb5e6d6b6ba2d815de6bdd5681f",
+      "candidate": "a894dff9b06ce168b5ab56db4a68bc9e7d48e423"
+    }
+  ]
+}
