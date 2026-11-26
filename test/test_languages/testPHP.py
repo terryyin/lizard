@@ -1,4 +1,5 @@
 import unittest
+from lizard import FileAnalyzer, get_extensions
 from lizard_languages import PHPReader
 from .php_helpers import (
     get_php_function_list,
@@ -216,6 +217,65 @@ class Example {
                     ('Example::fourth', 16 + offset, 18 + offset, 1),
                 ], [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
                     for f in functions])
+
+    def test_inline_attributes_keep_function_signatures(self):
+        functions = get_php_function_list("""<?php
+class TokenStore {
+    public function issue(#[SensitiveParameter] string $token): string {
+        return hash('sha256', $token);
+    }
+}
+
+#[Deprecated] function oldLimit(): int {
+    return 10;
+}
+""")
+        self.assertEqual([('TokenStore::issue', 3, 5), ('oldLimit', 8, 10)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_parameter_attribute_closure_keeps_method_metrics(self):
+        analyzer = FileAnalyzer(get_extensions(['cognitive', 'nd', 'ns']))
+        info = analyzer.analyze_source_code('store.php', """<?php
+class Store {
+    public function set(
+        #[Validate(static function (string $candidate): bool {
+            if ($candidate === '') { return false; }
+            return true;
+        })] string $name
+    ): void {}
+}
+""")
+        method, = info.function_list
+        self.assertEqual(('Store::set', 1, 0, 0, 0, ['$name']),
+                         (method.name, method.cyclomatic_complexity, method.cognitive_complexity,
+                          method.max_nesting_depth, method.max_nested_structures, method.parameters))
+        self.assertNotIn('$candidate', method.long_name)
+        self.assertEqual(6, method.nloc)
+
+    def test_parameter_attribute_forgive_does_not_hide_method(self):
+        functions = get_php_function_list("""<?php
+class Store {
+    public function set(
+        #[Validate(static function (string $candidate): bool {
+            // #lizard forgive
+            return $candidate !== '';
+        })] string $name
+    ): void {}
+}
+""")
+        self.assertEqual(['Store::set'], [f.name for f in functions])
+
+    def test_attribute_markers_in_nowdoc_stay_text(self):
+        functions = get_php_function_list("""<?php
+function sample(): string {
+    return <<<'EXAMPLE'
+    #[SensitiveParameter] if this contains sensitive data.
+    EXAMPLE;
+}
+""")
+        self.assertEqual([('sample', 2, 6, 1)], [
+            (f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in functions
+        ])
 
     def test_real_closing_tag_still_separates_php_from_html(self):
         for closing in ('?>', '// ?>', '# ?>', '/* ?> */ ?>', 'echo $x < 1 ?>'):

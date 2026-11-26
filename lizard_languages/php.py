@@ -6,12 +6,13 @@ import re
 from functools import lru_cache
 from itertools import compress, product
 
-from .code_reader import CodeReader, MemberName, _STRUCTURE_KEYWORDS, _previous_code
+from .code_reader import CodeReader, MemberName, _STRUCTURE_KEYWORDS
 from .clike import CCppCommentsMixin
 from .php_states import MEMBER_ACCESS, PHPLanguageStates
 from .token_pattern import compiled_token_pattern
 
 _BEFORE_MEMBER_NAME = MEMBER_ACCESS | {'function'}
+_DECLARATION_KEYWORDS = {'class', 'trait', 'use', 'function'}
 _OPENING_TAG = re.compile(r"<\?(?:php)?")
 _EXPLICIT_OPENING_TAG = r"<\?(?:=|(?i:php)(?=[ \t\r\n]|\Z))"
 _EXPLICIT_TAG = re.compile(_EXPLICIT_OPENING_TAG)
@@ -152,6 +153,10 @@ class _WordCandidate(str):
     """A word whose source boundaries allow it to be an operator."""
 
 
+class _AttributeStart(str):
+    starts_attribute = True
+
+
 class PHPReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -172,7 +177,7 @@ class PHPReader(CodeReader, CCppCommentsMixin):
         # PHP comparisons must not use the shared generic angle-bracket rule.
         operators = PHPReader._non_ternary_question_operators + r"|<<=|<=|<"
         # A closing tag ends a line comment, but not a string or block comment.
-        comments = r"|(?://|\#)" + _LINE_COMMENT_END + r"|\?>"
+        comments = r"|(?P<attribute_start>\#)(?=\[)|(?://|\#)" + _LINE_COMMENT_END + r"|\?>"
         word = rf"|(?P<operator_word>(?ai:and|or)){_WORD_BOUNDARY}"
         compact_number = (rf"|(?<![{_LABEL_CHAR}])(?P<compact_number>{_NUMBER})"
                           rf"(?=(?ai:and|or){_WORD_BOUNDARY})")
@@ -228,6 +233,8 @@ class PHPReader(CodeReader, CCppCommentsMixin):
                         break
                     if token_class:
                         yield token_class(match)
+                    elif group == 'attribute_start':
+                        yield _AttributeStart(token)
                     elif group == 'operator_word' and match.start() >= uncertain_until:
                         start = match.start()
                         # A numeric literal can touch an operator. A PHP
@@ -247,7 +254,8 @@ class PHPReader(CodeReader, CCppCommentsMixin):
         self.parallel_states = [PHPLanguageStates(context)]
 
     def preprocess(self, tokens):
-        keywords = _STRUCTURE_KEYWORDS | self.control_flow_keywords | self.case_keywords | _WORD_OPERATORS.keys()
+        keywords = (_STRUCTURE_KEYWORDS | _DECLARATION_KEYWORDS | self.control_flow_keywords
+                    | self.case_keywords | _WORD_OPERATORS.keys())
         tokens = [token for token in tokens if not token.isspace() or token == '\n']
         for index in compress(range(len(tokens)), map(keywords.__contains__, tokens)):
             token = tokens[index]
@@ -255,7 +263,14 @@ class PHPReader(CodeReader, CCppCommentsMixin):
                 if isinstance(token, _WordCandidate) and not _is_operator_name(tokens, index):
                     tokens[index] = _WORD_OPERATORS[token]
                 continue
-            before = _previous_code(tokens, index, True)
-            if before >= 0 and tokens[before] in _BEFORE_MEMBER_NAME:
-                tokens[index] = MemberName(token)
+            before = _adjacent_php_code(tokens, index, -1)
+            if before < 0:
+                continue
+            prefix = tokens[before]
+            if prefix in _BEFORE_MEMBER_NAME:
+                tokens[index] = MemberName(tokens[index])
+            elif prefix in ('(', ','):
+                after = _adjacent_php_code(tokens, index, 1)
+                if after < len(tokens) and tokens[after] == ':':
+                    tokens[index] = MemberName(tokens[index])
         return tokens

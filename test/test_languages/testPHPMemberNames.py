@@ -18,6 +18,32 @@ class Test_PHP_keyword_as_the_name_of_a_member(unittest.TestCase):
     """Since PHP 7 a keyword can name a member: `$promise->catch($f)` calls
     a method, and `User::class` names a class."""
 
+    def test_named_attribute_arguments_keep_function_names(self):
+        for label in ('match', 'function', 'class', 'use'):
+            with self.subTest(label=label):
+                functions = get_php_function_list("""<?php
+class Formatter {
+    #[Handler(LABEL /* option name */: 'trim')]
+    public function format(string $value): string { return trim($value); }
+    public function fallback(): string { return 'none'; }
+}
+""".replace('LABEL', label))
+                self.assertEqual(['Formatter::format', 'Formatter::fallback'],
+                                 [f.name for f in functions])
+
+    def test_named_attribute_argument_does_not_add_complexity(self):
+        metrics = php_metrics("""<?php
+function createRenderer(): object {
+    return new
+        #[Renderer(
+            # behavior for this renderer
+            if: true
+        )]
+        class {};
+}
+""")
+        self.assertEqual([('createRenderer', 1, 0, 0, 0, [])], metrics)
+
     def test_keyword_after_a_member_access_adds_no_structure(self):
         self.assertEqual(
             [('CreateTeamsTable::up', 1, 0, 0, 0, []),
