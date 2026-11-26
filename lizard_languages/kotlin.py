@@ -2,10 +2,50 @@
 Language parser for Apple Swift
 '''
 
+import re
+
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine
 from .golike import GoLikeStates
 from .swift import SwiftReplaceLabel
+
+
+# Raw strings may end in extra quotes: `"""a""""` holds `a"`.
+_RAW_STRING = r'""".*?""""*'
+_QUOTED_NAME = r"`[^`\r\n]+`"
+_KOTLIN_TRIVIA = re.compile(
+    r'//[^\n]*|' + _RAW_STRING + r'|"(?:\\.|[^"\\])*"|'
+    r"'(?:\\.|[^'\\])*'|" + _QUOTED_NAME + r"|/\*", re.S)
+_COMMENT_DELIMITER = re.compile(r'/\*|\*/')
+
+
+def _flatten_nested_comments(source):
+    """Kotlin block comments nest. Preserve positions while hiding inner
+    closers from the shared lexer. Each search resumes after the last
+    literal or comment, so text inside one cannot hide the next opener."""
+    if '/*' not in source:
+        return source
+    pieces = []
+    start = 0
+    match = _KOTLIN_TRIVIA.search(source)
+    while match:
+        resume = match.end()
+        if match.group() == '/*':
+            depth = 1
+            for delimiter in _COMMENT_DELIMITER.finditer(source, resume):
+                depth += 1 if delimiter.group() == '/*' else -1
+                if depth == 0:
+                    resume = delimiter.end()
+                    break
+            else:
+                break
+            pieces.append(source[start:match.end()])
+            pieces.append(source[match.end():resume - 2].replace('*/', '* '))
+            pieces.append('*/')
+            start = resume
+        match = _KOTLIN_TRIVIA.search(source, resume)
+    pieces.append(source[start:])
+    return ''.join(pieces)
 
 
 class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
@@ -32,8 +72,9 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         return CodeReader.generate_tokens(
-            source_code,
-            r"|`\w+`" +
+            _flatten_nested_comments(source_code),
+            "|" + _RAW_STRING +
+            "|" + _QUOTED_NAME +
             r"|\w+\?" +
             r"|\w+\!!" +
             r"|\?\?" +
@@ -46,6 +87,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
 
     FUNC_KEYWORD = 'fun'
     _ACCESSORS = {'get', 'set'}
+    _BEFORE_ACCESSOR_IDENTIFIER = {'.', '::', '@', ':', '=', 'typealias'}
     _ACCESSOR_MODIFIERS = {'public', 'protected', 'internal', 'private', 'inline', 'external'}
     _EXPRESSION_BODY_ENDERS = {
         'fun', 'class', 'interface', 'val', 'var',
@@ -73,7 +115,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         self._start_header()
 
     def _state_global(self, token):
-        if (token in self._ACCESSORS and self.last_token not in ('.', '::')
+        if (token in self._ACCESSORS and self.last_token not in self._BEFORE_ACCESSOR_IDENTIFIER
                 and self.context.current_function is self._accessor_declaration_scope):
             self._start_header()
             self._accessor_name = token
@@ -236,6 +278,9 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _function_name(self, token):
         if token == "<":
             self.next(self._template, token)
+        elif token == "interface":
+            self.fold_into_enclosing_function()
+            self.next(self._state_global, token)
         elif token == "@":
             self._state = self._receiver_annotation
         elif not self._receiver_type_end(token):
