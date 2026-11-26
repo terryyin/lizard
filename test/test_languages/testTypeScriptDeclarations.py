@@ -33,6 +33,23 @@ class Registry {
         functions = get_ts_function_list(code)
         self.assertEqual([('new', 2)], [(f.name, f.cyclomatic_complexity) for f in functions])
 
+    def test_type_checked_field_value_before_a_method_named_new(self):
+        for operator in ('as', 'satisfies'):
+            with self.subTest(operator=operator):
+                code = '''
+class Registry {
+  options = { enabled: true } OPERATOR Record<string, boolean>
+  new(key: 'enabled') {
+    return this.options[key] ? new Registry() : null;
+  }
+}
+'''.replace('OPERATOR', operator)
+                functions = get_ts_function_list(code)
+                self.assertEqual(
+                    [('new', 4, 2, ['key'])],
+                    [(f.name, f.start_line, f.cyclomatic_complexity, f.parameters)
+                     for f in functions])
+
     def test_abstract_constructor_return_type_stays_with_field_arrow(self):
         code = '''
 abstract class Item {}
