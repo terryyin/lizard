@@ -303,6 +303,39 @@ function real() {
                          [(f.name, f.start_line, f.end_line)
                           for f in functions])
 
+    def test_braces_under_v_pre_keep_the_following_script(self):
+        for example in (
+                '<template v-pre><code>{{</code></template>',
+                '<div v-pre><div>Syntax</div><code>{{</code></div>',
+                '<svg><text v-pre>{{</text></svg>'):
+            with self.subTest(example=example):
+                functions = get_vue_function_list(
+                    '<template>' + example + '</template>' + '''
+<script setup>
+function copyExample(text) {
+  return '{{ ' + text + ' }}</template>'
+}
+</script>
+''')
+                self.assertEqual([('copyExample', 3, 5, 1)],
+                                 [s[:4] for s in function_summaries(functions)])
+
+    def test_v_pre_skips_cdata_in_a_foreign_title(self):
+        functions = get_vue_function_list('''
+<template v-pre>
+  <svg>
+    <title><![CDATA[{{ </TITLE></template><script>function example() {}</script> }}]]></title>
+  </svg>
+</template>
+<script setup>
+function formatExample(value) {
+  return '{{ ' + value + ' }}</template>'
+}
+</script>
+''')
+        self.assertEqual([('formatExample', 8, 10, 1)],
+                         [s[:4] for s in function_summaries(functions)])
+
     def test_lang_is_not_read_from_other_attributes(self):
         functions = get_vue_function_list('''\
 <script data-lang="js" lang="ts">
