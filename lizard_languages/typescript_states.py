@@ -37,6 +37,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         # Token before the last '<': a generic arrow `x = <T>(...)` follows
         # '=' or 'async'; a generic call `x = f<T>(...)` follows a callee.
         self._generic_prefix = ''
+        self._generic_async_parameters = False
         self._in_prop_value = False  # Track if inside property value (after ':')
         self._in_abstract_context = False  # Track abstract method declarations
         self._condition_kind = None
