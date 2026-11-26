@@ -1108,3 +1108,18 @@ sub marker { return 1; }
         self.assertEqual(
             [('replace_name', 8, 2, 1), ('marker', 9, 1, 0)],
             [(f.name, f.end_line, f.cyclomatic_complexity, f.cognitive_complexity) for f in functions])
+
+
+class TestPerlSubroutineRanges(unittest.TestCase):
+    def test_anonymous_prototype_keeps_its_enclosing_function(self):
+        code = """sub setup_routes {
+    my $handler = sub (&) { return shift; };
+    return $handler;
+}
+sub reset_routes { return 0; }
+"""
+        functions = analyze_file.analyze_source_code("routes.pl", code).function_list
+
+        self.assertEqual(
+            [('setup_routes', 1, 4), ('reset_routes', 5, 5)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
