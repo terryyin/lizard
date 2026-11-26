@@ -18,6 +18,16 @@ from .extension_base import ExtensionBase
 DEFAULT_NS_THRESHOLD = 3
 
 
+def _prefer_reader_structures(read):
+    def read_structures(extension, tokens, reader=None):
+        track = getattr(reader, 'track_nested_structures', None)
+        if track is None:
+            return read(extension, tokens, reader)
+        track()
+        return tokens
+    return read_structures
+
+
 class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     """The intent of the code is to detect control structures as entities.
 
@@ -69,6 +79,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self.structure_piles = [0]  # Invariant: must always have at least one element
         self._set_structure_keywords(self.structures)
 
+    @_prefer_reader_structures
     def __call__(self, tokens, reader=None):
         if 'python' in getattr(reader, 'language_names', ()):
             return self._indented_structures(tokens, reader)
