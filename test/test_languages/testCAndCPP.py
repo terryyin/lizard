@@ -226,6 +226,37 @@ bool can_move(Job& job) {
             [(fn.name, fn.cyclomatic_complexity) for fn in result],
         )
 
+    def test_split_macro_prefix_follows_the_conditional_definition(self):
+        result = get_cpp_function_list("""template<class Left, class Right>
+constexpr bool same_type = false;
+template<class Type>
+constexpr bool same_type<Type, Type> = true;
+struct Job {};
+#if CHECK_TYPES
+#define CHECK(left, right) same_type<left, right>
+#else
+#define CHECK(left, right) (left right)
+#endif
+
+#if CHECK_TYPES
+bool accepts_move() {
+    return CHECK(Job&&, Job&&);
+}
+bool compares_reference() {
+    return CHECK(Job&&, Job);
+}
+#else
+bool accepts_work(bool active, bool ready) {
+    return CHECK(active &&, ready);
+}
+#endif
+""")
+
+        self.assertEqual(
+            [("accepts_move", 1), ("compares_reference", 1), ("accepts_work", 2)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result],
+        )
+
     def test_unnamed_array_rvalue_reference(self):
         result = get_cpp_function_list("""#include <type_traits>
 
