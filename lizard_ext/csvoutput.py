@@ -15,8 +15,11 @@ due to the nature of CSV outputs. The differences are:
      * Function line start
      * Function line end
 """
-import csv
-import sys
+
+
+def _quoted(text):
+    """A CSV text field: quoted, with each embedded quote doubled."""
+    return '"' + text.replace('"', '""') + '"'
 
 
 def _extension_columns(extensions):
@@ -36,8 +39,6 @@ def csv_output(result, options):
     result = result.result
     extension_variables, extension_captions = _extension_columns(
         options.extensions)
-    writer = csv.writer(sys.stdout, quoting=csv.QUOTE_NONNUMERIC,
-                        lineterminator='\n')
 
     if options.verbose:
         print(",".join([
@@ -52,22 +53,21 @@ def csv_output(result, options):
             if not source_function:
                 continue
             name = source_function.name
-            long_name = source_function.long_name
             fields = [
                 source_function.nloc,
                 source_function.cyclomatic_complexity,
                 source_function.token_count,
                 source_function.parameter_count,
                 source_function.length,
-                f'{name}@{source_function.start_line}-'
-                f'{source_function.end_line}@{source_file.filename}',
-                source_file.filename,
-                name,
-                long_name,
+                _quoted(f'{name}@{source_function.start_line}-'
+                        f'{source_function.end_line}@{source_file.filename}'),
+                _quoted(source_file.filename),
+                _quoted(name),
+                _quoted(source_function.long_name),
                 source_function.start_line,
                 source_function.end_line,
             ]
             fields.extend(
                 getattr(source_function, variable)
                 for variable in extension_variables)
-            writer.writerow(fields)
+            print(",".join(str(field) for field in fields))

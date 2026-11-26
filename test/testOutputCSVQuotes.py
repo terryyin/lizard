@@ -37,3 +37,15 @@ class TestCSVQuotes(unittest.TestCase):
                 self.assertEqual(11, len(rows[0]))
                 self.assertEqual(filename, rows[0][6])
                 self.assertEqual('plain@1-1@' + filename, rows[0][5])
+
+    def test_extension_values_keep_their_text(self):
+        result = analyze_file.analyze_source_code(
+            'plain.py', 'def plain():\n    pass\n')
+        result.function_list[0].statement_count = None
+        extension = SimpleNamespace(
+            FUNCTION_INFO={"statement_count": {"caption": "statements"}})
+        output = StringIO()
+        with redirect_stdout(output):
+            csv_output(AllResult([result]),
+                       SimpleNamespace(extensions=[extension], verbose=False))
+        self.assertTrue(output.getvalue().rstrip('\n').endswith(',1,2,None'))
