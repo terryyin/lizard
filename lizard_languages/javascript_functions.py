@@ -46,6 +46,8 @@ class JavaScriptFunctionsMixin:
         self.started_function = None
         self._in_prop_value = False
 
+    _pending_type_alias = False
+
     def end_expression_before(self, token):
         """Called by the reader with a line's first token before it is
         counted, so an ended arrow or abandoned signature keeps none of it."""
@@ -57,9 +59,15 @@ class JavaScriptFunctionsMixin:
             self._discard_signature()
             if not self.started_function:
                 return
-        if (self._state == self._state_global
+        if (self._state == self._state_global and not self._class_body_pending
                 and ends_expression(self.last_token)
                 and starts_statement(token)):
+            self._end_statement()
+        elif (self._pending_type_alias and ends_expression(self.last_token)
+              and starts_statement(token)):
+            # The type keyword at the end of this arrow was an identifier.
+            self._pending_type_alias = False
+            self.next(self._state_global)
             self._end_statement()
 
     def end_signature_before(self, token):
@@ -67,7 +75,17 @@ class JavaScriptFunctionsMixin:
         before it is counted.  A token that cannot start the body shows that
         the signature was an expression, `x = (a)` + `if (b)`: the function
         is discarded now, so the token counts for the function around it."""
-        if token in ('{', '=>', ':') or (
+        if token == '{':
+            # An initializer such as `x = (value)` needs an arrow.
+            # Its following brace belongs to a separate block.
+            # pylint: disable-next=comparison-with-callable
+            if self._arrow_only_signature and self._state == self._expecting_func_opening_bracket:
+                self._discard_signature()
+                if not self._class_body_pending:
+                    self._end_statement()
+                    self.next(self._expecting_statement_or_block)
+            return
+        if token in ('=>', ':') or (
                 token == ';' and self.as_object and self._in_abstract_context):
             return      # for _expecting_func_opening_bracket
         self._discard_signature()
@@ -181,6 +199,8 @@ class JavaScriptFunctionsMixin:
             self._state = self._dec
             self.context.add_to_long_function_name(" " + token)
 
+    _arrow_only_signature = False
+
     def _dec(self, token):
         if token == '(' and self._parameter_bindings.at_start:
             # Grouped expression, such as an arrow IIFE, rather than parameters.
@@ -238,7 +258,8 @@ class JavaScriptFunctionsMixin:
     def _expecting_func_opening_bracket(self, token):
         # Do not reset started_function for arrow functions (=>)
         if token == ':':
-            self.next(self._state_global)
+            if not self.as_class or self.function_name not in ('new', 'get new', 'set new'):
+                self.next(self._state_global)
             self._consume_type_annotation()
             return
         elif token == ';' and self.as_object and self._in_abstract_context:

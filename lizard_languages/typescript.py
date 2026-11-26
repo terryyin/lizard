@@ -6,14 +6,20 @@ from itertools import tee
 
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
+from .typescript_declarations import SplitTypeAliasName, has_split_alias_name
+from .typescript_type_annotation import (
+    TypeAliasContext, TypeArguments, followed_by_new_statement, packed_type_arguments)
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
-from .javascript_expression import awaiting_function_body, end_before_line_token
+from .javascript_expression import (
+    TypeArgumentEnd, awaiting_function_body, end_before_line_token)
 from .javascript_statements import ImpliedSemicolons
+from .javascript_expression import active_js_state, ends_expression, starts_statement
+from .typescript_signatures import template_call_type_arguments
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -118,6 +124,23 @@ def _ends_a_number(token):
         '_', '').isdigit()
 
 
+def _read_type_arguments(arguments, token, state):
+    if arguments is not None:
+        remaining, closed = arguments(token)
+        return remaining, closed, arguments.simple
+    if token == '<':
+        return (TypeArguments() if state.type_argument_context() else None), False, False
+    return None, packed_type_arguments(token) and state.type_argument_context(), True
+
+
+def _read_type_alias(alias, token):
+    if token.startswith(_COMMENT_STARTS):
+        if '\n' not in token:
+            return alias
+        token = '\n'
+    return None if alias(token) else alias
+
+
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -126,6 +149,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # JS/TS split templates into '${' + expression tokens; only TSX/JSX keep
     # atomic templates that need a backtick scan on the fast path.
     _scan_atomic_templates = False
+    measure_template_types = False
+    _in_call_type_arguments = False
+    starts_statement = staticmethod(starts_statement)
     _class_field_annotations = True
 
     # Separated condition categories
@@ -156,12 +182,41 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         """Tokens of a piece of code; Vue tokenizes its files as markup."""
         return self.generate_tokens(code)
 
-    def _count_interpolation_conditions(self, token, in_expression):
+    def type_annotation_owns_question_mark(self):
+        state = active_js_state(self.parallel_states[0])._state
+        return isinstance(state, TypeScriptTypeAnnotationStates) and state.owns_question_mark()
+
+    def in_template_literal_type(self):
+        if not self.context.class_field_annotations:
+            return False
+        if self._in_call_type_arguments:
+            return True
+        active = active_js_state(self.parallel_states[0])
+        state = active._state
+        if isinstance(state, TypeScriptTypeAnnotationStates):
+            return not (self.context.newline and state.ends_before_line_token('`'))
+        return (getattr(state, 'in_type_alias', False)
+                and not (self.context.newline and ends_expression(active.last_token or '')))
+
+    def _count_interpolation_conditions(self, token, in_expression, measure=None):
+        if getattr(token, 'interpolation_measured', False):
+            return None
+        tokens = self._interpolation_tokens(token, in_expression, measure is not None)
+        result = measure(tokens) if measure is not None else None
+        for _ in tokens:
+            pass
+        return result
+
+    def _interpolation_tokens(self, token, in_expression, emit):
         # Re-tokenize opaque interpolation spans; keyword members stay non-
         # conditions the same way as on the outer token stream (#546).
         conditions = self.conditions
         earlier = previous = None
-        for start, end in interpolation_code(token, in_expression):
+        for part in interpolation_code(token, in_expression, delimiters=emit):
+            if isinstance(part, str):
+                yield part
+                continue
+            start, end = part
             for inner in self.script_tokens(token[start:end]):
                 # A word after a dot names a member; `1. ? a : b` is a ternary.
                 if (inner in conditions and (previous not in _MEMBER_ACCESS
@@ -173,6 +228,13 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 elif not (inner.isspace()
                           or inner.startswith(_COMMENT_STARTS)):
                     earlier, previous = previous, inner
+                if emit:
+                    if inner.startswith(_COMMENT_STARTS):
+                        # Interpolation comments cannot end the source file.
+                        for _ in inner.splitlines()[1:]:
+                            yield '\n'
+                    else:
+                        yield inner
 
     def _count_conditions_from_token(self, previous, token):
         # Split JS/TS exposes '${' then the expression; atomic TSX/JSX
@@ -254,11 +316,26 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         name_keywords = structure_keywords | _NAMED_KEYWORDS
         member_access = False
         before_dot = ''
+        track_templates = self.measure_template_types and self.context.class_field_annotations
+        type_tokens = 0
         keyword = None      # waits for the next token: `{ if: a }`
         tokens = iter(self.code_tokens(tokens))
+        filename = self.context.fileinfo.filename.lower()
+        track_angles = filename.endswith(('.ts', '.tsx'))
+        packed_angles = filename.endswith('.tsx')
+        type_alias = None
+        type_arguments = None
         while True:
             for token in tokens:
+                if type_alias is not None:
+                    # Keep type-only angles out of statement detection even
+                    # when the runtime reader has left a multiline alias.
+                    type_alias = _read_type_alias(type_alias, token)
                 if not token.isspace():
+                    if track_templates:
+                        self._in_call_type_arguments = bool(type_tokens)
+                        if type_tokens:
+                            type_tokens -= 1
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
                         if token in _NAME_FOLLOWERS or (
@@ -272,9 +349,32 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
+                    if type_alias is not None and type_alias.in_body:
+                        type_arguments = None
+                    elif track_angles:
+                        if token == 'type' and type_alias is None:
+                            type_alias = TypeAliasContext()
+                        if type_arguments is not None or token == '<' or packed_angles and token[0] == '<':
+                            type_arguments, closes_arguments, simple_arguments = _read_type_arguments(
+                                type_arguments, token, state)
+                            if closes_arguments:
+                                tokens, lookahead = tee(tokens)
+                                line_start = followed_by_new_statement(lookahead, simple_arguments)
+                                del lookahead
+                                member_access = False
+                                yield TypeArgumentEnd(token) if line_start else token
+                                break
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False
+                    elif (track_templates and token == '<' and not self._in_call_type_arguments
+                          and ends_expression(state.last_token or '')):
+                        tokens, lookahead = tee(tokens)
+                        type_tokens = template_call_type_arguments(lookahead, self.script_tokens)
+                        del lookahead
+                        member_access = False
+                        yield token
+                        break
                     elif token in marked_punctuation:
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens
@@ -306,6 +406,13 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         if token in name_keywords:
                             keyword = token
                             continue
+                        if token == 'type' and self.context.class_field_annotations:
+                            tokens, lookahead = tee(tokens)
+                            if has_split_alias_name(lookahead):
+                                token = SplitTypeAliasName(token)
+                            del lookahead
+                            yield token
+                            break
                     yield token
                 elif token == '\n':
                     if keyword is not None:

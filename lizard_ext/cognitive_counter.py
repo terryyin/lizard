@@ -19,6 +19,18 @@ def _is_markup(token):
     return getattr(token, 'is_jsx_markup', False)
 
 
+class _MeasuredInterpolation(str):
+    """An opaque template token with the score of its expressions."""
+
+    interpolation_measured = True
+
+    def __new__(cls, token, score, structures):
+        marker = str.__new__(cls, token)
+        marker.score = score
+        marker.structures = structures
+        return marker
+
+
 class _Candidate(object):  # pylint: disable=R0903
     """A function that the reader started at a ``(`` and can still abandon."""
 
@@ -114,6 +126,10 @@ class _Counter(object):  # pylint: disable=R0902
                 read = token
                 if token in _BRACKETS:
                     function, token = self._route(function, token)
+                    if read == '${' and not _is_markup(read):
+                        token = '('
+                    elif read == '}' and token == ',':
+                        token = ')'
                 held = candidates and self._involved(function)
                 if held:
                     self._hold(function, token)
@@ -133,9 +149,15 @@ class _Counter(object):  # pylint: disable=R0902
             if not self._in_body(function):
                 return
             state.body_started = True
+        if (self.profile.nested_functions and line != state.line and state.logical
+                and not state.pdepth and state.prev and state.prev.endswith('`')
+                and self.reader.starts_statement(token)):
+            state.logical.pop(0, None)
         if self.profile.case_insensitive:
             token = token.lower()
         self._process(token)
+        if type(token) is _MeasuredInterpolation:
+            self._add_interpolation(token)
         state.prev2, state.prev = state.prev, token
 
     def finish(self):
@@ -265,6 +287,13 @@ class _Counter(object):  # pylint: disable=R0902
     def _add(self, amount):
         self.function.cognitive_complexity += amount
 
+    def _add_interpolation(self, token):
+        frames = self.state.frames
+        depth = len(frames)
+        if any(frame.phase == PAREN_HEAD for frame in frames):
+            depth -= 1  # the control statement nests its body
+        self._add(token.score + token.structures * depth)
+
     def _structural(self):
         self._add(1 + len(self.state.frames))
 
@@ -308,7 +337,10 @@ class _Counter(object):  # pylint: disable=R0902
                 calls = getattr(token, 'is_member_name', False) or not (
                     self.profile.reserved_structures
                     and self._is_structure(token))
-            if calls:
+            # Bare `new` is the JavaScript constructor operator.
+            if calls and not (
+                    token == 'new' and self.profile.reserved_structures
+                    and state.prev not in _MEMBER_ACCESS and state.prev != '?.'):
                 state.pending_call = True
                 state.pending += 1
         if token in self.profile.jumps and \

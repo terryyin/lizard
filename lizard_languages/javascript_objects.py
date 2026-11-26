@@ -6,6 +6,9 @@ from .javascript_statements import opens_object
 # The tokens before the name of a method in an object literal; it reads
 # the first member with no token before it.
 _MEMBER_STARTS = frozenset((None, ',', '*', 'async', 'get', 'set'))
+_CLASS_MEMBER_STARTS = frozenset((
+    None, ';', '}', 'static', 'async', 'get', 'set', 'public', 'protected',
+    'private', 'abstract', 'declare', 'override', 'readonly', 'accessor'))
 
 
 class JavaScriptObjectsMixin:
@@ -14,6 +17,9 @@ class JavaScriptObjectsMixin:
     holds_members = False
     # In an object: a default value is open, `{ a = async function () {} }`.
     _default_value = False
+    _class_async_modifier = False
+    _class_generator_modifier = False
+    _class_field_initializer = False
 
     def _typed_class_member(self):
         return (self.as_class and not self._in_prop_value
@@ -43,6 +49,51 @@ class JavaScriptObjectsMixin:
         self.context.add_condition(-1)
         return True
 
+    def _starts_class_member(self):
+        return (self.last_token in _CLASS_MEMBER_STARTS
+                or self.context.newline and ends_expression(self.last_token))
+
+    def _end_class_field_initializer(self, token, after_type=False):
+        # Unlike _in_prop_value, the field role survives a grouped value
+        # and a line break before an operator that can continue it.
+        if not self._open_groups and (token == ';' or (
+                (after_type or ends_expression(self.last_token or ''))
+                and token not in ('in', 'instanceof')
+                and (token[0].isalnum() or token[0] in "_$#'\"@"))):
+            self._class_field_initializer = False
+
+    def _read_class_new(self, token, after_field_type=False):
+        """Whether "new" names a class member outside a field value."""
+        previous = self.last_token
+        if self._class_body_pending and previous == 'extends':
+            return False
+        generator = previous == '*' and self._class_generator_modifier
+        after_field_value = self.context.newline and (
+            previous == '!' and getattr(self, '_postfix_operand', False)
+            or previous == 'new' and self._prev_token == '.')
+        if self._in_prop_value:
+            if after_field_type or after_field_value or generator:
+                self._end_statement()
+            else:
+                self._end_field_before_modifier()
+            if self._in_prop_value:
+                return False
+        elif not (after_field_type or after_field_value or self._starts_class_member()):
+            # A multiline initializer may already have cleared the field flag.
+            if not (previous == '*' and (
+                    generator or self._static_seen
+                    or self._async_seen and self._class_async_modifier)):
+                return False
+        if self.started_function:
+            if self._expression_body:
+                self._pop_function_from_stack()
+            else:
+                self._discard_signature()
+        if not self._handle_object_member(token):
+            self.last_tokens = token
+        self._prev_token = ''
+        return True
+
     def _handle_object_member(self, token):
         """Called for tokens in an object literal or class body (as_object)."""
         if (self._async_seen or self._static_seen) and token in (
@@ -54,8 +105,15 @@ class JavaScriptObjectsMixin:
         if token == '=':
             if self.as_class:
                 self._in_prop_value = True
+                self._class_field_initializer = True
             else:
                 self._default_value = True
+        if token == '*' and self.as_class:
+            # A field name or type can end with a token also used as an
+            # operator. The enclosing field role determines what '*' means.
+            self._class_generator_modifier = (
+                not self._in_prop_value and self.last_token in (None, ';', '}')
+                or not self._class_field_initializer and not self._open_groups)
         if (self.as_class and token.endswith('?')
                 and self._typed_class_member()):
             self.last_tokens = token[:-1]
@@ -90,6 +148,7 @@ class JavaScriptObjectsMixin:
             return True
         if token == ':' and self.as_class and self._typed_class_member():
             self.function_name = self.last_tokens
+            self._annotating_class_field = True
             self._consume_type_annotation()
             return True
         if token == ':':
@@ -125,6 +184,9 @@ class JavaScriptObjectsMixin:
             # Only "field = (" and "key: (" can open a group; a "(" after
             # a member name opens parameters.
             self._signature = self.last_token not in ('=', ':')
+            self._arrow_only_signature = not self._signature or (
+                self.last_token == 'async' and self.last_tokens == '='
+                and not self.holds_members)
             if not self.started_function:
                 # When last_tokens is '=' we're in a field assignment
                 # pattern (field = () => {}), so use function_name which
@@ -162,9 +224,10 @@ class JavaScriptObjectsMixin:
 
         object_reader = self._read_binding_candidate(
             '}', callback, as_object=True, track_complexity=False)
-        object_reader.as_class = self._class_body_pending
+        object_reader.as_class = bool(self._class_body_pending)
         object_reader.holds_members = self._opens_members()
-        self._class_body_pending = False
+        if object_reader.as_class:
+            self._class_body_pending -= 1
         object_reader._static_seen = self._static_seen
         object_reader._async_seen = self._async_seen
         self._static_seen = False
