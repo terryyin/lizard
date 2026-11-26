@@ -121,3 +121,34 @@ function close() {{ return 'closed'; }}
 }}
 """
                     self.assertEqual([(expected, 3, 3, 1), ('run', 1, 5, 1)], summary(filename, code))
+
+    def test_contextual_call_after_type_alias_keeps_its_callback(self):
+        for name in ('as', 'is'):
+            for filename in ('types.ts', 'types.tsx'):
+                with self.subTest(name=name, filename=filename):
+                    code = f"""function {name}(callback: () => boolean) {{ return callback() }}
+type Result = string
+{name}(() => true)
+function close() {{}}
+"""
+                    self.assertEqual([(name, 1, 1, 1), ('(anonymous)', 3, 3, 1), ('close', 4, 4, 1)],
+                                     summary(filename, code))
+
+    def test_contextual_assignment_after_type_alias_keeps_its_name(self):
+        for name in ('as', 'is'):
+            for filename in ('types.ts', 'types.tsx'):
+                with self.subTest(name=name, filename=filename):
+                    code = f"""let {name} = () => false
+type Result = string
+{name} = () => true
+function close() {{}}
+"""
+                    self.assertEqual([(name, 1, 1, 1), (name, 3, 3, 1), ('close', 4, 4, 1)], summary(filename, code))
+
+    def test_wrapped_assertion_type_in_alias_ends_before_runtime_call(self):
+        code = """function is(callback: () => boolean) { return callback() }
+type Assert = (value: unknown) => asserts value
+  is string
+is(() => true)
+"""
+        self.assertEqual([('is', 1, 1, 1), ('(anonymous)', 4, 4, 1)], summary('types.ts', code))
