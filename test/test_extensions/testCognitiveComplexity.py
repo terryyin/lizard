@@ -922,6 +922,16 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
             with self.subTest(filename=filename):
                 self.assertEqual([0, 0, 0, 1], cogc(filename, source))
 
+    def test_template_statement_after_a_type_alias(self):
+        source = """
+            function label(value: boolean) {
+              type Label = string
+              `${value ? 'yes' : 'no'}`
+              return value
+            }
+        """
+        self.assertEqual([1], cogc('labels.tsx', source))
+
     def test_runtime_ternary_and_conditional_type_inside_interpolation(self):
         self.assertEqual([0, 1], cogc("status.ts", """
             function label(value: unknown) {
