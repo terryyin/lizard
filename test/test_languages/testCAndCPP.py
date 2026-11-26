@@ -390,6 +390,25 @@ Job&& relay(Job& job, bool ready, bool enabled) {
 
         self.assertEqual([("relay", 3)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
+    def test_compact_lambda_reference_return_keeps_body_decisions(self):
+        source = """struct Job {};
+void dispatch(Job& job, bool ready, bool enabled) {
+    auto run = LAMBDA_HEAD -> Job&& {
+        if (ready && enabled) return static_cast<Job&&>(job);
+        return static_cast<Job&&>(job);
+    };
+    run();
+}
+"""
+        for head in ("[&]", "[&] noexcept", "[&] mutable", "[&]<typename = void>"):
+            with self.subTest(head=head):
+                result = get_cpp_function_list(source.replace("LAMBDA_HEAD", head))
+
+                self.assertEqual(
+                    [("dispatch", 2, 8, 3)],
+                    [(fn.name, fn.start_line, fn.end_line, fn.cyclomatic_complexity) for fn in result],
+                )
+
     def test_named_lambda_references_with_declarator_suffixes(self):
         result = get_cpp_function_list("""#include <vector>
 struct Job { int weight; };
