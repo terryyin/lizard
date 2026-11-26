@@ -602,6 +602,69 @@ class TestLogicalStatementBoundaries(unittest.TestCase):
             }"""))
 
 
+    def test_wrapped_named_infix_operator_continues_the_sequence(self):
+        cases = (
+            ("Permissions.kt", """
+                fun visible(a: Boolean, b: Boolean, c: Boolean, d: Boolean): Boolean =
+                    a && b xor
+                        c && d
+            """),
+            ("Permissions.scala", """
+                object Permissions {
+                  def visible(a: Boolean, b: Boolean, c: Boolean, d: Boolean): Boolean = {
+                    a && b equals
+                      c && d
+                  }
+                }
+            """),
+        )
+        for filename, code in cases:
+            with self.subTest(filename=filename):
+                self.assertEqual([1], cogc(filename, code))
+
+    def test_second_statement_can_start_with_a_digit_or_underscore_name(self):
+        cases = (
+            ("Permissions.kt", """
+                fun audit(enabled: Boolean, ready: Boolean, allowed_: Boolean) {
+                    enabled && ready
+                    0 < 1 && enabled
+                    allowed_ && ready
+                }
+            """),
+            ("Permissions.scala", """
+                object Permissions {
+                  def audit(enabled: Boolean, ready: Boolean, allowed_ : Boolean): Unit = {
+                    enabled && ready
+                    0 < 1 && enabled
+                    allowed_ && ready
+                  }
+                }
+            """),
+            ("Permissions.swift", """
+                func audit(_ enabled: Bool, _ ready: Bool, _ allowed_: Bool) {
+                    enabled && ready
+                    0 < 1 && enabled
+                    allowed_ && ready
+                }
+            """),
+        )
+        for filename, code in cases:
+            with self.subTest(filename=filename):
+                self.assertEqual([3], cogc(filename, code))
+
+    def test_scala_leading_symbolic_name_can_continue_the_sequence(self):
+        self.assertEqual([1], cogc("Permissions.scala", """
+            object Permissions {
+              extension (flag: Boolean) infix def and_+(other: Boolean): Boolean = flag & other
+
+              def visible(a: Boolean, b: Boolean, c: Boolean, d: Boolean): Boolean = {
+                a && b
+                  and_+ c && d
+              }
+            }
+        """)[-1:])
+
+
 class TestOtherBraceLanguages(unittest.TestCase):
 
     def test_javascript(self):
