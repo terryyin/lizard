@@ -139,6 +139,13 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         else:
             self.next(self._state_global, token)
 
+    @CodeStateMachine.read_inside_brackets_then("()", "_expect_function_impl")
+    def _function_dec(self, token):
+        if token == ')':
+            self._header_line = self.context.current_line
+        elif token != '(':
+            self.context.parameter(token)
+
     def _expect_function_impl(self, token):
         if token == '=':
             self._expr_nesting = 0
@@ -148,10 +155,14 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         elif self._ends_declaration(token):
             # `abstract fun f(): Int` or `private set` has no body. Its first
             # line and token were already counted in the enclosing scope.
+            if self.context.forgive and self.context.forgive_line <= self._header_line:
+                self.context.forgive = False
             self.fold_into_enclosing_function()
             self.context.current_function.nloc -= 1
             self.context.current_function.token_count -= 1
             self.next(self._state_global, token)
+        else:
+            self._header_line = self.context.current_line
 
     def _ends_declaration(self, token):
         # Kotlin semicolons are optional, so a declaration without a body
@@ -166,6 +177,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         return ends
 
     def _start_header(self):
+        self._header_line = self.context.current_line
         self._type_depth = 0
         self._type_annotated = False
 
