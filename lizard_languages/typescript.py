@@ -277,6 +277,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         token = _MemberName(token)
                         member_access = False
                     elif token in marked_punctuation:
+                        # `1..catch`: the number and each dot are tokens.
                         if (token == '<' and self.context.class_field_annotations
                                 and not getattr(token, 'is_jsx_markup', False)
                                 and state.generic_arrow_type_context()):
@@ -287,7 +288,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             member_access = False
                             yield token
                             break
-                        # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens
                         if token == '?':
 
