@@ -731,3 +731,30 @@ end
         ('rendered_jobs', 2), ('retry_jobs', 4), ('run_jobs', 3),
         ('later_guard', 1), ('grouped_jobs', 2),
     ]
+
+
+def test_postfix_guards_keep_independent_statements_at_the_same_depth():
+    source = '''
+def append_actions(key)
+  columns = Array(key.column).map { |column| quote(column) }
+  sql = +<<~SQL
+    FOREIGN KEY (#{columns.join(", ")})
+  SQL
+  sql << " #{action_sql('DELETE', key.on_delete)}" if key.on_delete
+  sql << " #{action_sql('UPDATE', key.on_update)}" if key.on_update
+end
+
+def schedule(jobs, ready)
+  if ready then jobs.each do |job|
+    job.run if job.active?
+  end else warn('No jobs') if jobs.empty?
+  end
+end
+'''
+    analyzer = FileAnalyzer(get_extensions(['nd']))
+
+    functions = analyzer.analyze_source_code('jobs.rb', source).function_list
+
+    assert [(f.name, f.max_nesting_depth) for f in functions] == [
+        ('append_actions', 1), ('schedule', 2),
+    ]

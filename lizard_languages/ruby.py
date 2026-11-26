@@ -35,6 +35,7 @@ _KEYWORDS = frozenset((
     'try', 'catch', 'finally', 'except', 'switch', 'with', 'return',
     'yield'))
 _NAME_BEFORE = frozenset(('.', 'def'))
+_BRANCH_BOUNDARIES = frozenset(('then', 'elsif', 'else', 'when', 'in', 'ensure'))
 
 
 def _paired(opening, closing):
@@ -86,6 +87,7 @@ class RubyStateMachine(RubylikeStateMachine):
         function = self.context.current_function
         owns_depth = self._loop_depth if opener == 'loop' else (
             opener in ('if', 'case') and self._take_pending_depth())
+        entry_depth = function.nesting_depth - owns_depth
         parent_peak = function.ruby_block_peak
         statement_peak = function.ruby_statement_peak
         function.ruby_block_peak = function.nesting_depth
@@ -95,7 +97,9 @@ class RubyStateMachine(RubylikeStateMachine):
             completed_peak = function.ruby_block_peak
             function.ruby_block_peak = (
                 None if parent_peak is None else max(parent_peak, completed_peak))
-            function.ruby_statement_peak = max(statement_peak, completed_peak)
+            function.ruby_statement_peak = statement_peak
+            if completed_peak > entry_depth:
+                function.ruby_statement_peak = max(statement_peak, completed_peak)
             if owns_depth:
                 self.context.add_nd_condition(-1)
             if callback is not None:
@@ -267,7 +271,8 @@ class _NestingSemicolons:
             self.before_token = (self.context.newline and previous is not None
                                  and token not in ('.', '&')
                                  and (previous in ('do', 'then') or _ends_value(previous)))
-            if token == ';' or (self.before_token and token not in (')', ']', '}')):
+            if (token == ';' or (self.before_token and token not in (')', ']', '}'))
+                    or (token in _BRANCH_BOUNDARIES and not getattr(token, 'is_member_name', False))):
                 self.context.current_function.ruby_statement_peak = 0
             previous = token
             yield token
