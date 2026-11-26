@@ -47,7 +47,7 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
         after_line_break = (1, 2, 2, 1)
         line_start = 0
         for token in tokens:
-            if token == '?':
+            if token == '?' and type(token) is str:
                 token = self._question_mark
             if not token.isspace():
                 if line_start:
