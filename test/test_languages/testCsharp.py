@@ -540,6 +540,12 @@ class Labels
     int Many(object value) { return value is int[] ? 1 : 0; }
     string Render(object value) { return $"{(value is not string ? "other" : "text")}"; }
     int Tuples(object value) { return value is List<(int, int)>[] ? 1 : 0; }
+    int NullableFirst(object value) { return value is List<(int?, int)>[] ? 1 : 0; }
+    int NullableLast(object value) { return value is List<(int, int?)>[] ? 1 : 0; }
+    int NestedNamed(object value) { return value is List<((int? start, int end), int)>[,] ? 1 : 0; }
+    int Property(object value) { return value is string { Length: > 2 } or int[] ? 1 : 0; }
+    int Constant(int value) { return value is (Short < Long ? 1 : 2) ? 1 : 0; }
+    const int Short = 1, Long = 2;
 }'''
         analyzer = FileAnalyzer(get_extensions(['nd', 'cognitive', 'complextags']))
         functions = analyzer.analyze_source_code('labels.cs', source).function_list
@@ -548,6 +554,11 @@ class Labels
             ('Labels::Many', 2, 1, 1, [['?', 5]]),
             ('Labels::Render', 2, 1, 1, [['?', 6]]),
             ('Labels::Tuples', 2, 1, 1, [['?', 7]]),
+            ('Labels::NullableFirst', 2, 1, 1, [['?', 8]]),
+            ('Labels::NullableLast', 2, 1, 1, [['?', 9]]),
+            ('Labels::NestedNamed', 2, 1, 1, [['?', 10]]),
+            ('Labels::Property', 2, 1, 1, [['?', 11]]),
+            ('Labels::Constant', 3, 2, 2, [['?', 12], ['?', 12]]),
         ], [(f.name, f.cyclomatic_complexity, f.max_nesting_depth,
              f.cognitive_complexity, f.complex_tags) for f in functions])
 
