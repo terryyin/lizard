@@ -318,6 +318,79 @@ template<class Value> struct Cache {
         self.assertEqual(1, len(result))
         self.assertEqual("ns::f<double>", result[0].name)
 
+    def test_comparison_in_template_parameter_default(self):
+        result = get_cpp_function_list("""template <int Size, bool Inline = (Size < 64)>
+struct Buffer {
+    int capacity() const { return Size; }
+};
+
+int default_capacity() { return Buffer<32>{}.capacity(); }
+""")
+
+        self.assertEqual(
+            [("Buffer::capacity", 3, 3), ("default_capacity", 6, 6)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_comparison_in_template_argument(self):
+        result = get_cpp_function_list("""#include <type_traits>
+
+template <typename T>
+using IsSmall = std::bool_constant<(sizeof(T) < 16)>;
+
+bool small_ints() { return IsSmall<int>::value; }
+""")
+
+        self.assertEqual(
+            [("small_ints", 6, 6)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_shift_in_qualified_template_name(self):
+        result = get_cpp_function_list("""template <int Capacity>
+struct Buffer {
+    int capacity() const { return Capacity; }
+};
+
+template <>
+int Buffer<(1024 >> 2)>::capacity() const {
+    return 256;
+}
+""")
+
+        self.assertEqual(
+            [("Buffer::capacity", 3, 3), ("Buffer<(1024>>2)>::capacity", 7, 9)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_function_after_comparison_with_grouped_right_operand(self):
+        result = get_cpp_function_list("""constexpr int width = 4, height = 2;
+constexpr bool fits = width < (height > 0);
+int capacity(int count) { return fits ? count : 0; }
+""")
+
+        self.assertEqual([("capacity", 1)], [(fn.name, fn.parameter_count) for fn in result])
+
+    def test_template_comparison_after_grouped_left_operand(self):
+        result = get_cpp_function_list("""template<bool Fits> struct Buffer { unsigned capacity() const; };
+template<int N> struct Size { static constexpr int value = N; };
+template<> unsigned Buffer<(4 > 2) < (1 << 1)>::capacity() const { return 64; }
+template<> unsigned Buffer<(4 > 2) < Size<(sizeof(int) < 8)>::value>::capacity() const { return 32; }
+unsigned capacity() { return Buffer<true>{}.capacity(); }
+""")
+
+        self.assertEqual(
+            ["Buffer<(4>2)<(1<<1)>::capacity",
+             "Buffer<(4>2)<Size<(sizeof(int)<8)>::value>::capacity", "capacity"],
+            [fn.name for fn in result])
+
+    def test_joined_comparisons_in_template_argument(self):
+        result = get_cpp_function_list("""template<bool Fits> struct Buffer { unsigned capacity() const; };
+template<> unsigned Buffer<(sizeof(int) > 1) && (sizeof(int) < 16)>::capacity() const { return 64; }
+unsigned capacity() { return Buffer<true>{}.capacity(); }
+""")
+
+        self.assertEqual(
+            ["Buffer<(sizeof(int)>1)&&(sizeof(int)<16)>::capacity", "capacity"],
+            [fn.name for fn in result])
+
     def test_nested_template_function(self):
         result = get_cpp_function_list("template<typename T> class c { "
                                        "template<typename S> void f() {} };")
