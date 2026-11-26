@@ -374,7 +374,11 @@ sub complex_method : locked {
         function_names = [f.name for f in result.function_list]
         # At minimum these functions should be detected
         expected_functions = {
+            'NestedSubTest::outer_function',
             'NestedSubTest::nested_sub',
+            'NestedSubTest::nested_one',
+            'NestedSubTest::nested_two',
+            'NestedSubTest::complex_nested',
             'NestedSubTest::multi_nested', 
             'NestedSubTest::outer_with_complex_nested',
             'NestedSubTest::with_lexical_sub',
@@ -391,11 +395,11 @@ sub complex_method : locked {
         
         # Function with lexical sub
         lexical = next(f for f in result.function_list if f.name == 'NestedSubTest::with_lexical_sub')
-        self.assertEqual(1, lexical.cyclomatic_complexity)
+        self.assertEqual(2, lexical.cyclomatic_complexity)
         
         # Anonymous sub in a block
         anon_block = next(f for f in result.function_list if f.name == 'NestedSubTest::with_anon_in_block')
-        self.assertEqual(2, anon_block.cyclomatic_complexity)  # 1 base + 1 if statement
+        self.assertEqual(3, anon_block.cyclomatic_complexity)  # Base, if, and anonymous sub
 
     def test_perl_block_scoping(self):
         result = analyze_file(os.path.join(os.path.dirname(__file__), "testdata/perl_block_scoping.pl"))
@@ -733,6 +737,24 @@ class TestPerlCoverageGaps(unittest.TestCase):
         self.assertEqual(1, len(funcs))
         self.assertEqual("foo", funcs[0].name)
 
+    def test_nested_named_sub_in_do_keeps_its_enclosing_function(self):
+        code = """package Report;
+sub render {
+    do {
+        sub value { return 42; }
+        value()
+    };
+    return 0 if $_[0];
+    return 1;
+}
+sub tail { 1 }
+"""
+        functions = analyze_file.analyze_source_code("report.pl", code).function_list
+
+        self.assertEqual(
+            [('Report::value', 4, 4), ('Report::render', 2, 9), ('Report::tail', 10, 10)],
+            [(function.name, function.start_line, function.end_line) for function in functions])
+
     def test_nested_named_sub_with_attribute(self):
         # _state_nested_named_sub_brace_search ':' branch
         code = (
@@ -756,8 +778,9 @@ class TestPerlCoverageGaps(unittest.TestCase):
             "}\n"
         )
         funcs = self._funcs(code)
-        names = {f.name for f in funcs}
-        self.assertIn("inner", names)
+        self.assertEqual(
+            [('inner', 2, 2), ('outer', 1, 4)],
+            [(function.name, function.start_line, function.end_line) for function in funcs])
 
     def test_nested_call_with_anonymous_sub(self):
         # _state_nested_call 'sub' branch + _state_nested_anon_search/body
