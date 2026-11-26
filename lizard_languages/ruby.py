@@ -76,7 +76,6 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
 
 class RubyStateMachine(RubylikeStateMachine):
 
-    _closed_nd_peak = 0
     _loop_depth = False
 
     def _start_block(self, opener, callback=None, token=None):
@@ -88,12 +87,15 @@ class RubyStateMachine(RubylikeStateMachine):
         owns_depth = self._loop_depth if opener == 'loop' else (
             opener in ('if', 'case') and self._take_pending_depth())
         parent_peak = function.ruby_block_peak
+        statement_peak = function.ruby_statement_peak
         function.ruby_block_peak = function.nesting_depth
+        function.ruby_statement_peak = 0
 
         def close_depth():
-            self._closed_nd_peak = function.ruby_block_peak
+            completed_peak = function.ruby_block_peak
             function.ruby_block_peak = (
-                None if parent_peak is None else max(parent_peak, self._closed_nd_peak))
+                None if parent_peak is None else max(parent_peak, completed_peak))
+            function.ruby_statement_peak = max(statement_peak, completed_peak)
             if owns_depth:
                 self.context.add_nd_condition(-1)
             if callback is not None:
@@ -125,14 +127,22 @@ class RubyStateMachine(RubylikeStateMachine):
         super()._read_modifier(token)
 
     def _record_modified_block_depth(self):
-        if self._closed_nd_peak and self.last_token in ('end', '}'):
-            self.context.record_nd_peak(self._closed_nd_peak + 1)
+        if getattr(self.context, 'ruby_tracks_depth', False):
+            function = self.context.current_function
+            if function.ruby_statement_peak:
+                function.ruby_statement_peak += 1
+                self.context.record_nd_peak(function.ruby_statement_peak)
 
     def _if(self, token):
         # A modifier predicate can open a block: `return if jobs.any? do`.
         if token == 'do' and not self.br_count and not getattr(token, 'is_member_name', False):
             self.next(self._modifier_do)
         else:
+            if (token in ('if', 'while') and self.follows_value() and not self.br_count
+                    and not getattr(token, 'is_member_name', False)
+                    and getattr(self.context, 'ruby_tracks_depth', False)
+                    and not self.context.get_condition_depth()):
+                self._record_modified_block_depth()
             super()._if(token)
 
     def _modifier_do(self, token):
@@ -257,6 +267,8 @@ class _NestingSemicolons:
             self.before_token = (self.context.newline and previous is not None
                                  and token not in ('.', '&')
                                  and (previous in ('do', 'then') or _ends_value(previous)))
+            if token == ';' or (self.before_token and token not in (')', ']', '}')):
+                self.context.current_function.ruby_statement_peak = 0
             previous = token
             yield token
 

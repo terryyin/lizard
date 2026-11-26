@@ -688,3 +688,46 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             filename, code).function_list
         return result[0].max_nesting_depth
+
+
+def test_postfix_guards_keep_the_depth_of_the_expression_they_wrap():
+    source = '''
+def rendered_jobs(jobs, ready)
+  jobs.map do |job|
+    job.render if job.active?
+  end.compact if ready
+end
+
+def retry_jobs(left, right, enabled)
+  begin
+    return true if left.empty? && right.empty?
+  end while left == right if enabled
+end
+
+def run_jobs(jobs, ready, enabled)
+  jobs.each do |job|
+    job.run if job.active?
+  end if ready while enabled
+end
+
+def later_guard(jobs, ready)
+  jobs.map do |job|
+    job.render if job.active?
+  end.compact
+  log_jobs if ready
+end
+
+def grouped_jobs(jobs, ready)
+  (jobs.each do |job|
+    job.run if job.active?
+  end) if ready
+end
+'''
+    analyzer = FileAnalyzer(get_extensions(['nd']))
+
+    functions = analyzer.analyze_source_code('jobs.rb', source).function_list
+
+    assert [(f.name, f.max_nesting_depth) for f in functions] == [
+        ('rendered_jobs', 2), ('retry_jobs', 4), ('run_jobs', 3),
+        ('later_guard', 1), ('grouped_jobs', 2),
+    ]
