@@ -125,6 +125,10 @@ class CppRValueRefStates(CodeStateMachine):
         self._set_state(self._r_value_ref, self._REFERENCE_SCAN_TOKENS)
         if not self._counts_and(token):
             return
+        if self._lambda is not None and self._lambda.in_return_type:
+            self._lambda.references += 1
+            self._initializer_deduction = False
+            return
         if self._initializer_deduction is None:
             self._initializer_deduction = True
         # A stand-alone && can be a macro argument. An operator name is also separate.
@@ -226,6 +230,10 @@ class _LambdaHeader:
     @property
     def in_parameter(self):
         return self._section == "(" and len(self._groups) == 1
+
+    @property
+    def in_return_type(self):
+        return self._section == "->" and not self._groups
 
     @property
     def in_group(self):
