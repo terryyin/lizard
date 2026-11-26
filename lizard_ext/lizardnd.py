@@ -28,7 +28,9 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     def __call__(self, tokens, reader, l_depth=0):
         implied_semicolons = None
-        if hasattr(reader, "implied_semicolons"):
+        if hasattr(reader, "nesting_semicolons"):
+            tokens, implied_semicolons = reader.nesting_semicolons(tokens)
+        elif hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
         return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
 
@@ -75,7 +77,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     context.close_condition()
 
                 # Handle logical operators && and || within conditions
-                elif token in ('&&', '||'):
+                elif token in ('&&', '||') and not getattr(token, 'is_logical_assignment', False):
                     if context.get_in_condition():
                         # Only add nesting depth for the first logical operator in a condition
                         # Subsequent && or || operators in the same condition don't add depth
@@ -85,6 +87,9 @@ class LizardExtension(object):  # pylint: disable=R0903
                     else:
                         # Not in a condition, treat as regular nesting
                         l_depth = context.open_level()
+                    if getattr(context, 'ruby_tracks_depth', False) and context.get_in_condition():
+                        function = context.current_function
+                        function.ruby_statement_peak = max(function.ruby_statement_peak, l_depth)
 
                 # Handle other loop keywords (if, for, while, etc.)
                 elif token in loops and token not in ('&&', '||') \
@@ -106,11 +111,17 @@ class LizardExtension(object):  # pylint: disable=R0903
 class NDFileInfoAddition(FileInfoBuilder):
 
     def add_nd_condition(self, inc=1):
-        self.current_function.nesting_depth += inc
-        nd_tmp = self.current_function.nesting_depth
-        if self.current_function.max_nesting_depth < nd_tmp:
-            self.current_function.max_nesting_depth = nd_tmp
-        return self.current_function.nesting_depth
+        function = self.current_function
+        function.nesting_depth += inc
+        self.record_nd_peak(function.nesting_depth)
+        return function.nesting_depth
+
+    def record_nd_peak(self, depth):
+        function = self.current_function
+        if function.max_nesting_depth < depth:
+            function.max_nesting_depth = depth
+        if function.ruby_block_peak is not None and function.ruby_block_peak < depth:
+            function.ruby_block_peak = depth
 
     def reset_nd_complexity(self):
         self.current_function.nesting_depth = 0
@@ -231,6 +242,8 @@ def patch_append_method(frm, accept_class, method_name):
 def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
     self.max_nesting_depth = 0
+    self.ruby_block_peak = None
+    self.ruby_statement_peak = 0
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
     self.in_condition = False  # Track if we're inside a condition

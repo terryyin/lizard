@@ -4,7 +4,7 @@ Language parser for Ruby
 
 import re
 
-from .rubylike import RubylikeReader
+from .rubylike import RubylikeReader, RubylikeStateMachine, _ends_value
 from .js_style_regex_expression import js_style_regex_expression
 from .ruby_documentation import may_have_documentation, pattern_for_fragment
 from .source_documentation import tokens_ignoring_documentation
@@ -35,6 +35,7 @@ _KEYWORDS = frozenset((
     'try', 'catch', 'finally', 'except', 'switch', 'with', 'return',
     'yield'))
 _NAME_BEFORE = frozenset(('.', 'def'))
+_BRANCH_BOUNDARIES = frozenset(('then', 'elsif', 'else', 'when', 'in', 'ensure'))
 
 
 def _paired(opening, closing):
@@ -74,11 +75,102 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
                     r"[a-z]*)")
 
 
+class RubyStateMachine(RubylikeStateMachine):
+
+    _loop_depth = False
+
+    def _start_block(self, opener, callback=None, token=None):
+        if not getattr(self.context, 'ruby_tracks_depth', False):
+            super()._start_block(opener, callback, token)
+            return
+
+        function = self.context.current_function
+        owns_depth = self._loop_depth if opener == 'loop' else (
+            opener in ('if', 'case') and self._take_pending_depth())
+        entry_depth = function.nesting_depth - owns_depth
+        parent_peak = function.ruby_block_peak
+        statement_peak = function.ruby_statement_peak
+        function.ruby_block_peak = function.nesting_depth
+        function.ruby_statement_peak = 0
+
+        def close_depth():
+            completed_peak = function.ruby_block_peak
+            function.ruby_block_peak = (
+                None if parent_peak is None else max(parent_peak, completed_peak))
+            function.ruby_statement_peak = statement_peak
+            if completed_peak > entry_depth:
+                function.ruby_statement_peak = max(statement_peak, completed_peak)
+            if owns_depth:
+                self.context.add_nd_condition(-1)
+            if callback is not None:
+                callback()
+
+        super()._start_block(opener, close_depth, token)
+
+    def _start_loop(self, opener, state):
+        self._loop_depth = (opener in ('while', 'for')
+                            and getattr(self.context, 'ruby_tracks_depth', False)
+                            and self._take_pending_depth())
+        super()._start_loop(opener, state)
+
+    def _take_pending_depth(self):
+        # Keep a keyword's level before a brace or line break can close it.
+        function = self.context.current_function
+        if not function.levels_awaiting_body:
+            return False
+        function.levels_awaiting_body -= 1
+        return True
+
+    def _loop_modifier(self, token):
+        if token == 'while':
+            self._record_modified_block_depth()
+
+    def _read_modifier(self, token):
+        if token == 'if':
+            self._record_modified_block_depth()
+        super()._read_modifier(token)
+
+    def _record_modified_block_depth(self):
+        if getattr(self.context, 'ruby_tracks_depth', False):
+            function = self.context.current_function
+            if function.ruby_statement_peak:
+                function.ruby_statement_peak += 1
+                self.context.record_nd_peak(function.ruby_statement_peak)
+
+    def _if(self, token):
+        # A modifier predicate can open a block: `return if jobs.any? do`.
+        if token == 'do' and not self.br_count and not getattr(token, 'is_member_name', False):
+            self.next(self._modifier_do)
+        else:
+            if (token in ('if', 'while') and self.follows_value() and not self.br_count
+                    and not getattr(token, 'is_member_name', False)
+                    and getattr(self.context, 'ruby_tracks_depth', False)
+                    and not self.context.get_condition_depth()):
+                self._record_modified_block_depth()
+            super()._if(token)
+
+    def _modifier_do(self, token):
+        # A block with parameters or a body on the next line has a
+        # distinct opening. Keep reading the predicate on other tokens.
+        if self.is_newline() or token in ('|', '||', ';'):
+            self.next(self._state_global)
+            self._start_block('do', token=token)
+        else:
+            self.next(self._if, token)
+
+
 class RubyReader(RubylikeReader):
     # pylint: disable=R0903
 
     ext = ['rb']
     language_names = ['ruby']
+    STATE_MACHINE = RubyStateMachine
+
+    def nesting_semicolons(self, tokens):
+        self.context.ruby_tracks_depth = True
+        self.block_starts = ('{', '${')
+        boundaries = _NestingSemicolons(self.context)
+        return boundaries.read(tokens), boundaries
 
     def preprocess(self, tokens):
         """Drop spaces, and mark a keyword right after '.', '&.' or 'def'
@@ -87,6 +179,8 @@ class RubyReader(RubylikeReader):
         keywords, name_before = _KEYWORDS, _NAME_BEFORE
         context = self.context
         context.at_line_end = None
+        if getattr(context, 'ruby_tracks_depth', False):
+            tokens = _mark_logical_assignments(tokens)
         name_follows = False
         for token in tokens:
             if token.isspace():
@@ -164,3 +258,38 @@ class RubyReader(RubylikeReader):
                 yield token
             else:
                 source = None
+
+
+class _NestingSemicolons:
+    """A Ruby statement normally ends at its line break."""
+
+    def __init__(self, context):
+        self.context = context
+        self.before_token = False
+
+    def read(self, tokens):
+        previous = None
+        for token in tokens:
+            if previous == 'else':
+                self.context.clear_prev_was_else()
+            self.before_token = (self.context.newline and previous is not None
+                                 and token not in ('.', '&')
+                                 and (previous in ('do', 'then') or _ends_value(previous)))
+            if (token == ';' or (self.before_token and token not in (')', ']', '}'))
+                    or (token in _BRANCH_BOUNDARIES and not getattr(token, 'is_member_name', False))):
+                self.context.current_function.ruby_statement_peak = 0
+            previous = token
+            yield token
+
+
+def _mark_logical_assignments(tokens):
+    for token in tokens:
+        if token in ('&&', '||'):
+            following = next(tokens, None)
+            if following == '=' and token.begin + len(token) == following.begin:
+                token.is_logical_assignment = True
+            yield token
+            if following is not None:
+                yield following
+        else:
+            yield token
