@@ -32,6 +32,7 @@ class Namespace(Nesting):  # pylint: disable=R0903
 
 
 class FunctionInfo(Nesting):  # pylint: disable=R0902
+    _declared_parameter_names = None
 
     def __init__(self, name, filename, start_line=0, ccn=1):
         self.cyclomatic_complexity = ccn
@@ -68,6 +69,9 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     @property
     def parameter_count(self):
+        if self._declared_parameter_names is not None:
+            return len(self._declared_parameter_names)
+
         # Binding patterns can occupy formal slots without introducing names.
         return sum(
             bool(_PARAMETER_NAME.search(parameter))
@@ -76,6 +80,9 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     @property
     def parameters(self):
+        if self._declared_parameter_names is not None:
+            return list(self._declared_parameter_names)
+
         # Exclude empty tokens as parameters. These can occur in languages
         # allowing a trailing comma on the last parameter in an function
         # argument list.
@@ -84,6 +91,10 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         # - a type annotation given after a ':'
         matches = map(_PARAMETER_NAME.search, self.full_parameters)
         return [m.group(1) for m in matches if m]
+
+    def record_parameter_names(self, names):
+        """Keep names read from declaration syntax."""
+        self._declared_parameter_names = tuple(names)
 
     @property
     def length(self):

@@ -6,6 +6,7 @@ from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine
 from .golike import GoLikeStates
 from .swift import SwiftReplaceLabel
+from .swift import _is_local_name
 
 
 class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
@@ -60,6 +61,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         'actual', 'context', 'import', 'package',
     } | _ACCESSORS | _ACCESSOR_MODIFIERS
     _HEADER_OPERATORS = {':', 'where', '.', '->', ',', '<', '(', '&', 'suspend'}
+    _PARAMETER_GROUPS = {'[': 1, '{': 1, ']': -1, '}': -1}
 
     def __init__(self, context, in_when_cases=False, accessor_declaration_scope=None):
         super().__init__(context)
@@ -247,6 +249,55 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _expect_function_dec(self, token):
         if not self._receiver_type_end(token):
             super()._expect_function_dec(token)
+
+    @CodeStateMachine.read_inside_brackets_then("()", "_expect_function_impl")
+    def _function_dec(self, token):
+        if self.br_count == 0:
+            self._finish_parameter_names()
+        elif token == '(' and self.br_count == 1:
+            self._start_parameter_names()
+        elif token not in ('(', ')'):
+            self._parameter_groups += self._PARAMETER_GROUPS.get(token, 0)
+            self._read_parameter_names(token, self.br_count == 1 and not self._parameter_groups)
+            self.context.parameter(token)
+        self._before_parameter_name = self.last_token
+
+    def _start_parameter_names(self):
+        self._parameter_groups = 0
+        self._parameter_names = []
+        self._can_read_parameter_name = True
+        self._reading_parameter_default = False
+        self._parameter_annotation = False
+        self._use_declared_parameter_names = False
+
+    def _read_parameter_names(self, token, at_top_level):
+        if at_top_level:
+            if token == ',':
+                self._can_read_parameter_name = True
+                self._parameter_annotation = False
+            elif token == '@' and self._can_read_parameter_name:
+                # Anonymous functions can omit parameter types.
+                self._parameter_annotation = bool(self.context.current_function.name)
+            elif token == ':' and self._can_read_parameter_name:
+                name = self.last_token
+                # Skip annotation use-site targets and anonymous object types.
+                if self._before_parameter_name != '@' and name not in (None, 'object') and _is_local_name(name):
+                    self._parameter_names.append(name.strip('`'))
+                    self._can_read_parameter_name = False
+                    self._reading_parameter_default = False
+                    self._parameter_annotation = False
+            elif token == '=' and self._parameter_names:
+                self._reading_parameter_default = True
+        elif token == '=' and self._parameter_annotation:
+            self._use_declared_parameter_names = True
+        if self._reading_parameter_default and '\n' in token:
+            self._use_declared_parameter_names = True
+
+    def _finish_parameter_names(self):
+        # Annotation arguments and multiline defaults can hide the formal
+        # names from the shared matcher.
+        if self._use_declared_parameter_names:
+            self.context.current_function.record_parameter_names(self._parameter_names)
 
     def _receiver_type_end(self, token):
         # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
