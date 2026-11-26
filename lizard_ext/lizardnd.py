@@ -101,6 +101,10 @@ class LizardExtension(object):  # pylint: disable=R0903
                 l_depth = 0
                 context.reset_nd_complexity()
             yield token
+            if (token in (':', '...')
+                    and context.__dict__.get('js_object_property') == context.fileinfo.token_count):
+                l_depth = context.end_statement()
+                context.set_logical_operator_added(False)
 
 
 class NDFileInfoAddition(FileInfoBuilder):
