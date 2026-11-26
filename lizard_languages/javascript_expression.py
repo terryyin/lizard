@@ -25,10 +25,20 @@ _LINE_START_OPERATORS = frozenset((
     '++', '--', '!', '~', '{', '@', '}', ')', ']'))
 
 
-class ClassFieldStart(str):
-    """First token after a class field's implicit semicolon."""
+class ClassFieldBoundary(str):
+    """An explicit semicolon or the first token after an implicit one."""
 
-    is_class_field_start = True
+    is_class_field_boundary = True
+
+
+class _ClassArrowFieldSemicolon(ClassFieldBoundary):
+    """A class field separator that also ends its expression arrow."""
+
+    ends_class_arrow_field = True
+
+
+_CLASS_FIELD_SEMICOLON = ClassFieldBoundary(';')
+_CLASS_ARROW_FIELD_SEMICOLON = _ClassArrowFieldSemicolon(';')
 
 
 def ends_expression(token):
@@ -64,7 +74,16 @@ def mark_class_field_start(state, token):
             and (token[0].isalnum() or token[0] in _STATEMENT_STARTS or token[0] == '@')
             and starts_statement(token)
             and ends_expression(active.last_token or '')):
-        return ClassFieldStart(token)
+        return ClassFieldBoundary(token)
+    return token
+
+
+def mark_class_field_semicolon(state, token):
+    active = active_js_state(state)
+    if active._state == active._state_global and _in_javascript_class_field(active):
+        if active._expression_body:
+            return _CLASS_ARROW_FIELD_SEMICOLON
+        return _CLASS_FIELD_SEMICOLON
     return token
 
 

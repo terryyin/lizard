@@ -111,6 +111,8 @@ class _Counter(object):  # pylint: disable=R0902
                     self._settle()
                 in_brackets = (candidates and
                                len(self.openers) >= candidates[-1].depth)
+                if token == ';' and getattr(token, 'ends_class_arrow_field', False):
+                    function = context.stacked_functions[-1]
                 read = token
                 if token in _BRACKETS:
                     function, token = self._route(function, token)

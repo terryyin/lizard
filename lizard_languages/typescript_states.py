@@ -224,7 +224,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 self.context.newline
                 and (not self.as_class or not self._in_prop_value
                      or self.context.class_field_annotations
-                     or getattr(token, 'is_class_field_start', False))
+                     or getattr(token, 'is_class_field_boundary', False))
                 # An object property value can continue across line breaks.
                 and (not self.as_object or self.as_class
                      or not self._in_prop_value or self.started_function)

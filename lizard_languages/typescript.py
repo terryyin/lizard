@@ -7,7 +7,8 @@ from itertools import tee
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
-from .javascript_expression import awaiting_class_field, mark_class_field_start
+from .javascript_expression import (
+    awaiting_class_field, mark_class_field_semicolon, mark_class_field_start)
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
@@ -305,6 +306,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
                             member_access = False
+                        if token == ';':
+                            token = mark_class_field_semicolon(state, token)
                         if token in name_keywords:
                             keyword = token
                             continue

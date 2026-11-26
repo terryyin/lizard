@@ -26,7 +26,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if token == '?' and getattr(token, 'is_optional', False):
             return
         state = self.state
-        if self.line != state.line and getattr(token, 'is_class_field_start', False):
+        if ((self.line != state.line or token == ';')
+                and getattr(token, 'is_class_field_boundary', False)):
             self._end_class_field()
         line = self.line
         if line != state.line:
