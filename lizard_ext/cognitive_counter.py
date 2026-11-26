@@ -20,14 +20,15 @@ def _is_markup(token):
 
 
 class _Candidate(object):  # pylint: disable=R0903
-    """A function that the reader started at a ``(`` and can still abandon."""
+    """A possible function that started at a ``(``."""
 
-    __slots__ = ('function', 'parent', 'depth')
+    __slots__ = ('function', 'parent', 'depth', 'quoted_formals')
 
-    def __init__(self, function, parent, depth):
+    def __init__(self, function, parent, depth, quoted_formals=False):
         self.function = function
         self.parent = parent    # the function around it
         self.depth = depth      # open brackets, with the ``(`` it started at
+        self.quoted_formals = quoted_formals
 
 
 class _Frame(object):  # pylint: disable=R0903
@@ -98,6 +99,10 @@ class _Counter(object):  # pylint: disable=R0902
         self.candidates = []    # functions the reader can still abandon
         self.held = {}          # function -> lists of (order, token, line)
         self.order = 0          # number of tokens held so far
+        self.last_quoted_formals = None
+        self.previous_owner = None
+        if profile.nested_functions:
+            self.context.quoted_formals = None
 
     def process(self, token, line=None, function=None):
         """Count the token for its function.  The held tokens come back with
@@ -109,6 +114,8 @@ class _Counter(object):  # pylint: disable=R0902
                 candidates = self.candidates
                 if candidates or self.previous == '(':
                     self._settle()
+                if candidates:
+                    function = self._quoted_owner(function)
                 in_brackets = (candidates and
                                len(self.openers) >= candidates[-1].depth)
                 read = token
@@ -118,11 +125,14 @@ class _Counter(object):  # pylint: disable=R0902
                 if held:
                     self._hold(function, token)
                     top = candidates[-1]
-                    if self._keeps_tokens(top, in_brackets, function, read):
+                    if not top.quoted_formals and self._keeps_tokens(
+                            top, in_brackets, function, read):
                         candidates.pop()
                         self._release(top.function, top.parent)
                 self.previous = read
                 self.previous_function = context.current_function
+                if read == '(':
+                    self.previous_owner = function
                 if held:
                     return
         if function is not self.function:
@@ -142,6 +152,9 @@ class _Counter(object):  # pylint: disable=R0902
         """The end of the file: count what is still held."""
         if self.held:
             self._settle()
+            for candidate in reversed(self.candidates):
+                if candidate.quoted_formals:
+                    self._merge(candidate, candidate.parent)
             del self.candidates[:]
             self._release(*list(self.held))
 
@@ -176,18 +189,48 @@ class _Counter(object):  # pylint: disable=R0902
         counts them."""
         context = self.context
         candidates = self.candidates
-        while candidates and self._ended(candidates[-1].function):
-            ended = candidates.pop()
-            if getattr(ended.function, 'abandoned', False):
-                self._merge(ended)
-            self._release(ended.function, ended.parent)
+        while candidates:
+            candidate = candidates[-1]
+            function = candidate.function
+            if candidate.quoted_formals:
+                if not function.resolved:
+                    break
+                candidates.pop()
+                owner = function.function or candidate.parent
+                self._merge(candidate, owner)
+                self._release(owner, candidate.parent)
+            else:
+                if not self._ended(function):
+                    break
+                candidates.pop()
+                if getattr(function, 'abandoned', False):
+                    self._merge(candidate, candidate.parent)
+                self._release(function, candidate.parent)
+        if self.previous == '(':
+            self._observe_quoted_formals()
         stacked = context.stacked_functions
         if self.previous == '(' and stacked and \
                 stacked[-1] is self.previous_function and \
                 context.current_function is not self.previous_function and \
                 getattr(context.current_function, 'optimistic', False):
             candidates.append(_Candidate(
-                context.current_function, stacked[-1], len(self.openers)))
+                context.current_function, self.previous_owner, len(self.openers)))
+
+    def _observe_quoted_formals(self):
+        formals = self.context.quoted_formals
+        if formals is not self.last_quoted_formals:
+            self.last_quoted_formals = formals
+            self.candidates.append(_Candidate(
+                formals, self.previous_owner, len(self.openers), quoted_formals=True))
+
+    def _quoted_owner(self, function):
+        # A late-started arrow still appears to be in the enclosing function
+        # while the reader consumes its possible parameters.
+        for candidate in self.candidates:
+            if (candidate.quoted_formals and not candidate.function.closed
+                    and candidate.parent is function):
+                function = candidate.function
+        return function
 
     def _keeps_tokens(self, candidate, in_brackets, function, token):
         """Whether it is now known that the candidate counts its own tokens.
@@ -221,8 +264,8 @@ class _Counter(object):  # pylint: disable=R0902
         self.held[function][0].append(
             (self.order, token, self.context.current_line))
 
-    def _merge(self, candidate):
-        function, parent = candidate.function, candidate.parent
+    def _merge(self, candidate, parent):
+        function = candidate.function
         lists = self.held.pop(function, None)
         if lists:
             self.held.setdefault(parent, [[]]).extend(lists)

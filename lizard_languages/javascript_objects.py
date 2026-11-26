@@ -1,6 +1,7 @@
 """JavaScript object and class members, including computed method names."""
 
 from .javascript_bindings import BindingSummary, JavaScriptBindings
+from .javascript_bindings import QuotedFormals
 from .javascript_expression import active_js_state, ends_expression
 from .javascript_statements import opens_object
 
@@ -212,19 +213,30 @@ class JavaScriptObjectsMixin:
         formals = group._property_formals = JavaScriptBindings(')', parameters=parameters)
         owner = self.context.current_function
         complexity = owner.cyclomatic_complexity
+        quoted = None
+        if hasattr(self.context, 'quoted_formals'):
+            quoted = self.context.quoted_formals = QuotedFormals()
 
         def after_group(token):
             if token in ('=>', ':'):
                 self._pending_bindings = BindingSummary(
                     formals.defaults - group._confirmed_binding_defaults,
-                    owner.cyclomatic_complexity - complexity, 0, parameters)
+                    owner.cyclomatic_complexity - complexity, 0, parameters,
+                    quoted_formals=quoted)
+            elif quoted is not None:
+                quoted.resolved = True
             if token == ':':
                 self.next(self._state_global)
                 self._consume_type_annotation()
                 return
             self.next(self._state_global, token)
 
-        self.sub_state(group, lambda: self.next(after_group))
+        def close_group():
+            if quoted is not None:
+                quoted.closed = True
+            self.next(after_group)
+
+        self.sub_state(group, close_group)
 
     def _collect_computed_name(self):
         # Collect tokens between [ and its ]

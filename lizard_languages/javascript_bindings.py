@@ -12,7 +12,16 @@ BindingEvent = namedtuple('BindingEvent', [
 ])
 BindingSummary = namedtuple('BindingSummary', [
     'defaults', 'expression_complexity', 'confirmed_defaults', 'full_parameters',
-])
+    'quoted_formals',
+], defaults=(None,))
+
+
+class QuotedFormals:
+    """A property value whose group can become an arrow's parameters."""
+
+    closed = False
+    resolved = False
+    function = None
 
 
 class BindingFrame:
@@ -144,6 +153,8 @@ class JavaScriptBindingsMixin:
         self._pending_bindings = None
         if not pending:
             return
+        if pending.quoted_formals is not None and token not in ('=>', ':'):
+            pending.quoted_formals.resolved = True
         if token in ('=', 'of', 'in'):
             if self._binding_candidate:
                 self._confirmed_binding_defaults += pending.defaults
@@ -183,11 +194,16 @@ class JavaScriptBindingsMixin:
     def _push_arrow_function(self):
         pending = self._pending_bindings
         self._pending_bindings = None
+        quoted = pending.quoted_formals if pending else None
+        if quoted is not None:
+            quoted.resolved = True
         if self.started_function:
             return
         if pending:
             self.context.add_condition(-pending.expression_complexity)
         self._push_function_to_stack()
+        if quoted is not None:
+            quoted.function = self.context.current_function
         if pending:
             self.context.current_function.full_parameters = pending.full_parameters
             self.context.add_condition(pending.defaults + pending.expression_complexity)
