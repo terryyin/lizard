@@ -270,7 +270,6 @@ class CLikeNestingStackStates(CodeStateMachine, _CppTemplateAngles):
 
     __namespace_separators = ['<', ":", "final", "[", "extends", 'implements']
     _TYPE_KEYWORDS = ("struct", "class", "namespace", "union")
-    on_class_alignment = None
 
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
@@ -287,6 +286,8 @@ class CLikeNestingStackStates(CodeStateMachine, _CppTemplateAngles):
 
     def _dot(self, _):
         self._state = self._state_global
+
+    on_class_alignment = None
 
     def _read_namespace(self, token):
         """Processes declarations right after namespace/class keywords."""
