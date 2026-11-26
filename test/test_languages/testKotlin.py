@@ -1,5 +1,6 @@
 import unittest
 
+from lizard import FileAnalyzer, get_extensions
 from lizard_languages import KotlinReader
 from .kotlin_helpers import get_kotlin_function_list
 
@@ -14,7 +15,280 @@ class Test_tokenizing_Kotlin(unittest.TestCase):
         self.check_tokens(['`a`'], '`a`')
 
 
+class TestKotlinStringLiterals(unittest.TestCase):
+
+    def test_raw_string_with_an_unpaired_quote_keeps_the_next_function(self):
+        functions = get_kotlin_function_list('''\
+fun quoteFragment(): String {
+    return """The "description field is missing."""
+}
+
+fun defaultField(): String {
+    return "description"
+}
+''')
+        self.assertEqual(
+            [("quoteFragment", 1, 3, 10), ("defaultField", 5, 7, 10)],
+            [(f.name, f.start_line, f.end_line, f.token_count) for f in functions],
+        )
+
+    def test_template_does_not_count_a_quoted_map_key_as_code(self):
+        function, = get_kotlin_function_list('''\
+fun localeLabel(labels: Map<String, String>): String {
+    if (labels.isEmpty()) return "Default"
+    return "Locale: ${labels["if"]}"
+}
+''')
+        self.assertEqual(2, function.cyclomatic_complexity)
+
+    def test_raw_template_with_quoted_delimiters_keeps_its_lines(self):
+        functions = get_kotlin_function_list('''\
+fun render(names: List<String>): String {
+    return """
+        Results: ${names.joinToString { """name: "$it"""" }}
+        End of results.
+    """.trimIndent()
+}
+fun count(names: List<String>) { println(names.size) }
+''')
+        self.assertEqual(
+            [("render", 1, 6, 6), ("count", 7, 7, 1)],
+            [(f.name, f.start_line, f.end_line, f.nloc) for f in functions],
+        )
+        self.assertEqual(29, functions[0].token_count)
+
+    def test_raw_template_counts_code_and_skips_literal_text(self):
+        analyzer = FileAnalyzer(get_extensions(["cognitive", "nd", "ns"]))
+        result = analyzer.analyze_source_code("status.kt", '''\
+fun statusLabel(active: Boolean): String {
+    return """if (active) code="${if (active) 200 else 503}""""
+}
+''')
+        function, = result.function_list
+        self.assertEqual(
+            (2, 2, 1, 2),
+            (function.cyclomatic_complexity, function.cognitive_complexity,
+             function.max_nesting_depth, function.max_nested_structures),
+        )
+
+    def test_adjacent_template_conditions_are_independent(self):
+        analyzer = FileAnalyzer(get_extensions(["nd"]))
+        result = analyzer.analyze_source_code("status.kt", '''\
+fun reportStatus(active: Boolean, audit: Boolean) {
+    println("${if (active) 200 else 503} // audit: ${if (audit) "on" else "off"}")
+}
+''')
+        function, = result.function_list
+        self.assertEqual((3, 1), (function.cyclomatic_complexity, function.max_nesting_depth))
+
+    def test_template_keeps_the_surrounding_if_and_else(self):
+        analyzer = FileAnalyzer(get_extensions(["ns"]))
+        result = analyzer.analyze_source_code("cookies.kt", '''\
+fun cookiePart(name: String, value: String?): String {
+    return if (value != null) "$name=${value.trim()}" else ""
+}
+''')
+        function, = result.function_list
+        self.assertEqual(2, function.max_nested_structures)
+
+    def test_template_in_a_get_call_does_not_start_an_accessor(self):
+        analyzer = FileAnalyzer(get_extensions([]))
+        result = analyzer.analyze_source_code("sourceSets.kts", '''\
+val sourceSets = mapOf("iosMain" to "commonMain")
+val target = "ios"
+with(sourceSets) {
+    get("${target}Main")
+}
+''')
+        self.assertEqual([], result.function_list)
+
+    def test_template_default_keeps_one_parameter(self):
+        _, function = get_kotlin_function_list('''\
+private const val CLIENT = "client"
+private const val TIMEOUT = "timeout"
+
+fun format(kind: String, detail: String) = "$kind-$detail"
+fun failureLabel(prefix: String = "${format(CLIENT, detail = TIMEOUT)}") = prefix
+''')
+        self.assertEqual(["prefix"], function.parameters)
+
+    def test_when_subject_with_a_template_keeps_the_branches(self):
+        function, = get_kotlin_function_list('''\
+fun protocolVersion(major: Int, minor: Int): Int {
+    return when ("v${major}.${minor}") {
+        "v1.0" -> 10
+        "v1.1" -> 11
+        else -> 0
+    }
+}
+''')
+        self.assertEqual(3, function.cyclomatic_complexity)
+
+    def test_interpolation_keeps_the_surrounding_logical_sequence(self):
+        analyzer = FileAnalyzer(get_extensions(["cognitive"]))
+        result = analyzer.analyze_source_code("sessions.kt", '''\
+fun mayOpenSession(authenticated: Boolean, userId: Int, sessions: Set<String>, quotaAvailable: Boolean): Boolean {
+    return authenticated && "user:${userId}" in sessions && quotaAvailable
+}
+fun mayOpenSharedSession(
+    authenticated: Boolean, staff: Boolean, optedIn: Boolean, sessions: Set<String>, quotaAvailable: Boolean
+): Boolean {
+    return authenticated && "staff:${staff && optedIn}" in sessions && quotaAvailable
+}
+''')
+        self.assertEqual([1, 2], [f.cognitive_complexity for f in result.function_list])
+
+    def test_interpolation_keeps_the_surrounding_if_body(self):
+        analyzer = FileAnalyzer(get_extensions(["cognitive"]))
+        result = analyzer.analyze_source_code("jobs.kt", '''\
+fun jobLabel(active: Boolean, priority: Boolean, jobId: Int): String {
+    return if (active) "${jobId}" + (if (priority) ":urgent" else ":normal") else "paused"
+}
+fun jobReport(active: Boolean, priority: Boolean, jobId: Int): String {
+    return if (active) """Job
+        ID: ${jobId}
+        Status: """ + (if (priority) "urgent" else "normal") else "paused"
+}
+''')
+        self.assertEqual([5, 5], [f.cognitive_complexity for f in result.function_list])
+
+    def test_callable_reference_after_comment_keeps_expression_token_count(self):
+        function, = get_kotlin_function_list('''\
+fun bound(): () -> Int {
+    val `message label` = """ready
+set"""
+    return (`message label`
+        /* Bind /* the property */ on this value. */ ::length)
+}
+''')
+        self.assertEqual(27, function.token_count)
+
+    def test_interpolation_closes_pending_cognitive_checks(self):
+        analyzer = FileAnalyzer(get_extensions(["cognitive"]))
+        result = analyzer.analyze_source_code("jobs.kt", '''\
+fun logUntilMissing(jobIds: List<String?>) {
+    for (jobId in jobIds) {
+        println("Job: ${jobId ?: break}")
+    }
+}
+fun logKnownJobs(jobIds: List<String?>) {
+    for (jobId in jobIds) {
+        println("Job: ${jobId ?: continue}")
+    }
+}
+fun jobLabel(active: Boolean, priority: Boolean, value: Any?): String {
+    return if (active) "${value as String ?}" + (if (priority) ":urgent" else ":normal") else "paused"
+}
+''')
+        self.assertEqual([1, 1, 5], [f.cognitive_complexity for f in result.function_list])
+
+    def test_nullable_cast_in_a_template_has_no_nesting(self):
+        analyzer = FileAnalyzer(get_extensions(["nd"]))
+        result = analyzer.analyze_source_code("jobs.kt", '''\
+fun nullableLabel(value: Any?): String {
+    return "Job: ${value as String ?}"
+}
+''')
+        function, = result.function_list
+        self.assertEqual(0, function.max_nesting_depth)
+
+    def test_nested_string_templates_count_code_at_each_level(self):
+        functions = get_kotlin_function_list('''\
+fun statusLabel(active: Boolean, delayed: Boolean): String {
+    return "Status: ${if (active) "Ready: ${if (delayed) "late" else "on time"}" else "Unavailable"}"
+}
+fun fallback() = "No status"
+''')
+        self.assertEqual(
+            [("statusLabel", 1, 3, 3), ("fallback", 4, 4, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in functions],
+        )
+
+    def test_raw_string_after_a_nested_comment_keeps_function_boundaries(self):
+        functions = get_kotlin_function_list('''\
+fun render(): String {
+    /*
+    if (debug) { /* Log old text. */ println("""Missing "quote""") }
+    */
+    return """Result "ok"""
+}
+fun afterRender() = "next"
+''')
+        self.assertEqual(
+            [("render", 1, 6), ("afterRender", 7, 7)],
+            [(f.name, f.start_line, f.end_line) for f in functions],
+        )
+
+    def test_quotes_in_backtick_template_names_stay_inside_the_string(self):
+        for identifier, string in (
+                ('`display"name`', '"Label: $`display"name` ${1}"'),
+                ('`display"""name`', '"""Label: $`display"""name`"""')):
+            with self.subTest(string=string):
+                functions = get_kotlin_function_list(f'''\
+fun label(): String {{
+    val {identifier} = "value"
+    return {string}
+}}
+fun fallback() = "next"
+''')
+                self.assertEqual(
+                    [("label", 1, 4), ("fallback", 5, 5)],
+                    [(f.name, f.start_line, f.end_line) for f in functions],
+                )
+
+
+class TestKotlinBlockComments(unittest.TestCase):
+
+    def test_nested_comment_does_not_count_disabled_code(self):
+        functions = get_kotlin_function_list('''\
+fun statusCode(active: Boolean): Int {
+    /*
+    /** Old policy. */
+    if (!active) return 204
+    */
+    return if (active) 200 else 503
+}
+
+fun healthCode(): Int { return 200 }
+''')
+        self.assertEqual(
+            [("statusCode", 1, 7, 2, 3, 19), ("healthCode", 9, 9, 1, 1, 10)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity, f.nloc, f.token_count)
+             for f in functions],
+        )
+
+    def test_nested_kdoc_does_not_expose_a_commented_out_function(self):
+        functions = get_kotlin_function_list('''\
+/*
+/** Checks the old broker. /* Retry once. */ */
+fun legacyHealthCode(): Int { return 504 }
+*/
+
+fun healthCode(): Int { return 200 }
+''')
+        self.assertEqual(
+            [("healthCode", 6, 6)],
+            [(f.name, f.start_line, f.end_line) for f in functions],
+        )
+
+
 class Test_parser_for_Kotlin(unittest.TestCase):
+
+    def test_multiline_default_keeps_escaped_parameter_names(self):
+        functions = get_kotlin_function_list('''\
+fun notice(
+    `subject  line`: String,
+    `retry-count (max), !` /* Maximum attempts. */ : Int,
+    message: String = """Try
+later""".trimIndent(),
+): String {
+    return "$message!"
+}
+''')
+        self.assertEqual(
+            [("notice", ["subject  line", "retry-count (max), !", "message"], 3)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
 
     def test_empty(self):
         functions = get_kotlin_function_list("")
@@ -44,6 +318,234 @@ class Test_parser_for_Kotlin(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("sayGoodbye", result[0].name)
         self.assertEqual(2, result[0].parameter_count)
+
+    def test_multiline_default_keeps_its_parameter_name(self):
+        functions = get_kotlin_function_list('''\
+fun readNotice(locale: String, notice: String = """
+    Service is unavailable.
+    Try again later.
+"""): String {
+    return "$locale: $notice"
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["locale", "notice"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_multiline_annotation_argument_keeps_the_formal_parameter_name(self):
+        functions = get_kotlin_function_list('''\
+annotation class Note(val text: String)
+
+fun readNotice(
+    @Note(text = """First line
+second line""") value: Int,
+    last: Int,
+): Int {
+    return value + last
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["value", "last"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_named_call_argument_is_not_a_formal_parameter(self):
+        functions = get_kotlin_function_list('''\
+fun render(title: String, detail: String): String { return "$title: $detail" }
+
+fun readNotice(
+    label: String = render(
+        title = "Service unavailable",
+        detail = """Try again
+later.""",
+    ),
+    retries: Int = 2,
+): String {
+    return "$label ($retries)"
+}
+''')
+        self.assertEqual(
+            [("render", ["title", "detail"], 2), ("readNotice", ["label", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_multiline_default_keeps_the_name_after_an_annotation(self):
+        functions = get_kotlin_function_list('''\
+annotation class Description(val text: String)
+
+fun readNotice(
+    @Description(text = "Public status") status: String = """Service unavailable
+Try again later.""",
+    retries: Int = 2,
+): String {
+    return "$status ($retries)"
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["status", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_multiline_defaults_count_each_declared_parameter_once(self):
+        functions = get_kotlin_function_list('''\
+annotation class NotePair(val title: String, val detail: String)
+
+fun formatNotice(title: String, detail: String): String { return "$title $detail" }
+
+fun fromCall(
+    message: String = formatNotice(
+        title = """Connection
+failed""",
+        detail = "Try later",
+    ),
+    retries: Int = 2,
+): String {
+    return "$message ($retries)"
+}
+
+fun fromAnnotation(
+    @NotePair(title = "Public", detail = "Warning") message: String = """Connection
+failed""",
+    retries: Int = 2,
+): String {
+    return "$message ($retries)"
+}
+''')
+        self.assertEqual(
+            [("formatNotice", ["title", "detail"], 2),
+             ("fromCall", ["message", "retries"], 2),
+             ("fromAnnotation", ["message", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_generic_type_before_multiline_default_keeps_the_formal_name(self):
+        functions = get_kotlin_function_list('''\
+fun notice(
+    messages: Map<String, String> = mapOf("error" to """Connection
+failed"""),
+    retries: Int = 2,
+): String {
+    return messages.getValue("error").repeat(retries)
+}
+''')
+        self.assertEqual(
+            [("notice", ["messages", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_parameters_ignore_commas_inside_parentheses(self):
+        functions = get_kotlin_function_list('''\
+fun applyOffset(
+    calculate: (left: Int, right: Int) -> Int,
+    offset: Int = maxOf(1, 2),
+): Int {
+    return calculate(1, 2) + offset
+}
+''')
+        self.assertEqual(
+            [("applyOffset", ["calculate", "offset"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_raw_defaults_do_not_change_parameter_depth(self):
+        functions = get_kotlin_function_list('''\
+fun delimiters(
+    prefix: String = """" ( " """,
+    suffix: String = """" ) " """,
+    count: Int = 0,
+): Int {
+    return prefix.length + suffix.length + count
+}
+
+fun fallback(): Int { return 1 }
+''')
+        self.assertEqual(
+            [("delimiters", ["prefix", "suffix", "count"], 3), ("fallback", [], 0)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_nested_comments_do_not_change_parameter_depth(self):
+        functions = get_kotlin_function_list('''\
+fun retry(
+    delay: Int = 2 /* Previous expression /* fallback */ maxOf( */,
+    limit: Int = 3 /* Previous expression /* fallback */ 100) */,
+    count: Int = 1,
+): Int {
+    return delay + limit + count
+}
+''')
+        self.assertEqual(
+            [("retry", ["delay", "limit", "count"], 3)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_escaped_parameter_name_survives_next_line_block_comment(self):
+        for comment in ('/* Public label. */', '/* Public /* older label */ label. */'):
+            with self.subTest(comment=comment):
+                functions = get_kotlin_function_list(f'''\
+fun follow(
+    `subject line`
+    {comment} : String,
+    `max attempts`
+    // The service allows retries.
+    : Int,
+    message: String = """Try
+later""".trimIndent(),
+): String {{
+    return "${{`subject line`}}: ${{`max attempts`}}: $message"
+}}
+''')
+                self.assertEqual(
+                    [("follow", ["subject line", "max attempts", "message"], 3)],
+                    [(f.name, f.parameters, f.parameter_count) for f in functions],
+                )
+
+    def test_typed_lambda_default_keeps_its_own_commas(self):
+        functions = get_kotlin_function_list('''\
+fun applyOffset(
+    calculate: (Int, Int) -> Int = { left: Int, right: Int -> left + right },
+    offset: Int = 0,
+): Int {
+    return calculate(1, 2) + offset
+}
+''')
+        self.assertEqual(
+            [("applyOffset", ["calculate", "offset"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_generic_arguments_keep_their_commas_and_comparisons_end_the_default(self):
+        functions = get_kotlin_function_list('''\
+fun format(
+    pair: Pair<Int, String> = Pair<Int, String>(1, "active"),
+    retry: Boolean = 1 < 2,
+    count: Int = maxOf(1, 2),
+): String {
+    return pair.second.repeat(if (retry) count else 1)
+}
+''')
+        self.assertEqual(
+            [("format", ["pair", "retry", "count"], 3)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_comparison_default_before_multiline_parameter_annotation(self):
+        functions = get_kotlin_function_list('''\
+annotation class Tuning(val description: String)
+
+fun retryDelay(
+    backoff: Boolean = 3 < 4,
+    @Tuning(description = """Request
+timeout""") timeout: Int = 1,
+): Int {
+    return if (backoff) timeout else 0
+}
+''')
+        self.assertEqual(
+            [("retryDelay", ["backoff", "timeout"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
 
     def test_one_function_with_return_value(self):
         result = get_kotlin_function_list('''
@@ -120,6 +622,28 @@ class Test_parser_for_Kotlin(unittest.TestCase):
             }
                 ''')
         self.assertEqual("`get`", result[0].name)
+
+    def test_type_identifier_keeps_function_boundaries(self):
+        result = get_kotlin_function_list('''\
+data class Job(val type: String)
+
+fun label(job: Job): String {
+    return job.type
+}
+
+fun normalize(type: String): String {
+    if (type.isBlank()) return "unknown"
+    return type
+}
+
+fun fallback(): String {
+    return "unknown"
+}
+        ''')
+        self.assertEqual(
+            [("label", 3, 5, 1), ("normalize", 7, 10, 2), ("fallback", 12, 14, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in result],
+        )
 
     def test_generic_function(self):
         result = get_kotlin_function_list('''

@@ -20,7 +20,8 @@ def comment_counter(tokens, reader):
     for token in tokens:
         comment = reader.get_comment_from_token(token)
         if comment is not None:
-            for _ in comment.splitlines()[1:]:
+            line_breaks = comment.splitlines()[1:]
+            for _ in line_breaks:
                 yield '\n'
             stripped = comment.strip()
             if stripped.startswith("#lizard forgive global"):
@@ -31,7 +32,11 @@ def comment_counter(tokens, reader):
                     metrics = {m.strip() for m in match.group(1).split(',') if m.strip()}
                     reader.context.current_function.forgiven_metrics.update(metrics)
             elif stripped.startswith("#lizard forgive"):
-                reader.context.forgive = True
+                context = reader.context
+                function = context.current_function
+                line = context.current_line - len(line_breaks)
+                context.forgive = True
+                context.forgive_directive = (function, line, context.fileinfo.token_count, function.end_line == line)
             if "GENERATED CODE" in comment:
                 return
         else:
