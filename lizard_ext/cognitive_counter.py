@@ -99,8 +99,6 @@ class _Counter(object):  # pylint: disable=R0902
         self.candidates = []    # functions the reader can still abandon
         self.held = {}          # function -> lists of (order, token, line)
         self.order = 0          # number of tokens held so far
-        self.last_quoted_formals = None
-        self.previous_owner = None
         if profile.nested_functions:
             self.context.quoted_formals = None
 
@@ -131,8 +129,6 @@ class _Counter(object):  # pylint: disable=R0902
                         self._release(top.function, top.parent)
                 self.previous = read
                 self.previous_function = context.current_function
-                if read == '(':
-                    self.previous_owner = function
                 if held:
                     return
         if function is not self.function:
@@ -206,22 +202,20 @@ class _Counter(object):  # pylint: disable=R0902
                 if getattr(function, 'abandoned', False):
                     self._merge(candidate, candidate.parent)
                 self._release(function, candidate.parent)
-        if self.previous == '(':
-            self._observe_quoted_formals()
+        if self.previous != '(':
+            return
+        formals = context.quoted_formals
+        if formals is not None:
+            context.quoted_formals = None
+            candidates.append(_Candidate(
+                formals, self._quoted_owner(self.previous_function),
+                len(self.openers), quoted_formals=True))
         stacked = context.stacked_functions
-        if self.previous == '(' and stacked and \
-                stacked[-1] is self.previous_function and \
+        if stacked and stacked[-1] is self.previous_function and \
                 context.current_function is not self.previous_function and \
                 getattr(context.current_function, 'optimistic', False):
             candidates.append(_Candidate(
-                context.current_function, self.previous_owner, len(self.openers)))
-
-    def _observe_quoted_formals(self):
-        formals = self.context.quoted_formals
-        if formals is not self.last_quoted_formals:
-            self.last_quoted_formals = formals
-            self.candidates.append(_Candidate(
-                formals, self.previous_owner, len(self.openers), quoted_formals=True))
+                context.current_function, self._quoted_owner(stacked[-1]), len(self.openers)))
 
     def _quoted_owner(self, function):
         # A late-started arrow still appears to be in the enclosing function
