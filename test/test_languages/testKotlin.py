@@ -319,6 +319,21 @@ fun fallback(): Int { return 1 }
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
+    def test_nested_comments_do_not_change_parameter_depth(self):
+        functions = get_kotlin_function_list('''\
+fun retry(
+    delay: Int = 2 /* Previous expression /* fallback */ maxOf( */,
+    limit: Int = 3 /* Previous expression /* fallback */ 100) */,
+    count: Int = 1,
+): Int {
+    return delay + limit + count
+}
+''')
+        self.assertEqual(
+            [("retry", ["delay", "limit", "count"], 3)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_typed_lambda_default_keeps_its_own_commas(self):
         functions = get_kotlin_function_list('''\
 fun applyOffset(
