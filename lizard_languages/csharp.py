@@ -57,10 +57,8 @@ def _name(token):
 
 
 class _CSharpNestingStackStates(CLikeNestingStackStates):
-    def _state_global(self, token):
-        # C# allows "template" as an ordinary identifier.
-        if token != 'template':
-            super()._state_global(token)
+    # C# allows "template" as an ordinary identifier.
+    _reads_cpp_templates = False
 
 
 class CSharpStates(CLikeStates):
