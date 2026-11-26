@@ -358,6 +358,22 @@ abstract class Command {
         self.assertEqual([('Command::name', 7, 9)],
                          [(f.name, f.start_line, f.end_line) for f in functions])
 
+    def test_bodyless_method_consumes_its_forgive_comment(self):
+        functions = get_php_function_list("""<?php
+interface Consumer {
+    public function accept(
+        // #lizard forgive
+        string $value
+    ): void;
+}
+
+function normalize(string $value): string {
+    return trim($value);
+}
+""")
+        self.assertEqual([('normalize', 9, 11)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])
+
     def test_foreach_is_not_a_function(self):
         functions = get_php_function_list("<?php function test() { foreach($items as $item) { echo $item; } } ?>")
         self.assertEqual(1, len(functions))
