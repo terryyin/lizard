@@ -34,10 +34,6 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     @staticmethod
     def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
-        keep_condition = not _EXPRESSION_BLOCK_LANGUAGES.isdisjoint(
-            getattr(reader, 'language_names', ()))
-        lambda_brace = (_ConditionLambdaBrace('cpp' in reader.language_names)
-                        if keep_condition else None)
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -51,10 +47,15 @@ class LizardExtension(object):  # pylint: disable=R0903
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
         context = reader.context
+        languages = getattr(reader, 'language_names', ())
+        keep_condition = not _EXPRESSION_BLOCK_LANGUAGES.isdisjoint(languages)
+        lambda_brace = None
+        if keep_condition:
+            from .nd_condition import ConditionLambdaBrace
+
+            lambda_brace = ConditionLambdaBrace('cpp' in languages)
+            tokens = lambda_brace.track(tokens, context)
         for token in tokens:
-            opens_lambda = (lambda_brace is not None
-                            and context.current_function.control_header_depth is not None
-                            and lambda_brace.read(token))
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
                 context.clear_prev_was_else()
@@ -100,7 +101,7 @@ class LizardExtension(object):  # pylint: disable=R0903
 
                 if token in block_starts:
                     if keep_condition:
-                        context.open_header_block(opens_lambda)
+                        context.open_header_block(lambda_brace.opens_body)
                     else:
                         context.open_block()
                 if token == indent_indicator and \
@@ -110,6 +111,20 @@ class LizardExtension(object):  # pylint: disable=R0903
                 l_depth = 0
                 context.reset_nd_complexity()
             yield token
+
+
+_EXPRESSION_BLOCK_LANGUAGES = frozenset(('cpp', 'java'))
+_CONTROL_HEADERS = frozenset(('if', 'for', 'while', 'catch'))
+
+
+class _ConditionBrace:  # pylint: disable=R0903
+    """A condition suspended while a lambda body reads its statements."""
+
+    def __init__(self, function):
+        self.levels = function.levels_awaiting_body
+        self.header_depth = function.control_header_depth
+        self.condition_depth = function.condition_depth
+        self.logical_operator_added = function.logical_operator_added
 
 
 class NDFileInfoAddition(FileInfoBuilder):
@@ -285,88 +300,6 @@ def _init_nesting_depth_data(self, *_):
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
-
-
-_EXPRESSION_BLOCK_LANGUAGES = frozenset(('cpp', 'java'))
-_CONTROL_HEADERS = frozenset(('if', 'for', 'while', 'catch'))
-
-
-class _ConditionBrace:  # pylint: disable=R0903
-    """A condition suspended while a lambda body reads its statements."""
-
-    def __init__(self, function):
-        self.levels = function.levels_awaiting_body
-        self.header_depth = function.control_header_depth
-        self.condition_depth = function.condition_depth
-        self.logical_operator_added = function.logical_operator_added
-
-
-class _ConditionLambdaBrace:  # pylint: disable=R0903
-    """Find lambda body braces while a C++ or Java control header is open."""
-
-    _OPERAND_STARTS = frozenset((
-        '(', '[', '{', ',', ';', '?', ':', '=', 'return', 'co_return',
-        '&&', '||', '!', '~', '==', '!=', '<', '<=', '>', '>=', '<=>',
-        '+', '-', '*', '/', '%', '&', '|', '^', '<<', '>>',
-    ))
-    _GROUPS = {'(': ')', '[': ']', '{': '}'}
-
-    def __init__(self, cpp):
-        self.cpp = cpp
-        self.previous = None
-        self.head = False
-        self.capture = False
-        self.closers = []
-        self.requires_body = False
-
-    def read(self, token):
-        previous, self.previous = self.previous, token
-        if not self.cpp:
-            return previous == '->' and token == '{'
-        if self.closers:
-            self._read_group(token, previous)
-        elif self.head:
-            return self._read_declarator(token, previous)
-        elif token == '[' and previous in self._OPERAND_STARTS:
-            self.head = self.capture = True
-            self.closers.append(']')
-            self.requires_body = False
-        return False
-
-    def _read_group(self, token, previous):
-        if self.capture and token == '[' and previous == '[' and self.closers == [']']:
-            self.head = False
-        if token in self._GROUPS:
-            self.closers.append(self._GROUPS[token])
-        elif token == '<' and self.closers[-1] == '>':
-            self.closers.append('>')
-        elif token == '>>' and self.closers[-2:] == ['>', '>']:
-            del self.closers[-2:]
-        elif token == self.closers[-1]:
-            self.closers.pop()
-        if not self.closers:
-            self.capture = False
-
-    def _read_declarator(self, token, previous):
-        if token == '{':
-            if self.requires_body:
-                # A requires-expression in the constraint owns this group.
-                self.requires_body = False
-                self.closers.append('}')
-            else:
-                self.head = False
-                return True
-        elif token in ('(', '['):
-            self.closers.append(self._GROUPS[token])
-        elif token == '<':
-            self.closers.append('>')
-        elif token == 'requires':
-            # Here a constraint can start with a requires-expression. A
-            # requires after a complete operand starts a new clause instead.
-            self.requires_body = previous in ('requires', '&&', '||', 'and', 'or')
-        elif token in (')', '}', ',', ';'):
-            self.head = False
-        return False
 
 
 patch(NDFileInfoAddition, FileInfoBuilder)
