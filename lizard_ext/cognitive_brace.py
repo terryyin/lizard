@@ -109,19 +109,21 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 break
 
     def _ternary_colon(self):
-        # Close any complete ternaries in the true arm before switching
-        # the nearest unfinished ternary to its false arm.
+        # A peer colon ends complete conditionals before it starts the next
+        # false arm, case body, or Objective-C message argument.
         state = self.state
         frames = state.frames
-        for index in range(len(frames) - 1, -1, -1):
-            frame = frames[index]
+        keep = len(frames)
+        while keep:
+            frame = frames[keep - 1]
             if (frame.kind not in _TERNARY_KINDS or frame.pdepth != state.pdepth
                     or frame.depth != state.depth):
-                return
+                break
             if frame.kind == 'ternary_true':
-                del frames[index + 1:]
                 frame.kind = 'ternary'
-                return
+                break
+            keep -= 1
+        del frames[keep:]
 
     def _statement_end(self):
         """A ';' at bracket depth 0 finishes the braceless bodies around it."""
