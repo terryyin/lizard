@@ -336,6 +336,19 @@ function formatExample(value) {
         self.assertEqual([('formatExample', 8, 10, 1)],
                          [s[:4] for s in function_summaries(functions)])
 
+    def test_mixed_case_text_elements_keep_script_like_text_out_of_the_file(self):
+        for prefix in ('<p v-pre>Example</p>', '<p title="v-pre">Example</p>'):
+            for name in ('texTarea', 'titLe'):
+                with self.subTest(prefix=prefix, name=name):
+                    source = (
+                        f'<template>{prefix}<{name}>literal '
+                        '</template><script>function phantom() { return 2 }</script>'
+                        f'</{name}></template>\n'
+                        '<script setup>\nfunction actual() { return 1 }\n</script>\n')
+                    functions = get_vue_function_list(source)
+                    self.assertEqual([('actual', 3, 3, 1)],
+                                     [s[:4] for s in function_summaries(functions)])
+
     def test_lang_is_not_read_from_other_attributes(self):
         functions = get_vue_function_list('''\
 <script data-lang="js" lang="ts">
