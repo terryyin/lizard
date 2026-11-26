@@ -25,6 +25,12 @@ _LINE_START_OPERATORS = frozenset((
     '++', '--', '!', '~', '{', '@', '}', ')', ']'))
 
 
+class ClassFieldStart(str):
+    """First token after a class field's implicit semicolon."""
+
+    is_class_field_start = True
+
+
 def ends_expression(token):
     """Whether an expression may end with this token (JavaScript ASI)."""
     first = token[:1]
@@ -57,16 +63,27 @@ def active_js_state(state):
     return state
 
 
-def awaiting_function_body(state):
+def awaiting_line_token(state):
     active = active_js_state(state)
-    return active._state == active._expecting_func_opening_bracket
+    return (active._state == active._expecting_func_opening_bracket
+            or active.as_class and active._in_prop_value)
 
 
 def end_before_line_token(state, arrows, token):
     """Offer a line's first token before counters charge it."""
+    active = active_js_state(state)
+    if _starts_next_class_field(active, token):
+        token = ClassFieldStart(token)
     if arrows:
         arrows[-1].end_expression_before(token)
-    else:
-        active = active_js_state(state)
-        if active._state == active._expecting_func_opening_bracket:
-            active.end_expression_before(token)
+    elif active._state == active._expecting_func_opening_bracket:
+        active.end_expression_before(token)
+    return token
+
+
+def _starts_next_class_field(state, token):
+    return (state.as_class and state._in_prop_value
+            and state._state == state._state_global
+            and (token[0].isalnum() or token[0] in _STATEMENT_STARTS or token[0] == '@')
+            and starts_statement(token)
+            and ends_expression(state.last_token or ''))

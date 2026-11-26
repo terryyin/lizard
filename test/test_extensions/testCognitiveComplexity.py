@@ -858,6 +858,43 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptClassFieldTernaries(unittest.TestCase):
+
+    def test_implicit_field_separator_ends_conditional_inside_call(self):
+        source = """
+            function register(add, ready) {
+                return add(class {
+                    static read = ready ? 1 : 0
+                    static write = ready ? 1 : 0
+                });
+            }
+        """
+        self.assertEqual([2], cogc("register.js", source))
+
+    def test_field_separator_keeps_the_conditional_around_the_class(self):
+        source = """
+            function register(add, enabled, ready, fallback) {
+                return enabled ? add(class {
+                    read = ready ? 1 : 0
+                    write = ready ? 1 : 0
+                }) : fallback ? 2 : 3;
+            }
+        """
+        self.assertEqual([7], cogc("register.js", source))
+
+    def test_next_line_can_continue_the_field_conditional(self):
+        source = """
+            function register(add, ready, fallback) {
+                return add(class {
+                    static read = ready ? 1 : 0
+                        ? 2 : 3
+                    static write = fallback ? 1 : 0
+                });
+            }
+        """
+        self.assertEqual([4], cogc("register.js", source))
+
+
 class TestJavaScriptTemplateLiterals(unittest.TestCase):
     """The ``}`` of an interpolation ends no block."""
 
@@ -1504,40 +1541,3 @@ class TestCommandLine(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-class TestJavaScriptClassFieldTernaries(unittest.TestCase):
-
-    def test_implicit_field_separator_ends_conditional_inside_call(self):
-        source = """
-            function register(add, ready) {
-                return add(class {
-                    static read = ready ? 1 : 0
-                    static write = ready ? 1 : 0
-                });
-            }
-        """
-        self.assertEqual([2], cogc("register.js", source))
-
-    def test_field_separator_keeps_the_conditional_around_the_class(self):
-        source = """
-            function register(add, enabled, ready, fallback) {
-                return enabled ? add(class {
-                    read = ready ? 1 : 0
-                    write = ready ? 1 : 0
-                }) : fallback ? 2 : 3;
-            }
-        """
-        self.assertEqual([7], cogc("register.js", source))
-
-    def test_next_line_can_continue_the_field_conditional(self):
-        source = """
-            function register(add, ready, fallback) {
-                return add(class {
-                    static read = ready ? 1 : 0
-                        ? 2 : 3
-                    static write = fallback ? 1 : 0
-                });
-            }
-        """
-        self.assertEqual([4], cogc("register.js", source))

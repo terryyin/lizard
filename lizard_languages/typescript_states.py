@@ -225,6 +225,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 # An object property value can continue across line breaks.
                 and (not self.as_object or self.as_class
                      or not self._in_prop_value or self.started_function)
+                and (not self.as_class or not self._in_prop_value
+                     or getattr(token, 'is_class_field_start', False))
                 and (not self._expression_body or self.last_token == ',')):
             self._end_statement()
 

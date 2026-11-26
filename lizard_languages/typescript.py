@@ -12,7 +12,7 @@ from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
-from .javascript_expression import awaiting_function_body, end_before_line_token
+from .javascript_expression import awaiting_line_token, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
 
 # One token, so each ? in ?? is not its own ternary decision.
@@ -269,7 +269,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         keyword = None
                     if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
-                        end_before_line_token(state, arrows, token)
+                        token = end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
                     if member_access and token in structure_keywords:
@@ -315,7 +315,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         # `1.` before a line break ends a number. On one
                         # line, `1 .if` and `1.5.if` name a member.
                         member_access = False
-                    if arrows or awaiting_function_body(state):
+                    if arrows or awaiting_line_token(state):
                         line_start = True
                     yield token
             else:
