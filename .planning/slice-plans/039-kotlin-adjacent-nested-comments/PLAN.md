@@ -67,3 +67,7 @@ Bring in #647's reader change and tests, correct the scan position, and add the 
 Slice-plan refinement: not needed. The plan has one Behavior slice, settled premises and mapped outside-in proof, with no cumulative design or sizing concern.
 
 Remaining slice-specific concerns: none.
+
+## Execution complete
+
+Product advice: no change. The Kotlin scanner corrects the four adjacent-comment cases and preserves the nested and literal controls from #647. Local proof and hosted run 45777652305 attempt 2 support the reader change. Full pytest also passed after merging the narrower hosted matrix from master. The measured CLI interval includes no change. The state-machine extraction preserves its existing import, so no product follow-up is needed.
