@@ -89,6 +89,9 @@ class ImpliedSemicolons:
                         found = token != ';'
                     elif groups or head_starts or body_starts:
                         pass
+                    elif (previous == '}' and _braceless_declaration_closed(
+                            context, last_closed_body)):
+                        found = token not in ('else', ';')
                     elif (previous != '}' or object_ended or (
                             _function_closed(context, last_closed_body)
                             # A matching clause continues the structure.
@@ -140,6 +143,7 @@ class ImpliedSemicolons:
                              is_object) = blocks.pop()
                         if not (groups or object_ended):
                             last_closed_body = context.last_closed_function_body
+                            busy = True
                     elif token in ('{', '${'):
                         blocks.append(
                             (groups, head, open_loops, loop_ends, is_object))
@@ -202,6 +206,13 @@ def _function_closed(context, last_closed_body):
     function = context.last_closed_function_body
     return (function is not last_closed_body
             and not getattr(function, 'is_braceless_declaration', False))
+
+
+def _braceless_declaration_closed(context, last_closed_body):
+    """A function declaration can be the body of a non-strict JS if."""
+    function = context.last_closed_function_body
+    return (function is not last_closed_body
+            and getattr(function, 'is_braceless_declaration', False))
 
 
 def _expression_ended(previous, before_previous, postfix):
