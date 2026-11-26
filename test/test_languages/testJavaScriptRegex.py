@@ -116,6 +116,19 @@ function percent(total, count, yield, scale, label) {
 '''
         self.assert_functions(source, [('percent', 3, 5, 3)], extensions=('js',))
 
+    def test_call_and_comment_before_a_regex_divisor(self):
+        for left, trivia in (('total()', ' '), ('total', ' /* average */ ')):
+            for prefix in ('', '// Adjust for wide labels.\n'):
+                with self.subTest(left=left, trivia=trivia, prefix=prefix):
+                    source = prefix + f'''
+function average(text, total) {{
+  return {left} /{trivia}/colou?r/i.exec(text)?.[0].length;
+}}
+'''
+                    line = 3 if prefix else 2
+                    self.assert_functions(source, [('average', line, line + 2, 1)],
+                                          extensions=('js', 'cjs', 'mjs'))
+
     def test_division_after_a_generic_type_assertion(self):
         source = '''\
 type Unit<T> = number;
