@@ -652,6 +652,27 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
                 self.assertEqual([('choose', 3)], [(f.name, f.cognitive_complexity) for f in plain])
                 self.assertEqual([('choose', 3)], [(f.name, f.cognitive_complexity) for f in typed])
 
+    def test_conditional_type_arguments_do_not_add_runtime_depth(self):
+        source = """
+        function choose(a: string, b: string) {
+          return { value: a || fmt<TYPES>(0, b || "b") };
+        }
+        """
+        for extension_order in (["nd", "cognitive"], ["cognitive", "nd"]):
+            with self.subTest(extension_order=extension_order):
+                analyzer = FileAnalyzer(get_extensions(extension_order))
+                plain = analyzer.analyze_source_code("a.ts", source.replace("<TYPES>", "")).function_list
+                typed = analyzer.analyze_source_code(
+                    "a.ts", source.replace("TYPES", "number extends string ? boolean : number, string")
+                ).function_list
+
+                for functions in (plain, typed):
+                    self.assertEqual(
+                        [('choose', 2, 2, 3)],
+                        [(f.name, f.max_nesting_depth, f.cognitive_complexity,
+                          f.cyclomatic_complexity) for f in functions],
+                    )
+
     def test_comparison_before_a_sibling_property_with_greater_than(self):
         source = """
         function compare(a: number, b: number, c: number, d: number) {
