@@ -916,6 +916,18 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
             }
         """))
 
+    def test_template_statement_after_alias_keeps_its_decision(self):
+        source = """
+            function format(value: boolean) {
+              type Label = string
+              `${value ? 'yes' : 'no'}`
+              return value
+            }
+        """
+        for filename in ('label.ts', 'label.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([1], cogc(filename, source))
+
     def test_interpolation_in_block(self):
         self.assertEqual([3], cogc("a.js", """
             function label(item) {
