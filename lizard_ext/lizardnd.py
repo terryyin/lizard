@@ -94,7 +94,9 @@ class LizardExtension(object):  # pylint: disable=R0903
                 elif token in loops and token not in ('&&', '||') \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
-                    l_depth = context.open_level(keep_condition and token in _CONTROL_HEADERS)
+                    l_depth = (context.open_control_level()
+                               if keep_condition and token in _CONTROL_HEADERS
+                               else context.open_level())
 
                 if token in block_starts:
                     context.open_block(opens_lambda)
@@ -124,12 +126,9 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.prev_was_else = False
         self.reset_condition_tracking()
 
-    def open_level(self, control_body=False):
+    def open_level(self):
         """A structure opens a level that its body will close."""
-        function = self.current_function
-        function.levels_awaiting_body += 1
-        if control_body:
-            function.control_header_depth = function.condition_depth
+        self.current_function.levels_awaiting_body += 1
         return self.add_nd_condition()
 
     def open_block(self, opens_lambda=False):
@@ -212,6 +211,12 @@ class NDFileInfoAddition(FileInfoBuilder):
                 if enclosing.condition_depth == 0:
                     enclosing.in_condition = False
                     enclosing.logical_operator_added = False
+
+    def open_control_level(self):
+        """Open a control header whose body can contain expression braces."""
+        function = self.current_function
+        function.control_header_depth = function.condition_depth
+        return self.open_level()
 
     def get_condition_depth(self):
         return self.current_function.condition_depth
