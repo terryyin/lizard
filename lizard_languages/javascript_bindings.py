@@ -149,6 +149,8 @@ class JavaScriptBindingsMixin:
                 self._confirmed_binding_defaults += pending.defaults
             else:
                 self.context.add_condition(pending.defaults)
+                if self._property_formals:
+                    self._confirmed_binding_defaults += pending.defaults
         elif token in ('=>', ':'):
             self._pending_bindings = pending
         else:

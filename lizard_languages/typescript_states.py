@@ -257,11 +257,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         group = self.__class__(self.context)
         group._call_group = True
         parameters = []
-        group._property_formals = JavaScriptBindings(')', parameters=parameters)
+        formals = group._property_formals = JavaScriptBindings(')', parameters=parameters)
+        owner = self.context.current_function
+        complexity = owner.cyclomatic_complexity
 
         def after_group(token):
             if token in ('=>', ':'):
-                self._pending_bindings = BindingSummary(0, 0, 0, parameters)
+                self._pending_bindings = BindingSummary(
+                    formals.defaults - group._confirmed_binding_defaults,
+                    owner.cyclomatic_complexity - complexity, 0, parameters)
             if token == ':':
                 self.next(self._state_global)
                 self._consume_type_annotation()
