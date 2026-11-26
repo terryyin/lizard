@@ -23,6 +23,27 @@ def test_labels_keep_actual_body_and_successor(suffix, statement):
          1, 4, []), ('after', 2, 5, 5, ['tail'])]
 
 
+@pytest.mark.parametrize('suffix', ['ts', 'tsx', 'vue'])
+@pytest.mark.parametrize('assertion', [
+    'as number',
+    'satisfies number',
+    'as unknown as ReadonlyArray<number>',
+    'as unknown as Intl.\n    NumberFormat',
+    'as unknown as {\n    value: number\n  }',
+])
+def test_expression_arrow_ends_after_type_assertion(suffix, assertion):
+    source = """function build(value: number, cached: boolean) {
+  const evaluate = () => value %s
+  if (cached) return undefined
+  return evaluate
+}
+""" % assertion
+    arrow_end = 2 + assertion.count('\n')
+    assert summaries(functions(source, suffix)) == [
+        ('evaluate', 1, 2, arrow_end, []),
+        ('build', 2, 1, arrow_end + 3, ['value', 'cached'])]
+
+
 @pytest.mark.parametrize('suffix', SUFFIXES)
 def test_minimal_label_retains_anonymous_function(suffix):
     result = functions('const x = [() => { a: 1 }];\n' + AFTER, suffix)
@@ -239,24 +260,3 @@ def test_optional_member_marker_is_not_an_enclosing_runtime_decision(suffix, ext
     if extension == 'complextags':
         assert result[2].complex_tags == [['?', 1], ['?', 1]]
         assert result[3].complex_tags == [['?', 2]]
-
-
-@pytest.mark.parametrize('suffix', ['ts', 'tsx', 'vue'])
-@pytest.mark.parametrize('assertion', [
-    'as number',
-    'satisfies number',
-    'as unknown as ReadonlyArray<number>',
-    'as unknown as Intl.\n    NumberFormat',
-    'as unknown as {\n    value: number\n  }',
-])
-def test_expression_arrow_ends_after_type_assertion(suffix, assertion):
-    source = """function build(value: number, cached: boolean) {
-  const evaluate = () => value %s
-  if (cached) return undefined
-  return evaluate
-}
-""" % assertion
-    arrow_end = 2 + assertion.count('\n')
-    assert summaries(functions(source, suffix)) == [
-        ('evaluate', 1, 2, arrow_end, []),
-        ('build', 2, 1, arrow_end + 3, ['value', 'cached'])]
