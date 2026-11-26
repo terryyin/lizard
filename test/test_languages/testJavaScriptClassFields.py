@@ -6,6 +6,18 @@ from .testJavaScript import get_js_function_list
 class Test_JavaScript_member_modifier_after_a_field(unittest.TestCase):
     """A field without ';' ends at the line of the next member's modifier."""
 
+    def test_bare_interface_field_keeps_the_following_method(self):
+        source = '''class Report {
+  interface
+  read(value) { if (value) return value; }
+}
+'''
+        functions = get_js_function_list(source)
+        self.assertEqual([('read', 3, ['value'], 2)], [
+            (f.name, f.start_line, f.parameters, f.cyclomatic_complexity)
+            for f in functions
+        ])
+
     def test_methods_with_modifiers_after_fields_without_semicolons(self):
         code = (
             "class A {\n"
