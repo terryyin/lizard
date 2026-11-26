@@ -32,7 +32,7 @@ class Namespace(Nesting):  # pylint: disable=R0903
 
 
 class FunctionInfo(Nesting):  # pylint: disable=R0902
-    _parameter_name_hints = None
+    _declared_parameter_names = None
 
     def __init__(self, name, filename, start_line=0, ccn=1):
         self.cyclomatic_complexity = ccn
@@ -70,10 +70,8 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
     @property
     def parameter_count(self):
         # Binding patterns can occupy formal slots without introducing names.
-        if self._parameter_name_hints is not None:
-            return sum(
-                name is not None or parameter.strip() in ('{}', '[]', '()')
-                for parameter, name in zip(self.full_parameters, self._parameter_names_for_slots()))
+        if self._declared_parameter_names is not None:
+            return len(self._declared_parameter_names)
         return sum(
             bool(_PARAMETER_NAME.search(parameter))
             or parameter.strip() in ('{}', '[]', '()')
@@ -87,23 +85,14 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         # Regex matches the parameter name, then optionally:
         # - a default value given after an '=' sign
         # - a type annotation given after a ':'
-        if self._parameter_name_hints is not None:
-            return [name for name in self._parameter_names_for_slots() if name is not None]
+        if self._declared_parameter_names is not None:
+            return list(self._declared_parameter_names)
         matches = map(_PARAMETER_NAME.search, self.full_parameters)
         return [m.group(1) for m in matches if m]
 
-    def _parameter_names_for_slots(self):
-        for index, parameter in enumerate(self.full_parameters):
-            name = self._parameter_name_hints.get(index)
-            if name is None:
-                match = _PARAMETER_NAME.search(parameter)
-                name = match.group(1) if match else None
-            yield name
-
-    def record_parameter_name(self, index, name):
-        if self._parameter_name_hints is None:
-            self._parameter_name_hints = {}
-        self._parameter_name_hints[index] = name
+    def record_parameter_names(self, names):
+        """Keep names read from declaration syntax."""
+        self._declared_parameter_names = tuple(names)
 
     @property
     def length(self):

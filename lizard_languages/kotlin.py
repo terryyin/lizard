@@ -60,6 +60,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         'actual', 'context', 'import', 'package',
     } | _ACCESSORS | _ACCESSOR_MODIFIERS
     _HEADER_OPERATORS = {':', 'where', '.', '->', ',', '<', '(', '&', 'suspend'}
+    _PARAMETER_GROUPS = {'[': 1, '{': 1, ']': -1, '}': -1}
 
     def __init__(self, context, in_when_cases=False, accessor_declaration_scope=None):
         super().__init__(context)
@@ -168,8 +169,6 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _start_header(self):
         self._type_depth = 0
         self._type_annotated = False
-        self._parameter_name = None
-        self._parameter_default = None
 
     def _type_is_open(self):
         # The next token continues a type that has an open `<` or `(`, that
@@ -252,21 +251,44 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
 
     @CodeStateMachine.read_inside_brackets_then("()", "_expect_function_impl")
     def _function_dec(self, token):
-        if token in ('(', ')'):
-            return
-        function = self.context.current_function
-        if self.br_count == 1:
+        if self.br_count == 0:
+            self._finish_parameter_names()
+        elif token == '(' and self.br_count == 1:
+            self._start_parameter_names()
+        elif token not in ('(', ')'):
+            self._parameter_groups += self._PARAMETER_GROUPS.get(token, 0)
+            self._read_parameter_names(token, self.br_count == 1 and not self._parameter_groups)
+            self.context.parameter(token)
+        self._before_parameter_name = self.last_token
+
+    def _start_parameter_names(self):
+        self._parameter_groups = 0
+        self._parameter_names = []
+        self._can_read_parameter_name = True
+        self._reading_parameter_default = False
+        self._multiline_parameter_default = False
+
+    def _read_parameter_names(self, token, at_top_level):
+        if at_top_level:
             if token == ',':
-                self._parameter_name = self._parameter_default = None
-            elif self._parameter_default is None:
-                if token == ':' and self.last_token and _is_local_name(self.last_token):
-                    self._parameter_name = len(function.full_parameters) - 1, self.last_token.strip('`')
-                elif token == '=':
-                    self._parameter_default = self._parameter_name
-        if self._parameter_default is not None and '\n' in token:
-            # A multiline default can hide the formal name from the shared pattern.
-            function.record_parameter_name(*self._parameter_default)
-        function.add_parameter(token)
+                self._can_read_parameter_name = True
+            elif token == ':' and self._can_read_parameter_name:
+                name = self.last_token
+                # Skip annotation use-site targets and anonymous object types.
+                if self._before_parameter_name != '@' and name not in (None, 'object') and _is_local_name(name):
+                    self._parameter_names.append(name.strip('`'))
+                    self._can_read_parameter_name = False
+                    self._reading_parameter_default = False
+            elif token == '=' and not self._can_read_parameter_name:
+                self._reading_parameter_default = True
+        if self._reading_parameter_default and '\n' in token:
+            self._multiline_parameter_default = True
+
+    def _finish_parameter_names(self):
+        # A multiline default can hide a name or expose a nested argument
+        # to the shared matcher. Use the names from the whole signature.
+        if self._multiline_parameter_default:
+            self.context.current_function.record_parameter_names(self._parameter_names)
 
     def _receiver_type_end(self, token):
         # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
