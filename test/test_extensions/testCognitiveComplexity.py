@@ -861,6 +861,31 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
 class TestJavaScriptTemplateLiterals(unittest.TestCase):
     """The ``}`` of an interpolation ends no block."""
 
+    def test_conditions_inside_template_interpolations(self):
+        code = """
+            function status(ready, enabled) {
+              return `State: ${ready ? 'ready' : 'waiting'} ${enabled && 'online'}`;
+            }
+        """
+        for extension in ("js", "ts", "jsx", "tsx"):
+            with self.subTest(extension=extension):
+                self.assertEqual([2], cogc("status." + extension, code))
+
+    def test_nested_interpolations_keep_the_enclosing_complexity_depth(self):
+        self.assertEqual([6], cogc("status.js", """
+            function status(show, ready, enabled) {
+              if (show) return `${ready ? `state: ${enabled ? 'on' : 'off'}` : 'waiting'}`;
+              return 'hidden';
+            }
+        """))
+
+    def test_arrow_body_inside_an_interpolation_has_its_own_complexity(self):
+        self.assertEqual([1], cogc("status.js", """
+            function status(records, enabled) {
+              return `${records.map(item => item.ready ? 'ready' : 'waiting')} ${enabled && 'online'}`;
+            }
+        """))
+
     def test_interpolation_in_block(self):
         self.assertEqual([3], cogc("a.js", """
             function label(item) {
