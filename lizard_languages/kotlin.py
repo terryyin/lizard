@@ -153,6 +153,17 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         # `get { ... }` calls a function with a trailing lambda.
         if token == '{':
             self._discard_pending_declaration(token)
+        elif token == '(' and self._accessor_name == 'get':
+            self._track_type(token)
+            self._state = self._after_getter_opening
+        else:
+            self.next(self._expect_function_impl, token)
+
+    def _after_getter_opening(self, token):
+        # A getter has no parameters. A quoted route such as `get("/")`
+        # calls a function.
+        if token[0] in '"\'':
+            self._discard_pending_declaration(token)
         else:
             self.next(self._expect_function_impl, token)
 
