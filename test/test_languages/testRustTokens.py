@@ -8,6 +8,42 @@ from .testRust import get_rust_function_list
 
 class TestRustTokens(unittest.TestCase):
 
+    def test_quote_interpolation_keeps_the_closing_brace(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+        use quote::quote;
+
+        fn wrap(value: TokenStream) -> TokenStream {
+            quote! { #value }
+        }
+
+        fn empty() -> TokenStream {
+            quote! {}
+        }
+        ''')
+        self.assertEqual(
+            [('wrap', 4, 6, 1), ('empty', 8, 10, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_quote_keeps_raw_string_text_out_of_complexity(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+        use quote::quote;
+
+        fn template() -> TokenStream {
+            quote! {
+                writer.push_str(r#"one " if flag {} fn example() {} "#);
+            }
+        }
+
+        fn empty() -> TokenStream {
+            quote! {}
+        }
+        ''')
+        self.assertEqual(
+            [('template', 4, 8, 1), ('empty', 10, 12, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
     def test_closure_without_parameters_is_one_token(self):
         # `||` of a closure without parameters is one token of the source,
         # and not a logical or.
