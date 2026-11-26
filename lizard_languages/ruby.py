@@ -87,8 +87,7 @@ class RubyStateMachine(RubylikeStateMachine):
         function = self.context.current_function
         owns_depth = self._loop_depth if opener == 'loop' else (
             opener in ('if', 'case') and self._take_pending_depth())
-        block_levels = function.block_levels[-1] if opener == '{' else owns_depth
-        entry_depth = function.nesting_depth - block_levels
+        entry_depth = function.nesting_depth - owns_depth
         parent_peak = function.ruby_block_peak
         statement_peak = function.ruby_statement_peak
         function.ruby_block_peak = function.nesting_depth

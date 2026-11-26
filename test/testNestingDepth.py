@@ -754,6 +754,11 @@ end
 def assign_layout_data(layout)
   payload[:layout] = merge(layout.data, payload[:layout] || {}) if layout
 end
+
+def association_type(options)
+  type = -(options[:foreign_type]&.to_s || "#{options[:as]}_type") if options[:as]
+end
+
 '''
     analyzer = FileAnalyzer(get_extensions(['nd']))
 
@@ -761,4 +766,5 @@ end
 
     assert [(f.name, f.max_nesting_depth) for f in functions] == [
         ('append_actions', 1), ('schedule', 2), ('assign_layout_data', 2),
+        ('association_type', 2),
     ]

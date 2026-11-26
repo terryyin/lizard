@@ -88,6 +88,9 @@ class LizardExtension(object):  # pylint: disable=R0903
                     else:
                         # Not in a condition, treat as regular nesting
                         l_depth = context.open_level()
+                    if not else_if_chain and context.get_in_condition():
+                        function = context.current_function
+                        function.ruby_statement_peak = max(function.ruby_statement_peak, l_depth)
 
                 # Handle other loop keywords (if, for, while, etc.)
                 elif token in loops and token not in ('&&', '||') \
