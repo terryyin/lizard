@@ -12,12 +12,18 @@ from .typescript_declarations import (
 # Ordinary tokens skip declaration and marker dispatch together.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
 _SPECIAL_TOKENS = DECLARATION_WORDS | _MARKER_TOKENS
-_TAIL_TOKENS = frozenset(('`', ':', ',', '!'))
+_TAIL_TOKENS = frozenset(('`', ':', ',', '!', '{'))
+# These operators require a value on their right.
+_FUNCTION_OPERAND_PREFIXES = frozenset(('=', '||', '&&', '??', '?'))
 
 
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        JavaScriptObjectsMixin, TypeScriptDeclarationsMixin,
                        CodeStateMachine):
+    _async_function_operand = False
+    _function_operand = False
+    function_operand_body = False
+
     def __init__(self, context):
         super().__init__(context)
         self.last_tokens = ''
@@ -102,6 +108,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     if self._in_prop_value:
                         self._end_field_before_modifier()
                     self._async_seen = True
+                    self._async_function_operand = self._starts_function_operand()
                     self._prev_token = token
                     return
                 if token == 'new':
@@ -135,6 +142,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             if self.started_function and not self.as_object:
                 self._pop_function_from_stack()
             self._signature = True
+            self._function_operand = self._starts_function_operand()
             self._state = self._function
         elif (token in ('if', 'switch', 'for', 'while', 'catch')
               and not getattr(token, 'is_member_name', False)):
@@ -211,6 +219,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 token == ']' and self._binding_candidate
                 and not self._binding_candidate._frames):
             self._empty_parenthesis = self.last_token is None
+            if token == '}' and self.function_operand_body:
+                self.context.last_closed_function_operand = self.context.current_function
             self.statemachine_return()
         elif token == ';' or (
                 # A binding/object/call reader owns an arrow's enclosing comma.
@@ -229,7 +239,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._end_statement()
 
         if token in _TAIL_TOKENS:
-            if token == '`':
+            if token == '{' and self._function_operand and self.started_function and not self._expression_body:
+                self._state.function_operand_body = True
+                self._function_operand = False
+            elif token == '`':
                 self.next(self._state_template_literal)
             elif token == ':' and not self.as_object:
                 self._read_runtime_colon()
@@ -295,3 +308,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
     def _state_template_literal(self, token):
         if token == '`':
             self.next(self._state_global)
+
+    def _starts_function_operand(self):
+        """Check whether the explicit function is in expression position."""
+        context = self.context
+        if not (getattr(context, 'class_field_annotations', False)
+                and hasattr(context, 'last_closed_function_operand')):
+            return False
+        previous = self.last_token
+        if previous == 'async':
+            return not context.newline and self._async_function_operand
+        return (previous in _FUNCTION_OPERAND_PREFIXES
+                or previous in ('return', 'yield', 'throw') and not context.newline)

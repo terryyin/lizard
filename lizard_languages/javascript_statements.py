@@ -59,6 +59,7 @@ class ImpliedSemicolons:
     def read(self, tokens, context):
         # Each token passes here, so the state is in local variables.
         blocks = []             # the blocks around the open one
+        last_closed_operand = context.last_closed_function_operand = None
         # What is open between the last "{" and its "}":
         groups = 0              # open "(" and "["
         head = None             # the groups around an open structure head
@@ -129,6 +130,7 @@ class ImpliedSemicolons:
                             loop_ends = False
                             busy = True
                     elif token == '}':
+                        last_closed_operand = context.last_closed_function_operand
                         object_ended = bool(blocks) and is_object
                         if blocks:
                             (groups, head, open_loops, loop_ends,
@@ -151,8 +153,10 @@ class ImpliedSemicolons:
                     elif token in POSTFIX:
                         postfix = (
                             line == last_line
-                            and _value_ended(
-                                previous, before_previous, postfix)
+                            and (_value_ended(previous, before_previous, postfix)
+                                 or (previous == '}' and token == '!'
+                                     and context.last_closed_function_operand
+                                     is not last_closed_operand))
                             and not (head_started or body_started))
                     elif tracked and previous not in MEMBER_ACCESS:
                         if token in HEADED:
