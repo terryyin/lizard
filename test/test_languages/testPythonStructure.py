@@ -322,3 +322,16 @@ def reader_factory():
                     (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
                     for f in functions
                 ])
+
+    def test_inline_suite_keeps_explicit_crlf_continuation(self):
+        source = (
+            "def isxdigit(c): return isdigit(c) or \\\r\n"
+            "    'a' <= c <= 'f' or 'A' <= c <= 'F'\r\n")
+        function, = get_python_function_list(source)
+        self.assertEqual((2, 3, 2),
+                         (function.end_line, function.cyclomatic_complexity, function.nloc))
+
+    def test_multiline_inline_docstring_keeps_code_on_its_closing_line(self):
+        source = 'def value(): """Return the\nvalue."""; return 1\n'
+        function, = get_python_function_list(source)
+        self.assertEqual((2, 2), (function.end_line, function.nloc))
