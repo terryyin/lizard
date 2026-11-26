@@ -94,6 +94,16 @@ function averageWords(length, label, fallback) {
                     [('isInPrefix', 2, 27), ('exceedsPrefix', 1, 23), ('averageWords', 2, 27)],
                     [(f.name, f.cyclomatic_complexity, f.token_count) for f in functions])
 
+    def test_top_level_await_does_not_turn_regex_end_into_a_divisor(self):
+        source = '''
+const active = await / /g.test(format(() => enabled ? primary : fallback)) / divider;
+function stable() { return 1; }
+'''
+        info = analyze_file.analyze_source_code('preview.mjs', source)
+        self.assertEqual([('(anonymous)', 2), ('stable', 1)], [
+            (function.name, function.cyclomatic_complexity)
+            for function in info.function_list])
+
     def test_division_after_a_generic_type_assertion(self):
         source = '''\
 type Unit<T> = number;
