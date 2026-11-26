@@ -409,6 +409,22 @@ void dispatch(Job& job, bool ready, bool enabled) {
                     [(fn.name, fn.start_line, fn.end_line, fn.cyclomatic_complexity) for fn in result],
                 )
 
+    def test_objective_c_string_receiver_before_logical_and(self):
+        source = """struct Result { bool ready; };
+@interface NSString
+- (Result*)result;
+@end
+
+template<class T>
+bool check() {
+    return [@"ready" result]->ready && requires(T value) { value.valid(); };
+}
+"""
+
+        result = analyze_file.analyze_source_code("check.h", source).function_list
+
+        self.assertEqual([("check", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
     def test_named_lambda_references_with_declarator_suffixes(self):
         result = get_cpp_function_list("""#include <vector>
 struct Job { int weight; };

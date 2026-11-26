@@ -260,8 +260,9 @@ class _LambdaHeader:
         if self.in_capture_prefix:
             if token == "=":
                 self._capture_has_initializer = True
-            elif token.isidentifier() and (previous.isidentifier() or previous in (")", "}")):
-                # An Objective-C receiver and selector can appear next to each other.
+            elif token == "@" or (
+                    token.isidentifier() and (previous.isidentifier() or previous in (")", "}"))):
+                # Objective-C messages can use literals or adjacent receiver and selector tokens.
                 return 0
         if token in (")", "]", "}") or (section == "(" and token == "="):
             return 0
@@ -281,6 +282,10 @@ class _LambdaHeader:
             self._section = token
             self._groups.append(self._GROUPS[token])
             return None
+        if token == "->" or token in self._MODIFIERS:
+            # C++23 permits these specifiers without a parameter list.
+            self._section = ")"
+            return self._after_parameters(token, previous)
         return 0
 
     def _after_parameters(self, token, previous):
