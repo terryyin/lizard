@@ -74,6 +74,18 @@ class _FunctionState(object):  # pylint: disable=R0902,R0903
         self.do_tail = False
 
 
+class _ObjectExpressionBrace(str):
+    """An opening brace that groups object properties in an expression."""
+
+
+_OBJECT_EXPRESSION = _ObjectExpressionBrace('{')
+_OBJECT_EXPRESSION_END = _ObjectExpressionBrace(']')
+
+
+class _LogicalAfterObject(str):
+    """A sequence that continues through an object operand."""
+
+
 # ---------------------------------------------------------------------------
 # Counters
 # ---------------------------------------------------------------------------
@@ -158,10 +170,17 @@ class _Counter(object):  # pylint: disable=R0902
         openers = self.openers
         if token in _CLOSER_OF:
             if not _is_markup(token):
+                if token == '{' and (self.previous == '?' or self.previous in self.logical_ops):
+                    # A brace after one of these operators opens an object
+                    # literal. Its contents have their own expression depth.
+                    openers.append((_OBJECT_EXPRESSION, function))
+                    return function, '['
                 openers.append((token, function))
         elif openers and _CLOSER_OF[openers[-1][0]] == token and \
                 not _is_markup(token):
             opener, function = openers.pop()
+            if opener is _OBJECT_EXPRESSION:
+                return function, _OBJECT_EXPRESSION_END
             if opener == '${':
                 token = ','
         return function, token

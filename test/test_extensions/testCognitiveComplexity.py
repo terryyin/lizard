@@ -900,6 +900,54 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptObjectExpressions(unittest.TestCase):
+
+    def test_property_commas_keep_the_enclosing_ternary_open(self):
+        code = """
+            function settings(hasDraft, canEdit) {
+              return hasDraft ? {
+                label: 'Draft',
+                editable: true
+              } : canEdit ? { editable: true } : { editable: false };
+            }"""
+        for filename in ("settings.js", "settings.ts"):
+            with self.subTest(filename=filename):
+                self.assertEqual([3], cogc(filename, code))
+
+    def test_logical_sequence_continues_after_an_object_literal(self):
+        code = """
+            function visible(enabled, defaults, overrides, allowed) {
+              return enabled && { ...defaults, ...overrides }.visible && allowed;
+            }
+
+            function publish(enabled, defaults, active, allowed) {
+              return enabled && {
+                ...defaults, visible: active && defaults.visible
+              }.visible && allowed;
+            }"""
+        for filename in ("settings.js", "settings.ts"):
+            with self.subTest(filename=filename):
+                self.assertEqual([1, 2], cogc(filename, code))
+
+
+    def test_object_operand_preserves_statement_boundaries(self):
+        code = """
+            function audit(enabled, ready, send) {
+              const options = enabled %s { debug: true }
+              ready %s send(options)
+            }
+
+            function visible(enabled, ready) {
+              return enabled %s { debug: true }.debug
+                %s ready
+            }
+        """
+        for filename in ("settings.js", "settings.ts"):
+            for operator in ("&&", "||"):
+                with self.subTest(filename=filename, operator=operator):
+                    self.assertEqual([2, 1], cogc(filename, code % ((operator,) * 4)))
+
+
 class TestJavaScriptTemplateLiterals(unittest.TestCase):
     """The ``}`` of an interpolation ends no block."""
 

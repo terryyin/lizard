@@ -1,6 +1,10 @@
 """Brace, parenthesis, and semicolon nesting for cognitive complexity."""
 
+from lizard_languages.javascript_expression import ends_expression, starts_statement
+from lizard_languages.javascript_statements import _expression_ended, _starts_line
+
 from .cognitive_actions import _BraceActions
+from .cognitive_counter import _OBJECT_EXPRESSION_END, _LogicalAfterObject
 from .cognitive_counter import (
     BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE)
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
@@ -28,6 +32,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         state = self.state
         line = self.line
         if line != state.line:
+            if not state.pdepth and type(state.logical.get(0)) is _LogicalAfterObject:
+                self._close_object_sequence_before(token, line)
             self._new_line(line)
         if state.pending:
             self._resolve_pending(token)
@@ -58,6 +64,10 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         elif token in (')', ']'):
             self._close_bracket()
             self._pop_expression_frames()
+            if token is _OBJECT_EXPRESSION_END:
+                operator = state.logical.get(state.pdepth)
+                if operator:
+                    state.logical[state.pdepth] = _LogicalAfterObject(operator)
         if state.lambda_scan is not None or token in self.lambda_triggers:
             if self._scan_lambda(token):
                 return
@@ -74,6 +84,12 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             action()
 
     # -- statement boundaries ---------------------------------------------------
+
+    def _close_object_sequence_before(self, token, line):
+        state = self.state
+        if (starts_statement(token) and _starts_line(token, line, state.line)
+                and _expression_ended(state.prev, state.prev2, ends_expression(state.prev2 or ''))):
+            state.logical.pop(0, None)
 
     def _new_line(self, line):
         state = self.state
