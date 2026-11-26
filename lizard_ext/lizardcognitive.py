@@ -37,7 +37,9 @@ import sys
 
 from lizard import FunctionInfo
 
-from .cognitive_indent import _counter_for
+from .cognitive_brace import _BraceCounter
+from .cognitive_indent import _counter_for as _default_counter_for
+from .cognitive_profile import _PROFILES
 
 DEFAULT_COGNITIVE_THRESHOLD = 15
 
@@ -95,3 +97,53 @@ def _add_default_everywhere():
 
 
 _add_default_everywhere()
+
+
+def _counter_for(reader):
+    if getattr(reader, 'has_scala_interpolation', False):
+        return _ScalaBraceCounter(reader, _PROFILES['scala'].for_reader(reader), gated=False)
+    return _default_counter_for(reader)
+
+
+class _ScalaBraceCounter(_BraceCounter):
+    def __init__(self, reader, profile, gated):
+        super().__init__(reader, profile, gated)
+        self._interpolations = []
+
+    def _process(self, token):
+        if getattr(token, 'is_scala_interpolation', False):
+            self._interpolation_boundary(token)
+            return
+        if getattr(token, 'is_scala_string_part', False):
+            start_line = self.line - token.count('\n')
+            if start_line != self.state.line:
+                self._new_line(start_line)
+            self.state.line = self.line
+        super()._process(token)
+
+    def _interpolation_boundary(self, token):
+        state = self.state
+        if token == '{':
+            nesting = getattr(state, 'enclosing_interpolation_frames', 0)
+            self._interpolations.append(
+                (state, state.frames, state.depth, state.pdepth, state.logical, nesting))
+            # A surrounding condition may still be reading its head. Keep its
+            # nesting contribution and let the substitution read its own frames.
+            state.enclosing_interpolation_frames = nesting + len(state.frames)
+            state.frames = []
+            state.depth = 0
+            state.pdepth = 0
+            state.logical = {}
+        elif self._interpolations:
+            owner, frames, depth, pdepth, logical, nesting = self._interpolations.pop()
+            owner.enclosing_interpolation_frames = nesting
+            owner.frames = frames
+            owner.depth = depth
+            owner.pdepth = pdepth
+            owner.logical = logical
+            # Line breaks inside the substitution belong to the string.
+            owner.line = self.line
+
+    def _structural(self):
+        state = self.state
+        self._add(1 + len(state.frames) + getattr(state, 'enclosing_interpolation_frames', 0))

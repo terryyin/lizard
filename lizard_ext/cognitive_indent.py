@@ -2,7 +2,7 @@
 
 from lizard_languages.python import PythonReader
 
-from .cognitive_brace import _BraceCounter, _ScalaBraceCounter
+from .cognitive_brace import _BraceCounter
 from .cognitive_counter import BODY, _Counter, _EXPRESSION_FRAMES, _Frame
 from .cognitive_profile import (
     _EXPRESSION_BREAKERS, _GATED_LANGUAGES, _PROFILES, _PYTHON, _Profile,
@@ -109,6 +109,4 @@ def _counter_for(reader):
         return _IndentCounter(reader, _PYTHON.for_reader(reader), gated=True)
     name = reader.language_names[0]
     profile = _PROFILES.get(name, _Profile()).for_reader(reader)
-    if name == 'scala':
-        return _ScalaBraceCounter(reader, profile, gated=False)
     return _BraceCounter(reader, profile, gated=name in _GATED_LANGUAGES)
