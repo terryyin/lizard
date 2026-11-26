@@ -50,6 +50,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
         context = reader.context
+        go_if = 'go' in getattr(reader, 'language_names', ())
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
@@ -91,6 +92,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
                     l_depth = context.open_level()
+                    if go_if and token == 'if':
+                        context.start_go_if()
 
                 if token in block_starts:
                     context.open_block()
@@ -116,6 +119,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.nesting_depth = 0
         self.current_function.levels_awaiting_body = 0
         self.current_function.block_levels = []
+        self.current_function.go_if_levels = None
         self.current_function.prev_was_else = False
         self.reset_condition_tracking()
 
@@ -127,6 +131,13 @@ class NDFileInfoAddition(FileInfoBuilder):
     def open_block(self):
         """The block takes over the levels awaiting their body."""
         function = self.current_function
+        if function.go_if_levels is not None:
+            if function.condition_depth:
+                # A grouped literal can contain braces before the if body.
+                function.block_levels.append(0)
+                return
+            function.go_if_levels = None
+            self.reset_condition_tracking()
         function.block_levels.append(function.levels_awaiting_body)
         function.levels_awaiting_body = 0
 
@@ -137,9 +148,20 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def end_statement(self):
         """A statement ends the levels of a braceless body."""
-        levels = self.current_function.levels_awaiting_body
-        self.current_function.levels_awaiting_body = 0
-        return self.add_nd_condition(-levels)
+        function = self.current_function
+        levels = function.levels_awaiting_body
+        # An explicit semicolon can separate a Go if initializer and test.
+        keep = function.go_if_levels or 0
+        function.levels_awaiting_body = keep
+        if keep:
+            function.logical_operator_added = False
+        return self.add_nd_condition(keep - levels)
+
+    def start_go_if(self):
+        function = self.current_function
+        function.in_condition = True
+        function.go_if_levels = function.levels_awaiting_body
+        function.logical_operator_added = False
 
     def set_in_condition(self, in_condition):
         self.current_function.in_condition = in_condition
@@ -152,13 +174,14 @@ class NDFileInfoAddition(FileInfoBuilder):
         function = self.current_function
         function.in_condition = True
         function.condition_depth += 1
-        function.logical_operator_added = False
+        if function.go_if_levels is None:
+            function.logical_operator_added = False
 
     def close_condition(self):
         """A ")" closes a level, and the condition with its last level."""
         self.decrement_condition_depth()
         function = self.current_function
-        if function.condition_depth == 0:
+        if function.condition_depth == 0 and function.go_if_levels is None:
             function.in_condition = False
             function.logical_operator_added = False
 
@@ -175,7 +198,7 @@ class NDFileInfoAddition(FileInfoBuilder):
             enclosing = self.stacked_functions[-1]
             if enclosing.condition_depth > 0:
                 enclosing.condition_depth -= 1
-                if enclosing.condition_depth == 0:
+                if enclosing.condition_depth == 0 and enclosing.go_if_levels is None:
                     enclosing.in_condition = False
                     enclosing.logical_operator_added = False
 
@@ -233,6 +256,7 @@ def _init_nesting_depth_data(self, *_):
     self.max_nesting_depth = 0
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
+    self.go_if_levels = None
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
