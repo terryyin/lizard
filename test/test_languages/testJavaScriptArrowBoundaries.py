@@ -192,6 +192,19 @@ class TestExpressionArrowContinuation(unittest.TestCase):
                          [f if f[0] != 'after' else f[:3]
                           for f in functions_in('a.js', code)])
 
+    def test_arrow_body_ends_on_the_same_line_as_its_callback(self):
+        code = '''const columns = (length) =>
+  Array.from({ length }).map((_, index) => ({
+    key: String(index),
+  }))
+'''
+        for ext in EXTENSIONS:
+            with self.subTest(ext=ext):
+                self.assertEqual([
+                    ('(anonymous)', 2, 4, 1, 3, 12),
+                    ('columns', 1, 4, 1, 2, 22)],
+                    functions_in('a.' + ext, code))
+
     def test_generic_arguments_split_after_comma_keep_their_line(self):
         code = ('const f = (x) => foo<A,\n B>(x)\n'
                 'function after() { return 1 }\n')

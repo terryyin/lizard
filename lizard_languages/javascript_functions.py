@@ -40,7 +40,13 @@ class JavaScriptFunctionsMixin:
 
     def _pop_function_from_stack(self):
         if self.started_function:
-            self.context.end_of_function()
+            context = self.context
+            function = context.current_function
+            context.end_of_function()
+            if function.defined_in_function:
+                # A callback can own the final line of the enclosing arrow.
+                enclosing = context.current_function
+                enclosing.end_line = max(enclosing.end_line, function.end_line)
         if self._expression_body:
             self._close_expression_body()
         self.started_function = None
