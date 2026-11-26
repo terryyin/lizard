@@ -125,6 +125,9 @@ class JavaScriptObjectsMixin:
             # Only "field = (" and "key: (" can open a group; a "(" after
             # a member name opens parameters.
             self._signature = self.last_token not in ('=', ':')
+            self._arrow_only_signature = not self._signature or (
+                self.last_token == 'async' and self.last_tokens == '='
+                and not self.holds_members)
             if not self.started_function:
                 # When last_tokens is '=' we're in a field assignment
                 # pattern (field = () => {}), so use function_name which
@@ -169,6 +172,9 @@ class JavaScriptObjectsMixin:
         object_reader._async_seen = self._async_seen
         self._static_seen = False
         self._async_seen = False
+        if object_reader.as_class and self.as_namespace:
+            object_reader.as_namespace_class = True
+        return object_reader
 
     def _opens_members(self):
         """Whether the '{' just read holds members, `x = {` or a class
@@ -216,6 +222,9 @@ class JavaScriptObjectsMixin:
             tokens.append(token)
             return False
         self.next(collect)
+
+    as_namespace = False
+    as_namespace_class = False
 
     def _to_camel_case(self, s):
         # Simple camelCase conversion for test case

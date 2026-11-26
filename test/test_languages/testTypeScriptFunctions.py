@@ -223,6 +223,85 @@ class Test_TypeScript_function_scopes(unittest.TestCase):
         names = [f.name for f in functions]
         self.assertIn("helper", names)
 
+    def test_namespace_class_methods_named_like_keywords(self):
+        code = '''
+namespace Network {
+  export class Retry {
+    catch(error: Error) {
+      if (error.name === "TimeoutError") return null;
+      return error;
+    }
+  }
+}
+
+function retry() { return new Network.Retry(); }
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual(
+            [('catch', 2), ('retry', 1)],
+            [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_namespace_identifier_in_expression_keeps_the_object_method(self):
+        code = '''
+const namespace = "name";
+namespace in {
+  name: "listen",
+  catch(error: Error) { return error; }
+};
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('catch', 1)], [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_nested_namespaces_keep_class_methods(self):
+        code = '''
+namespace Network.Retry {
+  export namespace Transports {
+    export class Http {
+      catch(error: Error) { return error; }
+    }
+  }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('catch', 1)], [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_namespace_keyword_methods_require_an_implementation(self):
+        code = '''
+namespace Network {
+  export declare class Deferred {
+    catch(error: Error): void;
+  }
+
+  export class Retry {
+    catch(error: Error): void;
+    catch(error: Error, reset = false): void {
+      if (reset) console.log(error.message);
+    }
+  }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual(
+            [('catch', 9, 3)],
+            [(f.name, f.start_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_semicolonless_namespace_keyword_method_overloads(self):
+        code = '''namespace Network {
+  export class Retry {
+    catch(error: Error): Error
+    catch(error: string): Error
+    catch(error: string | Error): Error {
+      if (typeof error === "string") return new Error(error);
+      return error;
+    }
+  }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('catch', 5, 8, 1, 2)], [
+            (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+            for f in functions])
+
     def test_iife(self):
         """Immediately invoked function expressions should be detected"""
         code = '''
