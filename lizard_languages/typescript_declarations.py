@@ -207,18 +207,23 @@ class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
 
     def _state_global(self, token):
         if not self._brackets and not token.isspace():
-            if (token == '(' and not self._expect_type
-                    and not (self._after_type_parameters or self._import_type)):
-                # An IIFE can begin on the line after a complete alias.
+            if not self._expect_type and self._starts_runtime_expression(token):
                 self.saved_token = token
                 self.statemachine_return()
                 return
             self._after_type_parameters = self._expect_type and token[0] == '<'
             self._import_type = token == 'import' and not self._qualified_type
-            if token == 'new' and not self._qualified_type:
+            if (token == 'new' and not self._qualified_type
+                    and (self._expect_type or self.last_token == 'abstract')):
                 # A constructor type has its own parameters and return arrow.
                 self._expect_type = True
                 return
             if self._qualified_type:
                 self._expect_type = True
         super()._state_global(token)
+
+    def _starts_runtime_expression(self, token):
+        if token == '(':
+            return not (self._after_type_parameters or self._import_type)
+        # A line break ends a type before postfix brackets or type arguments.
+        return self.context.newline and token[0] in '[<'
