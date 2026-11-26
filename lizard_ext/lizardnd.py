@@ -314,7 +314,7 @@ class _ConditionLambdaBrace:  # pylint: disable=R0903
         elif token == 'requires':
             # Here a constraint can start with a requires-expression. A
             # requires after a complete operand starts a new clause instead.
-            self.requires_body = previous in ('requires', '&&', '||')
+            self.requires_body = previous in ('requires', '&&', '||', 'and', 'or')
         elif token in (')', '}', ',', ';'):
             self.head = False
         return False
