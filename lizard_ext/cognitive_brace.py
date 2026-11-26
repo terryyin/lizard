@@ -50,6 +50,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 return
             self._logical_operator(token)
         elif token in _EXPRESSION_BREAKERS:
+            if token == ':' and getattr(token, 'is_conditional_colon', False):
+                self._conditional_alternate()
             state.logical.pop(state.pdepth, None)
             if token == ',':
                 self._pop_expression_frames(peer_comma=True)
@@ -58,8 +60,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         elif token in (')', ']'):
             self._close_bracket()
             self._pop_expression_frames()
-        elif token == ':' and getattr(token, 'is_conditional_colon', False):
-            self._conditional_alternate()
         if state.lambda_scan is not None or token in self.lambda_triggers:
             if self._scan_lambda(token):
                 return
