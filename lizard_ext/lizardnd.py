@@ -40,9 +40,6 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
-        js_do_bodies = isinstance(implied_semicolons, ImpliedSemicolons)
-        if js_do_bodies:
-            loops = loops.union(('do',))
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
         if hasattr(reader, "indent_indicator"):
@@ -50,8 +47,10 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             indent_indicator = ';'
         # Most tokens cannot change the depth: one lookup skips them.
+        js_do_bodies = isinstance(implied_semicolons, ImpliedSemicolons)
+        do_tokens = ('do',) if js_do_bodies else ()
         depth_tokens = frozenset(
-            (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
+            (indent_indicator, 'else', 'if', '(', ')', '&&', '||') + do_tokens
         ).union(block_ends, block_starts, loops)
         context = reader.context
         for token in tokens:
