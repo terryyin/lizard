@@ -7,6 +7,14 @@ from lizard import FileInfoBuilder, FunctionInfo
 DEFAULT_ND_THRESHOLD = 7
 
 
+def _track_kotlin_branches(read):
+    def track(extension, tokens, reader, l_depth=0):
+        if 'kotlin' in getattr(reader, 'language_names', ()):
+            tokens = _kotlin_else_if_branches(tokens, reader)
+        return read(extension, tokens, reader, l_depth)
+    return track
+
+
 class LizardExtension(object):  # pylint: disable=R0903
 
     FUNCTION_INFO = {
@@ -39,8 +47,6 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
-        if 'kotlin' in getattr(reader, 'language_names', ()):
-            tokens = _kotlin_else_if_branches(tokens, reader)
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
         if hasattr(reader, "indent_indicator"):
@@ -277,3 +283,6 @@ def _init_nesting_depth_data(self, *_):
 
 patch(NDFileInfoAddition, FileInfoBuilder)
 patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")
+
+
+LizardExtension.__call__ = _track_kotlin_branches(LizardExtension.__call__)
