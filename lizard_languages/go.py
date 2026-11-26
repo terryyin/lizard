@@ -2,17 +2,12 @@
 Language parser for Go lang
 '''
 
-import re
-
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
 from .go_function import (
     GoToken, function_signature, starts_declaration, variable_declaration)
 from .token_pattern import compiled_token_pattern
-
-
-_NON_GO_COMMENT_BREAK = re.compile(r'[\v\f\x1c-\x1e\x85\u2028\u2029]|\r(?!\n)')
 
 
 class GoReader(CodeReader, CCppCommentsMixin):
@@ -24,7 +19,6 @@ class GoReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super(GoReader, self).__init__(context)
         self.parallel_states = [GoStates(context)]
-        self.comment_line_offsets = []
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
@@ -53,45 +47,6 @@ class GoReader(CodeReader, CCppCommentsMixin):
             yield token
         state.statemachine_before_return()
         self.eof()
-
-    def track_comment_line_offsets(self):
-        """Track line breaks that Python counts and the Go lexer ignores."""
-        self.get_comment_from_token = self._counted_comment
-
-    def source_line_changed(self, previous, current):
-        """Tell whether an analysis line break includes a Go line feed."""
-        line_breaks = current - previous
-        for start, extra in reversed(self.comment_line_offsets):
-            if start < previous:
-                break
-            line_breaks -= extra
-        return line_breaks > 0
-
-    def _counted_comment(self, token):
-        if token.startswith(('/*', '//')):
-            comment = token[2:]
-            if _NON_GO_COMMENT_BREAK.search(comment):
-                return _GoComment(comment, self)
-            return comment
-        return None
-
-
-class _GoComment(str):
-    def __new__(cls, comment, reader):
-        token = str.__new__(cls, comment)
-        token.reader = reader
-        return token
-
-    def splitlines(self, keepends=False):
-        lines = super().splitlines(keepends)
-        extra = max(0, len(lines) - 1) - self.count('\n')
-        if extra:
-            offsets = self.reader.comment_line_offsets
-            start = self.reader.context.current_line
-            # An earlier extension may split the same comment too.
-            if not offsets or offsets[-1][0] != start:
-                offsets.append((start, extra))
-        return lines
 
 
 class GoStates(GoLikeStates):  # pylint: disable=R0903

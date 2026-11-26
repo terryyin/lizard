@@ -114,10 +114,6 @@ class _GoCounter(_BraceCounter):
     _STATEMENT_ENDS = frozenset((
         'break', 'continue', 'fallthrough', 'return', '++', '--', ')', ']', '}'))
 
-    def __init__(self, reader, profile, gated):
-        super().__init__(reader, profile, gated)
-        reader.track_comment_line_offsets()
-
     def _switch_function(self, function):
         previous_state = self.state
         super()._switch_function(function)
@@ -129,9 +125,7 @@ class _GoCounter(_BraceCounter):
 
     def _new_line(self, line):
         state = self.state
-        if (state.logical and self._inserts_semicolon(state.prev, state.prev2)
-                and (not self.reader.comment_line_offsets
-                     or self.reader.source_line_changed(state.line, line))):
+        if state.logical and self._inserts_semicolon(state.prev, state.prev2):
             state.logical.pop(state.pdepth, None)
         super()._new_line(line)
 

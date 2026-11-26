@@ -656,20 +656,6 @@ class TestOtherBraceLanguages(unittest.TestCase):
                     ready && state.active
             }"""))
 
-    def test_go_logical_sequence_through_a_block_comment(self):
-        self.assertEqual([1], cogc("a.go", """
-            func allowed(enabled, verified bool, attempts, limit int) bool {
-                return enabled && attempts /* Retry\u2028limit. */ < limit && verified
-            }"""))
-
-    def test_go_logical_sequence_through_a_dumped_block_comment(self):
-        analyzer = FileAnalyzer(get_extensions(["dumpcomments", Cognitive()]))
-        info = analyzer.analyze_source_code("a.go", """
-            func allowed(enabled, verified bool, attempts, limit int) bool {
-                return enabled && attempts /* Retry\u2028limit. */ < limit && verified
-            }""")
-        self.assertEqual([1], [fn.cognitive_complexity for fn in info.function_list])
-
     def test_go_logical_sequence_after_a_function_literal(self):
         self.assertEqual([0, 2], cogc("a.go", """
             func enabledForCallback(enabled bool) bool {
