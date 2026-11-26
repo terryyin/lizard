@@ -99,7 +99,7 @@ class _MemberName(str):
 _MEMBER_ACCESS = ('.', '?.')
 _COMMENT_STARTS = ('//', '/*')
 # The tokens that preprocess looks at, in one set for the hot loop.
-_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset((*_MEMBER_ACCESS, '<'))
+_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset(_MEMBER_ACCESS)
 # With the reader's conditions: the keywords that a metric counts as a
 # structure or a jump.
 _STRUCTURE_KEYWORDS = frozenset((
@@ -261,12 +261,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         keyword = None      # waits for the next token: `{ if: a }`
         tokens = iter(self.code_tokens(tokens))
         while True:
+            replay_arguments = False
             for token in tokens:
                 if not token.isspace():
-                    if type_argument_span:
-                        type_argument_span -= 1
-                        if token == ',':
-                            token = _TYPE_ARGUMENT_COMMA
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
                         if token in _NAME_FOLLOWERS or (
@@ -275,6 +272,16 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             keyword = _MemberName(keyword)
                         yield keyword
                         keyword = None
+                    if type_argument_span:
+                        type_argument_span -= 1
+                        if token == ',':
+                            token = _TYPE_ARGUMENT_COMMA
+                    elif (token == '<' and self.context.class_field_annotations
+                          and can_start_call_type_arguments(state.last_token)):
+                        tokens, lookahead = tee(tokens)
+                        type_argument_span = call_type_argument_span(lookahead)
+                        del lookahead
+                        replay_arguments = True
                     if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
                         end_before_line_token(state, arrows, token)
@@ -307,14 +314,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     break
                         elif member_access:
                             before_dot = token == '.' and state.last_token
-                        elif (token == '<' and not type_argument_span
-                              and self.context.class_field_annotations
-                              and can_start_call_type_arguments(state.last_token)):
-                            tokens, lookahead = tee(tokens)
-                            type_argument_span = call_type_argument_span(lookahead)
-                            del lookahead
-                            yield token
-                            break
                     else:
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
@@ -323,6 +322,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             keyword = token
                             continue
                     yield token
+                    if replay_arguments:
+                        break
                 elif token == '\n':
                     if keyword is not None:
                         yield keyword
