@@ -675,6 +675,21 @@ class TestScala(unittest.TestCase):
                          [(f.name, f.start_line, f.end_line, f.parameter_count)
                           for f in result])
 
+    def test_symbolic_declaration_names_do_not_count_as_decisions(self):
+        result = get_scala_function_list('''
+            object Checks {
+              def explain(left: String): String = {
+                extension (inline current: String) inline def &&(inline fallback: String): String =
+                  if current == "" then fallback else current
+                left && "fallback"
+              }
+              def /* custom operator */ ||(value: Int): Int = value
+              def ready(left: Boolean, right: Boolean): Boolean = left && right || !right
+            }
+            ''')
+        self.assertEqual([("&&", 2), ("explain", 2), ("||", 1), ("ready", 3)],
+                         [(f.name, f.cyclomatic_complexity) for f in result])
+
     def test_abstract_symbolic_method_keeps_following_method(self):
         result = get_scala_function_list('''
             trait Output {
