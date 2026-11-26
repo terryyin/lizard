@@ -77,9 +77,16 @@ class _BraceActions(object):
 
     def _resolve_pending_ternary(self, token):
         state = self.state
+        # A Java wildcard may use ``? super T``. In script readers,
+        # ``super`` can start the first branch of a conditional.
+        if (state.pending_ternary == 1 and token == 'super'
+                and not isinstance(self.reader, TypeScriptReader)):
+            state.pending_ternary = 0
+            return False
+
         if state.pending_ternary == 1:
             state.pending_ternary = 0
-            if token in _NOT_TERNARY_NEXT and not (token == 'super' and isinstance(self.reader, TypeScriptReader)):
+            if token in _NOT_TERNARY_NEXT:
                 return
             if self.profile.nullable_types:
                 if self.line != state.pending_ternary_line:

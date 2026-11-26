@@ -151,7 +151,7 @@ _EXPRESSION_BREAKERS = frozenset((
 # ``?:``, nullable types ``T?)``, Rust's ``foo()?;``, Java's ``? extends``.
 _NOT_TERNARY_NEXT = frozenset((
     '?', '.', ':', ')', ']', '}', ',', ';', '=', '>', '<', '&&', '||',
-    'extends', 'super'))
+    'extends'))
 
 # ``T? x`` followed by one of these is a nullable type, not ``c ? x : y``.
 _NULLABLE_TYPE_FOLLOWERS = frozenset((
