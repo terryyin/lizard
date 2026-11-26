@@ -41,6 +41,21 @@ class Test_JavaScript_members(unittest.TestCase):
         functions = get_js_function_list(code)
         self.assertEqual('inner', functions[0].name)
 
+    def test_keyword_method_in_division_operand(self):
+        functions = get_js_function_list("""
+function ratio() {
+    return 1 / { valueOf() { return 1; }, catch(error) { return error; } };
+}
+function next(ready) {
+    "" + /a/
+    { if (ready) { run(); } }
+}
+""")
+        self.assertEqual(
+            [('valueOf', 1, []), ('catch', 1, ['error']),
+             ('ratio', 1, []), ('next', 2, ['ready'])],
+            [(f.name, f.cyclomatic_complexity, f.parameters) for f in functions])
+
     def test_simple_class_two_methods_WORKS(self):
         # This simpler case works fine
         code = '''
