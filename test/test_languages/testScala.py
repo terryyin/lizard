@@ -339,6 +339,11 @@ class TestScala(unittest.TestCase):
             ('interpolation in a branch',
              '''if (ok) s"user ${id.toString}" + (if (verbose) " selected" else "") else ""''',
              '''if (ok) "user " + id.toString + (if (verbose) " selected" else "") else ""'''),
+            ('multiline interpolation in a branch',
+             '''if (ok) s"""${
+                id.toString
+             }""" + (if (verbose) " selected" else "") else ""''',
+             '''if (ok) id.toString + (if (verbose) " selected" else "") else ""'''),
             ('adjacent interpolations',
              '''s"${if (ok) 1 else 0}, ${if (ok) 2 else 3}"''',
              '''{
