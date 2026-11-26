@@ -36,6 +36,7 @@ class RReader(CodeReader, ScriptLanguageMixIn):
         """Generate tokens for R code with R-specific patterns."""
         # R-specific token patterns
         r_patterns = (
+            r"|`(?:\\.|[^`\\])*`"  # Quoted non-syntactic names
             r"|<-"          # Assignment operator <-
             r"|->"          # Assignment operator ->
             r"|%[a-zA-Z_*/>]+%"  # Special operators like %in%, %*%, %>%, %/%, etc.
