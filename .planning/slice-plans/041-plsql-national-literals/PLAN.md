@@ -47,13 +47,15 @@ No North Star topic bears on this reader correction beyond that ADR.
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 Proof: `analyze_file.analyze_source_code` on the key-example sources reports the promised CCN and function start lines. #639's tests and the PL/SQL reader tests stay green. Before merge, run full `nix develop -c python -m pytest` and `nix develop -c make` as `AGENTS.md` requires. Pair affected API and broad CLI timing on the exact corrected production bytes. Require green hosted checks on the published revision.
 
 Behavior: Given PL/SQL source with a `Q` or `NQ` alternative-quoted literal in any letter case, using a paired or repeated-character delimiter, that contains an embedded quote and apparent code, when the reader analyzes it, then only real decisions count and following functions keep their start lines.
 
 Bring in #639's reader change and tests, add the optional national-character prefix, and add the `NQ`, mixed-case, repeated-delimiter and multiline regressions. Compare master, the exact proposal and the corrected revision.
+
+Accepted proof: `test/test_languages/test_lizard_plsql_alternative_quotes.py` (`TestPLSQLAlternativeQuotes`) asserts name, CCN and start line through `analyze_file.analyze_source_code` for #639's five `Q` forms, six `NQ` case/delimiter forms, the multiline `NQ` literal (g at line 4), `N'it''s'` and identifier `nq` (f CCN 2). With `testPLSQL.py`: 49 passed. Language and extension suites: 3198 passed, 5 skipped. Full pytest: 3768 passed, 7 skipped. `make` passed. The master and #639 comparison reuses the settled premise rows. Paired timing on a 4000-function PL/SQL corpus, base versus corrected bytes: API best 1.21–1.54 s versus 1.25–1.44 s, CLI 1.26–2.25 s versus 1.30–1.79 s, all within noise. Refactor pass: documented the alternative-quote form in the `generate_tokens` docstring only. Hosted CI on the published revision remains for the completion boundary.
 
 ## Preparation review
 
