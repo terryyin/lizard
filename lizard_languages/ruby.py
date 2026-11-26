@@ -4,7 +4,9 @@ Language parser for Ruby
 
 import re
 
-from .rubylike import RubylikeReader
+from lizard_core.function_info import AnonymousParameter
+
+from .rubylike import RubylikeReader, RubylikeStateMachine
 from .js_style_regex_expression import js_style_regex_expression
 from .ruby_documentation import may_have_documentation, pattern_for_fragment
 from .source_documentation import tokens_ignoring_documentation
@@ -79,6 +81,10 @@ class RubyReader(RubylikeReader):
 
     ext = ['rb']
     language_names = ['ruby']
+
+    def __init__(self, context):
+        super().__init__(context)
+        self.parallel_states = [RubyStateMachine(context)]
 
     def preprocess(self, tokens):
         """Drop spaces, and mark a keyword right after '.', '&.' or 'def'
@@ -162,3 +168,12 @@ class RubyReader(RubylikeReader):
                 yield token
             else:
                 source = None
+
+
+class RubyStateMachine(RubylikeStateMachine):
+    def _def_parameters(self, token):
+        if token in (',', ')'):
+            parameters = self.context.current_function.full_parameters
+            if parameters and parameters[-1].strip() in ('*', '**', '&', '...'):
+                parameters[-1] = AnonymousParameter(parameters[-1])
+        super()._def_parameters(token)

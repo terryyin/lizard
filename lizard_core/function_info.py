@@ -21,6 +21,10 @@ class Nesting(object):  # pylint: disable=R0903
 BARE_NESTING = Nesting()
 
 
+class AnonymousParameter(str):
+    """A formal parameter that occupies a slot without binding a name."""
+
+
 class Namespace(Nesting):  # pylint: disable=R0903
 
     def __init__(self, name):
@@ -72,6 +76,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         return sum(
             bool(_PARAMETER_NAME.search(parameter))
             or parameter.strip() in ('{}', '[]', '()')
+            or isinstance(parameter, AnonymousParameter)
             for parameter in self.full_parameters)
 
     @property
