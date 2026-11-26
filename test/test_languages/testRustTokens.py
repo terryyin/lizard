@@ -282,6 +282,63 @@ class TestRustTokens(unittest.TestCase):
             [('template', 4, 6), ('after', 8, 8)],
             [(f.name, f.start_line, f.end_line) for f in result])
 
+    def test_raw_c_spelling_outside_quote_does_not_hide_function(self):
+        for prefix in (
+                '// Rust C literals can begin with cr#"',
+                'const RAW_C_PREFIX: &str = r##"cr#""##;',
+                'const LABEL: &std::ffi::CStr = cr#"label"#;'):
+            with self.subTest(prefix=prefix):
+                result = get_rust_function_list(prefix + '''
+        use proc_macro2::TokenStream;
+        use quote::quote;
+
+        fn emit(value: TokenStream) -> TokenStream {
+            quote! { /* cr#" in a comment */ #value }
+        }
+
+        fn after() {}
+        ''')
+                self.assertEqual(
+                    [('emit', 5, 7), ('after', 9, 9)],
+                    [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_raw_c_fallback_is_local_to_the_macro_with_the_literal(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+        use quote::quote;
+
+        fn retained(value: TokenStream) -> TokenStream {
+            quote! {
+                let banner = cr#"text " { "#;
+                #value
+            }
+        }
+
+        fn recovered(value: TokenStream) -> TokenStream {
+            quote! { #value }
+        }
+        ''')
+        self.assertEqual(
+            [('retained', 4, 9), ('recovered', 11, 13)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_local_quote_macro_can_execute_its_argument(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+        use quote::quote;
+
+        fn choose(flag: bool) -> usize {
+            macro_rules! quote { ($body:expr) => { $body }; }
+            quote!(if flag { 1 } else { 0 })
+        }
+
+        fn emit(value: TokenStream) -> TokenStream {
+            quote! { #value }
+        }
+        ''')
+        self.assertEqual(
+            [('choose', 4, 7, 2), ('emit', 9, 11, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
     def test_quote_spanned_counts_the_span_expression(self):
         result = get_rust_function_list('''use proc_macro2::{Span, TokenStream};
         use quote::quote_spanned;
