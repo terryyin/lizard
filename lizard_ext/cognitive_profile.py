@@ -20,12 +20,6 @@ _ROLES = {
 }
 
 
-# A member separator maps to the tokens that identify the current receiver.
-_SELF_REFERENCES = frozenset(('this', 'self', 'cls'))
-_MEMBER_RECEIVERS = {'.': _SELF_REFERENCES, '->': _SELF_REFERENCES, '::': frozenset()}
-_PHP_THIS = frozenset(('$this',))
-
-
 class _Profile(object):  # pylint: disable=R0902,R0903
     """What a language adds to what its reader already knows."""
 
@@ -36,8 +30,7 @@ class _Profile(object):  # pylint: disable=R0902,R0903
                  paren_heads=True, newline_ends_statement=False,
                  nullable_types=False, rvalue_refs=False, lambda_style=None,
                  case_insensitive=False, nesting=True,
-                 nested_functions=False, reserved_structures=False,
-                 *, member_receivers=_MEMBER_RECEIVERS):
+                 nested_functions=False, reserved_structures=False):
         # Structures the reader does not list; completed in ``for_reader``.
         self.ifs = frozenset(ifs)
         self.else_ifs = frozenset(else_ifs)
@@ -71,7 +64,6 @@ class _Profile(object):  # pylint: disable=R0902,R0903
         # A structure word is never a call, even in a function of that name:
         # `catch (e)` in a JavaScript method named `catch`.
         self.reserved_structures = reserved_structures
-        self.member_receivers = member_receivers
 
     def for_reader(self, reader):
         """A copy with the roles of the reader's control-flow keywords added."""
@@ -108,35 +100,27 @@ _PROFILES = {
     'tsx': _Profile(**_JS_LIKE),
     'vue': _Profile(**_JS_LIKE),
     'svelte': _Profile(**_JS_LIKE),
-    'php': _Profile(member_receivers={**_MEMBER_RECEIVERS,
-                                      '->': _PHP_THIS, '?->': _PHP_THIS},
-                    **_C_LIKE),
+    'php': _Profile(**_C_LIKE),
     'ttcn': _Profile(**_C_LIKE),
     'solidity': _Profile(catches=('catch',), **_C_LIKE),
     'go': _Profile(switches=('switch', 'select'), gotos=('goto',),
                    ternary=False, paren_heads=False,
                    newline_ends_statement=True),
     'kotlin': _Profile(switches=('when',), do_likes=('do',),
-                       nullable_types=True, newline_ends_statement=True,
-                       member_receivers={**_MEMBER_RECEIVERS,
-                                         '.': _SELF_REFERENCES | {'this?', 'this!!'}}),
+                       nullable_types=True, newline_ends_statement=True),
     'swift': _Profile(switches=('switch',), do_likes=('repeat',),
                       nullable_types=True, paren_heads=False,
                       newline_ends_statement=True),
     'rust': _Profile(switches=('match',), do_likes=('loop',),
                      ternary=False, paren_heads=False),
     'scala': _Profile(switches=('match',), newline_ends_statement=True),
-    'groovy': _Profile(newline_ends_statement=True,
-                       member_receivers={**_MEMBER_RECEIVERS,
-                                         '?.': _SELF_REFERENCES, '*.': frozenset()},
-                       **_C_LIKE),
+    'groovy': _Profile(newline_ends_statement=True, **_C_LIKE),
     'perl': _Profile(catches=('catch',),         # Try::Tiny
                      gotos=('goto',), jumps=('last', 'next', 'redo')),
     'r': _Profile(ternary=False),               # ``switch()`` is a function
     'zig': _Profile(switches=('switch',), ternary=False),
     'ruby': _Profile(ifs=('unless',), switches=('case',), **_FLAT),
     'lua': _Profile(do_likes=('repeat',), gotos=('goto',), ignore=('until',),
-                    member_receivers={**_MEMBER_RECEIVERS, ':': frozenset()},
                     **_FLAT),
     'erlang': _Profile(switches=('case', 'receive'), **_FLAT),
     'fortran': _Profile(else_ifs=('elseif',), switches=('select',),
@@ -173,6 +157,18 @@ _NOT_TERNARY_NEXT = frozenset((
 _NULLABLE_TYPE_FOLLOWERS = frozenset((
     '=', ';', ',', ')', '{', '}', 'in', '=>', '>', ':'))
 
+_MEMBER_ACCESS = frozenset(('.', '->', '::'))
+_SELF_REFERENCES = frozenset(('this', 'self', 'cls'))
+# These tokens represent the current receiver after language-specific
+# member access. Empty sets mark access that cannot call the same function.
+_PHP_THIS = frozenset(('$this',))
+_MEMBER_RECEIVER_OVERRIDES = {
+    'php': {'->': _PHP_THIS, '?->': _PHP_THIS},
+    # A grouped Groovy receiver can be ``(this)``.
+    'groovy': {'?.': _SELF_REFERENCES | {')'}, '*.': frozenset()},
+    'kotlin': {'.': _SELF_REFERENCES | {'this?', 'this!!'}},
+    'lua': {':': frozenset()},
+}
 _LAMBDA_TRIGGERS = {'cpp': frozenset((']',)), 'arrow': frozenset(('->', '=>')),
                     None: frozenset()}
 

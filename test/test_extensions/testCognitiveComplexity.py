@@ -695,12 +695,15 @@ class TestMemberCallRecursion(unittest.TestCase):
             }"""))
 
     def test_groovy_safe_and_spread_calls_use_the_receiver(self):
-        self.assertEqual([0, 0, 2], cogc("RetryPlan.groovy", """
+        self.assertEqual([0, 0, 2, 2], cogc("RetryPlan.groovy", """
             class RetryPlan {
                 def run(Plugin fallback) { fallback?.run() }
                 def refresh(List<Plugin> plugins) { plugins*.refresh() }
                 def retry(int remaining) {
                     if (remaining > 0) this?.retry(remaining - 1)
+                }
+                def retryGrouped(int remaining) {
+                    if (remaining > 0) (this)?.retryGrouped(remaining - 1)
                 }
             }"""))
 
