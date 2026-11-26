@@ -20,6 +20,16 @@ _TEMPLATE_SPECIAL = re.compile(r'\\.|`|\$\{', re.S)
 _WHOLE_TOKEN = re.compile(r'.*', re.S)
 
 
+class TemplateBoundary(str):
+    """A delimiter that also identifies part of a flattened template."""
+
+
+NESTED_TEMPLATE_START = TemplateBoundary("''")
+NESTED_TEMPLATE_END = TemplateBoundary(' ')
+NESTED_SUBSTITUTION_START = TemplateBoundary('(')
+NESTED_SUBSTITUTION_END = TemplateBoundary(')')
+
+
 def _template_end(source, start):
     """Return end and outer expression spans, using a stack instead of recursion."""
     # Zero denotes template text; positive values count interpolation braces.
@@ -94,16 +104,23 @@ def _converted_template(source, start, end, token_class, split):
     yield token
 
 
-def interpolation_code(source, in_expression=False):
+def interpolation_code(source, in_expression=False, delimiters=False,
+                       track_nested=False):
     """Spans of the code in the interpolations of a template, at any depth.
 
     The source is a whole template, or the expression of an interpolation.
     Nested templates split the code around them, so that each character is
-    scanned once.
+    scanned once. With delimiters, also yield grouping tokens for an
+    expression and a placeholder for a nested template literal. With
+    track_nested, preserve the boundaries for TypeScript type lookahead.
     """
     if not (in_expression or (source.startswith('`') and '${' in source)):
         return
     stack, pos, code = ([1], 0, 0) if in_expression else ([0], 1, None)
+    open_substitution = NESTED_SUBSTITUTION_START if track_nested else '('
+    close_substitution = NESTED_SUBSTITUTION_END if track_nested else ')'
+    if delimiters and in_expression:
+        yield open_substitution
     while stack:
         pattern = _TEMPLATE_SPECIAL if stack[-1] == 0 else _EXPRESSION_SPECIAL
         match = pattern.search(source, pos)
@@ -113,13 +130,19 @@ def interpolation_code(source, in_expression=False):
         pos = match.end()
         if stack[-1] == 0:
             if token == '${':
+                if delimiters:
+                    yield open_substitution
                 stack.append(1)
                 code = pos
             elif token == '`':
                 stack.pop()
+                if track_nested and stack:
+                    yield NESTED_TEMPLATE_END
                 code = pos
         elif token == '`':
             yield code, match.start()
+            if delimiters:
+                yield NESTED_TEMPLATE_START if track_nested else "''"
             stack.append(0)
         elif token == '{':
             stack[-1] += 1
@@ -128,8 +151,12 @@ def interpolation_code(source, in_expression=False):
             if stack[-1] == 0:
                 yield code, match.start()
                 stack.pop()
+                if delimiters:
+                    yield close_substitution
     if stack and stack[-1]:
         yield code, len(source)
+        if delimiters and in_expression:
+            yield close_substitution
 
 
 def template_tokens(source, addition='', token_class=None, split=True,

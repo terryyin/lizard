@@ -903,6 +903,209 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
 class TestJavaScriptTemplateLiterals(unittest.TestCase):
     """The ``}`` of an interpolation ends no block."""
 
+    def test_conditions_inside_template_interpolations(self):
+        code = """
+            function status(ready, enabled) {
+              return `State: ${ready ? 'ready' : 'waiting'} ${enabled && 'online'}`;
+            }
+        """
+        for extension in ("js", "ts", "jsx", "tsx"):
+            with self.subTest(extension=extension):
+                self.assertEqual([2], cogc("status." + extension, code))
+
+    def test_nested_interpolations_keep_the_enclosing_complexity_depth(self):
+        self.assertEqual([6], cogc("status.js", """
+            function status(show, ready, enabled) {
+              if (show) return `${ready ? `state: ${enabled ? 'on' : 'off'}` : 'waiting'}`;
+              return 'hidden';
+            }
+        """))
+
+    def test_arrow_body_inside_an_interpolation_has_its_own_complexity(self):
+        self.assertEqual([1], cogc("status.js", """
+            function status(records, enabled) {
+              return `${records.map(item => item.ready ? 'ready' : 'waiting')} ${enabled && 'online'}`;
+            }
+        """))
+
+    def test_template_literal_types_do_not_count_as_runtime_conditions(self):
+        source = """
+            function format<T extends boolean>(value: T) {
+              type Label = `status: ${T extends true ? 'ready' : 'waiting'}`;
+              return `status: ${value ? 'ready' : 'waiting'}` as Label;
+            }
+            function literalType<T extends boolean>(value: T) {
+              type Label = `status: ${T extends true ? 'ready' : 'waiting'}`;
+              return (value ? 'status: ready' : 'status: waiting') as Label;
+            }
+            function typeOnly<T extends boolean>(value: T) {
+              type Label = `${T extends true ? 'yes' : 'no'}`;
+              return { value, labels: [] as Label[] };
+            }
+        """
+        for filename in ('labels.ts', 'labels.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([1, 1, 0], cogc(filename, source))
+
+    def test_interpolation_comment_does_not_stop_either_metric(self):
+        code = """
+            function label(ready) {
+              return `${ready /* GENERATED CODE is the banner text */ ? 'yes' : 'no'}`;
+            }
+        """
+        ordinary = analyze_file.analyze_source_code("label.js", code).function_list
+        measured = analyze("label.js", code).function_list
+
+        self.assertEqual([("label", 2)], [(f.name, f.cyclomatic_complexity) for f in ordinary])
+        self.assertEqual([("label", 2, 1)], [
+            (f.name, f.cyclomatic_complexity, f.cognitive_complexity) for f in measured
+        ])
+
+    def test_template_literal_types_in_call_arguments_are_not_runtime(self):
+        source = """
+            function empty<T>(value: string) { return value; }
+            function genericType<T extends boolean>() {
+              return empty<`${T extends true ? 'yes' : 'no'}`>('no');
+            }
+            function nestedType<T extends boolean>() {
+              return empty<Readonly<`${T extends true ? 'yes' : 'no'}`>>('no');
+            }
+            function compare(lower: string, flag: boolean) {
+              return lower < `${flag ? 'yes' : 'no'}`;
+            }
+        """
+        for filename in ('labels.ts', 'labels.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 0, 0, 1], cogc(filename, source))
+
+    def test_template_types_match_compiler_erased_runtime(self):
+        cases = (
+            (
+                "return format?.<`${T extends true ? 'on' : 'off'}`>('on');",
+                "return format?.('on');",
+                0, 'optional-call'),
+            (
+                "const formatStatus = format<`${T extends true ? 'on' : 'off'}`>\n"
+                "return formatStatus('on');",
+                "const formatStatus = format\nreturn formatStatus('on');",
+                0, 'instantiation'),
+            (
+                "return `state: ${format<`${T extends true ? 'on' : 'off'}`>"
+                "(enabled ? 'on' : 'off')}`;",
+                "return `state: ${format(enabled ? 'on' : 'off')}`;",
+                1, 'generic-call-in-runtime-template'),
+            (
+                "type Keys = keyof\n    `${T extends true ? 'on' : 'off'}`;\n"
+                "const key: Keys = 'length';\nreturn key;",
+                "const key = 'length';\nreturn key;",
+                0, 'multiline-keyof-alias'),
+            (
+                "return `${prefix < `${enabled ? 'on' : 'off'}`}`;",
+                "return `${prefix < `${enabled ? 'on' : 'off'}`}`;",
+                1, 'runtime-comparison-in-template'),
+            (
+                "return new Map<`${T extends true ? 'on' : 'off'}`, () => void>();",
+                "return new Map();",
+                0, 'generic-constructor'),
+        )
+        for suffix in ('ts', 'tsx'):
+            for typed, erased, expected, name in cases:
+                with self.subTest(suffix=suffix, case=name):
+                    source = (
+                        'const format = <Label,>(value: string) => value;\n'
+                        'function status<T>(enabled: boolean, prefix: string) {\n'
+                        f'{typed}\n'
+                        '}'
+                    )
+                    runtime = (
+                        'const format = (value) => value;\n'
+                        'function status(enabled, prefix) {\n'
+                        f'{erased}\n'
+                        '}'
+                    )
+                    control = analyze('status.js', runtime)
+                    result = analyze(f'status.{suffix}', source)
+                    self.assertEqual(expected, next(
+                        f.cognitive_complexity for f in control.function_list
+                        if f.name == 'status'))
+                    self.assertEqual(expected, next(
+                        f.cognitive_complexity for f in result.function_list
+                        if f.name == 'status'))
+
+    def test_multiline_template_comparisons_keep_runtime_decisions(self):
+        expressions = (
+            "low < `${(enabled ? 'yes' : 'no')}` >\n    high",
+            "`${low < `${(enabled ? 'yes' : 'no')}` >\n    high}`",
+            "low < `${(class Label extends (class {}) {} ? 'yes' : 'no')}` >\n    high",
+        )
+        for expression in expressions:
+            runtime = f"function compare(enabled, low, high) {{ return {expression}; }}"
+            self.assertEqual([1], cogc('compare.js', runtime))
+            source = (
+                'function compare(enabled: boolean, low: string, high: boolean) {'
+                f' return {expression}; }}'
+            )
+            for suffix in ('ts', 'tsx'):
+                with self.subTest(expression=expression, suffix=suffix):
+                    self.assertEqual([1], cogc(f'compare.{suffix}', source))
+
+    def test_runtime_groups_in_template_comparisons_keep_their_decisions(self):
+        expressions = (
+            "low < `${(class<T extends unknown> extends Base {} ? 'yes' : 'no')}` >\n high",
+            "`${low < `${(class<T extends unknown> extends Base {} ? 'yes' : 'no')}` >\n high}`",
+            "`${low < (enabled ? `${word}` : 'no') >\n high}`",
+            "`${low < (enabled && `${word}`) >\n high}`",
+        )
+        for expression in expressions:
+            runtime = ('class Base {}\nfunction compare(low, high, enabled, word) {'
+                       f'return {expression.replace("<T extends unknown>", "")}; }}')
+            self.assertEqual([1], cogc('compare.js', runtime))
+            source = ('class Base {}\nfunction compare('
+                      'low: any, high: any, enabled: boolean, word: string) {'
+                      f'return {expression}; }}')
+            for suffix in ('ts', 'tsx'):
+                with self.subTest(expression=expression, suffix=suffix):
+                    self.assertEqual([1], cogc(f'compare.{suffix}', source))
+
+    def test_template_type_after_comparisons_is_independent_of_padding(self):
+        prefix = 'read() < (' * 8 + 'read()' + ')' * 8
+        erased = (
+            'const format = (value) => value;\n'
+            f'function probe(read) {{ return `${{({prefix}, format("yes"))}}`; }}'
+        )
+        self.assertEqual([0, 0], cogc('probe.js', erased))
+        for suffix in ('ts', 'tsx'):
+            for spaces in (0, 129, 130, 134, 135, 1000):
+                with self.subTest(suffix=suffix, spaces=spaces):
+                    source = (
+                        'const format = <T,>(value: string) => value;\n'
+                        'function probe<T>(read: () => number) { return `${('
+                        f'{prefix}, format<`${{T extends true ? "yes" : "no"}}`>("yes"))'
+                        + ' ' * spaces + '}`; }'
+                    )
+                    self.assertEqual([0, 0], cogc(f'probe.{suffix}', source))
+
+    def test_template_statement_after_a_type_alias(self):
+        source = """
+            function label(value: boolean) {
+              type Label = string
+              `${value ? 'yes' : 'no'}`
+              return value
+            }
+        """
+        self.assertEqual([1], cogc('labels.tsx', source))
+
+    def test_runtime_ternary_and_conditional_type_inside_interpolation(self):
+        self.assertEqual([0, 1], cogc("status.ts", """
+            function label(value: unknown) {
+              return `${value as (unknown extends string ? number : string)}`;
+            }
+
+            function status(value: unknown) {
+              return `${value as boolean ? 'enabled' : 'off'}`;
+            }
+        """))
+
     def test_interpolation_in_block(self):
         self.assertEqual([3], cogc("a.js", """
             function label(item) {

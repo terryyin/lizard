@@ -28,6 +28,9 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         self._qualified_type = False
         self._reference_parenthesis = False
 
+    def owns_question_mark(self):
+        return bool(self._brackets or self._conditional_type)
+
     def _state_global(self, token):
         if token.isspace():
             self._line_break |= '\n' in token
