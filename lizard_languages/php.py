@@ -3,12 +3,100 @@ Language parser for PHP
 '''
 
 import re
+from functools import lru_cache
+
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .php_states import MEMBER_ACCESS, PHPLanguageStates
 from .token_pattern import compiled_token_pattern
 
 _BEFORE_MEMBER_NAME = MEMBER_ACCESS | {'function'}
+_OPENING_TAG = re.compile(r"<\?(?:php)?")
+_EXPLICIT_OPENING_TAG = r"<\?(?:=|(?i:php)(?=[ \t\r\n]|\Z))"
+_TEMPLATE_OPENING_TAG = re.compile(_EXPLICIT_OPENING_TAG + r"|<\?")
+_TOKEN_SPAN = re.compile(r".*", re.S)
+_LABEL_START = r'a-zA-Z_\x80-\U0010ffff'
+_LABEL_CHAR = _LABEL_START + '0-9'
+_DOC_OPENER = (
+    rf"""[bB]?<<<[ \t]*(?P<doc_quote>['"]?)(?P<doc_label>[{_LABEL_START}][{_LABEL_CHAR}]*)(?P=doc_quote)"""
+    r"(?:\r\n|[\r\n])"
+)
+_INTERPOLATION = r"\{(?=\$)|\$\{"
+_LINE_COMMENT_END = r"[^\r\n]*?(?=\?>|[\r\n]|\Z)"
+
+
+def _quoted_prefix(quote, group):
+    # Match ordinary strings entirely in the tokenizer. Stop at an
+    # interpolation opener so the scanner can skip its PHP expression.
+    text = rf"[^{quote}\\{{$]*"
+    return rf"{quote}{text}(?:(?:\\.|\{{(?!\$)|\$(?!\{{)){text})*(?:{quote}|(?P<{group}>{_INTERPOLATION}))"
+
+
+_STRING_TOKENS = '|'.join((
+    r"[bB]?'[^'\\]*(?:\\.[^'\\]*)*'",
+    r"[bB]?" + _quoted_prefix('"', 'double_quote'),
+    _quoted_prefix('`', 'backtick'),
+    _DOC_OPENER,
+))
+_INTERPOLATION_TOKENS = re.compile(
+    r"/\*.*?\*/|(?://|\#(?!\[))" + _LINE_COMMENT_END + r"|\?>|[{}]|" + _STRING_TOKENS, re.S
+)
+_QUOTED_ENDS = {
+    name: re.compile(rf"{quote}|{_INTERPOLATION}|\\.", re.S)
+    for name, quote in (('double_quote', '"'), ('backtick', '`'))
+}
+
+
+@lru_cache(maxsize=128)
+def _doc_end(label, interpolate):
+    closing = rf"(?<=[\r\n])[ \t]*{re.escape(label)}(?![{_LABEL_CHAR}])"
+    if interpolate:
+        closing += rf"|{_INTERPOLATION}|\\[^\r\n]"
+    return re.compile(closing)
+
+
+def _string_end(source, opener):
+    kind = opener.lastgroup
+    pos = opener.end()
+    if kind == 'doc_label':
+        boundaries = _doc_end(opener['doc_label'], opener['doc_quote'] != "'")
+    else:
+        boundaries = _QUOTED_ENDS[kind]
+        pos = _expression_end(source, pos)
+    while pos is not None and (boundary := boundaries.search(source, pos)):
+        pos = boundary.end()
+        if boundary[0] in ('{', '${'):
+            pos = _expression_end(source, pos)
+        elif not boundary[0].startswith('\\'):
+            return pos
+    return None
+
+
+def _expression_end(source, pos):
+    depth = 1
+    while True:
+        for match in _INTERPOLATION_TOKENS.finditer(source, pos):
+            if match.lastindex:
+                pos = _string_end(source, match)
+                if pos is None:
+                    return None
+                break
+            token = match[0]
+            if token == '{':
+                depth += 1
+            elif token == '}':
+                depth -= 1
+                if depth == 0:
+                    return match.end()
+            elif token == '?>':
+                tag = _TEMPLATE_OPENING_TAG.search(source, match.end())
+                # A bare tag depends on the runtime short_open_tag setting.
+                if tag is None or tag[0] == '<?':
+                    return None
+                pos = tag.end()
+                break
+        else:
+            return None
 
 
 class PHPReader(CodeReader, CCppCommentsMixin):
@@ -27,26 +115,43 @@ class PHPReader(CodeReader, CCppCommentsMixin):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        addition += r"|(?:\$\w+)"
-        addition += r"|(?:\<{3}(?P<quote>\w+).*?(?P=quote))"
-        addition += PHPReader._non_ternary_question_operators
+        variables = r"|(?:\$\w+)"
         # PHP comparisons must not use the shared generic angle-bracket rule.
-        addition += r"|<<=|<=|<"
+        operators = PHPReader._non_ternary_question_operators + r"|<<=|<=|<"
         # A closing tag ends a line comment, but not a string or block comment.
-        addition += r"|(?://|\#)[^\n]*?(?=\?>|\n|\Z)|\?>"
-        pattern = compiled_token_pattern(addition)
+        comments = r"|(?://|\#(?!\[))" + _LINE_COMMENT_END + r"|\?>"
+        pattern = compiled_token_pattern(addition + variables +
+                                         rf"""|(?=[bB'"`<])(?:{_STRING_TOKENS})""" + operators + comments)
+        legacy_pattern = None
         current_pos = 0
-        opening_tag = re.compile(r"\<\?(?:php)?")
-        while match := opening_tag.search(source_code, current_pos):
-            if source_code[current_pos:match.start()]:
-                yield '"' + source_code[current_pos:match.start()] + '"'
-            for token_match in pattern.finditer(source_code, match.end()):
-                if token_match.group(0) == '?>':
-                    current_pos = token_match.end()
-                    break
-                yield token_class(token_match) if token_class else token_match.group(0)
-            else:
-                return
+        while tag := _OPENING_TAG.search(source_code, current_pos):
+            if current_pos < tag.start():
+                yield '"' + source_code[current_pos:tag.start()] + '"'
+            pos = tag.end()
+            while pos is not None:
+                for match in pattern.finditer(source_code, pos):
+                    if match.lastindex and match.lastgroup in ('doc_label', 'double_quote', 'backtick'):
+                        end = _string_end(source_code, match)
+                        if end is None:
+                            if legacy_pattern is None:
+                                legacy_pattern = compiled_token_pattern(
+                                    addition + variables + r"|(?:<<<(?P<quote>\w+).*?(?P=quote))"
+                                    + operators + r"|(?://|\#)[^\n]*?(?=\?>|\n|\Z)|\?>")
+                            match = legacy_pattern.match(source_code, match.start())
+                            end = match.end()
+                        elif token_class:
+                            match = _TOKEN_SPAN.match(source_code, match.start(), end)
+                        yield token_class(match) if token_class else source_code[match.start():end]
+                        pos = end
+                        break
+                    token = match[0]
+                    if token == '?>':
+                        current_pos = match.end()
+                        pos = None
+                        break
+                    yield token_class(match) if token_class else token
+                else:
+                    return
         if source_code[current_pos:]:
             yield '"' + source_code[current_pos:] + '"'
 

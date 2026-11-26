@@ -4,9 +4,8 @@
 
 import { existsSync } from "node:fs";
 import { dirname } from "node:path";
+import { takenHeading } from "./product-backlog-document.mjs";
 import { requireField } from "./product-backlog-refusal.mjs";
-import { reportRecordState } from "./product-backlog-report.mjs";
-import { readExpectedBasis } from "./product-backlog-request.mjs";
 import { deriveStartEligibility } from "./product-backlog-start-eligibility.mjs";
 import { applyToBacklog, readFile } from "./product-backlog-store.mjs";
 import {
@@ -15,6 +14,16 @@ import {
   recordPreparation,
 } from "./product-backlog-story-state-home.mjs";
 import { linkTakenPlan } from "./product-backlog-take.mjs";
+
+// The basis a preparation record was read from, when the caller states one.
+function readExpectedBasis(values) {
+  if (
+    values["expect-document"] === undefined &&
+    values["expect-plan"] === undefined
+  )
+    return undefined;
+  return { document: values["expect-document"], plan: values["expect-plan"] };
+}
 
 // A planned approach recorded for work already in "## Taken" also links that
 // entry to its plan, as taking planned work does. The link is checked against
@@ -62,6 +71,31 @@ export async function recordState(file, values) {
     });
   }
   console.log(reportRecordState({ ...outcome, linked, target }, values.file));
+}
+
+function reportRecordState(outcome, file) {
+  const { identity, key, refinement, approach, assessment } = outcome.state;
+  const approachText =
+    approach.kind === "planned" ? `planned (${approach.plan})` : approach.kind;
+  const verb = outcome.result === "recorded" ? "Recorded" : "Replaced";
+  const assessmentText =
+    assessment?.status === "ready" || assessment?.status === "not-ready"
+      ? ` Assessment ${assessment.status}${
+          assessment.status === "not-ready"
+            ? ` (${assessment.reasons.join("; ")})`
+            : ""
+        }.`
+      : "";
+  const backlogText =
+    outcome.linked?.result === "linked"
+      ? `Linked its ${takenHeading} entry to the plan ${outcome.target} in ` +
+        `${file}; other stories and entries were not changed.`
+      : `Other stories and the backlog were not changed.`;
+  return (
+    `${verb} preparation for "${identity}" in ${key}: ` +
+    `refinement ${refinement}, approach ${approachText}.` +
+    `${assessmentText} ${backlogText}`
+  );
 }
 
 // Prints the recorded preparation with the start eligibility derived from it

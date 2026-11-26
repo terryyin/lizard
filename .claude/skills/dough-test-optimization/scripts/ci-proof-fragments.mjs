@@ -3,12 +3,7 @@
 // report establishes or its publisher declares (ci-proof-evidence.mjs,
 // "Units"). Node built-ins only, like the rest of the collector
 // (ci-proof-summary.mjs).
-import {
-  DECLARED_UNITS,
-  LEGACY_UNIT,
-  fragment,
-  zeroCounts,
-} from "./ci-proof-contract.mjs";
+import { DECLARED_UNITS, fragment, zeroCounts } from "./ci-proof-contract.mjs";
 import {
   breakdownExtras,
   emptyFigures,
@@ -180,11 +175,9 @@ function durationsOf(times, entries) {
 
 // An outcomes file, one `<status><TAB><check path>` line per check, as one
 // fragment per entry. The format does not say what a line's outcome is, so
-// UNIT declares it: `case` when each line is one test case's outcome, `file`
-// when each is one file's aggregate outcome. Without UNIT the results are
-// legacy, labelled `checks` as before units were declared, and never read as
-// either. Each check counts toward the entry
-// whose path contains it: status `passed` and `failed` as such, any other as
+// UNIT declares it as `case` when each line is one test case's outcome or
+// `file` when each is one file's aggregate outcome. Each check counts toward
+// the entry whose path contains it: status `passed` and `failed` as such, any other as
 // other. A check in no entry proves no entry, so it counts toward none.
 // Optional TIMES text, same labels as outcomes, sets each matching entry's
 // durationMs to the sum of its checks' seconds as milliseconds. With
@@ -198,13 +191,11 @@ export function fragmentsFromOutcomes(
   timesText,
   { byFile = false, unit } = {},
 ) {
-  if (unit !== undefined && !DECLARED_UNITS.includes(unit)) {
+  if (!DECLARED_UNITS.includes(unit)) {
     throw new Error(
-      `the outcomes unit ${unit} is not ${DECLARED_UNITS.join(" or ")}`,
+      `outcomes require a unit of ${DECLARED_UNITS.join(" or ")}`,
     );
   }
-  const counted =
-    unit === undefined ? { unit: LEGACY_UNIT, label: "checks" } : { unit };
   const counts = new Map(
     identity.entries.map((entry) => [entry, zeroCounts()]),
   );
@@ -244,6 +235,6 @@ export function fragmentsFromOutcomes(
         : {}),
       ...(byFile ? breakdownExtras(breakdowns.get(entry)) : {}),
     };
-    return fragment(identity, entry, counted, counts.get(entry), extras);
+    return fragment(identity, entry, { unit }, counts.get(entry), extras);
   });
 }

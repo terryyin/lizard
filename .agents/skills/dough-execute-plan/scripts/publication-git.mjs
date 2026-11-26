@@ -14,6 +14,25 @@ export async function revParse(cwd, ref) {
   return (await git(cwd, "rev-parse", ref)).stdout.trim();
 }
 
+// Verify a ref, even if its object is missing. Extra options can request
+// output before the verified name. Only an unresolved ref returns false.
+export async function verifyRef(checkout, ref, ...extra) {
+  try {
+    const { stdout } = await git(
+      checkout,
+      "rev-parse",
+      ...extra,
+      "-q",
+      "--verify",
+      ref,
+    );
+    return { verified: true, stdout };
+  } catch (error) {
+    if (error.code !== 1) throw error;
+    return { verified: false, stdout: error.stdout };
+  }
+}
+
 // The full commit ID a hexadecimal object ID, full or uniquely abbreviated,
 // names in `cwd` as `{ commit }`, or `{ problem }` when it names none:
 // `not-an-object-id` (such as a ref name), `unknown`, `ambiguous` (more than
@@ -87,18 +106,28 @@ export async function pushExactRef(workspace, sha, remote, targetRef) {
 // Full index and patch snapshots stay in test fixtures, which prove
 // preservation independently of this production inspection. A caller that
 // already read HEAD passes it as `head`.
-export async function inspectCheckout(checkout, head) {
+export async function inspectCheckout(checkout, head, statusOptions = []) {
   return {
     head: head ?? (await revParse(checkout, "HEAD")),
-    status: (await git(checkout, "status", "--porcelain")).stdout,
+    status: (await git(checkout, "status", "--porcelain", ...statusOptions))
+      .stdout,
   };
 }
 
-// Soft-fail lookup of the workspace's remote-tracking tip for an authorized
-// target. Missing tracking refs are treated as an absent remote tip.
+// Read the authorized remote-tracking tip, or null when it is absent.
 export async function fetchedTarget(workspace, targetRef, remote = "origin") {
+  return readTrackingTip(workspace, originTrackingRef(targetRef, remote));
+}
+
+// Fetch and pin the observed tip of an authorized tracking ref for a decision.
+export async function observePublicationTarget(workspace, remote, tracking) {
+  await git(workspace, "fetch", remote);
+  return readTrackingTip(workspace, tracking);
+}
+
+export async function readTrackingTip(workspace, tracking) {
   try {
-    return await revParse(workspace, originTrackingRef(targetRef, remote));
+    return await revParse(workspace, tracking);
   } catch (error) {
     const text = `${error.stderr ?? ""}\n${error.message ?? ""}`;
     if (

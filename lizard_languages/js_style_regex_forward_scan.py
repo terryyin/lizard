@@ -1,5 +1,7 @@
 '''Full forward regex-context scan when of/await/for/async structure matters.'''
 
+import re
+
 from .js_style_regex_context import (
     _EXPRESSION_KEYWORDS,
     _LINE_ENDS,
@@ -8,6 +10,7 @@ from .js_style_regex_context import (
     _STRING_LINE_ENDS,
     _apply_marks,
 )
+from .ruby_documentation import match_opaque_span, may_have_documentation
 
 
 def mark_forward(source, js_family):
@@ -228,6 +231,20 @@ def mark_forward(source, js_family):
         i += 1
         after_operand()
 
-    while i < n:
-        advance()
+    if not js_family and may_have_documentation(source):
+        from .ruby import _PERCENT_LITERAL
+        percent_literal = re.compile(_PERCENT_LITERAL, re.S)
+        # A quote in documentation must not hide a later regex.
+        while i < n:
+            if source[i] in '=%_':
+                span = match_opaque_span(source, i, percent_literal)
+                if span:
+                    if source[i] == '%':
+                        after_operand()
+                    i = span.end()
+                    continue
+            advance()
+    else:
+        while i < n:
+            advance()
     return _apply_marks(source, marks)

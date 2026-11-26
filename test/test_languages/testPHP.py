@@ -36,8 +36,10 @@ class Test_tokenizing_PHP(unittest.TestCase):
     def test_multiple_line_string(self):
         self.check_tokens(['"this is a string\nwith two lines"'], '<?php"this is a string\nwith two lines"?>')
 
-    def test_multiple_line_string_alternative(self):
-        self.check_tokens(['<<<blah xxx blah'], '<?php<<<blah xxx blah?>')
+    def test_heredoc_token(self):
+        literal = '<<<NOTICE\nThis is a notice.\nNOTICE'
+        self.check_tokens(['\n', 'echo', ' ', literal, ';', '\n'],
+                          '<?php\necho ' + literal + ';\n')
 
     def test_dollar_var(self):
         self.check_tokens(['$a'], '<?$a?>')
@@ -80,6 +82,106 @@ class TestPHPOperatorNestingDepth(unittest.TestCase):
         self.assertEqual(1, functions[0].max_nesting_depth)
 
 
+class TestPHPStrings(unittest.TestCase):
+
+    def test_quoted_multiline_strings(self):
+        for label in ("'NOTICE'", '"NOTICE"'):
+            with self.subTest(label=label):
+                source = '''<?php
+function adminNotice() {
+    return <<<LABEL
+        Show this warning if maintenance is active.
+        NOTICE;
+}
+function isAdmin($user) {
+    return $user->isAdmin();
+}
+'''.replace('LABEL', label)
+                functions = get_php_function_list(source)
+                self.assertEqual([('adminNotice', 2, 6, 1), ('isAdmin', 7, 9, 1)],
+                                 [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_nested_heredoc_delimiter(self):
+        for expression in ('<<<NOTICE\nMaintenance starts at midnight.\nNOTICE',
+                           '"Maintenance starts at midnight.\nNOTICE\nCheck the status page."'):
+            with self.subTest(expression=expression):
+                source = '''<?php
+function renderNotice($view) {
+    return <<<"NOTICE"
+{$view->render(EXPRESSION)}
+Check the status page if maintenance is active.
+NOTICE;
+}
+
+function isMaintenanceActive($status) {
+    return $status === 'maintenance';
+}
+'''.replace('EXPRESSION', expression)
+                functions = get_php_function_list(source)
+                self.assertEqual([('renderNotice', 2, 9, 1), ('isMaintenanceActive', 11, 13, 1)],
+                                 [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_heredoc_expressions(self):
+        for argument in ('"{$labels["https://example.org/status"]}"', '#[Template] fn() => "active"'):
+            with self.subTest(argument=argument):
+                source = '''<?php
+function renderNotice($view, $labels) {
+    return <<<NOTICE
+{$view->render(ARGUMENT)}
+Check the status page if maintenance is active.
+NOTICE;
+}
+
+function renderFallback() {
+    return <<<NOTICE
+Please contact support if the page is unavailable.
+NOTICE;
+}
+'''.replace('ARGUMENT', argument)
+                functions = get_php_function_list(source)
+                self.assertEqual([('renderNotice', 2, 7, 1), ('renderFallback', 9, 13, 1)],
+                                 [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_label_in_heredoc_text(self):
+        functions = get_php_function_list('''<?php
+function updateNotice($version) {
+    return <<<NOTICE
+        System NOTICE: if version $version is unsupported, contact support.
+        NOTICE;
+}
+''')
+        self.assertEqual([('updateNotice', 6, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_nowdoc_opener_in_string(self):
+        for literal in (
+            """`sed 's/REPORT/Preview/' <<<'REPORT'
+`""",
+            '''"Example: {$view->render("Use the <<<'REPORT'
+marker to start a nowdoc.")}"''',
+        ):
+            with self.subTest(literal=literal):
+                source = '''<?php
+function previewReport($view) {
+    return LITERAL;
+}
+
+function formatReport() {
+    return <<<REPORT
+Show the report if it is ready.
+REPORT;
+}
+'''.replace('LITERAL', literal)
+                self.assertIn(literal, list(PHPReader.generate_tokens(source)))
+                functions = get_php_function_list(source)
+                self.assertEqual([('previewReport', 2, 5, 1), ('formatReport', 7, 11, 1)],
+                                 [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                                  for f in functions])
+
+
 class Test_parser_for_PHP(unittest.TestCase):
 
     def test_closing_tag_in_string_preserves_later_methods(self):
@@ -114,6 +216,33 @@ class Example {
                     ('Example::fourth', 16 + offset, 18 + offset, 1),
                 ], [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
                     for f in functions])
+
+    def test_inline_attributes_keep_function_signatures(self):
+        functions = get_php_function_list("""<?php
+class TokenStore {
+    public function issue(#[SensitiveParameter] string $token): string {
+        return hash('sha256', $token);
+    }
+}
+
+#[Deprecated] function oldLimit(): int {
+    return 10;
+}
+""")
+        self.assertEqual([('TokenStore::issue', 3, 5), ('oldLimit', 8, 10)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_attribute_markers_in_nowdoc_stay_text(self):
+        functions = get_php_function_list("""<?php
+function sample(): string {
+    return <<<'EXAMPLE'
+    #[SensitiveParameter] if this contains sensitive data.
+    EXAMPLE;
+}
+""")
+        self.assertEqual([('sample', 2, 6, 1)], [
+            (f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in functions
+        ])
 
     def test_real_closing_tag_still_separates_php_from_html(self):
         for closing in ('?>', '// ?>', '# ?>', '/* ?> */ ?>', 'echo $x < 1 ?>'):

@@ -44,9 +44,11 @@ retirement that procedure orders; report gaps.
 After the final accepted SHA's completion receipt and the finished visit, run
 the installed `story-branch-session-record.mjs record` with
 `--workspace <owned workspace>`, `--published-tip <saved final-closure tip>`,
-`--integrated-sha <integrated SHA>`, `--branch <execution branch>`, and the
-integration's `--landing-context` when the launch supplied one. It publishes
-the session's record as a separate commit on trunk. A printed
+`--integrated-sha <integrated SHA>`, `--branch <execution branch>`, and
+`--target-ref <target from the integration receipt>`. Pass the integration's
+`--remote` if it differs from `origin` and its `--landing-context` when the
+launch supplied one. The command publishes the session's record as a separate
+commit on trunk. A printed
 `stopped: "record"` blocks retirement: follow its `recovery`.
 
 ## Retire Story Branch resources
