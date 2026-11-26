@@ -1,13 +1,14 @@
 import unittest
 
-from lizard import analyze_file
+from lizard import FileAnalyzer, analyze_file, get_extensions
 
 
 class TestJavaScriptRegex(unittest.TestCase):
     extensions = ('js', 'ts', 'jsx', 'tsx')
+    script_extensions = ('js', 'ts')
 
-    def assert_functions(self, source, expected):
-        for extension in self.extensions:
+    def assert_functions(self, source, expected, extensions=None):
+        for extension in self.extensions if extensions is None else extensions:
             with self.subTest(extension=extension):
                 functions = analyze_file.analyze_source_code(
                     'a.' + extension, source).function_list
@@ -75,6 +76,101 @@ class TestJavaScriptRegex(unittest.TestCase):
         )
         self.assert_functions(source, [('a', 1, 7, 2), ('b', 8, 8, 1)])
 
+    def test_regex_literals_as_right_operands(self):
+        source = '''\
+function isInPrefix(label, offset) {
+  return offset >= 0 && offset < /^[a-z]+ ?/i.exec(label)?.[0].length;
+}
+function exceedsPrefix(label, offset) {
+  return offset > /^[a-z]+ ?/i.exec(label)?.[0].length;
+}
+function averageWords(length, label, fallback) {
+  return length / /^[a-z]+ ?/i.exec(label)?.[0].length || fallback;
+}
+'''
+        for suffix in ('js', 'cjs', 'mjs'):
+            with self.subTest(suffix=suffix):
+                functions = analyze_file.analyze_source_code('label.' + suffix, source).function_list
+                self.assertEqual(
+                    [('isInPrefix', 2, 27), ('exceedsPrefix', 1, 23), ('averageWords', 2, 27)],
+                    [(f.name, f.cyclomatic_complexity, f.token_count) for f in functions])
+
+    def test_regex_operands_keep_only_real_decisions(self):
+        cases = (
+            ('"" + /colou?r/.source', 1, 12, 0),
+            ('n < /colou?r/.source.length', 1, 14, 0),
+            ('n > /colou?r/.source.length', 1, 14, 0),
+            ('n / /colou?r/.source.length', 1, 14, 0),
+            ('n > /colou?r/.source.length ? n : 0', 2, 18, 1),
+            ('n < 10 && n > /colou?r/.source.length', 2, 18, 1),
+            ('n < 10 ? true : n > /colou?r/.source.length', 2, 20, 1),
+            ('n++ / (n || 1) / 100', 2, 17, 1),
+            ('n > 1 && n < 4 ? n / 2 : 0', 3, 20, 2),
+        )
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        for prefix in ('', 'async function ready() { return true; }\n'):
+            for expression, ccn, tokens, cognitive in cases:
+                for suffix in self.script_extensions:
+                    with self.subTest(expression=expression, suffix=suffix, prefix=prefix):
+                        source = prefix + f'function sample(n){{return {expression};}}'
+                        function = analyzer.analyze_source_code('sample.' + suffix, source).function_list[-1]
+                        self.assertEqual(('sample', ccn, tokens, cognitive), (
+                            function.name, function.cyclomatic_complexity,
+                            function.token_count, function.cognitive_complexity))
+
+    def test_top_level_await_does_not_turn_regex_end_into_a_divisor(self):
+        source = '''
+const active = await / /g.test(format(() => enabled ? primary : fallback)) / divider;
+function stable() { return 1; }
+'''
+        for prefix in ('', '// Wait for the value.\n', 'for (const value of []) {}\n'):
+            with self.subTest(prefix=prefix):
+                info = analyze_file.analyze_source_code('preview.mjs', prefix + source)
+                self.assertEqual([('(anonymous)', 2), ('stable', 1)], [
+                    (function.name, function.cyclomatic_complexity)
+                    for function in info.function_list])
+
+    def test_yield_operand_and_comparison_regex_in_the_forward_scan(self):
+        source = '''
+// Normalize totals for display.
+function percent(total, count, yield, scale, label) {
+  return total / count > yield / (scale || 1) / 100 && label.length < /colou?r/.test(label);
+}
+'''
+        self.assert_functions(source, [('percent', 3, 5, 3)], extensions=('js',))
+
+    def test_call_and_comment_before_a_regex_divisor(self):
+        for left, trivia in (('total()', ' '), ('total', ' /* average */ ')):
+            for prefix in ('', '// Adjust for wide labels.\n'):
+                with self.subTest(left=left, trivia=trivia, prefix=prefix):
+                    source = prefix + f'''
+function average(text, total) {{
+  return {left} /{trivia}/colou?r/i.exec(text)?.[0].length;
+}}
+'''
+                    line = 3 if prefix else 2
+                    self.assert_functions(source, [('average', line, line + 2, 1)],
+                                          extensions=('js', 'cjs', 'mjs'))
+
+    def test_division_after_a_generic_type_assertion(self):
+        cases = (
+            ('(scale || 1) / 100', 2, 27),
+            ('"text/?".length / 100', 1, 25),
+            ('/colou?r/.source.length', 1, 25),
+        )
+        for prefix in ('', 'async function ready() { return true; }\n'):
+            for divisor, ccn, tokens in cases:
+                with self.subTest(divisor=divisor, prefix=prefix):
+                    source = prefix + f'''\
+type Unit<T> = number;
+function proportion(total: number, scale: number) {{
+  return total as Unit<'cent'> / {divisor};
+}}
+'''
+                    function = analyze_file.analyze_source_code('amount.ts', source).function_list[-1]
+                    self.assertEqual(('proportion', ccn, tokens), (
+                        function.name, function.cyclomatic_complexity, function.token_count))
+
     def test_whitespace_before_regex_preserves_lines(self):
         source = (
             'function a(x) {\n'
@@ -85,6 +181,216 @@ class TestJavaScriptRegex(unittest.TestCase):
             'function b() { return "str"; }\n'
         )
         self.assert_functions(source, [('a', 1, 5, 1), ('b', 6, 6, 1)])
+
+    def test_regex_after_comments_preserves_function_complexity(self):
+        cases = (
+            ('block', """function matches(s) {
+              const ok = /* spelling */ /colou?r/.test(s);
+            }""", 1, 0),
+            ('line', """function matches(s) {
+              return (
+                // spelling
+                /colou?r/.test(s) && s.length > 2
+              );
+            }""", 2, 1),
+            ('mixed', """function matches(s, found, total) {
+              return found / total > 0 && // require a match
+                /* spelling */ /colou?r/.test(s);
+            }""", 2, 1),
+            ('prefix', """function matches(s) {
+              return ! /* exclude other spellings */ /colou?r/.test(s);
+            }""", 1, 0),
+            ('nonbreaking space', """async function matches(s) {
+              const ok = /* spelling */\u00a0/colou?r/.test(s);
+            }""", 1, 0),
+            ('byte order mark', """function matches(s) {
+              const ok = (
+                // spelling
+                \ufeff/colou?r/.test(s)
+              );
+            }""", 1, 0),
+        )
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        for extension in self.script_extensions:
+            for name, source, ccn, cognitive in cases:
+                with self.subTest(extension=extension, comment=name):
+                    functions = analyzer.analyze_source_code(
+                        'a.' + extension, source).function_list
+                    self.assertEqual([('matches', ccn, cognitive)], [
+                        (f.name, f.cyclomatic_complexity, f.cognitive_complexity)
+                        for f in functions])
+
+    def test_regex_after_comment_in_webpack_header(self):
+        source = r'''function removeRaster(options, name, trimSvgValue, xmlAttributeValue, attributes, href) {
+          if (
+            options.removeSvgRasterImages === true &&
+            name === "image" &&
+            // A data URL's media type, or else the path's extension, says what it is.
+            /^(?:data:image\/(?:jpe?g|png|gif)[;,]|(?!data:)[^?#]*\.(?:jpe?g|png|gif)(?:[?#]|$))/i.test(
+              trimSvgValue(xmlAttributeValue(
+                /** @type {number} */ (attributes.get("href") || (href === undefined ? 0 : href))
+              ))
+            )
+          ) return true;
+        }'''
+        self.assert_functions(source, [('removeRaster', 1, 12, 6)], self.script_extensions)
+
+    def test_division_continues_after_comments(self):
+        self.assert_ccn_and_tokens("""
+            function divide(a, b, c) { return a /* note */ / b / c; }
+        """, 1, 16)
+        self.assert_ccn_and_tokens("""
+            function divide(x, y, z) {
+              x = y // note
+                / 2 / (z || 1);
+              return x;
+            }
+        """, 2, 24)
+        self.assert_ccn_and_tokens("""function convert(total, packs, size) {
+          return total / packs /* https://example.org/units */
+            / (size || 1) / 100;
+        }""", 2, 22)
+
+    def test_arrow_regex_after_division_and_comment(self):
+        source = """function build(total, count, text) {
+          return total / count > 0 && (() => /* spelling */ /colou?r/.test(text))();
+        }"""
+        self.assert_functions(source, [('(anonymous)', 2, 2, 1), ('build', 1, 3, 2)], self.script_extensions)
+
+    def test_jsx_url_does_not_hide_a_child_expression(self):
+        source = '''function EndpointExample(usePreview: boolean) {
+          return <pre>
+            https://api.example.com
+            /{usePreview ? "preview" : "v1"}/users
+          </pre>;
+        }'''
+        self.assert_functions(source, [('EndpointExample', 1, 6, 2)], ('tsx',))
+
+    def test_url_in_division_operand_stays_in_its_string(self):
+        for quote in ('"', "'", '`'):
+            with self.subTest(quote=quote):
+                source = f"""function convert(total, scale) {{
+                  return total / {quote}https://example.org/units{quote}.length
+                    / (scale || 1) / 100;
+                }}"""
+                self.assert_functions(source, [('convert', 1, 4, 2)])
+
+    def test_member_name_before_line_comment_still_allows_division(self):
+        source = """function divide(obj, a, b, c) {
+          return obj. // member
+            return // divide this value
+            / (a || b) / c;
+        }"""
+        self.assert_ccn_and_tokens(source, 2, 24)
+
+    def test_private_and_unicode_names_still_allow_division(self):
+        source = r"""class Share {
+          #return = 120;
+          scale(a, b, c) {
+            const share = this.#return // validated
+              / (a || b) / c;
+            return share;
+          }
+        }
+        function normalize(a, b, c) {
+          const πin = a;
+          const \u{03c0}instanceof = b;
+          const mass = πin // validated
+            / (a || b) / c;
+          return \u{03c0}instanceof // validated
+            / (mass || 1) / c;
+        }"""
+        self.assert_functions(source, [('scale', 3, 7, 2), ('normalize', 9, 16, 3)])
+
+    def test_non_null_assertion_before_comment_still_allows_division(self):
+        source = """function divide(value: number | undefined, divisor: number) {
+          return value! /* use the validated value */ / (divisor || 1) / 3;
+        }"""
+        for extension in ('ts', 'tsx'):
+            with self.subTest(extension=extension):
+                functions = analyze_file.analyze_source_code(
+                    'a.' + extension, source).function_list
+                self.assertEqual([2], [f.cyclomatic_complexity for f in functions])
+
+    def test_braceless_if_regex_keeps_following_conditions(self):
+        self.assert_functions('''function collect(source, found, count) {
+          if (source) /return/.test(source) && found.push(source); return (found.length || 1) / count;
+        }''', [('collect', 1, 3, 4)])
+        self.assert_functions('''function accepts(s) {
+          if (s) /["]/.test(s); return /colou?r/.test(s);
+        }''', [('accepts', 1, 3, 2)])
+
+    def test_module_regex_keeps_following_function(self):
+        for opener in ('export default', 'await'):
+            with self.subTest(opener=opener):
+                source = opener + ' /["]/; export function matches(s) { return /colou?r/.test(s); }'
+                functions = analyze_file.analyze_source_code('a.mjs', source).function_list
+                self.assertEqual([('matches', 1)], [
+                    (f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_regex_in_class_heritage_keeps_method_body(self):
+        source = (
+            'class QuotePattern extends /return/.constructor {'
+            ' static match(s) { return matches(s) && s.length / 2; } }\n'
+            'function matches(s) { return /colou?r/.test(s); }'
+        )
+        self.assert_functions(source, [('match', 1, 1, 2), ('matches', 2, 2, 1)])
+
+    def test_yield_parameter_before_comment_still_allows_division(self):
+        source = """function convert(total, yield, scale, units) {
+          return total / yield /* normalize */ / (scale || 1) / units;
+        }
+        function convertAgain(total, yield, scale, units) {
+          return total / yield / (scale || 1) / units;
+        }
+        function convertLine(yield, scale) {
+          return yield // normalize the value
+            / (scale || 1) / 100;
+        }
+        function* patterns() {
+          yield /* spelling */ /colou?r/;
+        }
+        function normalize(total, yield, scale) {
+          return total / +yield / (scale || 1) / 100;
+        }
+        function normalizeComment(total, yield, scale) {
+          return total / +yield /* convert the input */ / (scale || 1) / 100;
+        }"""
+        self.assert_functions(source, [
+            ('convert', 1, 3, 2), ('convertAgain', 4, 6, 2),
+            ('convertLine', 7, 10, 2), ('patterns', 11, 13, 1),
+            ('normalize', 14, 16, 2), ('normalizeComment', 17, 19, 2)])
+
+    def test_binary_operator_before_yield_keeps_division(self):
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        for expression, ccn in (
+                ('total / count > yield / (scale || 1) / 100', 2),
+                ('total / count === yield / (scale || 1) / 100', 2),
+                ('total / count > yield /* target */ / (scale || 1) / 100', 2),
+                ('a + yield / (b || 1) / 2', 2),
+                ('total / count in yield / (scale || 1) / 100', 2),
+                ('total / count instanceof yield / (scale || 1) / 100', 2),
+                ('total / count ?? yield / (scale || 1) / 100', 3),
+                ('total /\n yield / (scale || 1) / 100', 2),
+                ('total / count >\n yield / (scale || 1) / 100', 2)):
+            with self.subTest(expression=expression):
+                source = (
+                    'function meetsTarget(total, count, yield, scale, a, b) {'
+                    f' return {expression}; }}')
+                functions = analyzer.analyze_source_code('a.js', source).function_list
+                self.assertEqual([('meetsTarget', ccn, 1)], [
+                    (f.name, f.cyclomatic_complexity, f.cognitive_complexity)
+                    for f in functions])
+
+    def test_yield_in_assignment_and_group_keeps_regex(self):
+        source = """function* patterns(a, s) {
+          const reply = yield /* spelling */ /colou?r/.test(s);
+          a <<= yield /colou?r/.test(s);
+          /prefix/
+          yield /colou?r/.test(s);
+          return a > (yield /colou?r/.test(s));
+        }"""
+        self.assert_functions(source, [('patterns', 1, 7, 1)], self.script_extensions)
 
     def test_shared_ruby_reader_keeps_quotes_inside_regex(self):
         source = (
@@ -118,6 +424,133 @@ class TestJavaScriptRegex(unittest.TestCase):
         self.assertEqual([('a', 2, 5, 1), ('b', 6, 6, 2)], [
             (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
             for f in functions])
+
+    def test_delegated_yield_regex_preserves_following_functions(self):
+        source = '''
+function* delegation() {
+  yield* yield /["]?colou?r/;
+}
+function next() {
+  return "ok";
+}
+function multiply(yield, scale) {
+  return yield * yield / (scale || 1) / 100;
+}
+'''
+        self.assert_functions(source, [('delegation', 2, 4, 1), ('next', 5, 7, 1),
+                                       ('multiply', 8, 10, 2)], extensions=('js',))
+
+    def test_generator_yield_after_a_typescript_instantiation(self):
+        source = '''
+declare function parse<T>(): T;
+
+export function* afterInstantiation() {
+  parse<number>
+  yield /colou?r/;
+}
+'''
+        self.assert_functions(source, [('afterInstantiation', 4, 7, 1)], extensions=('ts',))
+
+    def test_call_division_does_not_hide_a_later_commented_regex(self):
+        for operand in ('total()', 'total(value) /* recorded above */'):
+            with self.subTest(operand=operand):
+                source = f'''
+function normalize(value, text) {{
+  return {operand} / 2 + (/* alternate spelling */ /colou?r/.test(text) ? 1 : 0);
+}}
+'''
+                self.assert_functions(source, [('normalize', 2, 4, 2)],
+                                      extensions=('js', 'ts'))
+
+    def test_regex_statement_after_a_control_header(self):
+        source = '''
+function report(text) {
+  if (ready(text)) /colou?r/.test(text) && print(text);
+  return text;
+}
+'''
+        self.assert_functions(source, [('report', 2, 5, 3)], extensions=('js', 'ts'))
+
+    def test_delegated_yield_in_a_nested_block_keeps_following_functions(self):
+        source = '''\
+function* matches(enabled) {
+  if (enabled) {
+    yield* yield /["]?colou?r/;
+  }
+}
+function next() {
+  return "color";
+}
+'''
+        self.assert_functions(source, [('matches', 1, 5, 2), ('next', 6, 8, 1)],
+                              extensions=('js',))
+
+    def test_nested_functions_inside_a_generator_keep_yield_division(self):
+        source = '''\
+function* matches(scale) {
+  function normalize(yield, count) {
+    return yield * yield / (count || 1) / 100;
+  }
+  const callback = () => yield * yield / (scale || 1) / 100
+  if (scale) {
+    yield* yield /["]?colou?r/;
+  }
+}
+function next() { return "color"; }
+'''
+        self.assert_functions(source, [('normalize', 2, 4, 2), ('callback', 5, 5, 2),
+                                       ('matches', 1, 9, 2), ('next', 10, 10, 1)],
+                              extensions=('js',))
+
+    def test_nested_methods_keep_yield_division(self):
+        source = '''\
+function* matches(scale) {
+  const details = { read(yield, count) { return yield * yield / (count || 1) / 100; } };
+  if (scale) {
+    yield* yield /["]?colou?r/;
+  }
+}
+function next() { return "color"; }
+'''
+        self.assert_functions(source, [('read', 2, 2, 2), ('matches', 1, 6, 2),
+                                       ('next', 7, 7, 1)], extensions=('js',))
+
+    def test_nested_typed_functions_keep_yield_division(self):
+        source = '''\
+function* matches(scale: number) {
+  function normalize(yield: number, count: number): number {
+    return yield * yield / (count || 1) / 100;
+  }
+  if (scale) {
+    yield* yield /["]?colou?r/;
+  }
+}
+function next() { return "color"; }
+'''
+        self.assert_functions(source, [('normalize', 2, 4, 2), ('matches', 1, 8, 2),
+                                       ('next', 9, 9, 1)], extensions=('ts',))
+
+    def test_generator_yield_after_instantiation_with_function_typed_parameter(self):
+        source = '''\
+function* patterns(parse: <T>(input: string) => T) {
+  const parseNumber = parse<number>
+  yield /colou?r/
+  return parseNumber
+}
+'''
+        self.assert_functions(source, [('patterns', 1, 5, 1)], extensions=('ts',))
+
+    def test_typed_generator_yield_in_a_nested_block(self):
+        source = '''\
+function* patterns(parse: <T>(input: string) => T, enabled: boolean) {
+  if (enabled) {
+    const parseNumber = parse<number>
+    yield /colou?r/
+    return parseNumber
+  }
+}
+'''
+        self.assert_functions(source, [('patterns', 1, 7, 2)], extensions=('ts',))
 
     def test_return_regex_exposes_following_condition(self):
         source = (

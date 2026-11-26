@@ -3,6 +3,7 @@ generate token with javascript style regular expression.
 '''
 
 import re
+from functools import wraps
 
 from .js_style_regex_context import (
     REGEX_LITERAL,
@@ -40,6 +41,7 @@ def js_style_regex_expression(func=None, *, language='js'):
     token = REGEX_TOKEN_JSX if jsx else REGEX_TOKEN
 
     def decorator(generate_tokens):
+        @wraps(generate_tokens)
         def generate_tokens_with_regex(source_code, addition='', token_class=None):
             # Recognize literals before strings or JSX can consume their contents.
             marked = mark_regex_literal_starts(source_code, language=language)

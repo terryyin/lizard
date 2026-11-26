@@ -2,6 +2,7 @@
 Language parser for JavaScript
 '''
 
+from .js_style_regex_expression import js_style_regex_expression
 from .typescript import TypeScriptReader
 
 
@@ -14,3 +15,6 @@ class JavaScriptReader(TypeScriptReader):
 
     def __init__(self, context):
         super(JavaScriptReader, self).__init__(context)
+
+    generate_tokens = staticmethod(js_style_regex_expression(
+        TypeScriptReader.generate_tokens.__wrapped__, language='javascript'))

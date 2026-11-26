@@ -9,7 +9,8 @@ REGEX_LITERAL = (r"/(?![/*])(?:\\[^\r\n]|\[(?:\\[^\r\n]|[^\\\]\r\n])*\]"
 # Pre-token marker so REGEX_TOKEN needs no keyword lookbehind (tokens_in_span).
 REGEX_START_MARKER = "\ue000"
 # Trunk punctuation lookbehind plus marker form for pre-scanned opens.
-_PUNCT_OPEN = r"(?:\A|(?<=[=,({[?:!&|;]))"
+_EXPRESSION_PUNCTUATION = '=,({[?:!&|;'
+_PUNCT_OPEN = rf"(?:\A|(?<=[{_EXPRESSION_PUNCTUATION}]))"
 REGEX_TOKEN = (
     _PUNCT_OPEN + r"\s*" + REGEX_LITERAL
     + r"|" + r"\s*" + REGEX_START_MARKER + REGEX_LITERAL[1:]
@@ -29,6 +30,11 @@ REGEX_TOKEN_JSX = (
 )
 REGEX_TOKEN_PUNCT_JSX = _PUNCT_OPEN + r"\s*" + _JSX_LITERAL
 _REGEX_LITERAL_RE = re.compile(REGEX_LITERAL)
+# Match an operator before an operand. Compound assignments and arrows can
+# precede yield, as can a single question mark in a conditional expression.
+_OPERAND_OPERATOR = re.compile(r'(?:[=!]=|(?<!<)<=|(?<!>)>=|(?<!=)>|\?\?|[<+*/%~!&|^-])\Z')
+
+
 _EXPRESSION_KEYWORDS = frozenset({
     'return', 'typeof', 'instanceof', 'in', 'new', 'delete', 'void',
     'throw', 'case', 'do', 'else', 'yield',
@@ -39,18 +45,32 @@ _RUBY_EXPRESSION_KEYWORDS = _EXPRESSION_KEYWORDS | frozenset({
     'then', 'next', 'break',
 })
 _NEEDS_FORWARD = re.compile(r'\b(?:for|async)\b')
+
 # Cheap gate from the same keyword set; longer names first so ``in`` loses to
 # ``instanceof``. Skip the shared scan when no keyword/=> can open a literal.
 _MAYBE_KEYWORD_OPEN = re.compile(
     r'(?<![$\w])(?:'
     + '|'.join(sorted(_EXPRESSION_KEYWORDS, key=len, reverse=True))
     + r')\b|=>')
-_LINE_ENDS = frozenset('\r\n\u2028\u2029')
+_LINE_TERMINATORS = '\r\n\u2028\u2029'
+_LINE_ENDS = frozenset(_LINE_TERMINATORS)
+# Keep a divisor's trivia in the lexical span where it belongs.
+_OPERATOR_TRIVIA = rf'(?:[\s\ufeff]|/\*(?:[^*]|\*(?!/))*\*/|//[^{_LINE_TERMINATORS}]*[{_LINE_TERMINATORS}])'
+_DIVISOR_LEAD = '/' + _OPERATOR_TRIVIA + '+'
+_REGEX_DIVISOR = re.compile(_DIVISOR_LEAD + '(' + REGEX_LITERAL + ')')
+_OPERATOR_SLASH = re.compile(r'(?:[+<>]' + _OPERATOR_TRIVIA + '*|' + _DIVISOR_LEAD + r')/(?![/*])')
+_JS_SPACES = (' \t\v\f\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005'
+              '\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff')
+_JS_WHITESPACE = _LINE_ENDS | frozenset(_JS_SPACES)
+_BASIC_WHITESPACE = _LINE_ENDS | frozenset(' \t\v\f')
+# A slash after a block comment, or at the start of a line after a line comment.
+_MAYBE_COMMENT_OPEN = re.compile(
+    rf'\*/[{_JS_SPACES}{_LINE_TERMINATORS}]*/|[{_LINE_TERMINATORS}][{_JS_SPACES}]*/(?![/*])')
 # A string can hold U+2028 and U+2029, so only these end one that does not close.
 _STRING_LINE_ENDS = frozenset('\r\n')
-_WS = frozenset(' \t\v\f\r\n\u2028\u2029')
 _WORD_CONT = frozenset(
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$')
+_HEX = frozenset('0123456789abcdefABCDEF')
 # Pure-function memo for reused source objects (warmed analyzer batches).
 _MARK_CACHE = {}
 
@@ -78,13 +98,18 @@ def _mark_regex_literal_starts(source, language):
     if language == 'ruby':
         from .js_style_regex_forward_scan import mark_forward
         return mark_forward(source, js_family=False)
+    jsx = language == 'jsx'
+    operator_language = None
+    if not jsx and _OPERATOR_SLASH.search(source):
+        operator_language = 'javascript' if language == 'javascript' else 'typescript'
     if _NEEDS_FORWARD.search(source):
         from .js_style_regex_forward_scan import mark_forward
-        return mark_forward(source, js_family=True)
-    if _MAYBE_KEYWORD_OPEN.search(source) is None:
+        return mark_forward(source, js_family=True, jsx=jsx, operator_language=operator_language)
+    if (not operator_language and _MAYBE_KEYWORD_OPEN.search(source) is None
+            and (jsx or _MAYBE_COMMENT_OPEN.search(source) is None)):
         return source
     from .js_style_regex_keyword_scan import mark_keyword_slashes
-    return mark_keyword_slashes(source)
+    return mark_keyword_slashes(source, jsx=jsx, operator_language=operator_language)
 
 
 def _apply_marks(source, marks):
@@ -101,31 +126,141 @@ def _apply_marks(source, marks):
     return ''.join(parts)
 
 
+def _is_js_dividend(source, prev, word):
+    if prev < 0 or word in ('await', 'default', 'extends'):
+        return False
+    operand = source[prev]
+    return operand.isalnum() or operand in '_$]"`\''
+
+
+def _follows_type_arguments(source, close, comments):
+    """Recognize a possible TypeScript angle group before a slash."""
+    angles = 1
+    group_depth = 0
+    conditional_types = 0
+    pos = close - 1
+    while pos >= 0:
+        pos, _ = _before_comments(source, _skip_ws_back(source, pos), comments)
+        if pos < 0:
+            break
+        ch = source[pos]
+        if ch in '"\'`':
+            pos = _quoted_start(source, pos)
+        elif ch in ')]}':
+            group_depth += 1
+        elif ch in '([{':
+            if group_depth == 0:
+                return False
+            group_depth -= 1
+        elif group_depth == 0:
+            if ch == '>' and pos > 0 and source[pos - 1] == '=':
+                pos -= 1  # A function type's arrow.
+            elif ch == '>':
+                angles += 1
+            elif ch == '<':
+                angles -= 1
+                if angles == 0:
+                    return conditional_types == 0
+            elif ch in ';=+*/%!^~':
+                return False
+            elif ch in '&|?.' and source.endswith(('&&', '||', '??', '?.'), 0, pos + 1):
+                return False
+            elif ch == '?':
+                conditional_types += 1
+            elif conditional_types and ch == 's' and source.endswith('extends', 0, pos + 1):
+                word, before = _word_before(source, pos)
+                if word == 'extends':
+                    conditional_types -= 1
+                    pos = before + 1
+        pos -= 1
+    return False
+
+
+def _quoted_start(source, end):
+    quote = source[end]
+    pos = end
+    while True:
+        pos = source.rfind(quote, 0, pos)
+        if pos < 0:
+            return pos
+        before = pos - 1
+        while before >= 0 and source[before] == '\\':
+            before -= 1
+        if (pos - before) % 2:
+            return pos
+
+
+def _before_comments(source, i, comments):
+    line_comment = False
+    while i in comments:
+        start = comments[i]
+        line_comment = line_comment or source[start + 1] == '/'
+        i = _skip_ws_back(source, start - 1)
+    return i, line_comment
+
+
+def _yield_after_operator(source, start):
+    prev = _skip_ws_and_comments_back(source, start - 1)
+    if prev < 0 or _OPERAND_OPERATOR.search(source, max(0, prev - 1), prev + 1) is None:
+        return False
+    # A second yield can be the expression delegated by yield*.
+    if source[prev] == '*':
+        word, _ = _word_before(source, _skip_ws_and_comments_back(source, prev - 1))
+        if word == 'yield':
+            return False
+    return True
+
+
+def _opens_control_header(source, start):
+    prev = _skip_ws_and_comments_back(source, start - 1)
+    word, before = _word_before(source, prev)
+    if word not in ('if', 'while', 'for', 'with'):
+        return False
+    prefix = _skip_ws_and_comments_back(source, before)
+    return prefix < 0 or source[prefix] not in '.#'
+
+
+def _skip_ws_back(source, i):
+    while i >= 0 and source[i] in _JS_WHITESPACE:
+        i -= 1
+    return i
+
+
+def _word_before(source, i, *, unicode_names=True):
+    if i < 0 or source[i] not in _WORD_CONT:
+        return None, i
+    end = i + 1
+    while i >= 0 and source[i] in _WORD_CONT:
+        i -= 1
+    if unicode_names and i >= 0:
+        prefix = source[i]
+        # A keyword spelling must not be the suffix of a Unicode name.
+        if not prefix.isascii() and not prefix.isspace() and prefix != '\ufeff':
+            return None, i
+        if prefix == '}':
+            opening = i - 1
+            while opening >= 2 and source[opening] in _HEX:
+                opening -= 1
+            if opening >= 2 and source.startswith(r'\u{', opening - 2):
+                return None, i
+    return source[i + 1:end], i
+
+
 def _skip_ws_and_comments_back(source, i):
     while i >= 0:
         ch = source[i]
-        if ch in _WS:
+        if ch in _BASIC_WHITESPACE:
             i -= 1
-            continue
-        if ch == '/' and i >= 1 and source[i - 1] == '*':
+        elif ch == '/' and i >= 1 and source[i - 1] == '*':
             i -= 2
             while i >= 1:
                 if source[i - 1] == '/' and source[i] == '*':
                     i -= 2
                     break
                 i -= 1
-            continue
-        return i
+        else:
+            break
     return i
-
-
-def _word_before(source, i):
-    if i < 0 or source[i] not in _WORD_CONT:
-        return None, i
-    end = i + 1
-    while i >= 0 and source[i] in _WORD_CONT:
-        i -= 1
-    return source[i + 1:end], i
 
 
 def _is_property_before(source, i):
