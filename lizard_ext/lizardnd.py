@@ -27,6 +27,10 @@ class LizardExtension(object):  # pylint: disable=R0903
             default=DEFAULT_ND_THRESHOLD)
 
     def __call__(self, tokens, reader, l_depth=0):
+        use_reader_nesting = getattr(reader, "use_reader_nesting", None)
+        if use_reader_nesting is not None:
+            use_reader_nesting("max_nesting_depth")
+            return tokens
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
