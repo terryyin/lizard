@@ -35,3 +35,20 @@ class Test_TypeScript_type_identifier(unittest.TestCase):
             "function z(x) { if (x) {} }\n"
         )
         self.assertEqual([('z', 3, 3, 2)], summary("a.ts", code))
+
+    def test_type_alias_with_a_non_ascii_or_prefixed_name(self):
+        for name in ('$$Props', '_Props', 'Fa\u0301ctory', 'F\u200dactory',
+                     'Fa\u203fctory', r'\u0046actory', r'F\u{61}ctory'):
+            with self.subTest(name=name):
+                code = f"""\
+type {name} = BaseProps & {{ onClose: () => void }};
+function close() {{ dialog.close(); }}
+"""
+                self.assertEqual([('close', 2, 2, 1)], summary('a.ts', code))
+
+    def test_type_value_before_a_prefixed_assignment(self):
+        code = """\
+type
+$onClose = () => { dialog.close(); };
+"""
+        self.assertEqual([('$onClose', 2, 2, 1)], summary('a.ts', code))
