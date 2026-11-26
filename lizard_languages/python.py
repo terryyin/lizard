@@ -112,8 +112,9 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         tokens = iter(tokens)
         for token in tokens:
             if token.isspace():
-                if not isinstance(token, FStringExpressionToken) and (
-                        token == '\n' or '\r' in token):
+                if ((token == '\n' or '\r' in token) and
+                        not isinstance(token, FStringExpressionToken) and
+                        not getattr(token, 'is_continuation', False)):
                     at_line_start = True
                 yield token
                 continue
