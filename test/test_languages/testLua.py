@@ -55,6 +55,18 @@ class Test_tokenizing_Lua(unittest.TestCase):
 
 class Test_parser_for_Lua(unittest.TestCase):
 
+    def test_floor_division_keeps_the_rest_of_the_line(self):
+        code = '''
+local function pages(record_count, page_size)
+  return record_count // page_size + (record_count % page_size > 0 and 1 or 0)
+end
+'''
+
+        functions = get_function_list(code)
+
+        self.assertEqual([('pages', 3)], [
+            (fn.name, fn.cyclomatic_complexity) for fn in functions])
+
     def test_empty(self):
         functions = get_function_list("")
         self.assertEqual(0, len(functions))

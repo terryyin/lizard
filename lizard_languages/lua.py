@@ -23,6 +23,7 @@ class LuaReader(RubylikeReader):
             source_code,
             lua_patterns +
             r"|\-\-.*?$" +
+            r"|//" +
             addition)
 
     def get_comment_from_token(self, token):
