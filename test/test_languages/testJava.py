@@ -60,6 +60,24 @@ class Help {
         self.assertEqual(10, result.token_count)
         self.assertEqual(6, result.nloc)
 
+    def test_unicode_escapes_in_text_block_delimiters(self):
+        for opening, closing in (
+                (r'\u0022\u0022\u0022' + '\n', r'\u0022\u0022\u0022'),
+                (r'"""\u0020\u000a\u005c\u0022"" ', '"""')):
+            with self.subTest(opening=opening, closing=closing):
+                result = get_java_function_list(f'''class JavaExample {{
+    String render() {{
+        return {opening}" if (ready) run(); "
+            {closing};
+    }}
+    void later() {{}}
+}}
+''')
+                self.assertEqual(
+                    [('JavaExample::render', 1, 8), ('JavaExample::later', 1, 5)],
+                    [(function.name, function.cyclomatic_complexity, function.token_count)
+                     for function in result])
+
     def test_function_with_throws(self):
         result = get_java_function_list("void fun() throws e1, e2{}")
         self.assertEqual(1, len(result))
