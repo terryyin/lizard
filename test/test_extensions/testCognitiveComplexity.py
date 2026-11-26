@@ -1306,6 +1306,32 @@ class TestJavaScriptArrowBodyInParentheses(unittest.TestCase):
         self.assertEqual(0, outer)
 
 
+class TestCognitiveConditionalContinuations(unittest.TestCase):
+    def test_nested_conditional_keeps_its_nesting_across_a_comparison(self):
+        formats = (
+            'v >= 2015',
+            'v\n                  >= 2015',
+            'v >= /* edition threshold */\n                  2015',
+        )
+        for filename, parameter in (('edition.js', 'v'), ('edition.ts', 'v: number')):
+            for comparison in formats:
+                with self.subTest(filename=filename, comparison=comparison):
+                    source = """
+                        const edition = (%s) =>
+                          v === 0 ? 2026 : %s ? v - 2009 : v;
+                    """ % (parameter, comparison)
+                    self.assertEqual([3], cogc(filename, source))
+
+    def test_asi_ends_a_conditional_before_the_next_statement(self):
+        source = """
+            function edition(v: number, available: number | undefined) {
+              const first = v === 0 ? 2026 : available!
+              return v >= 2015 ? v - 2009 : first
+            }
+        """
+        self.assertEqual([2], cogc('edition.ts', source))
+
+
 class TestJavaScriptReaderFailure(unittest.TestCase):
     """The reader stops at code that nests too deep.  The functions that
     ended before it keep their score."""
