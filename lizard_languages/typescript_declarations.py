@@ -112,7 +112,7 @@ class TypeScriptDeclarationsMixin:
             return True
 
         # Skip interface declarations — method signatures are not runtime functions
-        if token == 'interface':
+        if token == 'interface' and not self.as_class:
             brace_count = 0
             interface_started = False
 
