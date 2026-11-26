@@ -5,6 +5,7 @@ Language parser for Apple Swift
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine
 from .golike import GoLikeStates
+from .kotlin_literals import INTERPOLATION_CLOSE, INTERPOLATION_OPEN, TemplateText, TemplateTokens, string_tokens
 from .swift import SwiftReplaceLabel
 
 
@@ -28,11 +29,17 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     def __init__(self, context):
         super(KotlinReader, self).__init__(context)
         self.parallel_states = [KotlinStates(context)]
+        self.interpolation_braces = None
+
+    def preprocess(self, tokens):
+        if isinstance(tokens, TemplateTokens):
+            self.interpolation_braces = INTERPOLATION_OPEN, INTERPOLATION_CLOSE
+            self.parallel_states[0] = _TemplateStates(self.parallel_states[0])
+        return super().preprocess(tokens)
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        return CodeReader.generate_tokens(
-            source_code,
+        addition = (
             r"|`\w+`" +
             r"|\w+\?" +
             r"|\w+\!!" +
@@ -40,6 +47,41 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
             r"|\?:" +
             addition
         )
+        if '${' in source_code:
+            return TemplateTokens(string_tokens(source_code, addition))
+        if '"""' in source_code or '$$"' in source_code:
+            return string_tokens(source_code, addition)
+        return CodeReader.generate_tokens(source_code, addition)
+
+
+class _TemplateStates:
+    """Read each interpolation in its own state. Pass the whole string to its owner."""
+
+    def __init__(self, state):
+        self.states = [state]
+        self.owners = []
+
+    def __call__(self, token):
+        state = self.states[-1]
+        if token is INTERPOLATION_OPEN:
+            self.owners.append(state.context.current_function)
+            self.states.append(state.statemachine_clone())
+        elif token is INTERPOLATION_CLOSE:
+            self.states.pop().statemachine_before_return()
+            owner = self.owners.pop()
+            context = state.context
+            if owner in context.stacked_functions:
+                while context.current_function is not owner:
+                    state.fold_into_enclosing_function()
+        elif isinstance(token, TemplateText):
+            if token.literal is not None:
+                state(token.literal)
+        else:
+            state(token)
+
+    def statemachine_before_return(self):
+        for state in reversed(self.states):
+            state.statemachine_before_return()
 
 
 class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
