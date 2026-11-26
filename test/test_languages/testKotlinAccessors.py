@@ -47,6 +47,67 @@ class TestKotlinAccessors(unittest.TestCase):
                 ''')
         self.assertEqual("get", result[0].name)
 
+    def test_annotation_use_site_targets_do_not_start_accessors(self):
+        result = get_kotlin_function_list('''\
+class Position(
+    @get:JvmName("row") val row: Int,
+    @set:JvmName("setColumnNumber") var column: Int,
+) {
+    val description: String
+        get() {
+            return "$row:$column"
+        }
+
+    fun move(columns: Int) {
+        column += columns
+    }
+}
+fun origin(): Position {
+    return Position(0, 0)
+}
+        ''')
+        self.assertEqual(
+            [("get", 6, 8), ("move", 10, 12), ("origin", 14, 16)],
+            [(f.name, f.start_line, f.end_line) for f in result],
+        )
+
+    def test_type_alias_and_initializer_with_accessor_names(self):
+        result = get_kotlin_function_list('''\
+typealias set = Runnable
+
+fun get(load: () -> String): String {
+    return load()
+}
+
+class HealthCheck(private val ready: Boolean) : set {
+    val message = get { if (ready) "ready" else "waiting" }
+
+    val status: String
+        get() { return message }
+
+    override fun run() { println(status) }
+}
+        ''')
+        self.assertEqual(
+            [("get", 3, 5, 1), ("get", 11, 11, 1), ("run", 13, 13, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in result],
+        )
+
+    def test_annotation_name_after_use_site_target(self):
+        result = get_kotlin_function_list('''\
+@Target(AnnotationTarget.PROPERTY_GETTER)
+annotation class set
+
+class CounterWithAnnotation(@get:set val value: Int) {
+    val doubled: Int
+        get() { return value * 2 }
+}
+        ''')
+        self.assertEqual(
+            [("get", 6, 6)],
+            [(f.name, f.start_line, f.end_line) for f in result],
+        )
+
     def test_getter_setter(self):
         result = get_kotlin_function_list('''
             class Time

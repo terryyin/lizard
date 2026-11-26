@@ -69,6 +69,32 @@ fun outer() {
         ''')
         self.assertEqual(["read", "outer"], [f.name for f in result])
 
+    def test_comparison_in_second_argument_keeps_later_decisions_in_the_caller(self):
+        for next_argument in ("if (flag) 1 else 0", "run { if (flag) 1 else 0 }"):
+            with self.subTest(next_argument=next_argument):
+                result = get_kotlin_function_list(f'''\
+private const val LIMIT = 4
+fun check(flag: Boolean) = Triple(0, fun(n: Int) = n < LIMIT, {next_argument})
+                ''')
+                self.assertEqual(
+                    [("", 1), ("check", 2)],
+                    [(f.name, f.cyclomatic_complexity) for f in result],
+                )
+
+    def test_call_comparison_after_a_callback_keeps_the_caller_decision(self):
+        result = get_kotlin_function_list('''\
+private const val LIMIT = 4
+fun third(flag: Boolean, value: Int) = Triple(
+    0,
+    fun(n: Int) = n < LIMIT,
+    kotlin.math.abs(value) > (if (flag) 1 else 0),
+)
+        ''')
+        self.assertEqual(
+            [("", 4, 4, 1), ("third", 2, 6, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in result],
+        )
+
     def test_anonymous_function_argument_after_a_comma(self):
         result = get_kotlin_function_list('''
 fun outer() {
@@ -76,8 +102,36 @@ fun outer() {
 }
 fun after() {}
         ''')
-        self.assertEqual([("outer", 2, 4), ("after", 5, 5)],
+        self.assertEqual([("", 3, 3), ("outer", 2, 4), ("after", 5, 5)],
                          [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_anonymous_function_with_block_body_after_a_comma(self):
+        result = get_kotlin_function_list('''\
+fun handlers(ready: Boolean): List<() -> String> {
+    return listOf(
+        fun(): String { return if (ready) "start" else "wait" },
+        fun(): String { return if (ready) "stop" else "skip" },
+    )
+}
+        ''')
+        self.assertEqual(
+            [("", 3, 3, 2), ("", 4, 4, 2), ("handlers", 1, 6, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in result],
+        )
+
+    def test_anonymous_argument_in_a_property_initializer_preserves_the_next_getter(self):
+        result = get_kotlin_function_list('''\
+class Controls {
+    val action = Pair("start", fun(n: Int): Boolean { return n > 0 })
+    val label: String
+        get() { return action.first }
+    fun report() = label
+}
+        ''')
+        self.assertEqual(
+            [("", 2, 2, 1), ("get", 4, 4, 0), ("report", 5, 5, 0)],
+            [(f.name, f.start_line, f.end_line, f.parameter_count) for f in result],
+        )
 
     def test_trailing_comma_in_lambda_parameters(self):
         result = get_kotlin_function_list('''
