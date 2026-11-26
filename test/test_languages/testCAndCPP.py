@@ -1,6 +1,7 @@
 import unittest
+from lizard import analyze_file
 from lizard_languages import CLikeReader
-from ..testHelpers import get_cpp_fileinfo, get_cpp_function_list
+from ..testHelpers import get_cpp_fileinfo, get_cpp_function_list, get_cpp_function_list_with_extension
 
 class Test_C_Token_extension(unittest.TestCase):
 
@@ -92,6 +93,285 @@ class Test_c_cpp_lizard(unittest.TestCase):
     def test_double_slash_within_string(self):
         result = get_cpp_function_list("""int fun(){char *a="\\\\";}""")
         self.assertEqual(1, len(result))
+
+    def test_range_for_rvalue_reference(self):
+        result = get_cpp_function_list("""int sum(const int (&items)[4]) {
+    int total = 0;
+    for (auto&& item : items) total += item;
+    return total;
+}
+""")
+
+        self.assertEqual([("sum", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_rvalue_references_in_template_arguments(self):
+        result = get_cpp_function_list("""#include <type_traits>
+#include <utility>
+
+template <class T>
+bool same_reference(T& item, bool ready) {
+    return std::is_same_v<T&&, T&&> && ready && std::forward<T&&>(item);
+}
+""")
+
+        self.assertEqual([("same_reference", 3)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_rvalue_references_and_logical_and_in_lambda_parameters(self):
+        result = get_cpp_function_list("""#include <utility>
+
+bool ready();
+bool available();
+
+template <class T>
+bool scan(T value) {
+    auto check = [](int&& number, T&&, bool enabled = ready() && available()) {
+        return number != 0 && enabled;
+    };
+    return check(1, std::move(value));
+}
+""")
+
+        self.assertEqual([("scan", 3)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_rvalue_reference_pack_and_logical_fold(self):
+        result = get_cpp_function_list("""#include <tuple>
+
+template <class... Flags>
+bool all_enabled(Flags... flags) {
+    auto check = [](auto&&... values) { return (values && ...); };
+    return check(flags...);
+}
+
+template <class... Items>
+bool has_items() {
+    return std::tuple_size_v<std::tuple<Items&&...>> != 0;
+}
+""")
+
+        self.assertEqual(
+            [("all_enabled", 2), ("has_items", 1)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_named_rvalue_reference_in_lambda_parameters(self):
+        result = get_cpp_function_list("""struct Widget { int value; };
+template <class T> struct Result { T value; };
+
+int read() {
+    int factor = 2;
+    auto get = [factor](Result<Widget>&& item) { return factor * item.value.value; };
+    return get(Result<Widget>{{1}});
+}
+
+template <class... Flags>
+bool all_enabled(Flags... flags) {
+    auto check = []<class... Args>(Args&&... values) { return (values && ...); };
+    return check(flags...);
+}
+""")
+
+        self.assertEqual([("read", 1), ("all_enabled", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_inside_and_after_lambda_parameter_types(self):
+        result = get_cpp_function_list("""struct Widget {};
+template <bool> struct Policy {};
+bool first();
+bool second();
+
+bool read() {
+    auto check = [](Policy<true && true>, Widget&&, bool enabled = first() && second()) {
+        return enabled;
+    };
+    return check(Policy<true>{}, Widget{}) && second();
+}
+""")
+
+        self.assertEqual([("read", 4)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_passed_to_a_macro(self):
+        result = get_cpp_function_list("""#define APPLY_BINARY(left, op, right) ((left) op (right))
+#define APPLY_LAST(left, right, op) ((left) op (right))
+#define APPLY_FIRST(op, left, right) ((left) op (right))
+#define APPLY_TO_FLAGS(op) (active op ready)
+
+bool ready(bool active, bool ready) {
+    return APPLY_BINARY(active, &&, ready) || APPLY_LAST(active, ready, &&) ||
+           APPLY_FIRST(&&, active, ready) || APPLY_TO_FLAGS(&&);
+}
+""")
+
+        self.assertEqual([("ready", 8)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_unnamed_array_rvalue_reference(self):
+        result = get_cpp_function_list("""#include <type_traits>
+
+bool check_arrays() {
+    return std::is_rvalue_reference_v<int (&&)[2]> && std::is_rvalue_reference_v<const int (&&)[2]>;
+}
+""")
+
+        self.assertEqual([("check_arrays", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_with_common_operands(self):
+        result = get_cpp_function_list("""struct State { bool enabled; };
+bool check(bool value);
+
+bool scan(const State *state, bool active, bool ready) {
+    bool simple = active && ready;
+    bool grouped = active && (ready);
+    bool called = check(active) && ready;
+    bool member = state->enabled && ready;
+    return simple && grouped && called && member &&
+           ready;
+}
+""")
+
+        self.assertEqual([("scan", 9)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_rvalue_reference_with_initializer_cancels_once(self):
+        result = get_cpp_function_list("""int fetch();
+
+int scan() {
+    int&& value = fetch();
+    return value;
+}
+""")
+
+        self.assertEqual([("scan", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_rvalue_reference_in_ignored_assertion(self):
+        result = get_cpp_function_list_with_extension("""int checked() {
+    static_assert(sizeof(int&&) == sizeof(int));
+    return 0;
+}
+""", "ignoreassert")
+
+        self.assertEqual([("checked", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_reference_and_logical_and_in_assertion(self):
+        source = """int checked() {
+    static_assert(sizeof(int&&) == sizeof(int) && true);
+    return 0;
+}
+"""
+
+        for functions, expected in (
+            (get_cpp_function_list(source), 2),
+            (get_cpp_function_list_with_extension(source, "ignoreassert"), 1),
+        ):
+            with self.subTest(expected=expected):
+                self.assertEqual([("checked", expected)], [(fn.name, fn.cyclomatic_complexity) for fn in functions])
+
+    def test_nonstrict_does_not_deduct_uncounted_references(self):
+        result = get_cpp_function_list_with_extension("""int list_initialized() {
+    int&& value{0};
+    return value;
+}
+
+int copy_initialized() {
+    int&& value = 0;
+    return value;
+}
+
+int alias_size() {
+    typedef int&& Ref;
+    return sizeof(Ref);
+}
+""", "nonstrict")
+
+        self.assertEqual(
+            [("list_initialized", 1), ("copy_initialized", 1), ("alias_size", 1)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_extension_counts_logical_and_outside_assertion(self):
+        source = """bool can_run(bool active, bool ready) {
+    static_assert(sizeof(int&&) == sizeof(int));
+    return active && ready;
+}
+"""
+
+        for extension, expected in [("ignoreassert", 2), ("nonstrict", 1)]:
+            with self.subTest(extension=extension):
+                result = get_cpp_function_list_with_extension(source, extension)
+                self.assertEqual([("can_run", expected)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_with_identifier_in_c_header(self):
+        result = analyze_file.analyze_source_code("flags.h", """static int scan(int bool, int ready) {
+    return bool && ready;
+}
+""").function_list
+
+        self.assertEqual([("scan", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_after_array_designators_in_gnu_c_header(self):
+        result = analyze_file.analyze_source_code("flags.h", """static int scan(int left, int right) {
+    enum { first, second };
+    int table[2] = { [first] (left && right), [second] (right && left) };
+    return table[0] + table[1];
+}
+""").function_list
+
+        self.assertEqual([("scan", 3)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_inside_block_call_in_objective_c_header(self):
+        result = analyze_file.analyze_source_code("validation.h", """typedef int (^Validation)(int);
+@protocol Validator
+- (Validation)validation;
+@end
+
+static inline int check(id<Validator> validator, int active, int ready) {
+    return [validator validation](active && ready);
+}
+
+typedef struct { int ready; } Result;
+typedef Result * (^ResultCallback)(int);
+@protocol Provider
+- (ResultCallback)result;
+@end
+
+static inline int check_result(id<Provider> provider, int active, int ready) {
+    return [provider result](active && ready)->ready;
+}
+""").function_list
+
+        self.assertEqual(
+            [("check", 2), ("check_result", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_named_lambda_references_in_callback_argument_in_cpp_header(self):
+        result = analyze_file.analyze_source_code("jobs.h", """struct Job { int weight; };
+
+int run_jobs() {
+    auto submit = [](int base, auto finish) { return finish(Job{base}, Job{base}); };
+    return submit(7, [weight = 2](Job&& first, Job&& second) mutable {
+        return weight * (first.weight + second.weight);
+    });
+}
+""").function_list
+
+        self.assertEqual([("run_jobs", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_named_lambda_references_with_declarator_suffixes(self):
+        result = get_cpp_function_list("""#include <vector>
+struct Job { int weight; };
+
+std::vector<int> weights() {
+    return [](Job&& job) -> std::vector<int> { return {job.weight}; }(Job{1});
+}
+
+int weight() {
+    constexpr bool safe = true;
+    return [](Job&& job) noexcept(noexcept(job.weight) && safe) { return job.weight; }(Job{1});
+}
+
+int constrained_weight() {
+    return []<class T>(T&& job) requires requires { job.weight; } {
+        return job.weight;
+    }(Job{1});
+}
+""")
+
+        self.assertEqual(
+            [("weights", 1), ("weight", 2), ("constrained_weight", 1)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
     def test_number_with_thousands_separator_since_cpp14(self):
         result = get_cpp_function_list("""int fun(){
