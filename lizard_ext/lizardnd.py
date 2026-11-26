@@ -37,8 +37,10 @@ class LizardExtension(object):  # pylint: disable=R0903
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
-            loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
-                         '?', 'catch', 'case', 'try', 'def'])
+            loops = {'if', 'foreach', 'for', 'while', '&&', '||',
+                     'catch', 'case', 'try', 'def'}
+            if '?' in getattr(reader, 'ternary_operators', ('?',)):
+                loops.add('?')
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
         if hasattr(reader, "indent_indicator"):
