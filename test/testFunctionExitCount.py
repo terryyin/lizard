@@ -57,3 +57,24 @@ void f( int a )
     def test_global_code_of_an_empty_file_counts_as_1(self):
         result = FileAnalyzer(get_extensions([ExitCounter(), OutsideCounter()])).analyze_source_code("a.js", "").function_list
         self.assertEqual([("*global*", 1)], [(f.name, f.exit_count) for f in result])
+
+    def test_nested_returns_do_not_change_the_enclosing_return_count(self):
+        code = """
+        function IDs(items) {
+            const pick = (item) => {
+                return item.id;
+            };
+            return items.map(pick);
+        }
+        function displayName(item) {
+            if (!item) {
+                return "Unknown";
+            }
+            const normalize = (name) => name.trim();
+            return normalize(item.name);
+        }
+        """
+        result = get_js_function_list_with_extension(code, ExitCounter())
+        self.assertEqual(
+            [("pick", 1), ("IDs", 1), ("normalize", 1), ("displayName", 2)],
+            [(function.name, function.exit_count) for function in result])
