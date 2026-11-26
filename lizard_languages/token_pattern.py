@@ -125,7 +125,7 @@ def tokens_in_span(pattern, source, start, end, token_class=None,
                 yield macro
                 yield token
                 macro = ""
-        elif token == "#" and (macros is True or (macros and macros(match))):
+        elif token == "#" and (macros(match) if callable(macros) else macros):
             macro = token
         else:
             yield token
