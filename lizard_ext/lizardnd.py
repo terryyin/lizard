@@ -7,6 +7,11 @@ from lizard_languages.javascript_statements import ImpliedSemicolons
 
 DEFAULT_ND_THRESHOLD = 7
 _STATEMENT_EXPRESSION_SEPARATORS = frozenset(('=', ',', ':', '?'))
+_GROUP_OPERAND_STARTS = _STATEMENT_EXPRESSION_SEPARATORS | {
+    None, 'return', 'co_return', 'throw', 'yield',
+    '(', '[', '{', ';', '&&', '||', '??', '!', '~', '+', '-', '*', '/', '%',
+    '|', '&', '^', '==', '!=', '===', '!==',
+}
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -52,12 +57,14 @@ class LizardExtension(object):  # pylint: disable=R0903
         ).union(block_ends, block_starts, loops,
                 _STATEMENT_EXPRESSION_SEPARATORS if standalone_chains else ())
         context = reader.context
+        previous_token = None
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
                 context.clear_prev_was_else()
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
+                    previous_token = None
             if token in depth_tokens:
                 if (standalone_chains and token in _STATEMENT_EXPRESSION_SEPARATORS
                         and context.get_condition_depth() == 0):
@@ -74,7 +81,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                     context.clear_prev_was_else()
                 # Handle opening parenthesis - start of condition
                 elif token == '(':
-                    context.open_condition()
+                    context.open_condition(
+                        standalone_chains and previous_token in _GROUP_OPERAND_STARTS)
                 # Handle closing parenthesis - end of condition
                 elif token == ')':
                     context.close_condition()
@@ -106,6 +114,8 @@ class LizardExtension(object):  # pylint: disable=R0903
             if l_depth < 0:
                 l_depth = 0
                 context.reset_nd_complexity()
+            if standalone_chains:
+                previous_token = token
             yield token
 
 
@@ -158,20 +168,22 @@ class NDFileInfoAddition(FileInfoBuilder):
     def get_in_condition(self):
         return self.current_function.in_condition
 
-    def open_condition(self):
+    def open_condition(self, can_group_standalone=False):
         """A "(" opens a condition, or a level inside one."""
         function = self.current_function
-        function.in_condition = True
         function.condition_depth += 1
+        if (can_group_standalone and
+                function.condition_depth == function.standalone_group_depth + 1):
+            # Grouping an operand keeps the surrounding statement's chain.
+            function.standalone_group_depth += 1
+            return
+        function.in_condition = True
         function.logical_operator_added = False
 
     def close_condition(self):
         """A ")" closes a level, and the condition with its last level."""
         self.decrement_condition_depth()
-        function = self.current_function
-        if function.condition_depth == 0:
-            function.in_condition = False
-            function.logical_operator_added = False
+        _close_condition_at_depth(self.current_function)
 
     def increment_condition_depth(self):
         self.current_function.condition_depth += 1
@@ -186,9 +198,7 @@ class NDFileInfoAddition(FileInfoBuilder):
             enclosing = self.stacked_functions[-1]
             if enclosing.condition_depth > 0:
                 enclosing.condition_depth -= 1
-                if enclosing.condition_depth == 0:
-                    enclosing.in_condition = False
-                    enclosing.logical_operator_added = False
+                _close_condition_at_depth(enclosing)
 
     def get_condition_depth(self):
         return self.current_function.condition_depth
@@ -197,6 +207,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.in_condition = False
         self.current_function.condition_depth = 0
         self.current_function.logical_operator_added = False
+        self.current_function.standalone_group_depth = 0
 
     def set_logical_operator_added(self, added):
         self.current_function.logical_operator_added = added
@@ -212,6 +223,13 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def clear_prev_was_else(self):
         self.current_function.prev_was_else = False
+
+
+def _close_condition_at_depth(function):
+    if function.condition_depth <= function.standalone_group_depth:
+        function.standalone_group_depth = function.condition_depth
+        function.in_condition = False
+        function.logical_operator_added = False
 
 
 def get_method(cls, name):
@@ -248,6 +266,7 @@ def _init_nesting_depth_data(self, *_):
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
     self.standalone_logical_added = False
+    self.standalone_group_depth = 0
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
 
 
