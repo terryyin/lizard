@@ -353,12 +353,16 @@ template<class T>
 bool has_result(id<Provider> provider, int input) {
     return [provider result](input)->ready && requires { typename T::result_type; };
 }
+template<class T>
+bool has_result_with_parameter(id<Provider> provider, int input) {
+    return [provider result](input)->ready && requires(T value) { value.result(); };
+}
 """).function_list
 
+        names = ("check_result", "has_result", "has_result_with_parameter")
         self.assertEqual(
-            [("check_result", 2), ("has_result", 2)],
-            [(fn.name, fn.cyclomatic_complexity)
-             for fn in result if fn.name in ("check_result", "has_result")])
+            [(name, 2) for name in names],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result if fn.name in names])
 
     def test_named_lambda_references_in_callback_argument_in_cpp_header(self):
         result = analyze_file.analyze_source_code("jobs.h", """struct Job { int weight; };
