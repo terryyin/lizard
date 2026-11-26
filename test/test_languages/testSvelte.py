@@ -151,6 +151,27 @@ class TestSvelte(unittest.TestCase):
                 self.assertEqual([('format', 4, 4, 1)],
                                  function_summaries(functions))
 
+    def test_script_after_element_with_closing_tag_text(self):
+        for element in ('div', 'textarea'):
+            with self.subTest(element=element):
+                markup = '<%s>{`</%s>{`}</%s>' % (element, element, element)
+                functions = get_svelte_function_list(markup + '''
+<script>
+  function format() { return 'Preview'; }
+</script>
+{`}`}
+''')
+                self.assertEqual([('format', 3, 3, 1)], function_summaries(functions))
+
+    def test_closing_tag_text_in_quoted_attribute_keeps_static_markup(self):
+        source = '''\
+<noscript>
+  <a href="</noscript><script>console.log('preview')</script>">Preview</a>
+</noscript>
+'''
+        info = analyze_file.analyze_source_code('preview.svelte', source)
+        self.assertEqual((0, []), (info.nloc, info.function_list))
+
     def test_typescript_script_reads_class_field_annotations(self):
         typed = get_svelte_function_list(
             '<script lang="ts">'
