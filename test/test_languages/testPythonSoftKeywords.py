@@ -322,3 +322,15 @@ def keep_value(case):
 """
         function, = self._get_funcs(code)
         self.assertEqual(1, function.cyclomatic_complexity)
+
+    def test_case_guard_keeps_explicit_crlf_continuation(self):
+        source = (
+            'def dispatch(value):\r\n'
+            '    match value:\r\n'
+            '        case 1 \\\r\n'
+            '            if value:\r\n'
+            '            return True\r\n'
+            '        case _:\r\n'
+            '            return False\r\n')
+        function, = self._get_funcs(source)
+        self.assertEqual(4, function.cyclomatic_complexity)
