@@ -45,6 +45,25 @@ class TestCppNestingDepth(unittest.TestCase):
                           ('signedPlan', 3)],
                          [(f.name, f.max_nesting_depth) for f in functions])
 
+    def test_lambda_constraint_accepts_alternative_operator_spellings(self):
+        for operator in ('and', 'or'):
+            with self.subTest(operator=operator):
+                source = """
+                #include <concepts>
+                bool eligible(bool online, bool cached, bool fresh) {
+                    if (online && [=]<class T>(T value)
+                        requires std::integral<T> OP requires { bool(value); } {
+                        const bool available = cached && fresh;
+                        if (value > 0) return available;
+                        return false;
+                    }(1)) return true;
+                    return false;
+                }
+                """.replace('OP', operator)
+                functions = get_cpp_with_nestdepth(source)
+                self.assertEqual([('eligible', 3)],
+                                 [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_cpp_condition_lambda_starts_a_separate_statement_scope(self):
         functions = get_cpp_with_nestdepth("""
         template<class Check> bool verify(Check check) { return check(); }
