@@ -39,10 +39,10 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         if brackets:
             if len(brackets) == 1:
                 if self._parenthesis_first is None:
-                    # The arrow after a parenthesized function type belongs
-                    # to the enclosing runtime signature.
+                    # Literal and generic callable types cannot begin
+                    # the parameter list of an ungrouped function type.
                     first = token[:1]
-                    if (first in ('"', "'", '`') or first.isdigit()
+                    if (first in ('"', "'", '`', '<') or first.isdigit()
                             or token in ('-', 'true', 'false', 'null')):
                         self._parenthesis_first = '('
                     else:
