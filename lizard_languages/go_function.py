@@ -54,7 +54,7 @@ def variable_declaration(matches):
 
 
 def composite_literal_braces(matches):
-    """Find the braces of an explicit array or slice type and its literal."""
+    """Find the braces of an explicit composite type and its literal."""
     braces = set()
     tokens = _SignatureTokens(matches, braces)
     tokens.read_type()

@@ -11,7 +11,14 @@ from .go_function import (
 from .token_pattern import compiled_token_pattern
 
 
-_OPERAND_STARTS = frozenset(('if', ';', '&&', '||', '!', '=', ':=', '(', ','))
+# A bracket after an operand can index it. After these tokens a new
+# operand can start with an explicit array, slice, map or struct type.
+_OPERAND_STARTS = frozenset((
+    'if', ';', '(', '[', '{', ',', ':', '=', ':=',
+    '&&', '||', '==', '!=', '<', '<=', '>', '>=',
+    '+', '-', '*', '/', '%', '&', '|', '^', '&^', '<<', '>>', '<-', '!',
+))
+_LITERAL_TYPE_STARTS = frozenset(('[', 'map', 'struct'))
 
 
 class _CompositeLiteralBrace(str):
@@ -46,7 +53,7 @@ class GoReader(CodeReader, CCppCommentsMixin):
                 declaration = variable_declaration(
                     pattern.finditer(source_code, match.end()))
                 token = GoToken(token, declaration)
-            elif token == '[' and last_token in _OPERAND_STARTS:
+            elif token in _LITERAL_TYPE_STARTS and last_token in _OPERAND_STARTS:
                 literal_braces.update(composite_literal_braces(
                     pattern.finditer(source_code, match.start())))
             elif token == '{' and match.start() in literal_braces:
