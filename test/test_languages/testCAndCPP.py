@@ -484,6 +484,19 @@ class Test_c_cpp_lizard(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("foo", result[0].name)
 
+    def test_parenthesized_trailing_constraint(self):
+        result = get_cpp_function_list("""template<class T> struct Cache {
+    unsigned capacity() const noexcept
+        requires (sizeof(T) > 1) {
+        return sizeof(T);
+    }
+};
+""")
+
+        self.assertEqual(
+            [("Cache::capacity", 2, 5)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
     def test_ref_qualifiers(self):
         """C++11 ref qualifiers for member functions."""
         result = get_cpp_function_list("struct A { void foo() & {} };")
