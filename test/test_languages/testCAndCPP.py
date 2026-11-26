@@ -19,11 +19,29 @@ class Test_c_cpp_lizard(unittest.TestCase):
 int header_length(void) { return 2; }
 """
 
-        result = analyze_file.analyze_source_code("pattern.c", source).function_list
+        for filename in ("pattern.c", "pattern.h"):
+            with self.subTest(filename=filename):
+                result = analyze_file.analyze_source_code(filename, source).function_list
 
-        self.assertEqual(
-            [("pattern_length", 1, 4), ("header_length", 5, 5)],
-            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+                self.assertEqual(
+                    [("pattern_length", 1, 4), ("header_length", 5, 5)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_cpp_template_in_c_or_objective_c_source(self):
+        source = """namespace render {
+template<class Value> struct Cache {
+    unsigned width() { return sizeof(Value); }
+};
+}
+"""
+
+        for filename in ("cache.c", "cache.m"):
+            with self.subTest(filename=filename):
+                result = analyze_file.analyze_source_code(filename, source).function_list
+
+                self.assertEqual(
+                    [("render::Cache::width", 3, 3)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result])
 
     def test_empty(self):
         result = get_cpp_function_list("")
