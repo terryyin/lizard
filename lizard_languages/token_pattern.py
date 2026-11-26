@@ -111,8 +111,7 @@ def _token_text(match):
 def tokens_in_span(pattern, source, start, end, token_class=None,
                    macros=True):
     """With `macros`, a lone '#' starts a preprocessor line kept as one
-    token. A callable can select which hash matches start a line.
-    Languages without a preprocessor can disable grouping with False."""
+    token; languages without a preprocessor keep '#' as its own token."""
     if token_class is None:
         token_class = _token_text
     macro = ""
@@ -125,7 +124,7 @@ def tokens_in_span(pattern, source, start, end, token_class=None,
                 yield macro
                 yield token
                 macro = ""
-        elif token == "#" and (macros is True or (macros and macros(match))):
+        elif token == "#" and macros:
             macro = token
         else:
             yield token

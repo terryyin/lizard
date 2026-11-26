@@ -38,7 +38,7 @@ class RustReader(CodeReader, CCppCommentsMixin):
             r"|(?:'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])')"
             r"|(?:'\w+\b)")  # lifetimes, labels
         source_code = _flatten_nested_comments(source_code)
-        if 'quote' not in source_code:
+        if 'quote' not in source_code or _UNRECOGNIZED_RAW_START.search(source_code):
             return CodeReader.generate_tokens(source_code, addition, token_class)
         return _quote_tokens(source_code, addition, token_class)
 
@@ -57,43 +57,6 @@ class RustReader(CodeReader, CCppCommentsMixin):
                 yield token
             if token[0] != '/':  # comments do not end an expression
                 last = token
-
-
-_QUOTE_MACROS = {'quote', 'quote_spanned'}
-_TOKEN_TREE_OPENERS = {'(', '[', '{'}
-_TOKEN_TREE_CLOSERS = {')', ']', '}'}
-_RAW_HASH = re.compile(r'#+"')
-
-
-def _quote_tokens(source, addition, token_class):
-    """Keep hashes in quote token trees from swallowing closing delimiters."""
-    depth = 0
-    after_quote = False
-    after_bang = False
-
-    def read_token(match):
-        nonlocal depth, after_quote, after_bang
-        token = match.group()
-        if depth:
-            if token in _TOKEN_TREE_OPENERS:
-                depth += 1
-            elif token in _TOKEN_TREE_CLOSERS:
-                depth -= 1
-        elif not token.isspace() and not token.startswith(('//', '/*')):
-            if after_bang and token in _TOKEN_TREE_OPENERS:
-                depth = 1
-            after_bang = after_quote and token == '!'
-            after_quote = token in _QUOTE_MACROS
-        return token if token_class is None else token_class(match)
-
-    def starts_macro(match):
-        pos = match.start()
-        # Leave the existing fallback for hashed raw literals in place.
-        return not depth or (
-            pos > 0 and source[pos - 1] == 'r' and _RAW_HASH.match(source, pos))
-
-    return tokens_in_span(compiled_token_pattern(addition), source, 0, len(source),
-                          read_token, macros=starts_macro)
 
 
 class RustStates(GoLikeStates):  # pylint: disable=R0903
@@ -171,6 +134,52 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
 
     def _end_match(self):
         self.next(self._state_global)
+
+
+_QUOTE_MACROS = {'quote', 'quote_spanned'}
+_TOKEN_TREE_OPENERS = {'(', '[', '{'}
+_TOKEN_TREE_CLOSERS = {')', ']', '}'}
+# These prefixes can remain split into tokens. Their text can contain braces.
+_UNRECOGNIZED_RAW_START = re.compile(r'(?:\bcr|#b?r)#*"')
+
+
+def _quote_tokens(source, addition, token_class):
+    """Keep the token count of quote input without parsing it as Rust code."""
+    depth = 0
+    after_name = None
+    after_bang = None
+    span_expression = False
+
+    def read_token(match):
+        nonlocal depth, after_name, after_bang, span_expression
+        token = match.group()
+        text = token if token_class is None else token_class(match)
+        if token.isspace() or token.startswith(('//', '/*')):
+            return text
+        if depth:
+            if token in _TOKEN_TREE_OPENERS:
+                depth += 1
+            elif token in _TOKEN_TREE_CLOSERS:
+                depth -= 1
+            if span_expression and depth == 1 and token == '=>':
+                span_expression = False
+            return text if span_expression and depth else _quote_data(text)
+
+        macro = after_bang
+        after_bang = after_name if token == '!' else None
+        after_name = token if token in _QUOTE_MACROS else None
+        if macro and token in _TOKEN_TREE_OPENERS:
+            depth = 1
+            span_expression = macro == 'quote_spanned'
+            return _quote_data(text)
+        return text
+
+    return tokens_in_span(compiled_token_pattern(addition), source, 0, len(source), read_token)
+
+
+def _quote_data(token):
+    # Like a string token, quoted text supplies data to the macro.
+    return token if token.startswith(('"', "'")) else '"' + token
 
 
 _CHAR_LITERAL = re.compile(
