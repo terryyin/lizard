@@ -349,12 +349,15 @@ class _Counter(object):  # pylint: disable=R0902
         a call to the function itself and a ``break``/``continue`` label."""
         state = self.state
         function = self.function
+        if token in self.profile.jumps and not getattr(token, 'is_member_name', False):
+            state.pending_jump_line = self.line
+            state.pending += 1
+        if self.member_receivers is not None and state.prev in self.member_receivers:
+            self._arm_member_call(token)
+            return
         # The reader may still be appending to the name (``A`` -> ``A::f``),
         # so it is compared on every candidate token.
-        if token in function.name and (
-                token == function.unqualified_name
-                or (state.prev == ':' and self.member_receivers
-                    and ':' in self.member_receivers and function.name.endswith('.' + token))):
+        if token in function.name and token == function.unqualified_name:
             if state.prev in _MEMBER_ACCESS:
                 calls = state.prev != '::' and state.prev2 in _SELF_REFERENCES
             else:
@@ -362,20 +365,26 @@ class _Counter(object):  # pylint: disable=R0902
                 calls = getattr(token, 'is_member_name', False) or not (
                     self.profile.reserved_structures
                     and self._is_structure(token))
-            member_receivers = self.member_receivers
-            if member_receivers is not None and state.prev in member_receivers:
-                if state.prev == ':':
-                    # A Lua table assignment declares its receiver as its first parameter.
-                    calls = (function in self.context.lua_member_assignments
-                             and function.parameters[:1] == [state.member_receiver])
-                else:
-                    calls = state.member_receiver in member_receivers[state.prev]
             if calls:
                 state.pending_call = True
                 state.pending += 1
-        if token in self.profile.jumps and \
-                not getattr(token, 'is_member_name', False):
-            state.pending_jump_line = self.line
+
+    def _arm_member_call(self, token):
+        state = self.state
+        function = self.function
+        lua_member = state.prev == ':'
+        if token not in function.name or (
+                token != function.unqualified_name
+                and not (lua_member and function.name.endswith('.' + token))):
+            return
+        if lua_member:
+            # A Lua table assignment declares its receiver as its first parameter.
+            calls = (function in self.context.lua_member_assignments
+                     and function.parameters[:1] == [state.member_receiver])
+        else:
+            calls = state.member_receiver in self.member_receivers[state.prev]
+        if calls:
+            state.pending_call = True
             state.pending += 1
 
     def _is_structure(self, token):
