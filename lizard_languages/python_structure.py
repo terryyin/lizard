@@ -119,7 +119,7 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _state_colon(self, token):
         if token == ':':
-            self._begin_suite()
+            self.next(self._state_first_line)
         elif self.read_return_annotations and token == '->':
             self.ignore_indentation = True
             self.br_count = 0
@@ -148,16 +148,15 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
                     self.lambda_heads -= 1
                 else:
                     self.ignore_indentation = False
-                    self._begin_suite()
-
-    def _begin_suite(self):
-        self.inline_suite = self.supports_inline_suites
-        self.next(self._state_first_line)
+                    self.next(self._state_first_line)
 
     def _state_first_line(self, token):
+        self.inline_suite = (
+            self.supports_inline_suites and token != '\n' and
+            self.context.pending_function is self.context.current_function)
         if token.startswith('"""') or token.startswith("'" * 3):
             self.context.add_nloc(-token.count('\n') - (not self.inline_suite))
-        if self.inline_suite and self.context.pending_function is self.context.current_function:
+        if self.inline_suite:
             self.ignore_indentation = True
             self.br_count = 0
             self.next(self._state_inline_suite, token)
@@ -173,9 +172,7 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
                 self.br_count -= 1
 
     def end_inline_line(self):
-        if self._state == self._state_first_line:
-            self.inline_suite = False
-        elif self.br_count == 0:
+        if self.br_count == 0:
             # Inline suites have no body indentation to attach the function.
             self.context.add_bare_nesting()
             self.context.pop_nesting()
