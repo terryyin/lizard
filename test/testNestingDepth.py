@@ -233,6 +233,31 @@ class TestCppNestingDepth(unittest.TestCase):
 
 class TestGoNestingDepth(unittest.TestCase):
 
+    def test_if_test_keeps_composite_types_and_comparison_operands(self):
+        code = """
+        package work
+
+        func fromMap(ready, cached, enabled, online bool, key string) {
+            if map[string]bool{key: ready && cached}[key] && enabled {
+                if online { println(key) }
+            }
+        }
+        func fromStruct(ready, cached, enabled, online bool) {
+            if struct{ active bool }{active: ready && cached}.active && enabled {
+                if online { println("online") }
+            }
+        }
+        func samePlans(ready, cached, enabled, online bool) {
+            if [1]bool{true} == [1]bool{ready && cached} && enabled {
+                if online { println("online") }
+            }
+        }
+        """
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'work.go', code).function_list
+        self.assertEqual([('fromMap', 3), ('fromStruct', 3), ('samePlans', 3)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_if_body_starts_after_boolean_composite_literal(self):
         code = """
         package work
