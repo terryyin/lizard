@@ -1,8 +1,9 @@
 '''
 Language parser for Scala
 '''
-from .code_reader import CodeReader, MemberName
+from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
+from . import code_reader
 from .golike import GoLikeStates
 __author__ = 'David Baum'
 
@@ -18,10 +19,6 @@ _CONTINUES_AT_LINE_END = frozenset((
 _CONDITION_KEYWORDS = frozenset(('if', 'while', 'for'))
 
 
-# Keep the operator or wildcard in the expression while skipping its increment.
-_QUESTION_MARK = MemberName('?')
-
-
 class ScalaReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -33,6 +30,8 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
     _logical_operators = {'&&', '||'}
     _case_keywords = {'case'}  # Pattern matching
     _ternary_operators = set()
+    # Keep the operator or wildcard as an expression token.
+    _question_mark = code_reader.MemberName('?')
 
     def __init__(self, context):
         super(ScalaReader, self).__init__(context)
@@ -60,7 +59,7 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
                 elif token.startswith('/*') and '\n' in token:
                     # A block comment that ends on a later line.
                     line_start = 3
-                yield _QUESTION_MARK if token == '?' else token
+                yield self._question_mark if token == '?' else token
             elif token == '\n':
                 line_start = after_line_break[line_start]
                 yield token
