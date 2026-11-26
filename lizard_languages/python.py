@@ -139,15 +139,23 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         """Recognize a suite colon at the end of a match or case header."""
         header = []
         depth = 0
-        started = False
+        started = continued = False
         for token in tokens:
             header.append(token)
             if isinstance(token, FStringExpressionToken):
                 continue
-            if token.isspace() or token.startswith('#'):
-                if depth == 0 and ('\n' in token or '\r' in token):
-                    break
+            if token in ('\\', '\\\n'):
+                # The older lexer splits a CRLF join into three tokens.
+                continued = token == '\\'
                 continue
+            if token.isspace() or token.startswith('#'):
+                if '\n' in token or '\r' in token:
+                    if not continued and depth == 0:
+                        break
+                    if '\n' in token:
+                        continued = False
+                continue
+            continued = False
             if not started and token in self._SOFT_KW_VARIABLE_NEXT:
                 break
             started = True
