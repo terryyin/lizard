@@ -64,3 +64,39 @@ def test_javascript_angle_comparisons_keep_the_array_separator():
         }
     """
     assert cogc("report.js", source) == [2]
+
+
+@pytest.mark.parametrize("extension", ["ts", "tsx"])
+@pytest.mark.parametrize("lower, upper", [
+    ("this.min", "this.max"),
+    ('"low".length', '"high".length'),
+])
+def test_comparison_members_keep_the_array_separator(extension, lower, upper):
+    source = f"""
+        class Limits {{
+            score = 1;
+            min = 2;
+            max = 3;
+
+            within(preferDefault: boolean) {{
+                return [preferDefault ? false : this.score < {lower},
+                    {upper} > (this.score) ? 1 : 0];
+            }}
+        }}
+    """
+    assert cogc("limits." + extension, source) == [2]
+
+
+def test_type_query_can_qualify_this_in_call_arguments():
+    source = """
+        declare function make<Key, Value>(key: Key): Value;
+
+        class Limits {
+            min = 2;
+
+            select(primary: boolean, fallback: boolean) {
+                return primary ? make<typeof this.min, number>(this.min) : fallback ? 1 : 2;
+            }
+        }
+    """
+    assert cogc("limits.ts", source) == [3]
