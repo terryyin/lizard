@@ -266,12 +266,16 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         self._parameter_names = []
         self._can_read_parameter_name = True
         self._reading_parameter_default = False
-        self._multiline_parameter_default = False
+        self._parameter_annotation = False
+        self._use_declared_parameter_names = False
 
     def _read_parameter_names(self, token, at_top_level):
         if at_top_level:
             if token == ',':
                 self._can_read_parameter_name = True
+                self._parameter_annotation = False
+            elif token == '@' and self._can_read_parameter_name:
+                self._parameter_annotation = True
             elif token == ':' and self._can_read_parameter_name:
                 name = self.last_token
                 # Skip annotation use-site targets and anonymous object types.
@@ -279,15 +283,18 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                     self._parameter_names.append(name.strip('`'))
                     self._can_read_parameter_name = False
                     self._reading_parameter_default = False
+                    self._parameter_annotation = False
             elif token == '=' and self._parameter_names:
                 self._reading_parameter_default = True
+        elif token == '=' and self._parameter_annotation:
+            self._use_declared_parameter_names = True
         if self._reading_parameter_default and '\n' in token:
-            self._multiline_parameter_default = True
+            self._use_declared_parameter_names = True
 
     def _finish_parameter_names(self):
-        # A multiline default can hide a name or expose a nested argument
-        # to the shared matcher. Use the names from the whole signature.
-        if self._multiline_parameter_default:
+        # Annotation arguments and multiline defaults can hide the formal
+        # names from the shared matcher.
+        if self._use_declared_parameter_names:
             self.context.current_function.record_parameter_names(self._parameter_names)
 
     def _receiver_type_end(self, token):
