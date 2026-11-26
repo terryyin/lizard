@@ -172,6 +172,50 @@ class TestSvelte(unittest.TestCase):
         info = analyze_file.analyze_source_code('preview.svelte', source)
         self.assertEqual((0, []), (info.nloc, info.function_list))
 
+    def test_script_after_implicitly_closed_elements(self):
+        for markup in ('<p>Intro<p>Details</p>', '<li>One<li>Two</li>'):
+            with self.subTest(markup=markup):
+                functions = get_svelte_function_list(markup + '''
+<script>function format() { return 'Preview'; }</script>
+''')
+                self.assertEqual([('format', 2, 2, 1)], function_summaries(functions))
+
+    def test_textarea_text_does_not_hide_script_or_expressions(self):
+        for text in ('<textarea>Paste here', '<!-- Paste a comment', '</div><div>'):
+            with self.subTest(text=text):
+                info = analyze_file.analyze_source_code('preview.svelte', f'''
+<div><textarea>{text}{{placeholder ? 'Type here' : ''}}</TEXTAREA></div>
+<script>
+  const placeholder = true;
+  function format() {{ return 'Preview'; }}
+</script>
+''')
+                self.assertEqual([('format', 5, 5, 1), (COMPONENT, 2, 5, 2)],
+                                 function_summaries(info.function_list))
+
+    def test_script_text_in_attributes_with_braces_is_not_code(self):
+        for attribute in (
+                'value={"} <script>function preview() {}</script>"}',
+                'value=\"{\"} <script>function preview() {}</script>\"}\"',
+                '{...{value: "} <script>function preview() {}</script>"}}'):
+            with self.subTest(attribute=attribute):
+                functions = get_svelte_function_list(
+                    '<input ' + attribute + '>\n'
+                    '<script>function format() { return "Preview"; }</script>')
+                self.assertEqual([('format', 2, 2, 1)], function_summaries(functions))
+
+    def test_script_inside_a_markup_block_is_text(self):
+        functions = get_svelte_function_list('''
+{#if showPreview}
+  <script>function preview() { return 0; }</script>
+{/if}
+<script>
+  const showPreview = true;
+  function format() { return 'Preview'; }
+</script>
+''')
+        self.assertEqual([('format', 7, 7, 1)], function_summaries(functions))
+
     def test_typescript_script_reads_class_field_annotations(self):
         typed = get_svelte_function_list(
             '<script lang="ts">'
