@@ -36,7 +36,6 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
         super(PythonStates, self).__init__(context)
         self.reader = reader
         self.lambda_heads = 0
-        self.indents = PythonIndents(context)
 
     def _state_global(self, token):
         if token == 'def':
