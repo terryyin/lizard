@@ -8,6 +8,7 @@ from .rubylike import RubylikeReader, RubylikeStateMachine, _ends_value
 from .js_style_regex_expression import js_style_regex_expression
 from .ruby_documentation import may_have_documentation, pattern_for_fragment
 from .source_documentation import tokens_ignoring_documentation
+from .token_pattern import compiled_token_pattern, tokens_in_span
 
 
 class MyToken(str):
@@ -18,6 +19,26 @@ class MyToken(str):
     def __init__(self, value):
         super(MyToken, self).__init__()
         self.begin = value.start() if hasattr(value, 'start') else 0
+
+
+class _HeredocCall(MyToken):
+    def __init__(self, match):
+        super().__init__(match)
+        self.opener = MyToken(match['heredoc_opener'])
+        self.opener.begin = match.start('heredoc_opener')
+        start, end = match.span('heredoc_suffix')
+        self.suffix_start = start - self.begin
+        self.suffix_end = end - self.begin
+
+
+class _HeredocLines(str):
+    """Line breaks in a literal whose opener was already emitted."""
+
+
+def _heredoc_token(match):
+    if match['heredoc_suffix']:
+        return _HeredocCall(match)
+    return MyToken(match)
 
 
 class _MethodName(str):
@@ -73,6 +94,25 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
                     r"|" + _any_delimited(True, 'percent_bare', '=') +
                     r"|r" + _any_delimited(False, 'percent_regex') +
                     r"[a-z]*)")
+
+
+# A heredoc can be one token when the opener ends the statement line
+# and its body contains only text or simple references. Keep a shift
+# such as pages <<~mask separate.
+_SIMPLE_HEREDOC = (
+    r"(?:(?<!\\\n)(?<!\\\r\n)^[ \t]*|(?<==)[ \t]*|(?P<heredoc_call>(?<=[(,])[ \t]*))"
+    r"(?P<heredoc_opener><<(?P<heredoc_indent>[-~])?"
+    r"(?P<heredoc_quoted>')?(?P<heredoc_label>[A-Za-z_]\w*)(?(heredoc_quoted)'))"
+    r"(?(heredoc_call)(?P<heredoc_suffix>"
+    r"(?:[ \t]*,[ \t]*(?:\w+:[ \t]+)?[:@]?\w+)*[ \t]*[)\]]+))[ \t]*\r?\n"
+    r"(?:(?!^(?(heredoc_indent)[ \t]*)(?P=heredoc_label)\r?$)"
+    r"(?(heredoc_quoted)[^\n]*|(?:[^#\n]|#(?!\{)"
+    r"|#\{(?:[A-Z]\w*(?:::[A-Z]\w*)*|[@$]?[a-z_]\w*)\})*)\n)*"
+    r"^(?(heredoc_indent)[ \t]*)(?P=heredoc_label)\r?$"
+)
+
+
+_PERCENT_INTERPOLATION = re.compile(r"\\.|#\{", re.S)
 
 
 class RubyStateMachine(RubylikeStateMachine):
@@ -166,7 +206,15 @@ class RubyReader(RubylikeReader):
         context = self.context
         context.at_line_end = None
         name_follows = False
+        tokens = _expand_percent_interpolation(tokens)
         for token in tokens:
+            if type(token) is _HeredocLines:
+                # The opener is the literal's token. Its disjoint body
+                # contributes physical lines after the call closes.
+                for _ in token:
+                    yield '\n'
+                context.add_nloc(len(token))
+                continue
             if token.isspace():
                 if token != '\n':
                     continue
@@ -214,11 +262,16 @@ class RubyReader(RubylikeReader):
     def generate_tokens(source_code, addition='', token_class=None):
         addition = (r"|\w+:|\$\w+|\.+|:?\@{0,2}\w+\??\!?"
                     r"|" + _PERCENT_LITERAL + addition)
+        read_token = MyToken
+        if "<<" in source_code:
+            addition += "|" + _SIMPLE_HEREDOC
+            read_token = _heredoc_token
+        percent_strings = '%(' in source_code or '%Q(' in source_code
         bracket_stack = []
         source = source_code
         while source is not None:
             tokens = tokens_ignoring_documentation(
-                source, addition, MyToken, pattern_for_fragment(source, source is source_code),
+                source, addition, read_token, pattern_for_fragment(source, source is source_code),
                 may_have_documentation(source))
             for token in tokens:
                 if token == "{":
@@ -237,6 +290,63 @@ class RubyReader(RubylikeReader):
                         bracket_stack.append(sep)
                         source = source[token.begin + token.find(sep)+2:]
                         break
-                yield token
+                if type(token) is _HeredocCall:
+                    yield token.opener
+                    yield from tokens_in_span(
+                        compiled_token_pattern(addition), token,
+                        token.suffix_start, token.suffix_end, MyToken)
+                    yield _HeredocLines('\n' * token.count('\n'))
+                else:
+                    if percent_strings and token.startswith(('%(', '%Q(')) and '#{' in token:
+                        token.percent_interpolation = addition
+                    yield token
             else:
                 source = None
+
+
+def _expand_percent_interpolation(tokens):
+    for token in tokens:
+        addition = getattr(token, 'percent_interpolation', None)
+        if addition is None:
+            yield token
+        else:
+            yield from _percent_interpolation_tokens(token, addition)
+
+
+def _percent_interpolation_tokens(token, addition):
+    start = token.index('(') + 1
+    end = len(token) - 1
+    fragments = []
+    pattern = compiled_token_pattern(r'|\#[^\n]*' + addition)
+
+    while start < end:
+        marker = next((match for match in _PERCENT_INTERPOLATION.finditer(token, start, end)
+                       if match[0] == '#{'), None)
+        if marker is None:
+            break
+        expression, closing = _percent_expression(token, marker.end(), end, pattern)
+        if closing is None:
+            return [token]
+        fragments.extend(('"'+token[start:marker.start()]+'"', '${'))
+        fragments.extend(expression)
+        fragments.append(closing)
+        start = closing.begin + 1
+
+    if not fragments:
+        return [token]
+    fragments.append('"'+token[start:end]+'"')
+    return fragments
+
+
+def _percent_expression(token, start, end, pattern):
+    parts = []
+    braces = 0
+    for current in tokens_in_span(pattern, token, start, end, MyToken):
+        if current == '{':
+            braces += 1
+        elif current == '}':
+            if not braces:
+                return parts, current
+            braces -= 1
+        parts.append(current)
+    return parts, None

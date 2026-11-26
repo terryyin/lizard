@@ -41,6 +41,108 @@ def test_generated_code_comment_still_ends_analysis():
     assert [f.name for f in result.function_list] == ['real']
 
 
+def test_standalone_heredoc_body_counts_as_literal_text():
+    source = '''
+def notice
+  <<~MESSAGE
+    Use the new settings if you changed teams.
+    Keep your presets until your trial ends.
+  MESSAGE
+end
+
+def template
+  body = <<~'TEMPLATE'
+    Account: #{account.name if account}
+  TEMPLATE
+  body
+end
+
+def shift_pages(pages, mask)
+  limit = pages <<~mask
+  mask
+  limit
+end
+'''
+    result = analyze_file.analyze_source_code('notices.rb', source)
+
+    assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+            for f in result.function_list] == [
+        ('notice', 2, 7, 1), ('template', 9, 14, 1), ('shift_pages', 16, 20, 1),
+    ]
+
+
+def test_continued_shift_does_not_consume_the_following_branch():
+    source = r'''
+def shift_pages(pages, mask, display)
+  limit = pages \
+    <<~mask
+  acknowledge(limit) if display
+  mask
+  limit
+end
+'''
+
+    function, = analyze_file.analyze_source_code('pages.rb', source).function_list
+
+    assert function.cyclomatic_complexity == 2
+
+
+def test_heredoc_with_simple_references_keeps_following_method():
+    source = '''
+def overview(label)
+  help = <<~HELP
+    You'll see your version in the settings.
+  HELP
+  info = <<~INFO
+    Here's the #{label}: #{Bundle::VERSION}
+  INFO
+  [help, info]
+end
+
+def verified
+  'ready'
+end
+'''
+    result = analyze_file.analyze_source_code('bundle.rb', source)
+
+    assert [(f.name, f.start_line, f.end_line) for f in result.function_list] == [
+        ('overview', 2, 10), ('verified', 12, 14),
+    ]
+
+
+def test_heredoc_before_a_call_closing_parenthesis_preserves_later_code():
+    source = '''
+def prepare(checker)
+  checker.verify(<<~RUBY)
+    if requested
+      authorize
+    end
+  RUBY
+  use_fallback if enabled?
+end
+'''
+
+    result = analyze_file.analyze_source_code('verify.rb', source)
+
+    assert [(f.name, f.start_line, f.end_line, f.nloc, f.cyclomatic_complexity)
+            for f in result.function_list] == [('prepare', 2, 9, 8, 2)]
+
+
+def test_heredoc_keeps_the_named_arguments_after_the_opener():
+    source = '''
+def prepare(checker, keyword)
+  checker.verify(<<~RUBY, keyword: keyword)
+    Use the new settings if the trial ends.
+  RUBY
+  use_fallback if enabled?
+end
+'''
+
+    function, = analyze_file.analyze_source_code('verify.rb', source).function_list
+
+    assert (function.end_line, function.cyclomatic_complexity) == (7, 2)
+
+
 def test_documentation_quote_does_not_hide_following_regex():
     source = "=begin\nWhat's this?\n=end\ndef real\n if /if/ =~ x\n  1\n end\nend\n"
     result = analyze_file.analyze_source_code('sample.rb', source)
@@ -55,6 +157,27 @@ def test_documentation_marker_inside_percent_literal_is_still_text():
     assert [(f.name, f.start_line, f.cyclomatic_complexity)
             for f in result.function_list] == [('real', 1, 2)]
     assert result.nloc == 8
+
+
+def test_percent_string_counts_only_executable_interpolation():
+    source = r'''
+def lines(enabled, framework)
+  %(#{"# " if enabled}require "#{framework}" if configured)
+end
+
+def literal(enabled, framework)
+  %q(#{"# " if enabled}require "#{framework}" if configured)
+end
+
+def escaped
+  %Q(\#{legacy if active} report #{name if available})
+end
+'''
+
+    result = analyze_file.analyze_source_code('config.rb', source)
+
+    assert [(f.name, f.cyclomatic_complexity)
+            for f in result.function_list] == [('lines', 2), ('literal', 1), ('escaped', 2)]
 
 
 def test_interpolation_does_not_make_a_data_marker_start_a_line():
