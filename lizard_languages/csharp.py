@@ -321,7 +321,8 @@ _DECLARATION_MODIFIERS = frozenset({
     'public', 'readonly', 'sealed', 'static', 'virtual', 'volatile',
 })
 _TYPE_END = frozenset(('(', '[', '{', ')', ']', '}', ';', '=', '=>'))
-_TYPE_PATTERN_END = frozenset(('?', '??', '&&', '||', '=', '=>', ':', ';', ')', '{', '}'))
+_PATTERN_END = frozenset(('?', '??', '&&', '||', '=', '=>', ':', ';', ',', ')', ']', '}'))
+_PATTERN_OPERATORS = frozenset(('is', 'not', 'and', 'or'))
 _NOT_A_TERNARY_ARM = frozenset(('.', ',', ':', ';', ')', ']', '}', '>', '='))
 _OPEN_GROUP = frozenset(('(', '[', '{'))
 _CLOSE_GROUP = frozenset((')', ']', '}'))
@@ -335,7 +336,7 @@ def _mark_questions(tokens):
     question = None
     previous = before_previous = None
     reading_type = False
-    type_pattern_depth = None
+    pattern = None
     type_brackets = constraint = 0
     for token in tokens:
         if buffered or token == '?':
@@ -355,8 +356,11 @@ def _mark_questions(tokens):
             if token == '?':
                 index = len(buffered) - 1
                 empty_rank = previous == ']' and before_previous in ('[', ',')
-                type_pattern = type_pattern_depth is not None
-                if not reading_type and (type_pattern or not (empty_rank or previous in _TYPE_WORDS)):
+                if pattern is None:
+                    can_end_condition = not (empty_rank or previous in _TYPE_WORDS)
+                else:
+                    can_end_condition = not pattern.type_arguments
+                if not reading_type and can_end_condition:
                     question = index
                 mark = _OptionalHoleQuestion if isinstance(token, _InterpolationPart) else _OptionalQuestion
                 buffered[index] = mark(token)
@@ -392,18 +396,40 @@ def _mark_questions(tokens):
                 type_brackets -= 1
             elif not type_brackets and token in _TYPE_END:
                 reading_type = False
-        if token == 'is':
-            type_pattern_depth = 0
-        elif type_pattern_depth is not None:
-            if token == '(':
-                type_pattern_depth += 1
-            elif token == ')' and type_pattern_depth:
-                type_pattern_depth -= 1
-            elif token in _TYPE_PATTERN_END:
-                type_pattern_depth = None
+        if pattern is not None:
+            if pattern.ends_at(token, previous):
+                pattern = None
+        elif token == 'is':
+            pattern = _IsPattern()
         if token != '@':
             before_previous, previous = previous, token
     yield from buffered
+
+
+class _IsPattern:
+    """Track nested punctuation after an `is` operator."""
+
+    def __init__(self):
+        self._groups = 0
+        self.type_arguments = 0
+
+    def ends_at(self, token, previous):
+        if token in _OPEN_GROUP:
+            self._groups += 1
+        elif self._groups and token in _CLOSE_GROUP:
+            self._groups -= 1
+        elif token == '<' and self._opens_type_arguments(previous):
+            self.type_arguments += 1
+        elif token == '>' and self.type_arguments:
+            self.type_arguments -= 1
+        else:
+            return not (self._groups or self.type_arguments) and token in _PATTERN_END
+        return False
+
+    def _opens_type_arguments(self, previous):
+        # Inside a grouped constant pattern, `<` can be a comparison.
+        return ((self.type_arguments or not self._groups) and previous not in _PATTERN_OPERATORS
+                and previous.lstrip('@').isidentifier())
 
 
 def _clear_questions(group):
