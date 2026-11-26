@@ -37,7 +37,7 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
             r"|`\w+`" +
             # A typed name may have a comment before its colon.
             # The literal scanner can end the token span at that comment.
-            r"|`[^`\r\n]+`(?=\s*(?::|/[/*]|\Z))" +
+            r"|`[^`\r\n]+`(?=\s*(?::|/[/*])|[ \t]*\Z)" +
             r"|\w+\?" +
             r"|\w+\!!" +
             r"|\?\?" +
