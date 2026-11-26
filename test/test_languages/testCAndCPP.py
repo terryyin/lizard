@@ -660,6 +660,48 @@ done:
 
         self.assertEqual([("step", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
+    def test_logical_and_before_assigning_grouped_label_addresses(self):
+        source = """int step(int ready) {
+    void *target;
+    return ready && (target = ADDRESS);
+done:
+    return 0;
+}
+
+int compare(int active, int ready, int input) {
+    int accepted;
+    return active && (accepted = (input) && ready);
+}
+"""
+        for filename in ("step.c", "step.cpp"):
+            for address in ("(&&done)", "(char *)&&done"):
+                with self.subTest(filename=filename, address=address):
+                    result = analyze_file.analyze_source_code(
+                        filename, source.replace("ADDRESS", address)).function_list
+
+                    self.assertEqual(
+                        [("step", 2), ("compare", 3)],
+                        [(fn.name, fn.cyclomatic_complexity) for fn in result],
+                    )
+
+    def test_logical_and_before_using_overloaded_operator(self):
+        result = get_cpp_function_list("""struct Flag { bool operator&&(int) const; };
+bool accepts(bool ready, const Flag& flag, int input) {
+    bool accepted;
+    return ready && (accepted = flag.operator&&(input));
+}
+
+bool binds(bool ready) {
+    bool (Flag::*combine)(int) const;
+    return ready && (combine = &Flag::operator&&);
+}
+""")
+
+        self.assertEqual(
+            [("accepts", 2), ("binds", 2)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result],
+        )
+
     def test_rvalue_reference_with_parenthesized_initializer(self):
         result = get_cpp_function_list("""int read_at(int index);
 
