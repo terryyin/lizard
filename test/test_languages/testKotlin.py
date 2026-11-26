@@ -392,6 +392,21 @@ failed""",
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
+    def test_generic_type_before_multiline_default_keeps_the_formal_name(self):
+        functions = get_kotlin_function_list('''\
+fun notice(
+    messages: Map<String, String> = mapOf("error" to """Connection
+failed"""),
+    retries: Int = 2,
+): String {
+    return messages.getValue("error").repeat(retries)
+}
+''')
+        self.assertEqual(
+            [("notice", ["messages", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_parameters_ignore_commas_inside_parentheses(self):
         functions = get_kotlin_function_list('''\
 fun applyOffset(
