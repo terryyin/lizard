@@ -2,10 +2,12 @@
 Language parser for Apple Swift
 '''
 
+from itertools import compress
+
 from .clike import CCppCommentsMixin
-from .code_reader import CodeReader, CodeStateMachine
+from .code_reader import CodeReader, CodeStateMachine, _previous_code
 from .golike import GoLikeStates
-from .swift import SwiftReplaceLabel
+from .swift import SwiftReplaceLabel, _is_local_name, _next_significant
 
 
 class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
@@ -27,7 +29,68 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
 
     def __init__(self, context):
         super(KotlinReader, self).__init__(context)
-        self.parallel_states = [KotlinStates(context)]
+        self._expression_bodies = []
+        self._statement_ends = None
+        self.parallel_states = [KotlinStates(context, expression_bodies=self._expression_bodies)]
+
+    def preprocess(self, tokens):
+        # Kotlin has optional semicolons, so the end of a line can end an
+        # expression body. Ending it here, before the next token is counted,
+        # counts that token in the enclosing scope.
+        # A body starts after `=`, never at the start of a line, so lines
+        # are tracked only while a body is open.
+        bodies = self._expression_bodies
+        line_start = False
+        enders = KotlinExpressionBody.ENDERS
+        statement_ends = self._statement_ends
+        tokens = self._mark_labels(tokens)
+        for index, token in enumerate(tokens):
+            if bodies:
+                if token == '\n':
+                    line_start = True
+                elif ((line_start or token in enders)
+                      and not (line_start and token[:2] in ('//', '/*'))):
+                    ended = False
+                    while bodies and bodies[-1].ends_before(token, line_start, tokens, index):
+                        bodies[-1].end()
+                        ended = True
+                    line_start = False
+                    # A body that ends at a bracket or a comma is part
+                    # of a statement that goes on.
+                    if ended and statement_ends is not None and token not in enders:
+                        statement_ends.before_token = True
+                        yield token
+                        statement_ends.before_token = False
+                        continue
+            elif line_start:
+                line_start = False
+            yield token
+        while bodies:
+            bodies[-1].end()
+
+    def _mark_labels(self, tokens):
+        tokens = self.mark_member_names(
+            tokens, self._BEFORE_MEMBER_NAME,
+            line_breaks=self._MEMBER_ACCESS_SPANS_LINES,
+            type_parameters=self._TYPE_PARAMETERS_BEFORE_NAME)
+        labels = {token for token in self.conditions if token.isalpha()}
+        labels.update(self._DECLARATION_LABELS)
+        # Keyword labels are rare. Check their neighbors only at their positions.
+        for index in compress(range(len(tokens)), map(labels.__contains__, tokens)):
+            previous = _previous_code(tokens, index, line_breaks=True)
+            if previous < 0 or tokens[previous] not in ('(', ','):
+                continue
+            colon = _next_significant(tokens, index + 1)
+            if colon is not None and _is_local_name(tokens[colon]):
+                colon = _next_significant(tokens, colon + 1)
+            if colon is not None and tokens[colon] == ':':
+                tokens[index] = '_' + tokens[index]
+        return tokens
+
+    def implied_semicolons(self, tokens):
+        if self._statement_ends is None:
+            self._statement_ends = _ExpressionBodyEnds()
+        return tokens, self._statement_ends
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
@@ -61,19 +124,28 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         'actual', 'context', 'import', 'package',
     } | _ACCESSORS | _ACCESSOR_MODIFIERS
     _HEADER_OPERATORS = {':', 'where', '.', '->', ',', '<', '(', '&', 'suspend'}
+    # The tokens that `_state_global` acts on.
+    _GLOBAL_TOKENS = _ACCESSORS | {
+        'class', 'object', '->', 'val', 'var', ',', 'interface', 'when', 'fun', 'type', '{', '}',
+    }
 
-    def __init__(self, context, in_when_cases=False, accessor_declaration_scope=None):
+    def __init__(self, context, in_when_cases=False, accessor_declaration_scope=None,
+                 expression_bodies=None):
         super().__init__(context)
         self._in_when_cases = in_when_cases
-        self._expr_nesting = 0
         self._accessor_name = None
         self._accessor_declaration_scope = (
             accessor_declaration_scope or context.global_pseudo_function
         )
-        self._when_return_state = self._state_global
+        self._expression_bodies = [] if expression_bodies is None else expression_bodies
         self._start_header()
 
+    def statemachine_clone(self):
+        return KotlinStates(self.context, expression_bodies=self._expression_bodies)
+
     def _state_global(self, token):
+        if token not in self._GLOBAL_TOKENS:
+            return
         if (token in self._ACCESSORS and self.last_token not in self._BEFORE_ACCESSOR_IDENTIFIER
                 and self.context.current_function is self._accessor_declaration_scope):
             self._start_header()
@@ -91,7 +163,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         elif token in ('val', 'var', ',', 'interface'):
             self._state = self._expect_declaration_name
         elif token == 'when':
-            self._start_when(self._state_global)
+            self._state = self._when_cases
         else:
             if token == self.FUNC_KEYWORD:
                 self._start_header()
@@ -106,6 +178,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             self.next(self._state_global)
             self.sub_state(KotlinStates(
                 self.context, accessor_declaration_scope=self.context.current_function,
+                expression_bodies=self._expression_bodies,
             ))
         elif token in self._EXPRESSION_BODY_ENDERS or token in ('}', ';'):
             self.next(self._state_global, token)
@@ -142,8 +215,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
 
     def _expect_function_impl(self, token):
         if token == '=':
-            self._expr_nesting = 0
-            self._state = self._expression_body
+            self._state = self._state_global
+            self.sub_state(KotlinExpressionBody(self), self.context.end_of_function)
         elif token == '{':
             self.next(self._function_impl, token)
         elif self._ends_declaration(token):
@@ -190,50 +263,6 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             self._type_annotated = self.last_token == '@' or (
                 self._type_annotated and '.' in (token, self.last_token))
 
-    def _start_when(self, return_state):
-        self._when_return_state = return_state
-        self._state = self._when_cases
-
-    def _expression_body(self, token):
-        if token == 'when':
-            self._start_when(self._expression_body)
-            return
-        if token in '{([':
-            self._expr_nesting += 1
-            return
-        if token in ')]}':
-            if self._expr_nesting > 0:
-                self._expr_nesting -= 1
-                return
-            if token == '}':
-                self._end_expression_body(token)
-            return
-        if self._expr_nesting == 0 and self._is_expression_body_ender(token):
-            self._end_expression_body(token)
-
-    def _is_expression_body_ender(self, token):
-        if token in self._ACCESSORS:
-            return self._starts_sibling_accessor(token)
-        if token == 'class' and self.last_token == '::':
-            return False
-        return token in self._EXPRESSION_BODY_ENDERS
-
-    def _starts_sibling_accessor(self, token):
-        if self._accessor_name is None or token == self._accessor_name:
-            return False
-        if self.last_token in ('=', '.', '::'):
-            return False
-        return (self.context.newline or self.last_token == ';'
-                or self.last_token in self._ACCESSOR_MODIFIERS)
-
-    def _end_expression_body(self, token):
-        self.context.end_of_function()
-        self.next(self._state_global, token)
-
-    def statemachine_before_return(self):
-        if self._state == self._expression_body:
-            self.context.end_of_function()
-
     def _function_name(self, token):
         if token == "<":
             self.next(self._template, token)
@@ -266,7 +295,302 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _when_cases(self, token):
         def callback():
             self.context.add_condition(inc=-1)
-            self.next(self._when_return_state)
+            self.next(self._state_global)
         if token != '{':
             return
-        self.sub_state(KotlinStates(self.context, in_when_cases=True), callback)
+        self.sub_state(KotlinStates(
+            self.context, in_when_cases=True, expression_bodies=self._expression_bodies,
+        ), callback)
+
+
+class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
+    '''Reads an expression body like a block body. The body ends before a
+    bracket or a semicolon that it did not open, or at the end of a line
+    where the expression does not continue.'''
+
+    ENDERS = {'}', ')', ']', ';', ',', 'else'}
+    # The Kotlin grammar continues an expression on the next line after
+    # these tokens...
+    _CONTINUES_AT_LINE_END = {
+        '=', '.', '::', ',', ':', '->', '+', '-', '*', '/', '%', '&&', '||',
+        '?:', '==', '!=', '===', '!==', '<', '<=', '>=', 'in', 'is', 'as', 'as?',
+        '@', 'if', 'else', 'when', 'object', 'throw',
+    }
+    # ...and before these ones (`?` starts `?.`).
+    _CONTINUES_AT_LINE_START = {
+        '.', '?', '?:', '&&', '||', 'as', 'as?', 'catch', 'finally',
+    }
+    # A block can follow these keywords across a line break.
+    _TAKES_BLOCK_ON_NEXT_LINE = {'when', 'try', 'finally', 'do'}
+    # Tokens that can follow a `<` in type arguments, `Map<K, List<V>?>`.
+    _TYPE_ARGUMENT_TOKENS = {'<', '>', '.', ',', '?', '*', '@', ':', '->', '&', 'in', 'out'}
+    _TYPE_OPERATORS = {'as', 'as?', 'is'}
+    _TYPE_PREFIXES = _TYPE_OPERATORS | {'.'}
+    # Words that are not operands, so a name after them is not an infix call.
+    _KEYWORDS = {
+        'if', 'else', 'when', 'try', 'catch', 'finally', 'return', 'throw',
+        'is', 'as', 'as?', 'in', 'out', 'by', 'where', 'val', 'var', 'fun',
+        'object', 'class', 'interface', 'typealias',
+    }
+    _BRACKET_CHANGES = {'(': 1, '[': 1, ')': -1, ']': -1}
+
+    def __init__(self, parent):
+        super().__init__(parent.context, expression_bodies=parent._expression_bodies)
+        self._parent = parent
+        self._function = parent.context.current_function
+        # Only an anonymous function can be an argument: `f(fun() = 1, 2)`.
+        self._anonymous = not self._function.name
+        self._depth = 0
+        self._condition = False
+        self._closes_condition = False
+        self._open_types = 0
+        self._closes_type = False
+        self._type_operand = False
+        # What can come next in a type argument: 'type' right after `<`,
+        # and 'dot' after a package name, `List<java.time.Instant>`.
+        self._type_part = None
+        self._open_ifs = 0
+        # Between `object` and the `{` of its body: `object : Runnable`.
+        self._object_header = False
+        self._token_before_last = None
+        # The body can start with annotations: `= @Suppress("X")`.
+        self._annotation = '@'
+        self._infix = False
+        self._trailing_lambda_start = -1
+        self.last_token = '='
+        self._expression_bodies.append(self)
+
+    def __call__(self, token, reader=None):
+        if not isinstance(self._state, CodeStateMachine):
+            if self._depth:
+                self._depth += self._BRACKET_CHANGES.get(token, 0)
+                self._closes_condition = self._depth == 0 and self._condition
+            else:
+                self._track_top_level(token)
+        return CodeStateMachine.__call__(self, token, reader)
+
+    def next(self, state, token=None):
+        # A state that passes its token on to the next state must not count
+        # that token's brackets twice.
+        self._state = state
+        if token is not None:
+            return CodeStateMachine.__call__(self, token)
+        return None
+
+    def _track_top_level(self, token):
+        if self._annotation is not None or token == '@':
+            self._track_annotation(token)
+        self._track_infix(token)
+        self._closes_condition = False
+        self._closes_type = False
+        # A trailing lambda can attach to a generic call, such as
+        # `run<Int>`. A type after a cast or type check accepts no lambda.
+        first = token[0]
+        if token in self._TYPE_OPERATORS:
+            self._type_operand = True
+        elif (self._type_operand and not self._open_types
+              and first != '<' and token != '.'
+              and self.last_token not in self._TYPE_PREFIXES):
+            self._type_operand = False
+        if first in '<>' or self._open_types:
+            self._track_types(token)
+        if token in ('(', '['):
+            # `if (ready)` needs its branch, even with a line break.
+            self._condition = self.last_token == 'if'
+            self._depth = 1
+        elif token in ('object', '{'):
+            self._object_header = token == 'object'
+        elif token == 'if':
+            self._open_ifs += 1
+        elif token == 'else' and self._open_ifs:
+            self._open_ifs -= 1
+        self._token_before_last = self.last_token
+
+    def _track_annotation(self, token):
+        # A line of annotations, like `@Suppress("UNCHECKED_CAST")`, annotates
+        # the expression on the next line. `_annotation` holds what the line
+        # can take next while it has only annotations, and None otherwise.
+        if self.context.newline:
+            self._annotation = '@'
+        if self._annotation is None:
+            return
+        if token == '@' and self._annotation in ('@', 'more', 'args'):
+            self._annotation = 'name'
+        elif self._annotation == 'name' and token == '[':
+            # A group such as `@[A B]` also annotates the next expression.
+            self._annotation = 'args'
+        elif self._annotation == 'name' and (token[0].isalpha() or token[0] in '_`'):
+            self._annotation = 'more'
+        elif self._annotation == 'more' and token in ('.', ':'):
+            self._annotation = 'name'
+        elif self._annotation == 'more' and token == '(':
+            # The arguments of the annotation. A `(` after them starts the
+            # expression: `@Suppress("X") (x as T)`.
+            self._annotation = 'args'
+        else:
+            self._annotation = None
+
+    def _track_infix(self, token):
+        # A name right after an operand calls an infix function, like `or`
+        # in `flags or`, and its argument can be on the next line.
+        self._infix = self._is_name(token) and not self._infix and (
+            self._is_name(self.last_token)
+            or self.last_token[0] in '"\'0123456789'
+            or self.last_token in (']', '}')
+            or self.last_token == ')' and not self._closes_condition
+            or self.last_token == '!' and self._token_before_last == '!')
+
+    def _is_name(self, token):
+        return (token[0].isalpha() or token[0] in '_`') and token not in self._KEYWORDS
+
+    def ends_before(self, token, line_start, tokens, index):
+        if (self._depth or isinstance(self._state, CodeStateMachine)
+                or self.context.current_function is not self._function
+                or index <= self._trailing_lambda_start):
+            return False
+        if token in ('}', ')', ']', ';'):
+            return True
+        if token == 'else':
+            # The `else` of an `if` around the body: `if (a) fun() = 1 else`.
+            return not self._open_ifs
+        if token == ',':
+            # Not a comma between type arguments, `Map<K, V>`, or between
+            # the supertypes of an `object :` expression.
+            return (self._anonymous and not self._in_type_arguments()
+                    and self._state == self._state_global)  # pylint: disable=W0143
+        return line_start and not (
+            self._closes_condition
+            or token == '(' and self.last_token == 'catch' and self._token_before_last == '}'
+            or self.last_token == '>' and not self._closes_type
+            or token == '>' and self._in_type_arguments()
+            or self._annotation in ('more', 'args')
+            or self._infix
+            or self.last_token in self._CONTINUES_AT_LINE_END
+            or self._ends_with_prefix_not()
+            or token in self._CONTINUES_AT_LINE_START
+            or self._continues_with_block(token, tokens, index))
+
+    def _continues_with_block(self, token, tokens, index):
+        takes_lambda = not self._type_operand and (self.last_token == ')' or self._closes_type)
+        if token == '{':
+            return takes_lambda or self._object_header or self.last_token in self._TAKES_BLOCK_ON_NEXT_LINE
+        if not takes_lambda:
+            return False
+        if token == '@':
+            index = self._after_annotations(tokens, index)
+            if index is None:
+                return False
+            token = tokens[index]
+        # `fold(0)\n add@{ ... }` still has a trailing lambda. The label
+        # can also start another statement, such as `add@ for (...)`.
+        if token != '{':
+            if (not (token[0].isalpha() or token[0] in '_`')
+                    or index + 1 == len(tokens) or tokens[index + 1] != '@'):
+                return False
+            index = _next_significant(tokens, index + 2)
+            if index is None or tokens[index] != '{':
+                return False
+        # These tokens belong to the lambda prefix, even across line breaks.
+        self._trailing_lambda_start = index
+        return True
+
+    def _after_annotations(self, tokens, index):
+        # A trailing lambda may have annotations. A declaration after the
+        # expression can also have annotations, so check what follows them.
+        while index is not None and tokens[index] == '@':
+            index = _next_significant(tokens, index + 1)
+            if index is None:
+                break
+            if tokens[index] != '[':
+                index = _next_significant(tokens, index + 1)
+                while index is not None and tokens[index] == '.':
+                    name = _next_significant(tokens, index + 1)
+                    if name is None:
+                        return None
+                    index = _next_significant(tokens, name + 1)
+            if index is not None and tokens[index] in ('(', '['):
+                index = self._after_annotation_group(tokens, index)
+        return index
+
+    @staticmethod
+    def _after_annotation_group(tokens, index):
+        opening = tokens[index]
+        closing = ')' if opening == '(' else ']'
+        depth = 1
+        for part in range(index + 1, len(tokens)):
+            if tokens[part] == opening:
+                depth += 1
+            elif tokens[part] == closing:
+                depth -= 1
+                if depth == 0:
+                    return _next_significant(tokens, part + 1)
+        return None
+
+    def _track_types(self, token):
+        # `<` and `>` open and close type arguments, `Map<K, V>`, or
+        # compare. A `>` with no `<` to close compares, and so does a
+        # `<` before a token that a type cannot have, `a < 0`.
+        if token == '<':
+            self._open_types += 1
+            self._type_part = 'type'
+        elif token == '>' and self._open_types:
+            self._open_types -= 1
+            self._closes_type = True
+            self._type_part = None
+        elif token[0] == '<' and token[-1] == '>':
+            # The tokenizer packs a nullable type argument as `<String?>`.
+            self._closes_type = True
+        elif self._open_types and not self._continues_type_arguments(token):
+            self._open_types = 0
+            self._type_part = None
+
+    def _in_type_arguments(self):
+        # A lowercase name right after `<` is a package only if a `.`
+        # follows it. Until then it can be the end of `value < limit`.
+        return self._open_types and self._type_part != 'dot'
+
+    def _continues_type_arguments(self, token):
+        expected, self._type_part = self._type_part, None
+        if expected == 'type':
+            # A type starts with a capital letter by convention, unlike the
+            # name in a comparison: `List<Int>`, but `value < limit`. A
+            # lowercase name can be a package before the type.
+            if self._is_name(token) and token[0].islower():
+                self._type_part = 'dot'
+                return True
+            return token[0].isupper() or token in ('*', 'in', 'out', '@')
+        if expected == 'dot':
+            self._type_part = 'type'
+            return token == '.'
+        # The tokenizer reads `<Int?>` as one token.
+        return (token in self._TYPE_ARGUMENT_TOKENS or token in ('(', '[')
+                or self._is_name(token)
+                or token[0] == '<' and token[-1] == '>' and len(token) > 2)
+
+    def _ends_with_prefix_not(self):
+        # `!` before a line break negates the next line, but `]!!` (which
+        # the tokenizer splits into `!` `!`) is a complete expression.
+        return self.last_token == '!' and self._token_before_last != '!'
+
+    def end(self):
+        self._expression_bodies.pop()
+        parent = self._parent
+        parent.next(parent.saved_state)
+        callback, parent.callback = parent.callback, None
+        callback()
+        # The enclosing function reaches at least as far as the function in
+        # it: `fun f() = fun() =` and the next line.
+        enclosing = self.context.current_function
+        enclosing.end_line = max(enclosing.end_line, self._function.end_line)
+
+    def statemachine_before_return(self):
+        # A `}` that the body could not match ended it.
+        if self in self._expression_bodies:
+            self._expression_bodies.remove(self)
+
+
+class _ExpressionBodyEnds:  # pylint: disable=R0903
+    '''An expression body ends without a `;` or a `}`. The extensions that
+    count nested structures and nesting depth read a `;` there.'''
+
+    before_token = False
