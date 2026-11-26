@@ -101,8 +101,8 @@ def _expression_end(source, pos):
 
 
 _WORD_OPERATORS = {
-    ''.join(letters): word
-    for word in ('and', 'or')
+    ''.join(letters): operator
+    for word, operator in (('and', '&&'), ('or', '||'))
     for letters in product(*zip(word, word.upper()))
 }
 _NAME_PREFIX = MEMBER_ACCESS | {'\\'}
@@ -135,6 +135,10 @@ def _is_operator_name(tokens, index):
     return False
 
 
+class _UnparsedString(str):
+    """The lexer used the legacy boundary for a string with an uncertain end."""
+
+
 class PHPReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -143,7 +147,7 @@ class PHPReader(CodeReader, CCppCommentsMixin):
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'foreach', 'while', 'catch', 'match'}
-    _logical_operators = {'&&', '||', 'and', 'or'}
+    _logical_operators = {'&&', '||'}
     _case_keywords = {'case'}
     _ternary_operators = {'?'}
     # Operators that contain '?' but are not the ternary operator
@@ -178,9 +182,11 @@ class PHPReader(CodeReader, CCppCommentsMixin):
                                     + operators + r"|(?://|\#)[^\n]*?(?=\?>|\n|\Z)|\?>")
                             match = legacy_pattern.match(source_code, match.start())
                             end = match.end()
+                            yield token_class(match) if token_class else _UnparsedString(match[0])
                         elif token_class:
-                            match = _TOKEN_SPAN.match(source_code, match.start(), end)
-                        yield token_class(match) if token_class else source_code[match.start():end]
+                            yield token_class(_TOKEN_SPAN.match(source_code, match.start(), end))
+                        else:
+                            yield source_code[match.start():end]
                         pos = end
                         break
                     token = match[0]
@@ -206,10 +212,16 @@ class PHPReader(CodeReader, CCppCommentsMixin):
     def preprocess(self, tokens):
         keywords = _STRUCTURE_KEYWORDS | self.control_flow_keywords | self.case_keywords | _WORD_OPERATORS.keys()
         tokens = [token for token in tokens if not token.isspace() or token == '\n']
+        fallback_start = None
         for index in compress(range(len(tokens)), map(keywords.__contains__, tokens)):
             token = tokens[index]
             if token in _WORD_OPERATORS:
-                tokens[index] = MemberName(token) if _is_operator_name(tokens, index) else _WORD_OPERATORS[token]
+                if fallback_start is None:
+                    fallback_start = next((i for i, item in enumerate(tokens) if isinstance(item, _UnparsedString)),
+                                          len(tokens))
+                # Legacy token boundaries can expose template text as code.
+                if index < fallback_start and not _is_operator_name(tokens, index):
+                    tokens[index] = _WORD_OPERATORS[token]
                 continue
             before = _previous_code(tokens, index, True)
             if before >= 0 and tokens[before] in _BEFORE_MEMBER_NAME:
