@@ -3,7 +3,7 @@
 from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
 from .python_structure import PythonStates, count_spaces
-from .python_tokens import FStringLiteralToken, PrefixedStringToken, \
+from .python_tokens import FStringExpressionToken, FStringLiteralToken, PrefixedStringToken, \
     generate_tokens as generate_python_tokens
 
 

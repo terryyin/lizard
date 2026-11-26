@@ -1,10 +1,7 @@
 """Python indentation and function declaration states."""
 
 from .code_reader import CodeStateMachine
-from .python_tokens import FStringExpressionToken, FStringLiteralToken, PrefixedStringToken
-
-
-_INTERPOLATED_PREFIXES = frozenset(('f', 'fr', 'rf', 't', 'tr', 'rt'))
+from .python_tokens import FStringExpressionToken
 
 
 def count_spaces(token):
@@ -144,14 +141,9 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
             self.next(self._state_global)
 
     def _state_return_annotation(self, token):
-        if isinstance(token, (FStringExpressionToken, FStringLiteralToken)) or (
-                isinstance(token, PrefixedStringToken) and '{' in token and
-                self.last_token.lower() in _INTERPOLATED_PREFIXES):
-            # Reused quotes can expose a field delimiter as an ordinary token.
-            self.indents.restore_function_indent()
-            self.reading_return_annotation = False
-            self.next(self._state_global)
-        elif token in ('def', 'class'):
+        if isinstance(token, FStringExpressionToken):
+            return
+        if token in ('def', 'class'):
             self.reading_return_annotation = False
             self.next(self._state_global, token)
         elif token in ('(', '[', '{'):
