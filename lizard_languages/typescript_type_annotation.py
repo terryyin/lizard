@@ -103,9 +103,7 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                                             and not self._reference_parenthesis
                                             and self._parenthesis_first != '(')
             return
-        if (newline and not self._expect_type
-                and token not in ('extends', 'is', 'in', 'as')
-                and starts_statement(token)):
+        if newline and self.ends_before_line_token(token):
             self.saved_token = token
             self.statemachine_return()
             return
@@ -149,6 +147,11 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
     def has_complete_type(self):
         return not (self._expect_type or self._conditional_type
                     or self._conditional_questions or self._qualified_type)
+
+    def ends_before_line_token(self, token):
+        return (not self._brackets and self.has_complete_type()
+                and token not in ('extends', 'is', 'in', 'as')
+                and starts_statement(token))
 
     def mismatched_closer(self, token):
         return (self._brackets and token in self.CLOSERS

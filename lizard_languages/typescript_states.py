@@ -79,6 +79,20 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if self.started_function:
             self._pop_function_from_stack()
 
+    def end_expression_before(self, token):
+        annotation = self._state
+        if (self._expression_body
+                and isinstance(annotation, TypeScriptTypeAnnotationStates)
+                and annotation.runtime_assertion
+                and annotation.ends_before_line_token(token)):
+            # Return to the runtime owner before the counters see the next
+            # statement. There is no token for the annotation to replay yet.
+            self.next(self.saved_state)
+            self.callback = None
+            self._end_statement()
+            return
+        super().end_expression_before(token)
+
     def type_argument_context(self):
         if isinstance(self._state, TypeScriptStates):
             return self._state.type_argument_context()
