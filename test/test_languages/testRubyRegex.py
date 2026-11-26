@@ -16,6 +16,33 @@ class Test_Ruby_regex_literal_context(unittest.TestCase):
         self.assertEqual([('a', 2)], [
             (f.name, f.cyclomatic_complexity) for f in functions])
 
+    def test_plain_regex_after_an_append(self):
+        source = r'''
+def append_defaults(rules, enabled)
+  rules << %r{#} << /\A(?:end|quit)?\z/ if enabled
+end
+
+def append_guard(rules, input, enabled)
+  rules << /#/ if /#/ =~ input && enabled
+end
+
+def append_prefix(rules, prefix)
+  rules << /#{prefix.delete_suffix('/')}/
+end
+
+def normalized_shift(enabled)
+  self.<< / (enabled ? 2 : 1) / 3
+end
+'''
+
+        functions = get_ruby_function_list(source)
+
+        self.assertEqual(
+            [('append_defaults', 4, 2), ('append_guard', 8, 3),
+             ('append_prefix', 12, 1), ('normalized_shift', 16, 2)],
+            [(function.name, function.end_line, function.cyclomatic_complexity)
+             for function in functions])
+
     def test_member_division_keeps_condition_and_tokens(self):
         functions = get_ruby_function_list(
             'def divide(obj,a,b,c)\n obj.return / (a || b) / c\nend\n')
