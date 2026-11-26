@@ -74,6 +74,18 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
                     r"[a-z]*)")
 
 
+# A heredoc can be one token when the opener ends the statement line
+# and its body contains only text or constant references. Keep a shift
+# such as pages <<~mask separate.
+_SIMPLE_HEREDOC = (
+    r"(?:(?<!\\\n)(?<!\\\r\n)^[ \t]*|(?<==)[ \t]*)<<(?P<heredoc_indent>[-~])?"
+    r"(?P<heredoc_quoted>')?(?P<heredoc_label>[A-Za-z_]\w*)(?(heredoc_quoted)')[ \t]*\r?\n"
+    r"(?:(?!^(?(heredoc_indent)[ \t]*)(?P=heredoc_label)\r?$)"
+    r"(?(heredoc_quoted)[^\n]*|(?:[^#\n]|#(?!\{)|#\{[A-Z]\w*(?:::[A-Z]\w*)*\})*)\n)*"
+    r"^(?(heredoc_indent)[ \t]*)(?P=heredoc_label)\r?$"
+)
+
+
 class RubyReader(RubylikeReader):
     # pylint: disable=R0903
 
@@ -136,6 +148,8 @@ class RubyReader(RubylikeReader):
     def generate_tokens(source_code, addition='', token_class=None):
         addition = (r"|\w+:|\$\w+|\.+|:?\@{0,2}\w+\??\!?"
                     r"|" + _PERCENT_LITERAL + addition)
+        if "<<" in source_code:
+            addition += "|" + _SIMPLE_HEREDOC
         bracket_stack = []
         source = source_code
         while source is not None:
