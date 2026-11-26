@@ -70,8 +70,6 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self._set_structure_keywords(self.structures)
 
     def __call__(self, tokens, reader=None):
-        if 'php' in getattr(reader, 'language_names', ()):
-            return _PHPNestedStructures().read(tokens, reader)
         if 'python' in getattr(reader, 'language_names', ()):
             return self._indented_structures(tokens, reader)
         if hasattr(reader, 'implied_semicolons'):
@@ -84,6 +82,11 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         structures = getattr(reader, 'nested_structure_keywords', self.structures)
         if structures is not self._structure_keywords:
             self._set_structure_keywords(structures)
+        if ('php' in getattr(reader, 'language_names', ())
+                and not isinstance(self, _PHPNestedStructures)):
+            counter = _PHPNestedStructures()
+            counter._start_file(reader)
+            self._state = counter._read_php_token
 
     def _set_structure_keywords(self, structures):
         self._structure_keywords = structures
@@ -247,30 +250,30 @@ class _PHPNestedStructures(LizardExtension):
     _BRANCH_KEYWORDS = _ALTERNATIVE_HEADS | _ALTERNATIVE_ENDS.keys() | {'elseif', 'else'}
     _BEFORE_NAME = frozenset(('->', '?->', '::', 'function', '(', ','))
 
-    def read(self, tokens, reader):
-        self._start_file(reader)
+    def _start_file(self, reader):
+        super()._start_file(reader)
         self._if_levels = [[]]
         self._alternate = [None]
         self._function = None
         self._function_scopes = {self.context.global_pseudo_function: 0}
         self._scope_start = 0
-        previous = None
-        for token in tokens:
-            function = self.context.current_function
-            if function is not self._function:
-                self._function = function
-                self._scope_start = self._function_scopes.setdefault(function, len(self.structure_piles))
-            word = token.lower()
-            if word in self._BRANCH_KEYWORDS and not getattr(token, 'is_member_name', False):
-                if previous not in self._BEFORE_NAME or word not in ('else', 'elseif'):
-                    token_for_metric = word
-                else:
-                    token_for_metric = ''
+        self._previous = None
+
+    def _read_php_token(self, token):
+        function = self.context.current_function
+        if function is not self._function:
+            self._function = function
+            self._scope_start = self._function_scopes.setdefault(function, len(self.structure_piles))
+        word = token.lower()
+        if word in self._BRANCH_KEYWORDS and not getattr(token, 'is_member_name', False):
+            if self._previous not in self._BEFORE_NAME or word not in ('else', 'elseif'):
+                token_for_metric = word
             else:
-                token_for_metric = token
-            self._state(token_for_metric)
-            previous = token
-            yield token
+                token_for_metric = ''
+        else:
+            token_for_metric = token
+        self._state(token_for_metric)
+        self._previous = token
 
     def _state_global(self, token):
         if token in ('else', 'elseif') and not getattr(token, 'is_member_name', False):
