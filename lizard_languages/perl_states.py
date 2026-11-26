@@ -180,11 +180,12 @@ class PerlStates(CodeStateMachine):
             self.paren_count = 1
             self.sub_state(self._state_function_prototype)
         else:
-            self._start_function(token)
+            self._start_function(token, nested=True)
             self.next(self._state_nested_named_sub_brace_search)
 
     def _state_nested_named_sub_brace_search(self, token):
         if token == '{':
+            self.enclosing_brace_count = self.brace_count
             self.brace_count = 1
             self.next(self._state_nested_sub_body)
         elif token.isspace():
@@ -206,7 +207,7 @@ class PerlStates(CodeStateMachine):
             if self.brace_count == 0:
                 # End the nested function
                 self.context.end_of_function()
-                # Return to parent function
+                self.brace_count = self.enclosing_brace_count
                 self.next(self._state_function_body)
 
     def _state_nested_call(self, token):
