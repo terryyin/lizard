@@ -306,6 +306,23 @@ class TestRust(unittest.TestCase):
             [('size', 10, 12)],
             [(f.name, f.start_line, f.end_line) for f in result])
 
+    def test_hashed_raw_literal_keeps_braced_macro_delimiters(self):
+        result = get_rust_function_list('''macro_rules! label_type {
+            ($label:literal) => { [u8; $label.len()] };
+        }
+
+        fn label() -> label_type!{br#"DATA"#} {
+            *b"DATA"
+        }
+
+        fn next() -> usize {
+            4
+        }
+        ''')
+        self.assertEqual(
+            [('label', 5, 7), ('next', 9, 11)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
     def test_attribute_in_const_argument_keeps_the_body(self):
         for attribute in ('#[allow(unused)]', '#[cfg_attr(target_pointer_width = "64", allow(unused))]'):
             with self.subTest(attribute=attribute):
