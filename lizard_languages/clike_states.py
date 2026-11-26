@@ -3,6 +3,10 @@
 from .code_reader import CodeStateMachine
 
 
+CPP_CONDITIONAL_START = frozenset(("if", "ifdef", "ifndef"))
+CPP_CONDITIONAL_DIRECTIVES = CPP_CONDITIONAL_START | {"elif", "elifdef", "elifndef", "else", "endif"}
+
+
 # pylint: disable=R0903
 class CLikeStates(CodeStateMachine):
     ''' This is the reader for C, C++ and Java. '''
@@ -13,6 +17,7 @@ class CLikeStates(CodeStateMachine):
         super(CLikeStates, self).__init__(context)
         self.bracket_stack = []
         self._saved_tokens = []
+        self._return_branch_depths = []
 
     def try_new_function(self, name):
         self.context.try_new_function(name)
@@ -86,6 +91,8 @@ class CLikeStates(CodeStateMachine):
         elif token == 'throws':
             self._state = self._state_throws
         elif token == '->':
+            self.br_count = 0
+            self._return_branch_depths.clear()
             self._state = self._state_trailing_return
         elif token == 'noexcept':
             self._state = self._state_noexcept
@@ -125,14 +132,24 @@ class CLikeStates(CodeStateMachine):
 
     def _state_trailing_return(self, token):
         if token == '(':
-            self.next(self._state_trailing_return_group, token)
-        elif token in (';', '{'):
+            self.br_count += 1
+        elif token == ')' and self.br_count:
+            self.br_count -= 1
+        elif not self.br_count and token in (';', '{'):
             self._state = self._state_dec_to_imp
             self._state(token)
 
-    @CodeStateMachine.read_inside_brackets_then("()", "_state_trailing_return")
-    def _state_trailing_return_group(self, _):
-        """Skip nested expressions in a trailing return type."""
+    def read_preprocessor_branch(self, directive):
+        if self._state != self._state_trailing_return:
+            return
+        if directive in CPP_CONDITIONAL_START:
+            self._return_branch_depths.append(self.br_count)
+        elif self._return_branch_depths:
+            if directive == "endif":
+                self._return_branch_depths.pop()
+            else:
+                # Each alternative starts with the same return expression depth.
+                self.br_count = self._return_branch_depths[-1]
 
     def _state_old_c_params(self, token):
         self._saved_tokens.append(token)
