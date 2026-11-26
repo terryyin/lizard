@@ -176,6 +176,9 @@ class RubyStateMachine(RubylikeStateMachine):
         else:
             super()._if(token)
 
+    def _finish_modifier_do(self):
+        self.next(self._state_global)
+
     def _modifier_do(self, token):
         # A block with parameters or a body on the next line has a
         # distinct opening. Keep reading the predicate on other tokens.
@@ -183,9 +186,6 @@ class RubyStateMachine(RubylikeStateMachine):
             self._read_block('do', callback=self._finish_modifier_do, token=token)
         else:
             self.next(self._if, token)
-
-    def _finish_modifier_do(self):
-        self.next(self._state_global)
 
 
 class RubyReader(RubylikeReader):
