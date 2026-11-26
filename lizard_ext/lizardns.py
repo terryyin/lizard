@@ -48,7 +48,6 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     FUNCTION_INFO = {"max_nested_structures": {"caption": "  NS  "}}
 
-    # TODO: Delegate this to language readers  # pylint: disable=fixme
     structures = set(['if', 'else', 'elif', 'for', 'foreach', 'while',
                       'do', 'try', 'catch', 'switch', 'finally',
                       'except', 'with'])
@@ -68,9 +67,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def __init__(self):
         super(LizardExtension, self).__init__(None)
         self.structure_piles = [0]  # Invariant: must always have at least one element
-        # The tokens that _state_global reads; it skips the others.
-        self._global_tokens = frozenset(self.structures) | frozenset((
-            '{', ';', '}', 'else', '.', '?.'))
+        self._set_structure_keywords(self.structures)
 
     def __call__(self, tokens, reader=None):
         if 'python' in getattr(reader, 'language_names', ()):
@@ -82,6 +79,21 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def _start_file(self, reader):
         super(LizardExtension, self)._start_file(reader)
         self.structure_piles = [0]
+        structures = getattr(reader, 'nested_structure_keywords', self.structures)
+        if structures is not self._structure_keywords:
+            self._set_structure_keywords(structures)
+        if ('php' in getattr(reader, 'language_names', ())
+                and not isinstance(self, _PHPNestedStructures)):
+            counter = _PHPNestedStructures()
+            counter._start_file(reader)
+            self._state = counter._read_php_token
+
+    def _set_structure_keywords(self, structures):
+        self._structure_keywords = structures
+        self._matching_structure_keywords = self.matching_structures & structures
+        # The tokens that _state_global reads; it skips the others.
+        self._global_tokens = frozenset(structures) | frozenset((
+            '{', ';', '}', 'else', '.', '?.'))
 
     def _unterminated_statements(self, tokens, reader):
         """JavaScript ends a statement without a ';' too: read a ';'
@@ -190,7 +202,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             if token == '}':
                 self._pop_scope()
             self._state = self._block_ending
-        elif token in self.structures:
+        elif token in self._structure_keywords:
             if getattr(token, 'is_member_name', False):
                 pass                    # member/method name like catch or if
             elif token == 'else':
@@ -203,7 +215,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def _member_name(self, token):
         """A member named like a structure, promise.catch(f), is not one."""
         self._state = self._state_global
-        if token not in self.structures:
+        if token not in self._structure_keywords:
             self._state(token)
 
     def _after_else(self, token):
@@ -220,11 +232,129 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def _block_ending(self, token):
         # `} finally(e) {` in a class starts a method, not a clause.
-        decrement = (token in self.matching_structures
+        decrement = (token in self._matching_structure_keywords
                      and not getattr(token, 'is_member_name', False))
         self._reset_or_decrement_current_scope(decrement=decrement)
         self._state = self._state_global
         self._state(token)
+
+
+class _PHPNestedStructures(LizardExtension):
+    """Track which PHP if owns a continuation, including colon bodies."""
+
+    _ALTERNATIVE_HEADS = frozenset(('if', 'for', 'foreach', 'while', 'switch'))
+    _ALTERNATIVE_ENDS = {
+        'endif': 'if', 'endfor': 'for', 'endforeach': 'foreach',
+        'endwhile': 'while', 'endswitch': 'switch',
+    }
+    _BRANCH_KEYWORDS = _ALTERNATIVE_HEADS | _ALTERNATIVE_ENDS.keys() | {'elseif', 'else'}
+    _BEFORE_NAME = frozenset(('->', '?->', '::', 'function', '(', ','))
+
+    def _start_file(self, reader):
+        super()._start_file(reader)
+        self._if_levels = [[]]
+        self._alternate = [None]
+        self._function = None
+        self._function_scopes = {self.context.global_pseudo_function: 0}
+        self._scope_start = 0
+        self._previous = None
+
+    def _read_php_token(self, token):
+        function = self.context.current_function
+        if function is not self._function:
+            self._function = function
+            self._scope_start = self._function_scopes.setdefault(function, len(self.structure_piles))
+        word = token.lower()
+        if word in self._BRANCH_KEYWORDS and not getattr(token, 'is_member_name', False):
+            if self._previous not in self._BEFORE_NAME or word not in ('else', 'elseif'):
+                token_for_metric = word
+            else:
+                token_for_metric = ''
+        else:
+            token_for_metric = token
+        self._state(token_for_metric)
+        self._previous = token
+
+    def _state_global(self, token):
+        if token in ('else', 'elseif') and not getattr(token, 'is_member_name', False):
+            if self._continue_if(token):
+                return
+        elif token in self._ALTERNATIVE_HEADS and not getattr(token, 'is_member_name', False):
+            self._php_head_kind = token
+            self._state = self._expect_php_condition
+            return
+        elif token in self._ALTERNATIVE_ENDS and self._alternate[-1] == self._ALTERNATIVE_ENDS[token]:
+            super()._state_global('}')
+            return
+        super()._state_global(token)
+
+    def _continue_if(self, token):
+        if not self._if_levels[-1] and self._alternate[-1] == 'if':
+            self._pop_scope()
+        levels = self._if_levels[-1]
+        if not levels:
+            return False
+        self.structure_piles[-1] = levels[-1]
+        if token == 'else':
+            levels.pop()
+        self._php_head_kind = token
+        self._state = self._php_else_body if token == 'else' else self._expect_php_condition
+        return True
+
+    def _php_else_body(self, token):
+        if token == 'if':
+            self._if_levels[-1].append(self.structure_piles[-1])
+            self._php_head_kind = 'elseif'
+            self._state = self._expect_php_condition
+        else:
+            self._php_body(token)
+
+    def _expect_php_condition(self, token):
+        if token == '(':
+            self._state = self._php_condition
+        else:
+            self._state = self._state_global
+        self._state(token)
+
+    @CodeStateMachine.read_inside_brackets_then("()")
+    def _php_condition(self, _):
+        self._state = self._php_body
+
+    def _php_body(self, token):
+        kind = self._php_head_kind
+        if kind == 'if':
+            self._if_levels[-1].append(self.structure_piles[-1])
+        self.pile_up_within_block()
+        self._state = self._state_global
+        if token == ':':
+            self._push_scope()
+            self._alternate[-1] = 'if' if kind in ('else', 'elseif') else kind
+        else:
+            self._state(token)
+
+    def _push_scope(self):
+        super()._push_scope()
+        self._if_levels.append([])
+        self._alternate.append(None)
+
+    def _pop_scope(self):
+        if len(self.structure_piles) > 1:
+            self._if_levels.pop()
+            self._alternate.pop()
+        super()._pop_scope()
+
+    def _block_ending(self, token):
+        if token not in ('elseif', 'else'):
+            self._if_levels[-1].clear()
+        elif not getattr(token, 'is_member_name', False) and self._continue_if(token):
+            return
+        super()._block_ending(token)
+
+    def pile_up_within_block(self):
+        self._increment_current_scope()
+        function = self.context.current_function
+        level = sum(self.structure_piles[self._scope_start:])
+        function.max_nested_structures = max(getattr(function, 'max_nested_structures', 0), level)
 
 
 def _init_nested_structure_data(self, *_):

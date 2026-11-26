@@ -16,6 +16,8 @@ class PHPReader(CodeReader, CCppCommentsMixin):
 
     ext = ['php']
     language_names = ['php']
+    nested_structure_keywords = frozenset((
+        'if', 'else', 'for', 'foreach', 'while', 'do', 'try', 'catch', 'switch', 'finally'))
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'foreach', 'while', 'catch', 'match'}
