@@ -6,7 +6,7 @@ import re
 import itertools
 
 
-_PARAMETER_NAME = re.compile(r'([\w$]+)(\s=.*)?(\s:.*)?$', re.DOTALL)
+_PARAMETER_NAME = re.compile(r'([\w$]+)(\s=.*)?(\s:.*)?$')
 
 
 class Nesting(object):  # pylint: disable=R0903
