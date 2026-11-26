@@ -59,6 +59,7 @@ class RustReader(CodeReader, CCppCommentsMixin):
 class RustStates(GoLikeStates):  # pylint: disable=R0903
     FUNC_KEYWORD = 'fn'
     _SIGNATURE_CLOSERS = {'(': ')', '[': ']', '{': '}', '<': '>'}
+    _COMPLETE_ATTRIBUTE = re.compile(r"""#\s*!?\s*\[[^\[\]{}'"/\n]*\]\s*(?://[^\n]*)?""")
 
     def __init__(self, context, in_match_arms=False):
         super().__init__(context)
@@ -95,6 +96,13 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
         else:
             super()._function_name(token)
 
+    def _skip_type_parameters(self, token):
+        if token == '{':
+            # Comparisons in a const argument do not close type parameters.
+            self._open_signature_group(token, in_type_parameters=True)
+        else:
+            super()._skip_type_parameters(token)
+
     def _expect_function_impl(self, token):
         if token == '{':
             super()._expect_function_impl(token)
@@ -116,27 +124,33 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
         else:
             self.next(self._expect_function_impl, token)
 
-    def _open_signature_group(self, token):
+    def _open_signature_group(self, token, in_type_parameters=False):
         ends = [self._SIGNATURE_CLOSERS[token]]
+        after_group = self._skip_type_parameters if in_type_parameters else self._expect_function_impl
 
         def read_group(token):
             expected = ends[-1]
             if token == expected:
                 ends.pop()
                 if not ends:
-                    self.next(self._expect_function_impl)
+                    self.next(after_group)
             elif token in ('[', '(', '{') or (token == '<' and expected == '>'):
                 # Angle tokens can be operators inside a const block or macro.
                 ends.append(self._SIGNATURE_CLOSERS[token])
-            else:
+            elif not in_type_parameters:
                 self._fall_back_on_hidden_delimiters(token)
 
         self.next(read_group)
 
     def _fall_back_on_hidden_delimiters(self, token):
-        if token[0] == '#' or (token[0] == '"' and self.last_token in ('r', 'br', 'cr')):
-            # The tokenizer can hide delimiters around raw strings. With
-            # an incomplete signature, keep looking for the body.
+        if token[0] == '#':
+            hidden_delimiters = self._COMPLETE_ATTRIBUTE.fullmatch(token) is None
+        else:
+            # In an un-hashed raw string the first quote ends the literal.
+            hidden_delimiters = (token[0] == '"' and self.last_token in ('r', 'br', 'cr')
+                                 and token.find('"', 1) != len(token) - 1)
+        if hidden_delimiters:
+            # Keep looking for the body if the tokenizer hid part of the signature.
             self.next(super()._expect_function_impl)
 
     def _fold_signature(self):
