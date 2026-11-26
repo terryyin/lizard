@@ -71,6 +71,487 @@ class TestRust(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_trait_declarations_leave_default_method(self):
+        result = get_rust_function_list('''
+        use std::path::Path;
+
+        pub trait Installable {
+            fn install_path(&self) -> &Path;
+            fn write_to<W>(&self, writer: W) -> std::io::Result<()>
+            where W: std::io::Write;
+
+            fn to_resolution(&self, cached: bool) -> u32 {
+                if cached { return 1; }
+                0
+            }
+        }
+        ''')
+        self.assertEqual(['to_resolution'], [function.name for function in result])
+        self.assertEqual((9, 12, 2), (result[0].start_line, result[0].end_line,
+                                      result[0].cyclomatic_complexity))
+
+    def test_extern_declaration_leaves_nested_wrapper(self):
+        result = get_rust_function_list('''
+        pub fn process_id() -> u32 {
+            unsafe extern "C" {
+                fn getpid() -> i32;
+            }
+            fn is_valid(pid: i32) -> bool {
+                pid > 0
+            }
+            let pid = unsafe { getpid() };
+            if is_valid(pid) { pid as u32 } else { 0 }
+        }
+        ''')
+        self.assertEqual(['is_valid', 'process_id'], [function.name for function in result])
+        self.assertEqual(2, result[1].cyclomatic_complexity)
+        self.assertEqual(8, result[1].nloc)
+
+    def test_default_method_with_array_return_type_has_a_body(self):
+        result = get_rust_function_list('''
+        pub trait Header {
+            fn checksum(&self) -> [u8; 4];
+            fn magic(&self) -> [u8; 4] {
+                *b"RIFF"
+            }
+        }
+        ''')
+        self.assertEqual(['magic'], [function.name for function in result])
+        self.assertEqual((4, 6), (result[0].start_line, result[0].end_line))
+
+    def test_return_type_macro_can_contain_semicolon(self):
+        result = get_rust_function_list('''
+        macro_rules! packet_type {
+            ($item:ty; $size:expr) => { [$item; $size] };
+        }
+
+        pub fn header() -> packet_type!(u8; 4) {
+            *b"RIFF"
+        }
+        ''')
+        self.assertEqual(['header'], [function.name for function in result])
+        self.assertEqual((6, 8), (result[0].start_line, result[0].end_line))
+
+    def test_type_macro_with_raw_byte_string_keeps_function_body(self):
+        result = get_rust_function_list('''
+        macro_rules! bytes_for {
+            ($literal:literal) => { [u8; $literal.len()] };
+        }
+
+        pub fn header() -> bytes_for!(br#"RIFF"#)
+        where
+            (): Sized,
+        {
+            *b"RIFF"
+        }
+
+        pub fn chunk_count() -> usize {
+            1
+        }
+        ''')
+        self.assertEqual(['header', 'chunk_count'], [function.name for function in result])
+        self.assertEqual((6, 11), (result[0].start_line, result[0].end_line))
+
+    def test_type_macro_with_hidden_opening_bracket_keeps_function(self):
+        result = get_rust_function_list('''
+        macro_rules! packet_type {
+            ($magic:literal, [$($flag:ident),* $(,)?]; $bytes:ty) => { $bytes };
+        }
+
+        pub fn header() -> packet_type!(
+            br#"RIFF"#, [
+                little_endian,
+            ]; [u8; 4]
+        ) {
+            *b"RIFF"
+        }
+
+        pub fn chunk_count() -> usize {
+            1
+        }
+        ''')
+        self.assertEqual(['header', 'chunk_count'], [function.name for function in result])
+        self.assertEqual((6, 12), (result[0].start_line, result[0].end_line))
+
+    def test_forgive_in_foreign_block_stays_with_the_declaration(self):
+        result = get_rust_function_list('''
+        unsafe extern "C" {
+            // #lizard forgives
+            fn getpid() -> i32;
+        }
+
+        pub struct Process {}
+
+        pub fn pid() -> i32 {
+            unsafe { getpid() }
+        }
+
+        pub fn parent_pid() -> i32 {
+            // #lizard forgives
+            unsafe extern "C" {
+                fn getppid() -> i32;
+            }
+            unsafe { getppid() }
+        }
+
+        pub fn pid_from_local_binding() -> i32 {
+            unsafe extern "C" {
+                // #lizard forgives
+                fn getpid() -> i32;
+            }
+            unsafe { getpid() }
+        }
+        ''')
+        self.assertEqual(['pid', 'pid_from_local_binding'], [function.name for function in result])
+
+    def test_type_macro_with_hashless_raw_path_keeps_function(self):
+        result = get_rust_function_list(r'''
+        macro_rules! path_buf_type {
+            ($root:literal, [$($dir:literal),+]; $cap:expr) => { [u8; $cap] };
+        }
+
+        pub fn default_path() -> path_buf_type!(r"C:\", ["Program Files"]; 32) {
+            [0; 32]
+        }
+
+        pub fn default_size() -> usize {
+            32
+        }
+        ''')
+        self.assertEqual(['default_path', 'default_size'], [function.name for function in result])
+        self.assertEqual((6, 8), (result[0].start_line, result[0].end_line))
+
+    def test_callback_fields_and_foreign_declaration_have_no_body(self):
+        result = get_rust_function_list('''
+        pub struct Signal {
+            pub first: Option<extern "C" fn(i32)>,
+            pub second: Option<extern "C" fn(i32)>,
+        }
+        unsafe extern "C" {
+            pub fn signal();
+        }
+        ''')
+        self.assertEqual([], result)
+
+    def test_comparison_in_const_bound_keeps_parameter_list(self):
+        result = get_rust_function_list('''pub trait Encoder<const WIDE: bool> {
+            fn encode(bytes: &[u8]) -> usize;
+        }
+
+        const HEADER_BYTES: usize = 16;
+
+        pub fn encode_header<E: Encoder<{ HEADER_BYTES > 8 }>>(bytes: &[u8]) -> usize {
+            E::encode(bytes)
+        }
+
+        pub fn header_size() -> usize {
+            HEADER_BYTES
+        }
+        ''')
+        self.assertEqual(
+            [('encode_header', 7, 9, 1), ('header_size', 11, 13, 0)],
+            [(f.name, f.start_line, f.end_line, f.parameter_count)
+             for f in result])
+
+    def test_const_arguments_do_not_start_function_bodies(self):
+        result = get_rust_function_list('''pub struct Tag<const N: u8>;
+
+        pub trait Header {
+            fn tag() -> Tag<{ b'A' + 1 }>;
+            fn size() -> usize { 4 }
+        }
+
+        fn header(cached: bool) -> Option<Tag<{ b'A' + 1 }>> {
+            if cached { Some(Tag) } else { None }
+        }
+        ''')
+        self.assertEqual(
+            [('size', 5, 5, 1), ('header', 8, 10, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_braced_macro_in_return_type_does_not_start_function_body(self):
+        result = get_rust_function_list('''macro_rules! header_type {
+            ($size:expr) => { [u8; $size] };
+        }
+
+        fn magic() -> header_type!{4} {
+            *b"RIFF"
+        }
+
+        fn wait() -> ! {
+            loop { std::thread::park(); }
+        }
+        ''')
+        self.assertEqual(
+            [('magic', 5, 7), ('wait', 9, 11)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_raw_text_in_braced_macro_keeps_the_following_method(self):
+        result = get_rust_function_list('''macro_rules! header_type {
+            ($label:literal) => { u8 };
+        }
+
+        trait Header {
+            fn tag() -> header_type!{
+                r"RIFF"
+            };
+
+            fn size() -> u8 {
+                4
+            }
+        }
+        ''')
+        self.assertEqual(
+            [('size', 10, 12)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_hashed_raw_literal_keeps_braced_macro_delimiters(self):
+        result = get_rust_function_list('''macro_rules! label_type {
+            ($label:literal) => { [u8; $label.len()] };
+        }
+
+        fn label() -> label_type!{br#"DATA"#} {
+            *b"DATA"
+        }
+
+        fn next() -> usize {
+            4
+        }
+        ''')
+        self.assertEqual(
+            [('label', 5, 7), ('next', 9, 11)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_attribute_in_const_argument_keeps_the_body(self):
+        for attribute in ('#[allow(unused)]', '#[cfg_attr(target_pointer_width = "64", allow(unused))]'):
+            with self.subTest(attribute=attribute):
+                result = get_rust_function_list('''pub struct Tag<const N: usize>;
+
+                fn header(present: bool) -> Option<Tag<{
+                    %s
+                    { 1 }
+                }>> {
+                    if present { Some(Tag) } else { None }
+                }
+                ''' % attribute)
+                self.assertEqual(
+                    [('header', 3, 8, 2)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in result])
+
+    def test_hashed_attribute_in_const_argument_keeps_the_body(self):
+        attributes = (
+            r'#[doc = r#"quoted \" and ] or {"#]',
+            '''#[cfg_attr(all(), doc = r##"literal "# and ]
+                    more { documentation"##)]''',
+        )
+        for attribute in attributes:
+            with self.subTest(attribute=attribute):
+                result = get_rust_function_list('''struct Tag<const N: usize>;
+
+                fn header(present: bool) -> Tag<{
+                    %s
+                    { 1 }
+                }> {
+                    if present { Tag } else { Tag }
+                }
+
+                fn sibling() {}
+                ''' % attribute)
+                end = 8 + attribute.count('\n')
+                self.assertEqual(
+                    [('header', 3, end, 2), ('sibling', end + 2, end + 2, 1)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in result])
+
+    def test_split_attribute_in_const_argument_keeps_the_body(self):
+        for documentation in ('"a } in the docs"', 'r#"a } in the docs"#',
+                              'stringify!({ [Tag]; } > { Tag })'):
+            with self.subTest(documentation=documentation):
+                result = get_rust_function_list('''struct Tag<const N: usize>;
+
+                fn header(present: bool) -> Tag<{
+                    #[cfg_attr(
+                        all(),
+                        doc = %s
+                    )]
+                    { 1 }
+                }> {
+                    if present { Tag } else { Tag }
+                }
+
+                fn sibling() {}
+                ''' % documentation)
+                self.assertEqual(
+                    [('header', 3, 11, 2), ('sibling', 13, 13, 1)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in result])
+
+    def test_raw_attribute_leaves_the_inline_item_visible(self):
+        cases = (
+            ('''#[doc = r#"First paragraph with a ].
+Second paragraph."#] pub fn documented(yes: bool) { if yes {} }
+
+pub fn sibling() {}''', [('documented', 2, 2, 2), ('sibling', 4, 4, 1)]),
+            ('''pub struct Settings;
+impl Settings {
+    #[doc = r#"A configured value.
+    This value is cheap to read."#] pub fn load(reload: bool) {
+        if reload {}
+    }
+
+    pub fn sibling() {}
+}''', [('load', 4, 6, 2), ('sibling', 8, 8, 1)]),
+        )
+        for source, expected in cases:
+            with self.subTest(source=source):
+                self.assertEqual(
+                    expected,
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in get_rust_function_list(source)])
+
+    def test_nested_doc_attributes_keep_signature_boundaries(self):
+        cases = (
+            ('''pub struct Tag<const N: usize>;
+
+pub fn header(present: bool) -> Tag<{
+    #[doc = stringify!(
+        #[allow(dead_code)])]
+    let value = 1;
+    value
+}> {
+    if present { Tag } else { Tag }
+}
+pub fn sibling() {}''', [('header', 3, 10, 2), ('sibling', 11, 11, 1)]),
+            ('''pub struct Tag;
+macro_rules! result_type {
+    ($($t:tt)*) => { Tag };
+}
+pub fn header(present: bool) -> result_type!(
+    #[doc = stringify!(
+        #[doc = r#"] ["#])]
+) {
+    if present { Tag } else { Tag }
+}
+pub fn sibling() {}''', [('header', 5, 10, 2), ('sibling', 11, 11, 1)]),
+        )
+        for source, expected in cases:
+            with self.subTest(source=source):
+                self.assertEqual(
+                    expected,
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in get_rust_function_list(source)])
+
+    def test_split_doc_value_keeps_the_following_items(self):
+        for return_type in ('', ' -> Vec<'):
+            with self.subTest(return_type=return_type):
+                result = get_rust_function_list('''#[doc = stringify!(
+    #[allow(dead_code)] fn template()%s
+)]
+pub fn documented(flag: bool) { if flag {} }
+pub fn sibling() {}''' % return_type)
+                self.assertEqual(
+                    [('documented', 4, 4, 2), ('sibling', 5, 5, 1)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in result])
+
+    def test_split_doc_value_does_not_count_example_code(self):
+        result = get_rust_function_list('''fn outer(flag: bool) {
+    #[doc = stringify!(
+        #[allow(dead_code)] fn template() { if true {} }
+    )]
+    fn actual(flag: bool) { if flag {} }
+    if flag { actual(flag); }
+}
+fn sibling() {}''')
+        self.assertEqual(
+            [('actual', 5, 5, 2), ('outer', 1, 7, 2), ('sibling', 8, 8, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_split_doc_value_with_raw_attribute_name_keeps_items(self):
+        result = get_rust_function_list('''#[r#doc = stringify!(
+    #[allow(dead_code)] fn template() -> Vec<
+)]
+pub fn documented(flag: bool) { if flag {} }
+pub fn sibling() {}''')
+        self.assertEqual(
+            [('documented', 4, 4, 2), ('sibling', 5, 5, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_nested_attribute_preserves_the_outer_doc_boundary(self):
+        result = get_rust_function_list('''#[cfg_attr(all(), doc = stringify!(
+    #[allow(dead_code)] fn template() -> Vec<))] pub fn documented(flag: bool) { if flag {} }
+pub fn sibling() {}''')
+        self.assertEqual(
+            [('documented', 2, 2, 2), ('sibling', 3, 3, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_conditional_doc_value_keeps_executable_items(self):
+        for example in ('r#await', '# +', 'let'):
+            with self.subTest(example=example):
+                result = get_rust_function_list('''#[cfg_attr(all(), doc = stringify!(
+    %s fn template() -> Vec<
+))]
+pub fn documented(flag: bool) { if flag {} }
+pub fn sibling() {}''' % example)
+                self.assertEqual(
+                    [('documented', 4, 4, 2), ('sibling', 5, 5, 1)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in result])
+
+    def test_nested_conditional_doc_keeps_executable_items(self):
+        result = get_rust_function_list('''#[cfg_attr(all(), cfg_attr(all(), r#doc = stringify!(
+    r#await fn template() -> Vec<
+)))]
+pub fn documented(flag: bool) { if flag {} }
+pub fn sibling() {}''')
+        self.assertEqual(
+            [('documented', 4, 4, 2), ('sibling', 5, 5, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_comment_trivia_does_not_hide_a_procedural_attribute(self):
+        result = get_rust_function_list('''use thiserror::Error;
+
+#[derive(Debug, Error)]
+# // [doc = example
+[error("{}", {
+    fn describe() -> &'static str { "closed" }
+    describe()
+})]
+pub struct Closed;
+
+pub fn verify() -> String { Closed.to_string() }
+pub fn sibling() {}''')
+        self.assertEqual(
+            [('describe', 6, 6, 1), ('verify', 11, 11, 1), ('sibling', 12, 12, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_doc_values_keep_raw_literal_delimiters_opaque(self):
+        cases = (
+            '''#[doc = stringify!(
+    cr#"" ] "# "" fn fake() -> Vec<
+)]
+fn host(x: bool) { if x {} }
+fn sibling() {}''',
+            '''#[cfg_attr(all(), doc = stringify!(
+    #br#"" ] "# "" fn fake() -> Vec<
+))]
+fn host(x: bool) { if x {} }
+fn sibling() {}''',
+        )
+        for source in cases:
+            with self.subTest(source=source):
+                self.assertEqual(
+                    [('host', 4, 4, 2), ('sibling', 5, 5, 1)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in get_rust_function_list(source)])
+
     def test_nested_functions(self):
         result = get_rust_function_list('''
         fn main() {

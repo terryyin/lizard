@@ -5,6 +5,7 @@ into spans reuses that pattern instead of compiling it for every span.
 """
 
 import re
+from collections import deque
 from functools import reduce
 from operator import or_
 
@@ -108,14 +109,32 @@ def _token_text(match):
     return match.group(0)
 
 
+class BracketDirective(str):
+    """A directive whose lexer tokens show how many brackets remain open."""
+
+    def __new__(cls, text, bracket_depth=0):
+        token = super().__new__(cls, text)
+        token.bracket_depth = bracket_depth
+        return token
+
+
+_BRACKET_DEPTH = {'[': 1, ']': -1}
+
+
 def tokens_in_span(pattern, source, start, end, token_class=None,
                    macros=True):
     """With `macros`, a lone '#' starts a preprocessor line kept as one
-    token; languages without a preprocessor keep '#' as its own token."""
+    token. Lexer rules can name a hash group `standalone_hash` to keep it
+    separate. Languages without a preprocessor can disable grouping with False."""
+    return tokens_from_matches(pattern.finditer(source, start, end), token_class, macros)
+
+
+def tokens_from_matches(matches, token_class=None, macros=True):
+    """Yield tokens from a stream of lexical matches."""
     if token_class is None:
         token_class = _token_text
     macro = ""
-    for match in pattern.finditer(source, start, end):
+    for match in matches:
         token = token_class(match)
         if macro:
             if "\\\n" in token or "\n" not in token:
@@ -124,9 +143,122 @@ def tokens_in_span(pattern, source, start, end, token_class=None,
                 yield macro
                 yield token
                 macro = ""
-        elif token == "#" and macros:
+        elif token == "#" and macros and match.lastgroup != "standalone_hash":
             macro = token
         else:
             yield token
     if macro:
         yield macro
+
+
+def rust_tokens_from_matches(matches, token_class, raw_doc_match):
+    """Group Rust attributes while retaining the ordinary token path for other readers."""
+    tokens = _RustTokens(matches, token_class, raw_doc_match)
+    attribute_depth = 0
+    macro = ""
+    for match, token in tokens:
+        if token == "#" and not macro:
+            inspect = getattr(token, 'inspect_attribute', None)
+            if inspect is not None:
+                opaque = inspect(tokens, tokens.pending)
+                if opaque is not None:
+                    attribute_depth += yield from _bracket_directive(tokens, attribute_depth, opaque)
+                    continue
+                token = '#'
+        if attribute_depth:
+            attribute_depth += _BRACKET_DEPTH.get(token, 0)
+            yield token
+            continue
+        if macro:
+            if "\\\n" in token or "\n" not in token:
+                macro += token
+            else:
+                yield macro
+                yield token
+                macro = ""
+        elif token == "#" and match.lastgroup != "standalone_hash":
+            macro = token
+        else:
+            yield token
+    if macro:
+        yield macro
+
+
+class _RustTokens:
+    def __init__(self, matches, token_class, raw_doc_match):
+        self.matches = iter(matches)
+        self.token_class = token_class
+        self.raw_doc_match = raw_doc_match
+        self.pending = deque()
+        self.opaque = False
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.pending:
+            return self.pending.popleft()
+
+        match = next(self.matches)
+        literal = self.raw_doc_match(match) if self.opaque else None
+        if literal is not None:
+            # Resume at the real delimiter, even when an ordinary match crossed it.
+            rest = match.re.finditer(match.string, literal.end(), match.endpos)
+            restart = getattr(self.matches, 'restart', None)
+            if restart is None:
+                self.matches = rest
+            else:
+                restart(rest)
+            match = literal
+        return match, self.token_class(match)
+
+
+def _bracket_directive(tokens, outer_depth, opaque):
+    """Read attribute tokens up to the line or closing bracket."""
+    parts = ['#']
+    depth = 0
+    multiline = False
+    while True:
+        tokens.opaque = opaque
+        entry = next(tokens, None)
+        tokens.opaque = False
+        if entry is None:
+            break
+        _, token = entry
+        if token == '\n' and not opaque:
+            yield BracketDirective(''.join(parts), depth)
+            yield token
+            return depth
+        parts.append(token)
+        multiline = multiline or '\n' in token
+        depth += _BRACKET_DEPTH.get(token, 0)
+        if token == ']' and outer_depth and depth == 0:
+            # The nested doc is complete. The rest of this line belongs to its parent.
+            opaque = False
+        if token == ']' and outer_depth + depth == 0:
+            if outer_depth or multiline:
+                yield BracketDirective(''.join(parts), depth)
+            else:
+                yield from _attribute_line_tail(tokens, parts)
+            return depth
+    yield BracketDirective(''.join(parts), depth)
+    return depth
+
+
+def _attribute_line_tail(tokens, parts):
+    """Keep the existing directive tokens for ordinary one-line attributes."""
+    trailing_code = False
+    for _, token in tokens:
+        if "\\\n" not in token and '\n' in token:
+            yield _attribute_token(parts, trailing_code)
+            yield token
+            return
+        parts.append(token)
+        if not token.isspace() and not token.startswith('//'):
+            trailing_code = True
+    yield _attribute_token(parts, trailing_code)
+
+
+def _attribute_token(parts, trailing_code):
+    text = ''.join(parts)
+    return text if trailing_code else BracketDirective(text)
