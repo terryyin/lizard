@@ -29,6 +29,8 @@ class PHPLanguageStates(CodeStateMachine):
         self.last_tokens = ''
         self.is_function_declaration = False
         self.assignment_name = ''
+        self.assignment_parens = 0
+        self.assigned_closure = None
         self.in_match = False
         self.match_case_count = 0
 
@@ -68,6 +70,7 @@ class PHPLanguageStates(CodeStateMachine):
             self.match_case_count = 0
         elif token == '=':
             self.assignment_name = self.last_tokens
+            self.assignment_parens = 0
             self._state = self._assignment_value
         elif token == '{':
             self.brace_level += 1
@@ -90,7 +93,10 @@ class PHPLanguageStates(CodeStateMachine):
                 self.last_tokens = ''
 
     def _assignment_value(self, token):
-        if token == '\n' or token.lower() == 'static':
+        if token == '\n' or token.startswith('#') or token.lower() == 'static':
+            return
+        if token == '(':
+            self.assignment_parens += 1
             return
         if token != 'function':
             self.assignment_name = ''
@@ -149,10 +155,12 @@ class PHPLanguageStates(CodeStateMachine):
                 self.function_name = f"{self.trait_name}::(anonymous)"
             else:
                 self.function_name = self.assignment_name or "(anonymous)"
-            self.assignment_name = ''
             self.bracket_level = 1
             self._state = self._function_args_continue
             self.context.push_new_function(self.function_name)
+            if self.assignment_parens and self.assignment_name == self.function_name:
+                self.assigned_closure = self.context.current_function
+            self.assignment_name = ''
             self.started_function = True
 
     def _function_args(self, token):
@@ -212,7 +220,22 @@ class PHPLanguageStates(CodeStateMachine):
                 if self.started_function:
                     self.context.end_of_function()
                     self.started_function = False
-                self._state = self._state_global
+                self._state = self._finish_closure_assignment if self.assigned_closure else self._state_global
+
+    def _finish_closure_assignment(self, token):
+        if token == '\n' or token.startswith('#'):
+            return
+        if self.assignment_parens and token == ')':
+            self.assignment_parens -= 1
+            return
+        if self.assignment_parens or token == '(':
+            # The group contains another expression, or the closure is called.
+            closure = self.assigned_closure
+            closure.long_name = '(anonymous)' + closure.long_name[len(closure.name):]
+            closure.name = '(anonymous)'
+        self.assigned_closure = None
+        self._state = self._state_global
+        self._state_global(token)
 
     def _condition_expected(self, token):
         if token == '(':
