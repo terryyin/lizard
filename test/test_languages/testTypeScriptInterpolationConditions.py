@@ -68,6 +68,21 @@ class Test_conditions_in_template_interpolations(unittest.TestCase):
                         expected,
                         [(f.name, f.cyclomatic_complexity) for f in functions])
 
+    def test_regex_with_braces_and_comment_keeps_interpolation_conditions(self):
+        for comment in ('/* closing tag example */ ', '// closing tag example\n    '):
+            for filename in ('preview.js', 'preview.ts', 'preview.jsx', 'preview.tsx'):
+                with self.subTest(comment=comment, filename=filename):
+                    code = (
+                        'function preview(text, enabled) {\n'
+                        '  return `Preview: ${(' + comment + '/} ?/.test(text) && enabled)}`;\n'
+                        '}\n'
+                        'function label(text) { return text.trim(); }\n'
+                    )
+                    end = 4 if comment.startswith('//') else 3
+                    functions = analyze_file.analyze_source_code(filename, code).function_list
+                    self.assertEqual([('preview', end, 2), ('label', end + 1, 1)], [
+                        (f.name, f.end_line, f.cyclomatic_complexity) for f in functions])
+
     def test_keyword_member_inside_interpolation_is_not_a_condition(self):
         code = "function a(p) { return `${p.catch(x)}`; }\n"
         for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
