@@ -104,8 +104,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             if l_depth < 0:
                 l_depth = 0
                 context.reset_nd_complexity()
-            if php:
-                previous_token = token
+            previous_token = token if php else None
             yield token
 
 
