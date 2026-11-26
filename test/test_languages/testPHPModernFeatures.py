@@ -4,6 +4,43 @@ from .php_helpers import get_php_function_list
 
 class TestPHPModernFeatures(unittest.TestCase):
 
+    def test_attribute_closures_keep_method_scope(self):
+        functions = get_php_function_list("""<?php
+#[Check(static function () {
+    return true;
+})]
+class ReportController {
+    #[Check(static function () {
+        return true;
+    })]
+    public function show(): void {}
+}
+""")
+        self.assertEqual(['ReportController::show'],
+                         [f.name for f in functions if f.start_line == 9])
+
+    def test_named_use_argument_keeps_property_hook_scope(self):
+        functions = get_php_function_list("""<?php
+function label(string $use): string { return $use; }
+
+class StatusLabel {
+    public string $text {
+        get => label(use: match ($this->status) {
+            200 => match ($this->format) {
+                'short' => 'OK',
+                default => 'Success',
+            },
+            default => 'Error',
+        });
+    }
+
+    public function __construct(private int $status, private string $format) {}
+    public function display(): string { return $this->text; }
+}
+""")
+        self.assertEqual(['label', 'StatusLabel::__construct', 'StatusLabel::display'],
+                         [f.name for f in functions])
+
     def test_foreach_not_function_and_detects_real_functions(self):
         php_code = '''<?php
 class Note {
@@ -233,3 +270,116 @@ class NotebookApp {
         functions = get_php_function_list(php_code)
         self.assertEqual([('T::a', 3, 5), ('T::b', 6, 8)],
                          [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_trait_adaptation_scope(self):
+        functions = get_php_function_list("""<?php
+trait Macroable {
+    public function call(string $name): string {
+        return $name;
+    }
+}
+
+class CacheStore {
+    use Macroable {
+        call as private callMacro;
+    }
+
+    public function get(string $key): string {
+        return $this->callMacro($key);
+    }
+}
+
+function defaultStore(): CacheStore {
+    return new CacheStore();
+}
+""")
+        self.assertEqual([
+            ('Macroable::call', 3, 5),
+            ('CacheStore::get', 13, 15),
+            ('defaultStore', 18, 20),
+        ], [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_type_scope_in_namespace(self):
+        php_code = """<?php
+namespace Cache {
+    trait NormalizesKeys {
+        public function normalize(string $key): string {
+            return strtolower($key);
+        }
+    }
+
+    TYPE Lookup {
+        USE
+
+        public function get(string $key): string {
+            return $this->normalize($key);
+        }
+    }
+
+    function defaultKey(): string {
+        return 'cache';
+    }
+}
+"""
+        for declaration in ('class', 'trait'):
+            for trait_use in ('use NormalizesKeys;', 'use NormalizesKeys { normalize as protected; }'):
+                with self.subTest(declaration=declaration, trait_use=trait_use):
+                    functions = get_php_function_list(php_code.replace('TYPE', declaration).replace('USE', trait_use))
+                    self.assertEqual([
+                        ('NormalizesKeys::normalize', 4, 6),
+                        ('Lookup::get', 12, 14),
+                        ('defaultKey', 17, 19),
+                    ], [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_match_in_property_hook(self):
+        functions = get_php_function_list("""<?php
+trait LogsReads {
+    public function logRead(): void {}
+}
+
+class Order {
+    public const string trait = 'catalog';
+
+    public string $status {
+        get => match ($this->code()) {
+            200 => 'shipped',
+            default => 'pending',
+        };
+    }
+
+    use LogsReads { logRead as private; }
+
+    public function code(): int {
+        return 200;
+    }
+}
+
+function parseStatus(string $value): string {
+    return trim($value);
+}
+""")
+        self.assertEqual(['LogsReads::logRead', 'Order::code', 'parseStatus'],
+                         [f.name for f in functions])
+
+    def test_type_words_as_arguments(self):
+        functions = get_php_function_list("""<?php
+function getLabel(string $class, string $trait): string {
+    return $class . ':' . $trait;
+}
+
+class Metadata {
+    public string $label {
+        get => getLabel(class: 'cache', trait: 'storage');
+    }
+
+    public function display(): string {
+        return strtoupper($this->label);
+    }
+}
+
+function trimLabel(string $label): string {
+    return trim($label);
+}
+""")
+        self.assertEqual(['getLabel', 'Metadata::display', 'trimLabel'],
+                         [f.name for f in functions])

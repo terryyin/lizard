@@ -2,7 +2,7 @@
 PHP function/class/match state machine.
 '''
 
-from .code_reader import CodeStateMachine
+from .code_reader import CodeStateMachine, MemberName
 
 MEMBER_ACCESS = frozenset(('->', '?->', '::'))
 _SKIPPED = frozenset(('fn', 'public', 'private', 'protected', 'static'))
@@ -22,7 +22,10 @@ class PHPLanguageStates(CodeStateMachine):
         self.in_class = False
         self.in_trait = False
         self.bracket_level = 0
+        self.attribute_bracket_level = 0
+        self.attribute_forgive = False
         self.brace_level = 0
+        self.type_brace_level = 0
         self.function_brace_level = 0
         self.started_function = False
         self.last_token = ''
@@ -33,8 +36,8 @@ class PHPLanguageStates(CodeStateMachine):
         self.match_case_count = 0
 
     def _state_global(self, token):
-        if token in _SKIPPED or (self.last_token in MEMBER_ACCESS
-                                 and token.isidentifier()):
+        if (token in _SKIPPED or isinstance(token, MemberName)
+                or (self.last_token in MEMBER_ACCESS and token.isidentifier())):
             # An arrow function (PHP 7.4+), a visibility modifier, or a
             # member, `User::class` or `$app->use()`, starts no statement.
             pass
@@ -58,14 +61,6 @@ class PHPLanguageStates(CodeStateMachine):
         elif token == '=>' and self.in_match:
             # Count each case in a match expression
             self.match_case_count += 1
-        elif token == '}' and self.in_match:
-            # End of match expression
-            self.in_match = False
-            # Add the match cases to complexity (subtract 1 because the 'match' keyword is already counted)
-            if self.match_case_count > 0:
-                for _ in range(self.match_case_count - 1):
-                    self.context.add_condition()
-            self.match_case_count = 0
         elif token == '=':
             # Handle function assignment
             self.function_name = self.last_tokens.strip()
@@ -73,8 +68,14 @@ class PHPLanguageStates(CodeStateMachine):
         elif token == '{':
             self.brace_level += 1
         elif token == '}':
+            if self.in_match:
+                self.in_match = False
+                # The 'match' keyword already counted the first case.
+                for _ in range(self.match_case_count - 1):
+                    self.context.add_condition()
+                self.match_case_count = 0
             self.brace_level -= 1
-            if self.brace_level == 0:
+            if self.brace_level == self.type_brace_level:
                 if self.in_class:
                     self.in_class = False
                     self.class_name = None
@@ -94,25 +95,37 @@ class PHPLanguageStates(CodeStateMachine):
                 self.last_tokens = ''
 
     def _state_use(self, token):
-        """Handle use statements (use function, use const, etc.)"""
-        if token == ';':
-            # End of use statement, return to global state
+        """Skip imports and trait use statements."""
+        if token in (';', ':'):  # "use:" names an argument.
             self._state = self._state_global
-        # Ignore all other tokens in use statements
+        elif token == '{' and (self.in_class or self.in_trait):
+            self._state = self._state_use_block
+
+    def _state_use_block(self, token):
+        # Semicolons terminate adaptations within a trait use block.
+        if token == '}':
+            self._state = self._state_global
 
     def _trait_declaration(self, token):
-        if token and not token.isspace() and token not in ['{', '(']:
-            self.trait_name = token
-            self.in_trait = True
+        if token in ('{', '}'):
             self._state = self._state_global
-        elif token == '{':
-            self.brace_level += 1
+            self._state_global(token)
+        elif token and not token.isspace():
+            # "trait" can also name a constant, enum case or named argument.
+            first = token[0]
+            if first.isalpha() or first == '_' or not first.isascii():
+                self.trait_name = token
+                self.in_trait = True
+                self.type_brace_level = self.brace_level
             self._state = self._state_global
 
     def _class_declaration(self, token):
-        if token and not token.isspace() and token not in ['{', '(', 'extends', 'implements']:
+        if token == ':':  # "class:" names an argument.
+            self._state = self._state_global
+        elif token and not token.isspace() and token not in ['{', '(', 'extends', 'implements']:
             self.class_name = token
             self.in_class = True
+            self.type_brace_level = self.brace_level
             self._state = self._state_global
         elif token == '{':
             self.brace_level += 1
@@ -165,7 +178,18 @@ class PHPLanguageStates(CodeStateMachine):
             self._state = self._function_args_continue
 
     def _function_args_continue(self, token):
-        if token == '(':
+        if token == '#' and getattr(token, 'starts_attribute', False):
+            # An attribute can contain its own closure and parameters.
+            self.attribute_forgive = self.context.forgive
+            self.context.forgive = False
+            self.context.push_new_function('')
+            # The tokenizer already counted the opening marker in the method.
+            attribute = self.context.current_function
+            attribute.nloc = 0
+            attribute.token_count = 0
+            self.attribute_bracket_level = 0
+            self._state = self._parameter_attribute
+        elif token == '(':
             self.bracket_level += 1
         elif token == ')':
             self.bracket_level -= 1
@@ -211,6 +235,16 @@ class PHPLanguageStates(CodeStateMachine):
                     self.context.end_of_function()
                     self.started_function = False
                 self._state = self._state_global
+
+    def _parameter_attribute(self, token):
+        if token == '[':
+            self.attribute_bracket_level += 1
+        elif token == ']':
+            self.attribute_bracket_level -= 1
+            if self.attribute_bracket_level == 0:
+                self.fold_into_enclosing_function()
+                self.context.forgive = self.attribute_forgive
+                self._state = self._function_args_continue
 
     def _condition_expected(self, token):
         if token == '(':
