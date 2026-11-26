@@ -75,6 +75,51 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
 
 
 class RubyStateMachine(RubylikeStateMachine):
+    structure_depth = None
+    ns_structures = frozenset(('if', 'for', 'while', 'do'))
+    modifier_structure = False
+    structure_peak = 0
+    closed_structure_peak = 0
+
+    def _read_block(self, opener, callback=None, token=None, function_body=False):
+        if self.structure_depth is None:
+            super()._read_block(opener, callback, token, function_body)
+            return
+        child = self.statemachine_clone()
+        depth = 0 if function_body else self.structure_depth
+        child.structure_depth = depth + (opener in self.ns_structures)
+        if opener == 'do' and self._state == self._modifier_do:
+            child.structure_depth += self.modifier_structure
+        child._record_structure(child.structure_depth)
+
+        def finish_block():
+            if not function_body:
+                self.closed_structure_peak = child.structure_peak
+                self.structure_peak = max(self.structure_peak, child.structure_peak)
+            if callback is not None:
+                callback()
+
+        self.sub_state(child, finish_block, token)
+
+    def _read_modifier(self, token):
+        self.modifier_structure = token in self.ns_structures
+        if self.structure_depth is not None and self.modifier_structure:
+            self._record_structure(self._modified_statement_depth() + 1)
+        super()._read_modifier(token)
+
+    def _count_loop_modifier(self, token):
+        if self.structure_depth is not None and token in self.ns_structures:
+            self._record_structure(self._modified_statement_depth() + 1)
+
+    def _modified_statement_depth(self):
+        if self.last_token in ('end', '}') and not self.is_newline():
+            return max(self.structure_depth, self.closed_structure_peak)
+        return self.structure_depth
+
+    def _record_structure(self, depth):
+        self.structure_peak = max(self.structure_peak, depth)
+        function = self.context.current_function
+        function.max_nested_structures = max(function.max_nested_structures, depth)
 
     def _if(self, token):
         # A modifier predicate can open a block: `return if jobs.any? do`.
@@ -87,10 +132,12 @@ class RubyStateMachine(RubylikeStateMachine):
         # A block with parameters or a body on the next line has a
         # distinct opening. Keep reading the predicate on other tokens.
         if self.is_newline() or token in ('|', '||', ';'):
-            self.next(self._state_global)
-            self.sub_state(self.statemachine_clone(), token=token)
+            self._read_block('do', callback=self._finish_modifier_do, token=token)
         else:
             self.next(self._if, token)
+
+    def _finish_modifier_do(self):
+        self.next(self._state_global)
 
 
 class RubyReader(RubylikeReader):
@@ -99,6 +146,9 @@ class RubyReader(RubylikeReader):
     ext = ['rb']
     language_names = ['ruby']
     STATE_MACHINE = RubyStateMachine
+
+    def track_nested_structures(self):
+        self.parallel_states[0].structure_depth = 0
 
     def preprocess(self, tokens):
         """Drop spaces, and mark a keyword right after '.', '&.' or 'def'

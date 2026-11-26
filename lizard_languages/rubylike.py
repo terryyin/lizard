@@ -37,6 +37,7 @@ class RubylikeStateMachine(CodeStateMachine):
     # Each of these opens a block that ends at its own `end` or `}`.
     BLOCK_KEYWORDS = ("begin", "do", "class", "module", "case", "{", "${")
     LOOP_KEYWORDS = ("while", "until", "for")
+    loop_keyword = None
 
     def __init__(self, context):
         super(RubylikeStateMachine, self).__init__(context)
@@ -59,20 +60,34 @@ class RubylikeStateMachine(CodeStateMachine):
                     self.is_newline() or self.last_token is None):
                 self._state = self._it
         elif token in self.BLOCK_KEYWORDS and self.last_token != ".":
-            self.sub_state(self.statemachine_clone())
-        elif token in self.LOOP_KEYWORDS:
-            if not getattr(token, 'is_member_name', False) and \
-                    not self.follows_value():
-                self.next(self._for_while)
+            self._read_block(token)
+        elif token in self.LOOP_KEYWORDS and not getattr(token, 'is_member_name', False):
+            self._start_loop(token)
         elif token in ("if", "unless"):
             if getattr(token, 'is_member_name', False):
                 pass
             elif self.follows_value():
-                self.next(self._if)
+                self._read_modifier(token)
             else:
-                self.sub_state(self.statemachine_clone())
+                self._read_block(token)
         elif token == "=begin":
             self.sub_state(state_embedded_doc)
+
+    def _read_block(self, opener, callback=None, token=None, function_body=False):
+        self.sub_state(self.statemachine_clone(), callback, token)
+
+    def _read_modifier(self, token):
+        self.next(self._if)
+
+    def _start_loop(self, token):
+        if not self.follows_value():
+            self.loop_keyword = token
+            self.next(self._for_while)
+        else:
+            self._count_loop_modifier(token)
+
+    def _count_loop_modifier(self, _token):
+        pass
 
     def is_newline(self):
         return self.context.newline or self.last_token == ";"
@@ -143,7 +158,7 @@ class RubylikeStateMachine(CodeStateMachine):
             token, 'begin', None)
 
     def _def_body(self, token):
-        self.sub_state(self.statemachine_clone(), self._end_def, token)
+        self._read_block('def', self._end_def, token, function_body=True)
 
     def _end_def(self):
         self.context.end_of_function()
@@ -160,11 +175,12 @@ class RubylikeStateMachine(CodeStateMachine):
                 token in ("if", "unless") and not self.follows_value() and
                 not getattr(token, 'is_member_name', False)):
             self.context.at_line_end = None
-            self.sub_state(self.statemachine_clone(), self._endless_value)
+            self._read_block(token, self._endless_value, function_body=True)
             return
         elif token in self.LOOP_KEYWORDS and not self.follows_value() and \
                 not getattr(token, 'is_member_name', False):
             self.context.at_line_end = None
+            self.loop_keyword = token
             self.next(self._endless_loop)
             return
         elif token in ("}", ";") or (
@@ -211,7 +227,7 @@ class RubylikeStateMachine(CodeStateMachine):
             self.next(self._state_global, token)
         elif token == "then" and not getattr(token, 'is_member_name', False):
             self.next(self._state_global)
-            self.sub_state(self.statemachine_clone())
+            self._read_block('if')
         elif token in ("{", "${"):
             self.br_count += 1
         elif token == "}":
@@ -228,11 +244,11 @@ class RubylikeStateMachine(CodeStateMachine):
             if token == "do" and \
                     not getattr(token, 'is_member_name', False):
                 self.next(state)
-                self.sub_state(self.statemachine_clone(), callback)
+                self._read_block(self.loop_keyword, callback, function_body=callback is not None)
                 return
             if self.is_newline():
                 self.next(state)
-                self.sub_state(self.statemachine_clone(), callback, token)
+                self._read_block(self.loop_keyword, callback, token, function_body=callback is not None)
                 return
         if token in ("(", "[", "${") or (
                 token == "{" and self.last_token != ")"):

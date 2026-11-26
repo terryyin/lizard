@@ -75,6 +75,10 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def __call__(self, tokens, reader=None):
         if 'python' in getattr(reader, 'language_names', ()):
             return self._indented_structures(tokens, reader)
+        track_structures = getattr(reader, 'track_nested_structures', None)
+        if track_structures is not None:
+            track_structures()
+            return tokens
         if hasattr(reader, 'implied_semicolons'):
             return self._unterminated_statements(tokens, reader)
         return super(LizardExtension, self).__call__(tokens, reader)
