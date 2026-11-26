@@ -6,6 +6,12 @@ OPERAND_WORDS = frozenset((
     'of', 'as', 'satisfies', 'keyof'))
 
 
+class FunctionCallParen(str):
+    """A call-like parenthesis that can prove to be part of a declaration."""
+
+    starts_function = False
+
+
 class JSXChildBrace(str):
     """The '{' of a JSX child expression, `<p>{x && <a/>}</p>`: an
     expression container, never an object literal or a block."""

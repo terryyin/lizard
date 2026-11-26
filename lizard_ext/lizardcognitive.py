@@ -66,8 +66,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         _add_default_field(type(reader.context.global_pseudo_function))
         counter = _counter_for(reader)
         for token in tokens:
-            counter.process(token)
-            yield token
+            yield counter.process(token)
         counter.finish()
 
 

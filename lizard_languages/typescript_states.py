@@ -195,6 +195,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             group._call_group = True
             self.sub_state(group)
         elif token == '{':
+            signature_paren = getattr(self, '_signature_paren', None)
+            if signature_paren is not None and self.started_function and not self._expression_body:
+                signature_paren.starts_function = True
+                self._signature_paren = None
             # Expression arrows read object operands; block bodies and typed
             # signatures awaiting a real body still open a nested function.
             if self.started_function and not self._expression_body:
