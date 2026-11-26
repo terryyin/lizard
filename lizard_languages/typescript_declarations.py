@@ -259,6 +259,9 @@ class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
                 self._expect_type = True
         super()._state_global(token)
 
+    def _ends_line(self, token):
+        return token.startswith('`') or super()._ends_line(token)
+
     def _starts_runtime_expression(self, token):
         if token == '(':
             return not (self._after_type_parameters or self._import_type)
