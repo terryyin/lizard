@@ -153,6 +153,23 @@ class Counter(@get:[Trace set("count")] val count: Int) {
             [(f.name, f.start_line, f.end_line) for f in result],
         )
 
+    def test_get_with_arguments_in_a_route_does_not_start_a_getter(self):
+        result = get_kotlin_function_list('''\
+class Routes {
+    fun get(path: String, handle: () -> String) { println(path + handle()) }
+}
+fun routes(configure: Routes.() -> Unit) { Routes().configure() }
+val diagnostics = routes {
+    get("/health") { "ready" }
+}
+val status: String
+    get() { return "ready" }
+        ''')
+        self.assertEqual(
+            [("get", 2, 2), ("routes", 4, 4), ("get", 9, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result],
+        )
+
     def test_getter_setter(self):
         result = get_kotlin_function_list('''
             class Time
