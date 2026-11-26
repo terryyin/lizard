@@ -50,15 +50,18 @@ class ImpliedSemicolons:
     brackets or an object literal, or while a structure waits for its
     head or its body, `if (ready)` + line break + `run()`."""
 
-    __slots__ = ('before_token',)
+    __slots__ = ('before_token', 'while_closes_do_body', 'closes_control_body')
 
     def __init__(self):
         self.before_token = False
+        self.while_closes_do_body = False
+        self.closes_control_body = False
 
     # pylint: disable=R0912,R0914,R0915,R1702
     def read(self, tokens, context):
         # Each token passes here, so the state is in local variables.
         blocks = []             # the blocks around the open one
+        control_bodies = []     # brace depths of control structure bodies
         # What is open between the last "{" and its "}":
         groups = 0              # open "(" and "["
         head = None             # the groups around an open structure head
@@ -135,6 +138,10 @@ class ImpliedSemicolons:
                             busy = True
                     elif token == '}':
                         object_ended = bool(blocks) and is_object
+                        self.closes_control_body = bool(
+                            control_bodies and control_bodies[-1] == len(blocks))
+                        if self.closes_control_body:
+                            control_bodies.pop()
                         if blocks:
                             (groups, head, open_loops, loop_ends,
                              is_object) = blocks.pop()
@@ -143,6 +150,8 @@ class ImpliedSemicolons:
                     elif token in ('{', '${'):
                         blocks.append(
                             (groups, head, open_loops, loop_ends, is_object))
+                        if body_started:
+                            control_bodies.append(len(blocks))
                         is_object = _object_starts(
                             token, previous, before_previous, groups,
                             line == last_line)
@@ -166,10 +175,12 @@ class ImpliedSemicolons:
                             head_starts = busy = True
                             # In `do while (a) run(); while (b)` the first
                             # "while" is the body.
-                            if (token == 'while' and open_loops
-                                    and not body_started):
-                                open_loops -= 1
-                                loop_ends = True
+                            if token == 'while':
+                                self.while_closes_do_body = bool(
+                                    open_loops and not body_started)
+                                if self.while_closes_do_body:
+                                    open_loops -= 1
+                                    loop_ends = True
                         elif token in UNHEADED:
                             body_starts = busy = True
                             if token == 'do':
