@@ -3,7 +3,6 @@
 import re
 
 from .js_style_regex_context import (
-    REGEX_LITERAL,
     _EXPRESSION_KEYWORDS,
     _LINE_ENDS,
     _REGEX_LITERAL_RE,
@@ -12,10 +11,6 @@ from .js_style_regex_context import (
     _apply_marks,
 )
 from .ruby_documentation import match_opaque_span, may_have_documentation
-
-
-_RUBY_APPEND = re.compile(r"<<[^\S\r\n]*/")
-_RUBY_APPEND_REGEX = re.compile(r"[^\S\r\n]*(" + REGEX_LITERAL + ")")
 
 
 def mark_forward(source, js_family):
@@ -199,6 +194,15 @@ def mark_forward(source, js_family):
                 i += 1
             after_operand()
             return
+        if ch == '<' and ruby_append and not expect_property:
+            append = _RUBY_APPEND.match(source, i)
+            matched = match_literal(source, append.end() - 1) if append else None
+            # A slash inside executable interpolation can end this match early.
+            if matched and '#{' not in matched[0]:
+                marks.append(matched.start())
+                i = matched.end()
+                after_operand()
+                return
         if ch == '(':
             if pending_for:
                 for_headers.append(paren_depth + 1)
@@ -228,15 +232,6 @@ def mark_forward(source, js_family):
                 i += 1
             after_operand(next_expect_property=True)
             return
-        if ch == '<' and ruby_append and not expect_property and source.startswith('<<', i):
-            matched = _RUBY_APPEND_REGEX.match(source, i + 2)
-            # The literal pattern cannot find the end of an executable
-            # interpolation that itself contains a slash.
-            if matched and '#{' not in matched[1]:
-                marks.append(matched.start(1))
-                i = matched.end()
-                after_operand()
-                return
         if ch in '=,({[?:!&|;':
             i += 1
             after_operand(next_can_regex=True)
@@ -275,3 +270,6 @@ def mark_forward(source, js_family):
         while i < n:
             advance()
     return _apply_marks(source, marks)
+
+
+_RUBY_APPEND = re.compile(r"<<[^\S\r\n]*/")
