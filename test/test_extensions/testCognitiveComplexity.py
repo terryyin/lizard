@@ -936,6 +936,60 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
             with self.subTest(filename=filename):
                 self.assertEqual([0, 0, 0, 1], cogc(filename, source))
 
+    def test_template_types_match_compiler_erased_runtime(self):
+        cases = (
+            (
+                "return format?.<`${T extends true ? 'on' : 'off'}`>('on');",
+                "return format?.('on');",
+                0, 'optional-call'),
+            (
+                "const formatStatus = format<`${T extends true ? 'on' : 'off'}`>\n"
+                "return formatStatus('on');",
+                "const formatStatus = format\nreturn formatStatus('on');",
+                0, 'instantiation'),
+            (
+                "return `state: ${format<`${T extends true ? 'on' : 'off'}`>"
+                "(enabled ? 'on' : 'off')}`;",
+                "return `state: ${format(enabled ? 'on' : 'off')}`;",
+                1, 'generic-call-in-runtime-template'),
+            (
+                "type Keys = keyof\n    `${T extends true ? 'on' : 'off'}`;\n"
+                "const key: Keys = 'length';\nreturn key;",
+                "const key = 'length';\nreturn key;",
+                0, 'multiline-keyof-alias'),
+            (
+                "return `${prefix < `${enabled ? 'on' : 'off'}`}`;",
+                "return `${prefix < `${enabled ? 'on' : 'off'}`}`;",
+                1, 'runtime-comparison-in-template'),
+            (
+                "return new Map<`${T extends true ? 'on' : 'off'}`, () => void>();",
+                "return new Map();",
+                0, 'generic-constructor'),
+        )
+        for suffix in ('ts', 'tsx'):
+            for typed, erased, expected, name in cases:
+                with self.subTest(suffix=suffix, case=name):
+                    source = (
+                        'const format = <Label,>(value: string) => value;\n'
+                        'function status<T>(enabled: boolean, prefix: string) {\n'
+                        f'{typed}\n'
+                        '}'
+                    )
+                    runtime = (
+                        'const format = (value) => value;\n'
+                        'function status(enabled, prefix) {\n'
+                        f'{erased}\n'
+                        '}'
+                    )
+                    control = analyze('status.js', runtime)
+                    result = analyze(f'status.{suffix}', source)
+                    self.assertEqual(expected, next(
+                        f.cognitive_complexity for f in control.function_list
+                        if f.name == 'status'))
+                    self.assertEqual(expected, next(
+                        f.cognitive_complexity for f in result.function_list
+                        if f.name == 'status'))
+
     def test_template_statement_after_a_type_alias(self):
         source = """
             function label(value: boolean) {
