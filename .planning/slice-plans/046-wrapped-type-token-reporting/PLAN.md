@@ -65,3 +65,7 @@ The full suite passed with 4,043 tests and 7 skips. `nix develop -c make pep8` p
 ## Concern evidence
 
 Slice-plan refinement was unnecessary. One behavior slice owns both observations of the same wrapped token, with bounded edits in two existing modules and one outside-in fixture family. The scratch run reached the planned consumer routes and the existing full suite. No remaining slice-specific concern was identified.
+
+## Execution complete
+
+Product advice: No change to the backlog or near-future direction. The delivered changes in `60a63ca6` satisfy the story's shared analyzer and CSV promises. The CLI case uses a real source file to check the serialized name and ranges. The analyzer cases cover the detailed metrics and parser behavior. Once trunk CI verifies the shared replacement, close PR #656 as superseded.
