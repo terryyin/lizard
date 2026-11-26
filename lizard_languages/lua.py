@@ -77,17 +77,12 @@ class LuaStateMachine(RubylikeStateMachine):
         if token in self._STATE_TOKENS:
             if token == "do":
                 self._open_control_body(counts_for_nd=False)
-            elif token == "if" and not self.follows_value():
+            elif token == "if":
                 self._open_control_body()
+            elif token in self.LOOP_KEYWORDS:
+                self.next(self._for_while)
             else:
                 RubylikeStateMachine._state_global(self, token)
-
-    def _if(self, token):
-        if token == "then" and not self.is_newline():
-            self.next(self._state_global)
-            self._open_control_body()
-        else:
-            super()._if(token)
 
     def _for_while(self, token):
         if token == "do":
