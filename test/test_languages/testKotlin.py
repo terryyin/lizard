@@ -16,6 +16,22 @@ class Test_tokenizing_Kotlin(unittest.TestCase):
 
 class Test_parser_for_Kotlin(unittest.TestCase):
 
+    def test_multiline_default_keeps_escaped_parameter_names(self):
+        functions = get_kotlin_function_list('''\
+fun notice(
+    `subject  line`: String,
+    `retry-count (max), !` /* Maximum attempts. */ : Int,
+    message: String = """Try
+later""".trimIndent(),
+): String {
+    return "$message!"
+}
+''')
+        self.assertEqual(
+            [("notice", ["subject  line", "retry-count (max), !", "message"], 3)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_empty(self):
         functions = get_kotlin_function_list("")
         self.assertEqual(0, len(functions))
@@ -44,6 +60,106 @@ class Test_parser_for_Kotlin(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("sayGoodbye", result[0].name)
         self.assertEqual(2, result[0].parameter_count)
+
+    def test_multiline_default_keeps_its_parameter_name(self):
+        functions = get_kotlin_function_list('''\
+fun readNotice(locale: String, notice: String = """
+    Service is unavailable.
+    Try again later.
+"""): String {
+    return "$locale: $notice"
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["locale", "notice"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_multiline_annotation_argument_keeps_the_formal_parameter_name(self):
+        functions = get_kotlin_function_list('''\
+annotation class Note(val text: String)
+
+fun readNotice(
+    @Note(text = """First line
+second line""") value: Int,
+    last: Int,
+): Int {
+    return value + last
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["value", "last"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_named_call_argument_is_not_a_formal_parameter(self):
+        functions = get_kotlin_function_list('''\
+fun render(title: String, detail: String): String { return "$title: $detail" }
+
+fun readNotice(
+    label: String = render(
+        title = "Service unavailable",
+        detail = """Try again
+later.""",
+    ),
+    retries: Int = 2,
+): String {
+    return "$label ($retries)"
+}
+''')
+        self.assertEqual(
+            [("render", ["title", "detail"], 2), ("readNotice", ["label", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_multiline_default_keeps_the_name_after_an_annotation(self):
+        functions = get_kotlin_function_list('''\
+annotation class Description(val text: String)
+
+fun readNotice(
+    @Description(text = "Public status") status: String = """Service unavailable
+Try again later.""",
+    retries: Int = 2,
+): String {
+    return "$status ($retries)"
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["status", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_multiline_defaults_count_each_declared_parameter_once(self):
+        functions = get_kotlin_function_list('''\
+annotation class NotePair(val title: String, val detail: String)
+
+fun formatNotice(title: String, detail: String): String { return "$title $detail" }
+
+fun fromCall(
+    message: String = formatNotice(
+        title = """Connection
+failed""",
+        detail = "Try later",
+    ),
+    retries: Int = 2,
+): String {
+    return "$message ($retries)"
+}
+
+fun fromAnnotation(
+    @NotePair(title = "Public", detail = "Warning") message: String = """Connection
+failed""",
+    retries: Int = 2,
+): String {
+    return "$message ($retries)"
+}
+''')
+        self.assertEqual(
+            [("formatNotice", ["title", "detail"], 2),
+             ("fromCall", ["message", "retries"], 2),
+             ("fromAnnotation", ["message", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
 
     def test_one_function_with_return_value(self):
         result = get_kotlin_function_list('''
