@@ -94,7 +94,7 @@ class PHPLanguageStates(CodeStateMachine):
 
     def _state_use(self, token):
         """Skip imports and trait use statements."""
-        if token == ';':
+        if token in (';', ':'):  # "use:" names an argument.
             self._state = self._state_global
         elif token == '{' and (self.in_class or self.in_trait):
             self._state = self._state_use_block
