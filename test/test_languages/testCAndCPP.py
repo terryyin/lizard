@@ -597,6 +597,25 @@ class Test_cpp11_Attributes(unittest.TestCase):
 
 class Test_Preprocessing(unittest.TestCase):
 
+    def test_alternative_groups_in_trailing_return_type(self):
+        result = get_cpp_function_list("""template<class T>
+auto lookup(T& value) ->
+#if THREADED
+    decltype(value.locked_lookup(
+#else
+    decltype(value.lookup(
+#endif
+        1))
+{
+    return value.lookup(1);
+}
+int neighbor() { return 0; }
+""")
+
+        self.assertEqual(
+            [("lookup", 2, 11), ("neighbor", 12, 12)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
     def test_content_macro_should_be_ignored(self):
         result = get_cpp_function_list(r'''
                     #define MTP_CHEC                    \
