@@ -1,9 +1,12 @@
 """Brace, parenthesis, and semicolon nesting for cognitive complexity."""
 
-from .cognitive_actions import _BraceActions, _TERNARY_KINDS
+from .cognitive_actions import _BraceActions
 from .cognitive_counter import (
     BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE)
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
+
+
+_TERNARY_KINDS = ('ternary', 'ternary_true')
 
 
 class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
@@ -18,7 +21,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     def __init__(self, reader, profile, gated):
         super(_BraceCounter, self).__init__(reader, profile, gated)
         self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
-        self.track_ternary_arms = reader.language_names[0] in ('cpp', 'objectivec')
         self.actions = self._keyword_actions(profile)
         if not profile.nesting:
             self._process = self._process_flat

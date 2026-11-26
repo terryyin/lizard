@@ -6,13 +6,11 @@ from .cognitive_profile import (
     _is_word)
 
 
-_TERNARY_KINDS = ('ternary', 'ternary_true')
-
-
 class _BraceActions(object):
     """Keyword increments, lookaheads, and languages without brace blocks."""
 
     def _keyword_actions(self, profile):
+        self.track_ternary_arms = self.reader.language_names[0] in ('cpp', 'objectivec')
         actions = {'{': self._open_block, '}': self._close_block,
                    ';': self._semicolon, 'else': self._else}
         for tokens, action in ((profile.ifs, self._if),
