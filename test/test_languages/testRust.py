@@ -233,6 +233,26 @@ class TestRust(unittest.TestCase):
         ''')
         self.assertEqual([], result)
 
+    def test_comparison_in_const_bound_keeps_parameter_list(self):
+        result = get_rust_function_list('''pub trait Encoder<const WIDE: bool> {
+            fn encode(bytes: &[u8]) -> usize;
+        }
+
+        const HEADER_BYTES: usize = 16;
+
+        pub fn encode_header<E: Encoder<{ HEADER_BYTES > 8 }>>(bytes: &[u8]) -> usize {
+            E::encode(bytes)
+        }
+
+        pub fn header_size() -> usize {
+            HEADER_BYTES
+        }
+        ''')
+        self.assertEqual(
+            [('encode_header', 7, 9, 1), ('header_size', 11, 13, 0)],
+            [(f.name, f.start_line, f.end_line, f.parameter_count)
+             for f in result])
+
     def test_const_arguments_do_not_start_function_bodies(self):
         result = get_rust_function_list('''pub struct Tag<const N: u8>;
 
@@ -266,6 +286,40 @@ class TestRust(unittest.TestCase):
         self.assertEqual(
             [('magic', 5, 7), ('wait', 9, 11)],
             [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_raw_text_in_braced_macro_keeps_the_following_method(self):
+        result = get_rust_function_list('''macro_rules! header_type {
+            ($label:literal) => { u8 };
+        }
+
+        trait Header {
+            fn tag() -> header_type!{
+                r"RIFF"
+            };
+
+            fn size() -> u8 {
+                4
+            }
+        }
+        ''')
+        self.assertEqual(
+            [('size', 10, 12)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_attribute_in_const_argument_keeps_the_body(self):
+        result = get_rust_function_list('''pub struct Tag<const N: usize>;
+
+        fn header(present: bool) -> Option<Tag<{
+            #[allow(unused)]
+            { 1 }
+        }>> {
+            if present { Some(Tag) } else { None }
+        }
+        ''')
+        self.assertEqual(
+            [('header', 3, 8, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
 
     def test_nested_functions(self):
         result = get_rust_function_list('''
