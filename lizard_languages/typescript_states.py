@@ -1,8 +1,9 @@
 """Shared JavaScript and TypeScript runtime state dispatch."""
 
 from .code_reader import CodeStateMachine
+from .javascript_bindings import read_recursive_local_bindings
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
-from .javascript_expression import JSXChildBrace
+from .javascript_expression import JSXChildBrace, ends_expression
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
@@ -47,6 +48,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._open_groups = 0  # "(" of a group read as parameters
         self._in_condition = False  # Inside `if (...)` / `for (...)`
 
+    @read_recursive_local_bindings
     def __call__(self, token, reader=None):
         if self._binding_candidate:
             # Only named-formal readers need events for initializer dispatch.
@@ -71,6 +73,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_abstract_context = False
         self._in_prop_value = False
         self._prev_token = ''
+        self.recursive_statement_scope = None
         if self.last_token != ',':
             self._declaration_binding = None
 
@@ -79,6 +82,13 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._pop_function_from_stack()
 
     def _state_global(self, token):
+        if self._declaration_binding:
+            if self.last_token in ('const', 'let', 'var'):
+                self._recursive_declaration_kind = self.last_token
+            if self.last_token in ('const', 'let', 'var', ','):
+                kind = getattr(self, '_recursive_declaration_kind', None)
+                if kind is not None:
+                    self._record_recursive_local(token, kind)
         if self._pending_bindings:
             self._resolve_pending_bindings(token)
         if self._ts_declare or token in _SPECIAL_TOKENS:
@@ -90,6 +100,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 if isinstance(token, ReturnTypeColon):
                     self._consume_type_annotation()
                     return
+                if token == 'async' and hasattr(self.context, 'bare_recursive_functions'):
+                    self._async_declaration_start = not self.holds_members and self._at_function_declaration_start()
                 if token == 'static':
                     # Hot path: most `static`/`async` tokens are not inside an
                     # open field value; avoid the helper call overhead there.
@@ -112,9 +124,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                         return
                 if token != ':':
                     if token == '?' or not self.as_object:
+                        if token == 'case':
+                            self._binding_case_depth = self._ternary_depth + 1
                         self._ternary_depth += 1
                 elif self._ternary_depth or (
                         self.last_tokens == 'default' and not self.as_object):
+                    self._case_body_start = not self.as_object and (
+                        self.last_tokens == 'default' or self._ternary_depth == self._binding_case_depth)
+                    if self._case_body_start:
+                        self._binding_case_depth = None
                     # Runtime colons must not swallow a following function type.
                     if self.last_tokens != 'default':
                         if (self._expression_body and self._ternary_depth
@@ -245,6 +263,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._in_prop_value = self._default_value = False
         if token == '<':
             self._generic_prefix = self._prev_token
+        if token == 'function' and self._state == self._function:
+            self._explicit_function = hasattr(self.context, 'bare_recursive_functions')
+            self._local_function_declaration = self._explicit_function and (
+                self._starts_local_function_declaration())
         self.last_tokens = token
         # Don't overwrite _prev_token if it's 'new' (preserve for next token)
         if self._prev_token != 'new':
@@ -265,9 +287,6 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 and self.last_tokens in ('', ';', '{'))
 
     def _expecting_condition_and_statement_block(self, token):
-        def callback():
-            self.next(self._expecting_statement_or_block)
-
         if token == "await":
             return
 
@@ -276,24 +295,65 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             return
 
         if self._condition_kind == 'catch':
+            function = self.context.current_function
+            tracks_name = function in getattr(self.context, 'bare_recursive_functions', ())
+
             def catch_callback(summary):
                 self.context.add_condition(summary.defaults)
-                callback()
+                if tracks_name and not candidate._binding_candidate.recursive_name:
+                    self._read_scoped_body({function})
+                else:
+                    self.next(self._expecting_statement_or_block)
 
-            self._read_binding_candidate(')', catch_callback, track_complexity=False)
+            candidate = self._read_binding_candidate(')', catch_callback, track_complexity=False)
+            if tracks_name:
+                candidate._binding_candidate.recursive_name = function.unqualified_name
             return
 
         condition = self.__class__(self.context)
         condition._in_condition = True  # `for ({a = 1} of b)`: no block
+
+        def callback():
+            self._read_scoped_body(getattr(condition, '_recursive_local_shadows', None))
+
         self.sub_state(condition, callback)
 
-    def _expecting_statement_or_block(self, token):
+    def _read_scoped_body(self, shadows):
+        if not shadows:
+            self.next(self._expecting_statement_or_block)
+            return
+
+        def read_body(token):
+            self._expecting_statement_or_block(token, shadows)
+            if token != '{':
+                self.recursive_statement_scope = shadows
+
+        self.next(read_body)
+
+    def _starts_local_function_declaration(self):
+        if (self.last_token == 'async' and self._prev_token == 'async'
+                and not self.context.newline):
+            return getattr(self, '_async_declaration_start', False)
+        return self._at_function_declaration_start()
+
+    def _at_function_declaration_start(self):
+        return (self._prev_token in ('', ';', '{', '}')
+                or self._prev_token == ':' and self._case_body_start
+                or self.context.newline and ends_expression(self._prev_token))
+
+    _binding_case_depth = None
+    _case_body_start = False
+    recursive_statement_scope = None
+
+    def _expecting_statement_or_block(self, token, shadows=None):
         def callback():
             self._prev_token = ''
             self.next(self._state_global)
         if token == "{":
-            self.sub_state(
-                self.__class__(self.context), callback)
+            body = self.__class__(self.context)
+            if shadows:
+                body._recursive_local_shadows = shadows
+            self.sub_state(body, callback)
         else:
             self._prev_token = ''
             self.next(self._state_global, token)

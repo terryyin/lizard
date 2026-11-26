@@ -4,6 +4,7 @@ Language parser for TypeScript
 
 from itertools import tee
 
+from .javascript_bindings import OptionalCallBinding
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
@@ -299,6 +300,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     break
                         elif member_access:
                             before_dot = token == '.' and state.last_token
+                            if token == '?.':
+                                token = self._mark_optional_call_binding(token, state)
                     else:
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
@@ -322,6 +325,24 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 if keyword is not None:
                     yield keyword
                 return
+
+    def _mark_optional_call_binding(self, token, state):
+        functions = getattr(self.context, 'bare_recursive_functions', ())
+        name = state.last_token
+        if not functions or not name:
+            return token
+        function = self.context.current_function
+        if getattr(function, 'optimistic', False) and function not in functions:
+            function = self.context.stacked_functions[-1]
+        if name != function.unqualified_name or function not in functions:
+            return token
+        scopes = [self.context.recursive_var_shadows]
+        while isinstance(state, TypeScriptStates):
+            scopes.append(state.recursive_local_scope())
+            if state.recursive_statement_scope:
+                scopes.append(state.recursive_statement_scope)
+            state = state._state
+        return OptionalCallBinding(token, function, scopes)
 
     @staticmethod
     def code_tokens(tokens):

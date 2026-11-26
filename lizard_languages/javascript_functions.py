@@ -174,6 +174,10 @@ class JavaScriptFunctionsMixin:
         if token.startswith('<') and token.endswith('>') and len(token) > 1:
             # Single-token generic from TSX tokenizer (e.g., <T>, <Props>)
             return
+        if getattr(self, '_local_function_declaration', False):
+            self._local_function_declaration = False
+            if token != '(':
+                self._record_recursive_local(token, 'function')
         if token != '(':
             # Only set function_name for valid identifiers
             if token and (token[0].isalpha() or token[0] in ('_', '$', '#')):
@@ -184,6 +188,9 @@ class JavaScriptFunctionsMixin:
             self._static_seen = False
             self._async_seen = False
         else:
+            recursive_name = (self.function_name
+                              if getattr(self, '_explicit_function', False) else '')
+            self._explicit_function = False
             if self._expression_body:
                 function = self.context.current_function
                 self._arrow_signature = (
@@ -194,7 +201,7 @@ class JavaScriptFunctionsMixin:
                     # For the extensions: this "(" can open a group.
                     self.context.current_function.optimistic = True
             self._parameter_bindings = JavaScriptBindings(
-                ')', self.context.current_function)
+                ')', self.context.current_function, recursive_name=recursive_name)
             self._decorated_parameters = False
             self._state = self._dec
             self.context.add_to_long_function_name(" " + token)
