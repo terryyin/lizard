@@ -97,7 +97,7 @@ class _MemberName(str):
 _MEMBER_ACCESS = ('.', '?.')
 _COMMENT_STARTS = ('//', '/*')
 # The tokens that preprocess looks at, in one set for the hot loop.
-_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset((*_MEMBER_ACCESS, '<'))
+_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset(_MEMBER_ACCESS)
 # With the reader's conditions: the keywords that a metric counts as a
 # structure or a jump.
 _STRUCTURE_KEYWORDS = frozenset((
@@ -247,7 +247,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         signatures = self.context.ended_signatures = []
         line_start = False
         state = self.parallel_states[0]
-        marked_punctuation = _MARKED_PUNCTUATION
+        marked_punctuation = _MARKED_PUNCTUATION | {'<'}
         member_access_tokens = _MEMBER_ACCESS
         structure_keywords = (_STRUCTURE_KEYWORDS | self.control_flow_keywords
                               | self.case_keywords)
@@ -277,6 +277,16 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         token = _MemberName(token)
                         member_access = False
                     elif token in marked_punctuation:
+                        if (token == '<' and self.context.class_field_annotations
+                                and not getattr(token, 'is_jsx_markup', False)
+                                and state.generic_arrow_type_context()):
+                            tokens, lookahead = tee(tokens)
+                            if generic_arrow_has_function_constraint(lookahead):
+                                token = GenericArrowTypeOpen(token)
+                            del lookahead
+                            member_access = False
+                            yield token
+                            break
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens
                         if token == '?':
@@ -298,16 +308,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     yield token
                                     # Resume with the buffered iterator.
                                     break
-                        elif (token == '<' and self.context.class_field_annotations
-                                and not getattr(token, 'is_jsx_markup', False)
-                                and state.generic_arrow_type_context()):
-                            tokens, lookahead = tee(tokens)
-                            if generic_arrow_has_function_constraint(lookahead):
-                                token = GenericArrowTypeOpen(token)
-                            del lookahead
-                            member_access = False
-                            yield token
-                            break
                         elif member_access:
                             before_dot = token == '.' and state.last_token
                     else:
