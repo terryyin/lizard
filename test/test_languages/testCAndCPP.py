@@ -336,6 +336,23 @@ static inline int check_result(id<Provider> provider, int active, int ready) {
         self.assertEqual(
             [("check", 2), ("check_result", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
+    def test_logical_and_after_block_pointer_member_in_objective_cpp_header(self):
+        result = analyze_file.analyze_source_code("validation.h", """struct Result { bool ready; };
+typedef Result* (^ResultCallback)(int);
+@protocol Provider
+- (ResultCallback)result;
+@end
+struct Flag {
+    bool ready;
+    explicit operator bool() const { return ready; }
+};
+static inline bool check_result(id<Provider> provider, int input, bool enabled) {
+    return [provider result](input)->ready && Flag{enabled};
+}
+""").function_list
+
+        self.assertEqual(2, next(fn.cyclomatic_complexity for fn in result if fn.name == "check_result"))
+
     def test_named_lambda_references_in_callback_argument_in_cpp_header(self):
         result = analyze_file.analyze_source_code("jobs.h", """struct Job { int weight; };
 
