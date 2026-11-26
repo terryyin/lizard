@@ -7,6 +7,31 @@ from lizard import FileInfoBuilder, FunctionInfo
 DEFAULT_ND_THRESHOLD = 7
 
 
+def _xml_indent_scopes(tokens, context):
+    """Keep the waiting levels of each indented match separate."""
+    enclosing = []
+    for token in tokens:
+        events = getattr(token, 'xml_indent_events', None)
+        if events:
+            opening, activating, closing = events
+            for has_xml in closing:
+                owner, outer_levels = enclosing.pop()
+                if has_xml:
+                    owner.nesting_depth -= owner.levels_awaiting_body
+                    owner.levels_awaiting_body = outer_levels
+                    owner.prev_was_else = False
+            if opening:
+                owner = context.current_function
+                enclosing.append((owner, owner.levels_awaiting_body))
+            if activating:
+                # A scope with ordinary patterns keeps its existing metric behavior.
+                owner, outer_levels = enclosing[-1]
+                protected = min(outer_levels, owner.levels_awaiting_body)
+                owner.levels_awaiting_body -= protected
+                enclosing[-1] = owner, protected
+        yield token
+
+
 class LizardExtension(object):  # pylint: disable=R0903
 
     FUNCTION_INFO = {
@@ -30,6 +55,8 @@ class LizardExtension(object):  # pylint: disable=R0903
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
+        if getattr(reader, 'has_scala_interpolation', False):
+            tokens = _xml_indent_scopes(tokens, reader.context)
         return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
 
     @staticmethod
@@ -66,11 +93,17 @@ class LizardExtension(object):  # pylint: disable=R0903
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:
                     context.clear_prev_was_else()
+                if interpolations is not None and getattr(token, 'ends_scala_case', False):
+                    context.clear_prev_was_else()
+                    l_depth = context.end_statement()
                 # Don't add nesting for "if" when it immediately follows "else" (else if)
                 # Syntactically else if is equivalent to else {if} but should not increase depth
                 if token == 'else' and not getattr(token, 'is_member_name', False):
                     context.set_prev_was_else(True)
-                elif token == 'if' and token in loops and context.get_prev_was_else():
+                elif token == 'if' and token in loops and (
+                        context.get_prev_was_else() or
+                        (interpolations is not None and getattr(token, 'is_scala_case_guard', False))):
+                    # A guard tests the case at the case's depth.
                     context.clear_prev_was_else()
                 # Handle opening parenthesis - start of condition
                 elif token == '(':

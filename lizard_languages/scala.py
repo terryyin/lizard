@@ -21,6 +21,23 @@ _CONTINUES_AT_LINE_END = frozenset((
 _CONDITION_KEYWORDS = frozenset(('if', 'while', 'for'))
 
 
+_OPERATOR_CHAR = r'[!#%&*+\-/:<=>?@\\^|~]'
+# Recognize a symbolic name before a signature with a visible body.
+_SYMBOLIC_DEF = (
+    r'|\bdef[^\S\n]+(?:(?!//|/\*)' + _OPERATOR_CHAR + r')+'
+    r'(?=[^\S\n]*(?:\[[^\[\]\n#]*\][^\S\n]*)?'
+    r'(?:\((?:(?!//|/\*)[^()\n#])*\)[^\S\n]*)+'
+    r"""(?:(?::(?:(?!//|/\*)[^=\n{}"'`#])+)?=(?!""" + _OPERATOR_CHAR + r')|\{))')
+_SYMBOLIC_NAME_START = re.compile(r'\bdef[^\S\n]+(?!//|/\*)' + _OPERATOR_CHAR)
+
+
+_XML_NAME = r'[^\W\d][\w.:-]*'
+_XML_START = re.compile(r'(?<![^ \t\r\n({>])<(?=[^\W\d]|[!?])')
+_TAG_PART = re.compile(r"""(?:"[^"]*"|'[^']*')|/>|[>{]""")
+_TAG_XML_NAME = re.compile(r'</?' + _XML_NAME)
+_CONTENT_PART = re.compile(r'<!--.*?-->|<!\[CDATA\[.*?\]\]>|<\?.*?\?>|</?' + _XML_NAME + r'|\{\{|\{', re.S)
+
+
 _STRING_OPENERS = frozenset(('"', '"""'))
 _LOCATED_DELIMITERS = _STRING_OPENERS | {'}'}
 _STRING_DELIMITERS = r'|"""|(?<=[\w$`])"'
@@ -37,6 +54,20 @@ class _InterpolationBrace(str):
 
 class _MultilineStringPart(str):
     is_scala_string_part = True
+
+
+class _XmlText(str):
+    @property
+    def is_scala_string_part(self):
+        return '\n' in self
+
+
+class _XmlCaseBoundary(str):
+    ends_scala_case = True
+
+
+class _XmlCaseGuard(str):
+    is_scala_case_guard = True
 
 
 _INTERPOLATION_OPEN = _InterpolationBrace('{')
@@ -56,7 +87,8 @@ class _LocatedToken(str):
 
 def _locate_delimiter(match):
     text = match.group()
-    if text in _LOCATED_DELIMITERS or (text.startswith('/*') and '/*' in text[2:]):
+    if (text in _LOCATED_DELIMITERS or (text.startswith('/*') and '/*' in text[2:])
+            or (text == '<' and _XML_START.match(match.string, match.start()))):
         return _LocatedToken(text, match.start())
     return text
 
@@ -65,10 +97,24 @@ def _scala_tokens(patterns, source, pos=0, in_interpolation=False):
     """Read code until the end of the file or the matching interpolation brace."""
     depth = 0
     end = len(source)
+    xml_enabled = True
     pattern = patterns[in_interpolation]
     while pos < end:
         for token in tokens_in_span(pattern, source, pos, end, _locate_delimiter,
                                     macros=not in_interpolation):
+            if token.startswith('def') and token[3:4].isspace():
+                name = token[3:].lstrip()
+                yield 'def'
+                yield token[3:len(token) - len(name)]
+                yield name
+                continue
+            if xml_enabled and token == '<' and isinstance(token, _LocatedToken):
+                xml_end, parts = _complete_xml(patterns, source, token.offset)
+                if xml_end is not None:
+                    yield from parts
+                    pos = xml_end
+                    break
+                xml_enabled = False
             if token in _STRING_OPENERS:
                 pos = yield from _string_tokens(patterns, source, token)
                 break
@@ -89,6 +135,169 @@ def _scala_tokens(patterns, source, pos=0, in_interpolation=False):
     return end
 
 
+def _complete_xml(patterns, source, start):
+    # The compiler also prints pseudo tags in generated output. Keep the
+    # original tokens if the apparent XML cannot close.
+    stream = _xml_tokens(patterns, source, start)
+    parts = []
+    try:
+        while True:
+            parts.append(next(stream))
+    except StopIteration as end:
+        return end.value, parts
+
+
+def _xml_tokens(patterns, source, start):
+    """Read XML text and hand embedded blocks back to the Scala scanner."""
+    tags = []
+    tag = None
+    closing = False
+    segment = pos = start
+    while True:
+        pattern = _TAG_PART if tag is not None else _CONTENT_PART
+        match = pattern.search(source, pos)
+        if match is None or (pos == start and match.start() != start):
+            return None
+        part = match.group()
+        pos = match.end()
+        if part == '{':
+            yield _XmlText('"' + source[segment:match.start()] + '"')
+            pos = segment = yield from _interpolation_tokens(patterns, source, pos)
+        elif tag is not None:
+            if part in ('>', '/>'):
+                if closing:
+                    if not tags or tags.pop() != tag or part != '>':
+                        return None
+                elif part == '>':
+                    # A generated pseudo tag can have the same opening
+                    # shape. Reject it before scanning any Scala splices.
+                    if not tags and source.find('</' + tag, pos) < 0:
+                        return None
+                    tags.append(tag)
+                tag = None
+                if not tags:
+                    break
+        elif _TAG_XML_NAME.fullmatch(part):
+            closing = part.startswith('</')
+            tag = part[2:] if closing else part[1:]
+        elif not tags:
+            break
+    if pos > segment:
+        yield _XmlText('"' + source[segment:pos] + '"')
+    return pos
+
+
+class _IndentedMatch:
+    def __init__(self, indent, brace_depth):
+        self.indent = indent
+        self.brace_depth = brace_depth
+        self.has_xml = False
+
+    def ends_before(self, token, indent, brace_depth):
+        if self.brace_depth != brace_depth:
+            return False
+        if token == '}':
+            return True
+        return indent is not None and (indent < self.indent or
+                                       (indent == self.indent and token != 'case'))
+
+
+class _XmlIndentBoundary(str):
+    def __new__(cls, token, opening, activating, closing):
+        boundary = super().__new__(cls, token)
+        boundary.token = token
+        boundary.xml_indent_events = opening, activating, closing
+        return boundary
+
+    def __getattr__(self, name):
+        return getattr(self.token, name)
+
+
+def _tokens_with_indentation(tokens):
+    leading = ''
+    for token in tokens:
+        if token == '\n':
+            leading = ''
+        elif leading is not None:
+            if token.isspace():
+                leading += token
+            elif not token.startswith(('//', '/*')):
+                yield token, len(leading.expandtabs(8))
+                leading = None
+                continue
+        yield token, None
+
+
+def _xml_case_tokens(tokens):
+    """Mark sibling case boundaries in brace and indentation matches."""
+    tokens = _tokens_with_indentation(tokens)
+    braces = []
+    indents = []
+    after_match = after_line_start_end = match_end_marker = False
+    for token, indent in tokens:
+        closing = ()
+        while indents and indents[-1].ends_before(token, indent, len(braces)):
+            closing += (indents.pop().has_xml,)
+        opening = after_match and not match_end_marker and token == 'case' and indent is not None
+        if opening:
+            indents.append(_IndentedMatch(indent, len(braces)))
+
+        braced_case = bool(braces and braces[-1] is not None)
+        indented_case = (indents and indents[-1].brace_depth == len(braces)
+                         and indent == indents[-1].indent)
+        if token == 'case' and (braced_case or indented_case):
+            activating = False
+            head = _case_head(tokens)
+            if head and head[-1] in ('if', '=>'):
+                has_xml = any(isinstance(part, _XmlText) for part in head)
+                if indented_case:
+                    activating = has_xml and not indents[-1].has_xml
+                    indents[-1].has_xml |= has_xml
+                    has_xml = indents[-1].has_xml
+                else:
+                    braces[-1] |= has_xml
+                    has_xml = braces[-1]
+                if has_xml:
+                    token = _XmlCaseBoundary(token)
+                    if head[-1] == 'if':
+                        head[-1] = _XmlCaseGuard(head[-1])
+            if opening or activating or closing:
+                token = _XmlIndentBoundary(token, opening, activating, closing)
+            yield token
+            yield from head
+            after_match = after_line_start_end = match_end_marker = False
+            continue
+
+        if token == '{':
+            braces.append(False if after_match else None)
+        elif token == '}' and braces:
+            if braces.pop():
+                token = _XmlCaseBoundary(token)
+        if not (token.isspace() or token.startswith(('//', '/*'))):
+            after_match = token == 'match'
+            # In a standalone `end match`, the next case can belong to an outer match.
+            match_end_marker = after_match and after_line_start_end and indent is None
+            after_line_start_end = token == 'end' and indent is not None
+        yield _XmlIndentBoundary(token, False, False, closing) if closing else token
+
+
+def _case_head(tokens):
+    """Read only the pattern and its first separator."""
+    head = []
+    depth = 0
+    for token, _ in tokens:
+        head.append(token)
+        if not depth and token in ('if', '=>', 'class', 'object', ';'):
+            break
+        if token in ('(', '[', '{'):
+            depth += 1
+        elif token in (')', ']', '}'):
+            depth -= 1
+            if depth < 0:
+                break
+    return head
+
+
 def _nested_comment_end(source, start):
     depth = 1
     for marker in _COMMENT_BRACKETS.finditer(source, start + 2):
@@ -96,6 +305,13 @@ def _nested_comment_end(source, start):
         if not depth:
             return marker.end()
     return len(source)
+
+
+def _interpolation_tokens(patterns, source, start):
+    yield _INTERPOLATION_OPEN
+    end = yield from _scala_tokens(patterns, source, start, True)
+    yield _INTERPOLATION_CLOSE
+    return end
 
 
 def _string_tokens(patterns, source, opener):
@@ -120,9 +336,7 @@ def _string_tokens(patterns, source, opener):
         if marker == '${':
             prefix = '' if segment == start else '"'
             yield _string_part(prefix + source[segment:match.start()] + '$')
-            yield _INTERPOLATION_OPEN
-            pos = segment = yield from _scala_tokens(patterns, source, pos, True)
-            yield _INTERPOLATION_CLOSE
+            pos = segment = yield from _interpolation_tokens(patterns, source, pos)
         elif marker[0] == '"' or marker == '\n':
             end = match.start() if marker == '\n' else pos
             prefix = '' if segment == start else '"'
@@ -150,11 +364,16 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         addition = r'|`[^`\r\n]+`' + addition
-        if token_class is not None or not ('"""' in source_code or '${' in source_code or '$"' in source_code):
+        if token_class is not None or not (
+                '"""' in source_code or '${' in source_code or '$"' in source_code
+                or _SYMBOLIC_NAME_START.search(source_code) or _XML_START.search(source_code)):
             return CodeReader.generate_tokens(source_code, addition, token_class)
-        addition = _STRING_DELIMITERS + addition
+        addition = _STRING_DELIMITERS + _SYMBOLIC_DEF + addition
         patterns = (compiled_token_pattern(addition), compiled_token_pattern(_SCALA_QUOTES + addition))
-        return _scala_tokens(patterns, source_code)
+        tokens = _scala_tokens(patterns, source_code)
+        if 'case' in source_code and _XML_START.search(source_code):
+            return _xml_case_tokens(tokens)
+        return tokens
 
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
@@ -178,6 +397,9 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
                 elif token.startswith('/*') and '\n' in token:
                     # A block comment that ends on a later line.
                     line_start = 3
+                if token == '?' and isinstance(token, _XmlIndentBoundary):
+                    # Keep the reader's operator marker on a dedent token.
+                    token.token = getattr(self, '_question_mark', token.token)
                 yield token
             elif token == '\n':
                 line_start = after_line_break[line_start]
