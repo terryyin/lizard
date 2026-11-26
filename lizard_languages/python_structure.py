@@ -26,9 +26,13 @@ class PythonIndents:  # pylint: disable=R0902
 
 
 class PythonStates(CodeStateMachine):  # pylint: disable=R0903
+    read_return_annotations = True
+    reading_return_annotation = False
+
     def __init__(self, context, reader):
         super(PythonStates, self).__init__(context)
         self.reader = reader
+        self.lambda_heads = 0
 
     def _state_global(self, token):
         if token == 'def':
@@ -112,8 +116,35 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
     def _state_colon(self, token):
         if token == ':':
             self.next(self._state_first_line)
+        elif self.read_return_annotations and token == '->':
+            self.reading_return_annotation = True
+            self.br_count = 0
+            self.lambda_heads = 0
+            self.next(self._state_return_annotation)
+        elif self.read_return_annotations and token == '\\\n':
+            return
         else:
             self.next(self._state_global)
+
+    def _state_return_annotation(self, token):
+        if isinstance(token, FStringExpressionToken):
+            return
+        if token in ('def', 'class'):
+            self.reading_return_annotation = False
+            self.next(self._state_global, token)
+        elif token in ('(', '[', '{'):
+            self.br_count += 1
+        elif token in (')', ']', '}'):
+            self.br_count -= 1
+        elif self.br_count == 0:
+            if token == 'lambda':
+                self.lambda_heads += 1
+            elif token == ':':
+                if self.lambda_heads:
+                    self.lambda_heads -= 1
+                else:
+                    self.reading_return_annotation = False
+                    self.next(self._state_first_line)
 
     def _state_first_line(self, token):
         self._state = self._state_global

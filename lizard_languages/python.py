@@ -184,6 +184,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     def preprocess(self, tokens):
         indents = PythonIndents(self.context)
+        states = self.parallel_states[0]
         current_leading_spaces = 0
         reading_leading_space = True
         for token in self._soft_keyword_lookahead(tokens):
@@ -195,7 +196,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                         if not token.startswith('#'):
                             current_function = self.context.current_function
                             if (current_function.name == '*global*' or
-                                    current_function.long_name.endswith(')')):
+                                    (current_function.long_name.endswith(')') and
+                                     not states.reading_return_annotation)):
                                 indents.set_nesting(current_leading_spaces, token)
                         reading_leading_space = False
             else:

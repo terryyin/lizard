@@ -22,6 +22,8 @@ class GDScriptReader(PythonReader):
 
 
 class GDScriptStates(PythonStates):  # pylint: disable=R0903
+    read_return_annotations = False
+
     def _state_global(self, token):
         if token == 'func':
             self._state = self._function
