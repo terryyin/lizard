@@ -109,9 +109,10 @@ class JavaScriptObjectsMixin:
         elif token == '(':
             # Check if this is a method call (previous token was . or new)
             if self._prev_token == '.' or self._prev_token == 'new':
-                if self.as_class and self.last_token == 'new':
+                if self.as_class and self._prev_token == self.last_token == 'new':
                     # The group is the constructor target; arguments can follow.
                     self._in_prop_value = True
+                    self.last_tokens = token
                 # Method call inside object — use its group reader so
                 # the matching ')' doesn't escape the object reader.
                 self._read_parenthesis_group()
