@@ -344,7 +344,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
     bracket or a semicolon that it did not open, or at the end of a line
     where the expression does not continue.'''
 
-    ENDERS = {'}', ')', ']', ';', ',', 'else'}
+    ENDERS = {'}', ')', ']', ';', ',', 'else', '->'}
     # The Kotlin grammar continues an expression on the next line after
     # these tokens...
     _CONTINUES_AT_LINE_END = {
@@ -362,7 +362,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
     _TYPE_ARGUMENT_TOKENS = {'<', '>', '.', ',', '?', '*', '@', ':', '->', '&', 'in', 'out'}
     _TYPE_GROUP_PREFIXES = {'<', ',', '(', '->', ':', '.', '&', 'in', 'out', 'suspend', 'context'}
     _TYPE_OPERATORS = {'as', 'as?', 'is'}
-    _TYPE_PREFIXES = _TYPE_OPERATORS | {'.'}
+    _TYPE_PREFIXES = _TYPE_OPERATORS | {'.', '->', 'suspend'}
     # Words that are not operands, so a name after them is not an infix call.
     _KEYWORDS = {
         'if', 'else', 'when', 'try', 'catch', 'finally', 'return', 'throw',
@@ -449,7 +449,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
         elif (self._type_operand and not self._open_types
               and first != '<' and token != '.'
               and self.last_token not in self._TYPE_PREFIXES):
-            self._type_operand = False
+            self._type_operand = token == '->' and self.last_token == ')'
         if first in '<>' or self._open_types:
             self._track_types(token)
         if token in ('(', '['):
@@ -501,11 +501,17 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
         if token == 'else':
             # The `else` of an `if` around the body: `if (a) fun() = 1 else`.
             return not self._open_ifs
+        if token == '->':
+            # A direct anonymous condition can end at the arm separator.
+            # A cast such as `value as (Int) -> Boolean` owns its type arrow.
+            return (self._anonymous and self._parent._in_when_cases
+                    and not (self._type_operand and self.last_token == ')')
+                    and self._outside_type_arguments(tokens, index))
         if token == ',':
             # Not a comma between type arguments, `Map<K, V>`, or between
             # the supertypes of an `object :` expression.
             return (self._anonymous and self._state == self._state_global  # pylint: disable=W0143
-                    and self._ends_at_comma(tokens, index))
+                    and self._outside_type_arguments(tokens, index))
         return line_start and not (
             self._closes_condition
             or token == '(' and self.last_token == 'catch' and self._token_before_last == '}'
@@ -518,12 +524,12 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
             or token in self._CONTINUES_AT_LINE_START
             or self._continues_with_block(token, tokens, index))
 
-    def _ends_at_comma(self, tokens, index):
+    def _outside_type_arguments(self, tokens, index):
         if not self._open_types:
             return True
-        # The tokens before the comma can be either a comparison with a
+        # The tokens before the boundary can be either a comparison with a
         # constant or the start of a type list. Check the closing angle
-        # once and reuse its position for later commas in that list.
+        # once and reuse its position for later boundaries in that list.
         if index >= self._type_argument_end:
             self._type_argument_end = self._find_type_argument_end(tokens, index)
         return index >= self._type_argument_end
@@ -531,7 +537,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
     def _find_type_argument_end(self, tokens, index):
         depth = self._open_types
         groups = []
-        previous = ','
+        previous = tokens[index]
         index = swift._next_significant(tokens, index + 1)
         while index is not None:
             token = tokens[index]
