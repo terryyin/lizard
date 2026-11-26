@@ -181,9 +181,45 @@ function cacheKey(string $prefix, string $key): string {
         functions = get_php_function_list("<?php $a = function ($a, $b){} ?>")
         self.assertEqual('$a', functions[0].name)
 
-    def test_not_a_function_assigning_to_a_name(self):
-        functions = get_php_function_list("<?php abc=3; function (a, b){} ?>")
-        self.assertEqual('abc', functions[0].name)
+    def test_unrelated_assignment_does_not_name_callback(self):
+        functions = get_php_function_list("""<?php
+class Cache {
+    private int $limit = 10;
+}
+array_map(function ($item) { return $item * 2; }, [1, 2]);
+$result = array_map(function ($item) { return $item + 1; }, [1, 2]);
+""")
+        self.assertEqual(['(anonymous)', '(anonymous)'], [f.name for f in functions])
+
+    def test_static_closure_gets_its_assignment_name(self):
+        functions = get_php_function_list("""<?php
+$format = /* format a value */ STATIC
+    function ($value): string { return (string) $value; };
+array_map(function ($item) { return $item * 2; }, [1]);
+""")
+        self.assertEqual(['$format', '(anonymous)'], [f.name for f in functions])
+
+    def test_grouped_closure_gets_its_assignment_name(self):
+        functions = get_php_function_list("""<?php
+$format = ((static function ($value): string {
+    return (string) $value;
+}));
+$display = (function ($value): string { return (string) $value; })(42);
+""")
+        self.assertEqual(['$format', '(anonymous)'], [f.name for f in functions])
+
+    def test_grouped_closure_expression_result_stays_anonymous(self):
+        functions = get_php_function_list("""<?php
+class Page {
+    public int $limit = 42;
+}
+$result = (function () { return $this->limit; })->call(new Page());
+$isClosure = ((function () {})) INSTANCEOF Closure;
+$label = ((function () {})) ? 'available' : 'missing';
+$format = (function ($value) { return (string) $value; }) and true;
+""")
+        self.assertEqual(['(anonymous)', '(anonymous)', '(anonymous)', '$format'],
+                         [f.name for f in functions])
 
     def test_function_without_name_assign_to_field(self):
         functions = get_php_function_list("<?php a.b.c = function (a, b){} ?>")
