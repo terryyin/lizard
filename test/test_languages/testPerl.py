@@ -5,6 +5,23 @@ import os
 from lizard_languages.code_reader import CodeReader
 
 
+class TestPerlQualifiedSubroutineNames(unittest.TestCase):
+    def test_qualified_declaration_keeps_its_target_package(self):
+        code = """package RouteConfig;
+BEGIN {
+    sub Web::Router::register {
+        return shift;
+    }
+}
+sub reset { return 0; }
+"""
+        functions = analyze_file.analyze_source_code("routes.pm", code).function_list
+
+        self.assertEqual(
+            [('Web::Router::register', 3, 5), ('RouteConfig::reset', 7, 7)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
+
 class TestPerl(unittest.TestCase):
 
     def test_perl_function(self):
