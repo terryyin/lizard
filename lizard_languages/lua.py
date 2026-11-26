@@ -78,13 +78,6 @@ class LuaStateMachine(RubylikeStateMachine):
         else:
             super()._def_continue(token)
 
-    def _anonymous_def(self, token):
-        if token != '(':
-            self.next(self._def, token)
-            return
-        self.context.push_new_function(self.probable_function_name)
-        self.next(self._def_parameters)
-
     def _def_parameters(self, token):
         if token != ")":
             self.context.parameter(token)
