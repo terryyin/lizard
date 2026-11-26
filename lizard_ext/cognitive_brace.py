@@ -1,8 +1,15 @@
 """Brace, parenthesis, and semicolon nesting for cognitive complexity."""
 
+from lizard_core.file_analyzer import comment_counter, line_counter, token_counter
+from lizard_core.file_info_builder import FileInfoBuilder
+from lizard_languages.javascript import JavaScriptReader
+from lizard_languages.javascript_expression import starts_statement
+from lizard_languages.typescript import TypeScriptReader
+
 from .cognitive_actions import _BraceActions
 from .cognitive_counter import (
-    BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE)
+    BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE,
+    _MeasuredInterpolation)
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 
 
@@ -22,12 +29,38 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if not profile.nesting:
             self._process = self._process_flat
 
+    def measure_templates(self, tokens):
+        atomic = type(self.reader)._scan_atomic_templates  # pylint: disable=protected-access
+        read_interpolation = self.reader._count_interpolation_conditions  # pylint: disable=protected-access
+        for token in tokens:
+            in_expression = self.previous == '${'
+            if (in_expression or (atomic and token[:1] == '`' and '${' in token)) and (
+                    '?' in token or '&&' in token or '||' in token):
+                score, structures = read_interpolation(token, in_expression, self._measure_template)
+                token = _MeasuredInterpolation(token, score, structures)
+            yield token
+
+    def _measure_template(self, tokens):
+        context = FileInfoBuilder(self.context.fileinfo.filename)
+        reader_class = JavaScriptReader if not self.context.class_field_annotations else TypeScriptReader
+        reader = reader_class(context)
+        counter = _InterpolationCounter(reader, self.profile, gated=False)
+        tokens = reader.preprocess(tokens)
+        tokens = token_counter(line_counter(comment_counter(tokens, reader), reader), reader)
+        for token in reader(counter.measure(tokens), reader):
+            pass
+        counter.finish()
+        return context.global_pseudo_function.cognitive_complexity, counter.structures
+
     def _process(self, token):  # pylint: disable=E0202
         if token == '?' and getattr(token, 'is_optional', False):
             return
         state = self.state
         line = self.line
         if line != state.line:
+            if (state.logical and not state.pdepth and self.profile.nested_functions
+                    and state.prev and state.prev.endswith('`') and starts_statement(token)):
+                state.logical.pop(0, None)
             self._new_line(line)
         if state.pending:
             self._resolve_pending(token)
@@ -250,3 +283,20 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     def _semicolon(self):
         if not self.state.pdepth:
             self._statement_end()
+
+
+class _InterpolationCounter(_BraceCounter):
+    """Measure an expression without adding its nested functions to the file."""
+
+    structures = 0
+
+    def measure(self, tokens):
+        for token in tokens:
+            if token != '?' or not self.reader.type_annotation_owns_question_mark():
+                self.process(token)
+            yield token
+
+    def _structural(self):
+        if self.function is self.context.global_pseudo_function:
+            self.structures += 1
+        super()._structural()

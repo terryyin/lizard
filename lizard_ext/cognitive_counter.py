@@ -19,6 +19,18 @@ def _is_markup(token):
     return getattr(token, 'is_jsx_markup', False)
 
 
+class _MeasuredInterpolation(str):
+    """An opaque template token with the score of its expressions."""
+
+    interpolation_measured = True
+
+    def __new__(cls, token, score, structures):
+        marker = str.__new__(cls, token)
+        marker.score = score
+        marker.structures = structures
+        return marker
+
+
 class _Candidate(object):  # pylint: disable=R0903
     """A function that the reader started at a ``(`` and can still abandon."""
 
@@ -136,6 +148,8 @@ class _Counter(object):  # pylint: disable=R0902
         if self.profile.case_insensitive:
             token = token.lower()
         self._process(token)
+        if type(token) is _MeasuredInterpolation:
+            self._add_interpolation(token)
         state.prev2, state.prev = state.prev, token
 
     def finish(self):
@@ -153,17 +167,18 @@ class _Counter(object):  # pylint: disable=R0902
         two (``if (list.some(item => item.ok))``); the enclosing function
         would otherwise never see its bracket close.
 
-        The ``}`` of a template interpolation ends no block.  It ends the
-        sequence of logical operators before it, so it counts as ``,``."""
+        Template interpolation delimiters group an expression."""
         openers = self.openers
         if token in _CLOSER_OF:
             if not _is_markup(token):
                 openers.append((token, function))
+                if token == '${':
+                    token = '('
         elif openers and _CLOSER_OF[openers[-1][0]] == token and \
                 not _is_markup(token):
             opener, function = openers.pop()
             if opener == '${':
-                token = ','
+                token = ')'
         return function, token
 
     # -- functions the reader abandons ----------------------------------------
@@ -264,6 +279,13 @@ class _Counter(object):  # pylint: disable=R0902
 
     def _add(self, amount):
         self.function.cognitive_complexity += amount
+
+    def _add_interpolation(self, token):
+        frames = self.state.frames
+        depth = len(frames)
+        if any(frame.phase == PAREN_HEAD for frame in frames):
+            depth -= 1  # the control statement nests its body
+        self._add(token.score + token.structures * depth)
 
     def _structural(self):
         self._add(1 + len(self.state.frames))

@@ -64,6 +64,8 @@ class LizardExtension(object):  # pylint: disable=R0903
     def __call__(self, tokens, reader):
         _add_default_field(type(reader.context.global_pseudo_function))
         counter = _counter_for(reader)
+        if counter.profile.nested_functions:
+            tokens = counter.measure_templates(tokens)
         for token in tokens:
             counter.process(token)
             yield token
