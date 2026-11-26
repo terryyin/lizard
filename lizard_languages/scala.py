@@ -87,11 +87,9 @@ class _LocatedToken(str):
         return token
 
 
-def _locate_delimiter(match):
-    text = match.group()
-    if (text in _LOCATED_DELIMITERS or (text.startswith('/*') and '/*' in text[2:])
-            or (text == '<' and _XML_START.match(match.string, match.start()))):
-        return _LocatedToken(text, match.start())
+def _locate_delimiter(text, source, offset):
+    if text in _LOCATED_DELIMITERS or (text == '<' and _XML_START.match(source, offset)):
+        return _LocatedToken(text, offset)
     return text
 
 
@@ -102,8 +100,7 @@ def _scala_tokens(patterns, source, pos=0, in_interpolation=False, macro_splices
     xml_enabled = True
     pattern = patterns[in_interpolation or macro_splices]
     while pos < end:
-        for token in tokens_in_span(pattern, source, pos, end, _locate_delimiter,
-                                    macros=False):
+        for token in _tokens_with_nested_comments(pattern, source, pos, end, _locate_delimiter):
             if xml_enabled and token == '<' and isinstance(token, _LocatedToken):
                 xml_end, parts = _complete_xml(patterns, source, token.offset)
                 if xml_end is not None:
@@ -113,10 +110,6 @@ def _scala_tokens(patterns, source, pos=0, in_interpolation=False, macro_splices
                 xml_enabled = False
             if token in _STRING_OPENERS:
                 pos = yield from _string_tokens(patterns, source, token)
-                break
-            if isinstance(token, _LocatedToken) and token.startswith('/*'):
-                pos = _nested_comment_end(source, token.offset)
-                yield source[token.offset:pos]
                 break
             if macro_splices and token == '$' and source.startswith('{', token.offset + 1):
                 # Read a Scala 3 splice as a balanced block. Quotes inside it
@@ -310,6 +303,20 @@ def _case_head(tokens):
     return head
 
 
+def _tokens_with_nested_comments(pattern, source, pos, end, locate_token=None):
+    while pos < end:
+        for match in pattern.finditer(source, pos, end):
+            text = match.group()
+            if text.startswith('/*') and text.find('/*', 2) != -1:
+                start = match.start()
+                pos = _nested_comment_end(source, start)
+                yield source[start:pos]
+                break
+            yield text if locate_token is None else locate_token(text, source, match.start())
+        else:
+            return
+
+
 def _nested_comment_end(source, start):
     depth = 1
     for marker in _COMMENT_BRACKETS.finditer(source, start + 2):
@@ -386,6 +393,8 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
                 return _xml_case_tokens(tokens)
             return tokens
         pattern = compiled_token_pattern(addition)
+        if token_class is None:
+            return _tokens_with_nested_comments(pattern, source_code, 0, len(source_code))
         return tokens_in_span(pattern, source_code, 0, len(source_code), token_class, macros=False)
 
     def preprocess(self, tokens):
