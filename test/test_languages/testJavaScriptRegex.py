@@ -100,10 +100,21 @@ function averageWords(length, label, fallback) {
 const active = await / /g.test(format(() => enabled ? primary : fallback)) / divider;
 function stable() { return 1; }
 '''
-        info = analyze_file.analyze_source_code('preview.mjs', source)
-        self.assertEqual([('(anonymous)', 2), ('stable', 1)], [
-            (function.name, function.cyclomatic_complexity)
-            for function in info.function_list])
+        for prefix in ('', '// Wait for the value.\n', 'for (const value of []) {}\n'):
+            with self.subTest(prefix=prefix):
+                info = analyze_file.analyze_source_code('preview.mjs', prefix + source)
+                self.assertEqual([('(anonymous)', 2), ('stable', 1)], [
+                    (function.name, function.cyclomatic_complexity)
+                    for function in info.function_list])
+
+    def test_yield_operand_and_comparison_regex_in_the_forward_scan(self):
+        source = '''
+// Normalize totals for display.
+function percent(total, count, yield, scale, label) {
+  return total / count > yield / (scale || 1) / 100 && label.length < /colou?r/.test(label);
+}
+'''
+        self.assert_functions(source, [('percent', 3, 5, 3)], extensions=('js',))
 
     def test_division_after_a_generic_type_assertion(self):
         source = '''\
