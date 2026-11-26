@@ -32,6 +32,8 @@ class LizardExtension(object):  # pylint: disable=R0903
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
+        if 'java' in getattr(reader, 'language_names', ()):
+            tokens = _java_lambda_expressions(tokens, reader.context)
         return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
 
     @staticmethod
@@ -250,6 +252,50 @@ def _close_logical_condition(function):
     if function.condition_depth in (0, function.control_header_depth):
         function.logical_operator_added = False
         function.in_control_header = False
+
+
+def _java_lambda_expressions(tokens, context):
+    """An expression lambda owns the operators up to its argument boundary."""
+    expressions = []
+    after_arrow = False
+    for token in tokens:
+        if expressions and token in (')', ',', '?', ':'):
+            while expressions and expressions[-1].ends_at(token, context.current_function):
+                expressions.pop().close(context)
+        if after_arrow and token != '{':
+            expressions.append(_JavaLambdaExpression(context.current_function))
+        after_arrow = token == '->' and context.current_function.in_control_header
+        yield token
+
+
+class _JavaLambdaExpression:  # pylint: disable=R0903
+    def __init__(self, function):
+        self.function = function
+        self.condition_depth = function.condition_depth
+        self.block_depth = len(function.block_levels)
+        self.levels = function.levels_awaiting_body
+        self.logical_added = function.logical_operator_added
+        self.ternaries = 0
+        function.logical_operator_added = False
+
+    def ends_at(self, token, function):
+        if (function is not self.function or function.condition_depth != self.condition_depth
+                or len(function.block_levels) != self.block_depth):
+            return False
+        if token == '?':
+            self.ternaries += 1
+            return False
+        if token == ':' and self.ternaries:
+            self.ternaries -= 1
+            return False
+        return True
+
+    def close(self, context):
+        function = self.function
+        levels = max(function.levels_awaiting_body - self.levels, 0)
+        function.levels_awaiting_body -= levels
+        function.logical_operator_added = self.logical_added
+        context.add_nd_condition(-levels)
 
 
 class _ConditionBrace:  # pylint: disable=R0903
