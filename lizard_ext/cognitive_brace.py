@@ -25,10 +25,10 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     def _process(self, token):  # pylint: disable=E0202
         if token == '?' and getattr(token, 'is_optional', False):
             return
-        state = self.state
-        if ((self.line != state.line or token == ';')
-                and getattr(token, 'is_class_field_boundary', False)):
+        if (getattr(token, 'is_class_field_boundary', False)
+                and (self.line != self.state.line or token == ';')):
             self._end_class_field()
+        state = self.state
         line = self.line
         if line != state.line:
             self._new_line(line)
