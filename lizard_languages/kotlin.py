@@ -101,13 +101,25 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         if token == '(':
             self.next(self._local_class_parameters, token)
         elif token == '{':
-            # A local class can declare accessors while its enclosing function is active.
-            self.next(self._state_global)
-            self.sub_state(KotlinStates(
-                self.context, accessor_declaration_scope=self.context.current_function,
-            ))
+            self._read_local_class_body()
         elif token in self._EXPRESSION_BODY_ENDERS or token in ('}', ';'):
             self.next(self._state_global, token)
+
+    def _read_local_class_body(self):
+        context = self.context
+        enclosing_forgiveness = context.forgive, context.forgive_directive
+
+        def restore_forgiveness():
+            context.forgive, context.forgive_directive = enclosing_forgiveness
+
+        # The class has its own declarations while the enclosing function
+        # remains active for metrics.
+        context.forgive = False
+        context.forgive_directive = None
+        self.next(self._state_global)
+        self.sub_state(KotlinStates(
+            context, accessor_declaration_scope=context.current_function,
+        ), restore_forgiveness)
 
     @CodeStateMachine.read_inside_brackets_then("()", "_local_class_header")
     def _local_class_parameters(self, token):
@@ -160,7 +172,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             return
         owner, line, token_count, follows_code = context.forgive_directive
         declaration = context.current_function
-        if owner is context.global_pseudo_function and not declaration.defined_in_function:
+        if owner is self._accessor_declaration_scope and owner is context.stacked_functions[-1]:
             context.forgive = False
         elif owner is declaration:
             # A comment between two accessors can introduce the next one
