@@ -4,11 +4,11 @@ Language parser for TypeScript
 
 from itertools import tee
 
+from .code_reader import CodeReader, CodeStateMachine, MemberName
+from .clike import CCppCommentsMixin
 from .typescript_declarations import SplitTypeAliasName, has_split_alias_name
 from .typescript_type_annotation import (
     TypeAliasContext, TypeArguments, followed_by_new_statement, packed_type_arguments)
-from .code_reader import CodeReader, CodeStateMachine, MemberName
-from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
