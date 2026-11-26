@@ -4,7 +4,7 @@ from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
 from .python_structure import PythonIndents, PythonStates, count_spaces
 from .python_tokens import FStringExpressionToken, FStringLiteralToken, PrefixedStringToken, \
-    ContinuedLineToken, generate_tokens as generate_python_tokens
+    generate_tokens as generate_python_tokens
 
 
 class PythonReader(CodeReader, ScriptLanguageMixIn):
@@ -127,7 +127,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         tokens_iter = iter(tokens)
         for token in tokens_iter:
             if token == '\n':
-                if not isinstance(token, (ContinuedLineToken, FStringExpressionToken)):
+                if (not isinstance(token, FStringExpressionToken) and
+                        not getattr(token, 'is_continuation', False)):
                     at_line_start = True
                 yield token
             elif token.isspace():
@@ -202,7 +203,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                                      not states.ignore_indentation)):
                                 indents.set_nesting(current_leading_spaces, token)
                         reading_leading_space = False
-            elif not isinstance(token, (ContinuedLineToken, FStringExpressionToken)):
+            elif (not isinstance(token, FStringExpressionToken) and
+                  not getattr(token, 'is_continuation', False)):
                 if states.inline_suite:
                     states.end_inline_line()
                 reading_leading_space = True
