@@ -3,8 +3,6 @@
 from itertools import chain
 from weakref import WeakKeyDictionary
 
-from .cognitive_profile import _MEMBER_RECEIVER_OVERRIDES
-
 from .cognitive_profile import (
     _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
 
@@ -86,7 +84,7 @@ class _Counter(object):  # pylint: disable=R0902
     def __init__(self, reader, profile, gated):
         self.reader = reader
         self.context = reader.context
-        self.member_receivers = _MEMBER_RECEIVER_OVERRIDES.get(reader.language_names[0])
+        self.member_receivers = profile.member_receivers
         self.profile = profile
         self.gated = gated
         self.logical_ops = frozenset(

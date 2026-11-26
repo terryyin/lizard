@@ -71,6 +71,7 @@ class _Profile(object):  # pylint: disable=R0902,R0903
         if self.case_insensitive:
             known = set(word.lower() for word in known)
         profile = copy(self)
+        profile.member_receivers = _MEMBER_RECEIVER_OVERRIDES.get(reader.language_names[0])
         for role, words in _ROLES.items():
             setattr(profile, role, getattr(self, role) | (known & words))
         return profile
@@ -159,8 +160,8 @@ _NULLABLE_TYPE_FOLLOWERS = frozenset((
 
 _MEMBER_ACCESS = frozenset(('.', '->', '::'))
 _SELF_REFERENCES = frozenset(('this', 'self', 'cls'))
-# These tokens represent the current receiver after language-specific
-# member access. Empty sets mark access that cannot call the same function.
+# Tokens before language-specific member access can identify the current
+# receiver. Empty sets mark access that cannot call the same function.
 _PHP_THIS = frozenset(('$this',))
 _MEMBER_RECEIVER_OVERRIDES = {
     'php': {'->': _PHP_THIS, '?->': _PHP_THIS},
