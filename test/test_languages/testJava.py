@@ -20,6 +20,40 @@ public String funcB() {
         self.assertEqual('funcA()', result[0].long_name)
         self.assertEqual('funcB()', result[1].long_name)
 
+    def test_template_variable_in_comparison(self):
+        result = get_java_function_list("""class TemplateRanking {
+    int rank(int template, int limit) {
+        if (template < limit) {
+            return 0;
+        }
+        return template;
+    }
+
+    int defaultRank() {
+        return 1;
+    }
+}
+""")
+        self.assertEqual(
+            [('TemplateRanking::rank', 2, 7), ('TemplateRanking::defaultRank', 9, 11)],
+            [(function.name, function.start_line, function.end_line) for function in result])
+
+    def test_template_variable_in_array_initializer(self):
+        result = get_java_function_list("""class TemplateRenderer {
+    String[] templates(String template) {
+        return new String[] {template};
+    }
+
+    int size() {
+        return 1;
+    }
+}
+""")
+        self.assertEqual(
+            [('TemplateRenderer::templates( String template)', 2, 4), ('TemplateRenderer::size()', 6, 8)],
+            [(function.long_name, function.start_line, function.end_line)
+             for function in result])
+
     def test_function_with_throws(self):
         result = get_java_function_list("void fun() throws e1, e2{}")
         self.assertEqual(1, len(result))
