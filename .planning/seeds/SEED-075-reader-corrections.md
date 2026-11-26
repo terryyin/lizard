@@ -64,33 +64,6 @@ frozen master `6ff51711d14d7aebca1d72690130fab6e1889fe8`.
 **Plan:** [Keep valid R raw-string delimiter forms opaque](../slice-plans/040-r-raw-literal-delimiters/PLAN.md)
 
 
-<a id="plsql-national-literals"></a>
-
-### Keep national-character PL/SQL alternative literals opaque
-
-**Identity:** SEED-075#plsql-national-literals
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/041-plsql-national-literals/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"671910be12b429b96e44c0dd316443346bd3fb16f62bbe0e15d54196bb7695be","plan":"38e8a7d2aa5eb82c46a8dfc1269d7ab758e3ac7e2bc30b481c93b6ec690d1185"}}
-```
-
-**Goal:** PL/SQL users get the same CCN and following function locations for national-character `NQ` alternative-quoted literals as for the equivalent `Q` literals when the literal text contains apparent executable code.
-
-**Scope:** Correct the specific language reader behavior reproduced during review of [#639](https://github.com/terryyin/lizard/pull/639) at `887ad0bff86a05c71eca26d9eb6eba6a0b7dde4f`. Follow #639's direction: an alternative-quoted literal is one token, so its text adds no decisions and its newlines keep following functions on their real lines. Make that hold for the `N` national-character prefix in any letter case (`nq`, `NQ`, `Nq`, `nQ`) with every delimiter #639 accepts: `[]`, `{}`, `()`, `<>` and a repeated single character. Preserve #639's `Q` behavior, ordinary and `N'...'` strings, identifiers named `nq`, and unrelated reader behavior. Out of scope: other SEED-075 reader corrections, non-PL/SQL languages, and unterminated alternative-quoted literals.
-
-**Finding:** In a function returning `nq'[it's if x then end if;]'`, master and #639 report CCN 2. The equivalent Q form gives CCN 1 on #639. With a repeated-character delimiter such as `Nq'#...#'`, master and #639 lose function f entirely. Oracle accepts `[N|n][Q|q]'` before the quote delimiter. [Language reference](https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/Literals.html).
-
-**Key examples:**
-
-- Each source is `CREATE FUNCTION f RETURN varchar2 AS BEGIN RETURN <literal>; END;` then `CREATE PROCEDURE g AS BEGIN NULL; END;` on the next line, with `<literal>` hiding `if x then end if;` behind an embedded quote `it's`. Expected: f CCN 1 and g at line 2 with CCN 1.
-  - `q'[it's if x then end if;]'` → #639 passes; master f CCN 2.
-  - `nq'[...]'`, `NQ'{...}'`, `nq'(...)'` and `nq'<...>'` → master and #639 f CCN 2.
-  - `Nq'#...#'` → master and #639 report no function f.
-- A multiline `nq'[it's` / `if x then end if;` / `]'` → f CCN 1 and g starts at line 4 (master and #639: f CCN 2).
-- An ordinary national string `N'it''s'` followed by a real `IF x THEN NULL; END IF;` → f CCN 2, and a variable named `nq` used in `IF nq > 1` → f CCN 2 (unchanged on master and #639).
-
-**Plan:** [Keep national-character PL/SQL alternative literals opaque](../slice-plans/041-plsql-national-literals/PLAN.md)
-
-
 <a id="r-formal-parameter-boundaries"></a>
 
 ### Count R variadic and quoted formals with nested defaults
