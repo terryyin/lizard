@@ -2,20 +2,28 @@
 
 import re
 
-from .js_style_regex_expression import REGEX_TOKEN
+from .js_style_regex_expression import REGEX_LITERAL, REGEX_TOKEN
 from .token_pattern import compiled_token_pattern, tokens_in_span
 
 
 # JavaScript line comments end at any line terminator, even after a backslash.
 LINE_COMMENT = r'//[^\r\n\u2028\u2029]*'
+_COMMENT = r'/\*.*?\*/|' + LINE_COMMENT
 # Skip lexical units before interpreting their quotes, backticks or braces.
 _OPAQUE_CODE = (
-    r'/\*.*?\*/|' + LINE_COMMENT +
+    _COMMENT +
     r'|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''
     r'|' + REGEX_TOKEN
 )
 _TEMPLATE_START = re.compile(_OPAQUE_CODE + r'|`', re.S)
-_EXPRESSION_SPECIAL = re.compile(_OPAQUE_CODE + r'|[`{}]', re.S)
+# A comment can separate a regular expression from the punctuation that
+# starts its operand. A postfix operator or a completed operand cannot.
+_COMMENTED_REGEX = (
+    r'(?:\A|(?<=[=,({[?:;]))\s*(?:' + _COMMENT + r')'
+    r'(?:\s|' + _COMMENT + r')*' + REGEX_LITERAL
+)
+_EXPRESSION_SPECIAL = re.compile(
+    r'(?P<commented_regex>' + _COMMENTED_REGEX + r')|' + _OPAQUE_CODE + r'|[`{}]', re.S)
 _TEMPLATE_SPECIAL = re.compile(r'\\.|`|\$\{', re.S)
 _WHOLE_TOKEN = re.compile(r'.*', re.S)
 
@@ -118,6 +126,9 @@ def interpolation_code(source, in_expression=False):
             elif token == '`':
                 stack.pop()
                 code = pos
+        elif match.lastgroup == 'commented_regex':
+            yield code, match.start()
+            code = pos
         elif token == '`':
             yield code, match.start()
             stack.append(0)
