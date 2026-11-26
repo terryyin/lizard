@@ -21,7 +21,7 @@ _LINE_BREAK = re.compile(rf'[{_LINE_TERMINATORS}]')
 _OPERAND_OPERATOR = re.compile(r'(?:[=!]=|(?<!<)<=|(?<!>)>=|(?<!=)>|\?\?|[<+*/%~!&|^-])\Z')
 
 
-_AFTER_PAREN = re.compile(r'\)\s*/(?![/*])')
+_AFTER_PAREN = re.compile(r'\)\s*(?:(?:' + _COMMENT.pattern + r')\s*)*/(?![/*])', re.S)
 _PAREN_EVENTS = re.compile(r"""[/()`"']""")
 _CONTROL_HEADERS = frozenset(('if', 'while', 'for', 'with'))
 
