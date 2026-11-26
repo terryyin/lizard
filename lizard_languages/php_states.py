@@ -130,8 +130,8 @@ class PHPLanguageStates(CodeStateMachine):
 
     def _function_name(self, token):
         if token and not token.isspace() and token != '(':
-            self.assignment_name = ''
             method_name = token
+            self.assignment_name = ''
             if self.in_class and self.class_name:
                 # In class, use ClassName::methodName format
                 long_name = f"{self.class_name}::{method_name}"
