@@ -861,6 +861,114 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
 class TestJavaScriptTemplateLiterals(unittest.TestCase):
     """The ``}`` of an interpolation ends no block."""
 
+    def test_conditions_inside_template_interpolations(self):
+        code = """
+            function status(ready, enabled) {
+              return `State: ${ready ? 'ready' : 'waiting'} ${enabled && 'online'}`;
+            }
+        """
+        for extension in ("js", "ts", "jsx", "tsx"):
+            with self.subTest(extension=extension):
+                self.assertEqual([2], cogc("status." + extension, code))
+
+    def test_nested_interpolations_keep_the_enclosing_complexity_depth(self):
+        self.assertEqual([6], cogc("status.js", """
+            function status(show, ready, enabled) {
+              if (show) return `${ready ? `state: ${enabled ? 'on' : 'off'}` : 'waiting'}`;
+              return 'hidden';
+            }
+        """))
+
+    def test_arrow_body_inside_an_interpolation_has_its_own_complexity(self):
+        self.assertEqual([1], cogc("status.js", """
+            function status(records, enabled) {
+              return `${records.map(item => item.ready ? 'ready' : 'waiting')} ${enabled && 'online'}`;
+            }
+        """))
+
+    def test_template_literal_types_do_not_count_as_runtime_conditions(self):
+        source = """
+            function format<T extends boolean>(value: T) {
+              type Label = `status: ${T extends true ? 'ready' : 'waiting'}`;
+              return `status: ${value ? 'ready' : 'waiting'}` as Label;
+            }
+            function literalType<T extends boolean>(value: T) {
+              type Label = `status: ${T extends true ? 'ready' : 'waiting'}`;
+              return (value ? 'status: ready' : 'status: waiting') as Label;
+            }
+            function typeOnly<T extends boolean>(value: T) {
+              type Label = `${T extends true ? 'yes' : 'no'}`;
+              return { value, labels: [] as Label[] };
+            }
+        """
+        for filename in ('labels.ts', 'labels.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([1, 1, 0], cogc(filename, source))
+
+    def test_interpolation_comment_does_not_stop_either_metric(self):
+        code = """
+            function label(ready) {
+              return `${ready /* GENERATED CODE is the banner text */ ? 'yes' : 'no'}`;
+            }
+        """
+        ordinary = analyze_file.analyze_source_code("label.js", code).function_list
+        measured = analyze("label.js", code).function_list
+
+        self.assertEqual([("label", 2)], [(f.name, f.cyclomatic_complexity) for f in ordinary])
+        self.assertEqual([("label", 2, 1)], [
+            (f.name, f.cyclomatic_complexity, f.cognitive_complexity) for f in measured
+        ])
+
+    def test_template_literal_types_in_call_arguments_are_not_runtime(self):
+        source = """
+            function empty<T>(value: string) { return value; }
+            function genericType<T extends boolean>() {
+              return empty<`${T extends true ? 'yes' : 'no'}`>('no');
+            }
+            function nestedType<T extends boolean>() {
+              return empty<Readonly<`${T extends true ? 'yes' : 'no'}`>>('no');
+            }
+            function compare(lower: string, flag: boolean) {
+              return lower < `${flag ? 'yes' : 'no'}`;
+            }
+        """
+        for filename in ('labels.ts', 'labels.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 0, 0, 1], cogc(filename, source))
+
+    def test_template_statement_after_a_type_alias(self):
+        source = """
+            function label(value: boolean) {
+              type Label = string
+              `${value ? 'yes' : 'no'}`
+              return value
+            }
+        """
+        self.assertEqual([1], cogc('labels.tsx', source))
+
+    def test_runtime_ternary_and_conditional_type_inside_interpolation(self):
+        self.assertEqual([0, 1], cogc("status.ts", """
+            function label(value: unknown) {
+              return `${value as (unknown extends string ? number : string)}`;
+            }
+
+            function status(value: unknown) {
+              return `${value as boolean ? 'enabled' : 'off'}`;
+            }
+        """))
+
+    def test_template_statement_after_alias_keeps_its_decision(self):
+        source = """
+            function format(value: boolean) {
+              type Label = string
+              `${value ? 'yes' : 'no'}`
+              return value
+            }
+        """
+        for filename in ('label.ts', 'label.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([1], cogc(filename, source))
+
     def test_interpolation_in_block(self):
         self.assertEqual([3], cogc("a.js", """
             function label(item) {

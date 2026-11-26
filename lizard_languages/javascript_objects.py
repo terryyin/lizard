@@ -125,6 +125,9 @@ class JavaScriptObjectsMixin:
             # Only "field = (" and "key: (" can open a group; a "(" after
             # a member name opens parameters.
             self._signature = self.last_token not in ('=', ':')
+            self._arrow_only_signature = not self._signature or (
+                self.last_token == 'async' and self.last_tokens == '='
+                and not self.holds_members)
             if not self.started_function:
                 # When last_tokens is '=' we're in a field assignment
                 # pattern (field = () => {}), so use function_name which
