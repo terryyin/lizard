@@ -227,18 +227,18 @@ bool can_move(Job& job) {
         )
 
     def test_split_macro_prefix_follows_the_conditional_definition(self):
-        result = get_cpp_function_list("""template<class Left, class Right>
+        source = """template<class Left, class Right>
 constexpr bool same_type = false;
 template<class Type>
 constexpr bool same_type<Type, Type> = true;
 struct Job {};
-#if CHECK_TYPES
+CHECK_GUARD
 #define CHECK(left, right) same_type<left, right>
 #else
 #define CHECK(left, right) (left right)
 #endif
 
-#if CHECK_TYPES
+USE_GUARD
 bool accepts_move() {
     return CHECK(Job&&, Job&&);
 }
@@ -250,12 +250,55 @@ bool accepts_work(bool active, bool ready) {
     return CHECK(active &&, ready);
 }
 #endif
-""")
+"""
+        for declaration, use in (
+            ("#if CHECK_TYPES", "#if CHECK_TYPES"),
+            ("#if defined(CHECK_TYPES)", "#if defined(CHECK_TYPES)"),
+            ("#ifdef CHECK_TYPES", "#if defined ( CHECK_TYPES )"),
+        ):
+            with self.subTest(declaration=declaration, use=use):
+                result = get_cpp_function_list(source.replace("CHECK_GUARD", declaration).replace("USE_GUARD", use))
 
-        self.assertEqual(
-            [("accepts_move", 1), ("compares_reference", 1), ("accepts_work", 2)],
-            [(fn.name, fn.cyclomatic_complexity) for fn in result],
+                self.assertEqual(
+                    [("accepts_move", 1), ("compares_reference", 1), ("accepts_work", 2)],
+                    [(fn.name, fn.cyclomatic_complexity) for fn in result],
+                )
+
+    def test_split_macro_prefix_survives_agreeing_conditional_definitions(self):
+        source = """DEFINITIONS
+
+bool accepts_work(bool active, bool ready) {
+    return CHECK(active &&, ready);
+}
+"""
+        cases = (
+            """#if SELECT_FIRST
+#define CHECK(left, right) (left right)
+#else
+#define CHECK(prefix, suffix) (prefix suffix)
+#endif""",
+            """#if SELECT_FIRST
+#define CHECK(left, right) (left right)
+#elif SELECT_SECOND
+#define CHECK(prefix, suffix) (prefix suffix)
+#else
+#if SELECT_THIRD
+#define CHECK(prefix, suffix) (prefix suffix)
+#else
+#define CHECK(left, right) (left right)
+#endif
+#endif""",
+            """#define CHECK(left, right) (left right)
+#if SELECT_FIRST
+#undef CHECK
+#define CHECK(prefix, suffix) (prefix suffix)
+#endif""",
         )
+        for definitions in cases:
+            with self.subTest(definitions=definitions):
+                result = get_cpp_function_list(source.replace("DEFINITIONS", definitions))
+
+                self.assertEqual([("accepts_work", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
     def test_unnamed_array_rvalue_reference(self):
         result = get_cpp_function_list("""#include <type_traits>
