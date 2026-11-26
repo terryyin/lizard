@@ -50,8 +50,8 @@ class LizardExtension(object):  # pylint: disable=R0903
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
-        ).union(block_ends, block_starts, loops,
-                _STANDALONE_BOUNDARIES if standalone_chains else ())
+            + (tuple(_STANDALONE_BOUNDARIES) if standalone_chains else ())
+        ).union(block_ends, block_starts, loops)
         context = reader.context
         previous_token = None
         for token in tokens:
@@ -360,14 +360,14 @@ def patch_append_method(frm, accept_class, method_name):
 def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
     self.max_nesting_depth = 0
+    self.standalone_logical_added = False
+    self.standalone_groups = []
+    self.standalone_square_depth = 0
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
-    self.standalone_logical_added = False
-    self.standalone_groups = []
-    self.standalone_square_depth = 0
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
 
 
