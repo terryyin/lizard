@@ -41,7 +41,12 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                 if self._parenthesis_first is None:
                     # The arrow after a parenthesized function type belongs
                     # to the enclosing runtime signature.
-                    self._parenthesis_first = token
+                    first = token[:1]
+                    if (first in ('"', "'", '`') or first.isdigit()
+                            or token in ('-', 'true', 'false', 'null')):
+                        self._parenthesis_first = '('
+                    else:
+                        self._parenthesis_first = token
                 elif brackets[-1] == ')':
                     if token == ':':
                         self._parenthesis_parameter_type = True
