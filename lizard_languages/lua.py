@@ -39,11 +39,13 @@ class LuaStateMachine(RubylikeStateMachine):
     def __init__(self, context):
         super(LuaStateMachine, self).__init__(context)
         self.probable_function_name = None
+        self._member_assignment = False
 
     def _state_global(self, token):
         if token == "=":
             self.next(self._assigning)
             return
+        self._member_assignment = self.last_token == '.'
         self.probable_function_name = token
         super(LuaStateMachine, self)._state_global(token)
 
@@ -69,4 +71,6 @@ class LuaStateMachine(RubylikeStateMachine):
             self.next(self._def, token)
             return
         self.context.push_new_function(self.probable_function_name)
+        if self._member_assignment:
+            self.context.current_function._lua_member_assignment = True
         self.next(self._def_parameters)

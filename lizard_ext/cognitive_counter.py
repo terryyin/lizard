@@ -3,6 +3,8 @@
 from itertools import chain
 from weakref import WeakKeyDictionary
 
+from lizard_languages.javascript_expression import ends_expression
+
 from .cognitive_profile import (
     _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
 
@@ -57,6 +59,9 @@ class _FunctionState(object):  # pylint: disable=R0902,R0903
         self.logical = {}       # pdepth -> last binary logical operator
         self.prev = None
         self.prev2 = None
+        self.receiver_groups = None
+        self.grouped_receiver = None
+        self.member_receiver = None
         self.line = None
         self.continued = False
         self.after_async = False
@@ -136,6 +141,9 @@ class _Counter(object):  # pylint: disable=R0902
             state.body_started = True
         if self.profile.case_insensitive:
             token = token.lower()
+        member_receivers = self.member_receivers
+        if member_receivers and (state.grouped_receiver or token in ('(', ')') or token in member_receivers):
+            self._remember_member_receiver(token)
         self._process(token)
         state.prev2, state.prev = state.prev, token
 
@@ -294,6 +302,36 @@ class _Counter(object):  # pylint: disable=R0902
         for depth in [d for d in state.logical if d > state.pdepth]:
             del state.logical[depth]
 
+    def _remember_member_receiver(self, token):
+        state = self.state
+        grouped = state.grouped_receiver
+        state.grouped_receiver = None
+        if token in self.member_receivers:
+            state.member_receiver = grouped[1] if grouped else state.prev
+        elif token == '(' and self._starts_receiver_group():
+            if state.receiver_groups is None:
+                state.receiver_groups = {}
+            state.receiver_groups[state.pdepth + 1] = self.context.fileinfo.token_count
+        elif token == ')' and state.receiver_groups:
+            opening = state.receiver_groups.pop(state.pdepth, None)
+            if opening is not None:
+                # Only a bare name or another grouping of that name
+                # identifies the receiver. A call may return any object.
+                if self.context.fileinfo.token_count - opening == 2:
+                    state.grouped_receiver = (opening, state.prev)
+                elif grouped and grouped[0] == opening + 1:
+                    state.grouped_receiver = (opening, grouped[1])
+
+    def _starts_receiver_group(self):
+        state = self.state
+        if state.frames and state.frames[-1].phase == BODY_PENDING:
+            return True
+        if state.prev2 in _MEMBER_ACCESS or state.prev2 in self.member_receivers:
+            return False
+        previous = state.prev or ''
+        return (previous in ('return', 'throw', 'yield', 'then', 'else', 'do')
+                or not ends_expression(previous))
+
     def _arm_word(self, token):
         """Remember identifiers that may need the next token to be judged:
         a call to the function itself and a ``break``/``continue`` label."""
@@ -311,7 +349,13 @@ class _Counter(object):  # pylint: disable=R0902
                     and self._is_structure(token))
             member_receivers = self.member_receivers
             if member_receivers is not None and state.prev in member_receivers:
-                calls = state.prev2 in member_receivers[state.prev]
+                calls = state.member_receiver in member_receivers[state.prev]
+                if calls and state.prev == ':':
+                    # A Lua table assignment can declare the receiver as
+                    # its first parameter. A local function can name any
+                    # parameter ``self`` without owning that table.
+                    calls = (getattr(function, '_lua_member_assignment', False)
+                             and function.parameters[:1] == ['self'])
             if calls:
                 state.pending_call = True
                 state.pending += 1

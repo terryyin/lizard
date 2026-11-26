@@ -165,10 +165,9 @@ _SELF_REFERENCES = frozenset(('this', 'self', 'cls'))
 _PHP_THIS = frozenset(('$this',))
 _MEMBER_RECEIVER_OVERRIDES = {
     'php': {'->': _PHP_THIS, '?->': _PHP_THIS},
-    # A grouped Groovy receiver can be ``(this)``.
-    'groovy': {'?.': _SELF_REFERENCES | {')'}, '*.': frozenset()},
+    'groovy': {'?.': _SELF_REFERENCES, '*.': frozenset()},
     'kotlin': {'.': _SELF_REFERENCES | {'this?', 'this!!'}},
-    'lua': {':': frozenset()},
+    'lua': {':': frozenset(('self',))},
 }
 _LAMBDA_TRIGGERS = {'cpp': frozenset((']',)), 'arrow': frozenset(('->', '=>')),
                     None: frozenset()}
