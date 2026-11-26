@@ -499,6 +499,35 @@ class Labels
         self.assertEqual(4, build.cyclomatic_complexity)
         self.assertEqual([['?', 6], ['?', 7], ['??', 7]], build.complex_tags)
 
+    def test_type_patterns_can_end_a_ternary_condition(self):
+        source = '''class Labels
+{
+    int One(object value) { return value is string ? 1 : 0; }
+    int Many(object value) { return value is int[] ? 1 : 0; }
+    string Render(object value) { return $"{(value is not string ? "other" : "text")}"; }
+}'''
+        analyzer = FileAnalyzer(get_extensions(['nd', 'cognitive', 'complextags']))
+        functions = analyzer.analyze_source_code('labels.cs', source).function_list
+        self.assertEqual([
+            ('Labels::One', 2, 1, 1, [['?', 3]]),
+            ('Labels::Many', 2, 1, 1, [['?', 4]]),
+            ('Labels::Render', 2, 1, 1, [['?', 5]]),
+        ], [(f.name, f.cyclomatic_complexity, f.max_nesting_depth,
+             f.cognitive_complexity, f.complex_tags) for f in functions])
+
+    def test_named_argument_does_not_make_previous_index_access_a_ternary(self):
+        source = '''#nullable enable
+class Labels
+{
+    int Read(int[]? entries) { return Coalesce(entries?[0], fallback: 0); }
+    int Coalesce(int? value, int fallback) { return value ?? fallback; }
+}'''
+        analyzer = FileAnalyzer(get_extensions(['nd', 'cognitive', 'complextags']))
+        read, _ = analyzer.analyze_source_code('labels.cs', source).function_list
+        self.assertEqual(('Labels::Read', 1, 0, 0, []), (
+            read.name, read.cyclomatic_complexity, read.max_nesting_depth,
+            read.cognitive_complexity, read.complex_tags))
+
     def test_nullable_generic_local_return_type_is_not_a_condition(self):
         source = """
 #nullable enable
