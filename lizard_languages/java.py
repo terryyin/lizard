@@ -2,8 +2,6 @@
 Language parser for Java
 '''
 
-import re
-
 from lizard_languages.code_reader import CodeStateMachine
 from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
 
@@ -28,7 +26,6 @@ def _unicode_text_block_pattern():
 
 
 _JAVA_UNICODE_TEXT_BLOCK = _unicode_text_block_pattern()
-_JAVA_UNICODE_QUOTE = re.compile(r'\\u+0022')
 
 
 # "record" is a keyword for type declarations, but a valid method/field name.
@@ -86,7 +83,7 @@ class JavaReader(CLikeReader):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         has_raw_delimiter = '"""' in source_code
-        if r'\u' in source_code and (has_raw_delimiter or _JAVA_UNICODE_QUOTE.search(source_code)):
+        if r'\u' in source_code and (has_raw_delimiter or 'u0022' in source_code):
             addition = _JAVA_UNICODE_TEXT_BLOCK + addition
         elif has_raw_delimiter:
             addition = _JAVA_TEXT_BLOCK + addition
