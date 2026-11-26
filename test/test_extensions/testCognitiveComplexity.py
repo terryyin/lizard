@@ -1388,6 +1388,36 @@ class TestMemberCallRecursion(unittest.TestCase):
         """))
 
 
+    def test_lua_assigned_methods_use_their_explicit_receiver_parameter(self):
+        self.assertEqual([2, 2, 2], cogc("plan.lua", """
+            local Plan = {}
+            Plan.drain = function(plan, remaining)
+                if remaining > 0 then return plan:drain(remaining - 1) end
+            end
+            Plan.wrap = function(plan, remaining)
+                if remaining > 0 then return ((plan)):wrap(remaining - 1) end
+            end
+            Plan.describe = function(plan, remaining)
+                if remaining > 0 then return "retry " .. plan:describe(remaining - 1) end
+                return "done"
+            end
+        """))
+
+    def test_lua_receiver_parameter_does_not_identify_another_object(self):
+        self.assertEqual([0, 0, 0], cogc("plan.lua", """
+            local Plan = {}
+            Plan.forward = function(plan, fallback)
+                return fallback:forward()
+            end
+            Plan.refresh = function(plan, connection)
+                return connection.plan:refresh()
+            end
+            local function audit(plan)
+                return plan:audit()
+            end
+        """))
+
+
 class TestFlatLanguages(unittest.TestCase):
     """Blocks are not brace-delimited: increments without nesting penalty."""
 
