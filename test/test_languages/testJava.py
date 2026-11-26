@@ -64,6 +64,63 @@ class Help {
         result = get_java_function_list("void fun() throws e1, e2{}")
         self.assertEqual(1, len(result))
 
+    def test_lambda_field_does_not_consume_next_constructor(self):
+        code = """
+import java.util.function.Predicate;
+
+class ItemFilter {
+    private final Predicate<String> allowed = value -> this.valid(value) && permitted(value);
+
+    ItemFilter() {
+        if (!allowed.test("sample")) {
+            throw new IllegalStateException();
+        }
+    }
+
+    private boolean valid(String value) {
+        return !value.isEmpty();
+    }
+
+    private boolean permitted(String value) {
+        return value.length() < 20;
+    }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(['ItemFilter::ItemFilter', 'ItemFilter::valid', 'ItemFilter::permitted'],
+                         [function.name for function in result])
+        constructor = result[0]
+        self.assertEqual((7, 11), (constructor.start_line, constructor.end_line))
+        self.assertEqual(2, constructor.cyclomatic_complexity)
+
+    def test_comparison_in_lambda_field_preserves_following_members(self):
+        code = """
+import java.util.function.IntPredicate;
+
+class LambdaComparison {
+    final IntPredicate allowed = n -> this.check() && (n < 2);
+
+    LambdaComparison() {}
+    public boolean check() { return true; }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(['LambdaComparison::LambdaComparison', 'LambdaComparison::check'],
+                         [function.name for function in result])
+        self.assertEqual([5, 8], [function.token_count for function in result])
+
+    def test_instanceof_field_preserves_following_constructor(self):
+        code = """
+class TextValue {
+    final boolean allowed = value() instanceof String;
+    TextValue() {}
+    Object value() { return ""; }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(['TextValue::TextValue', 'TextValue::value'],
+                         [function.name for function in result])
+
     def test_anonymous_class_in_field_initializer(self):
         code = """
 class T {
