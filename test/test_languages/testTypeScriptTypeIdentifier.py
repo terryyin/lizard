@@ -122,6 +122,33 @@ function close() {{ return 'closed'; }}
 """
                     self.assertEqual([(expected, 3, 3, 1), ('run', 1, 5, 1)], summary(filename, code))
 
+    def test_single_generic_parameter_in_tsx_type_alias_keeps_later_jsx(self):
+        code = """type Parse = <T>(value: T) => T
+const parse: Parse = (value) => value
+const widget = () => <span />
+"""
+        self.assertEqual([('parse', 2, 2, 1), ('widget', 3, 3, 1)], summary('panel.tsx', code))
+
+    def test_escaped_value_named_with_type_prefix_keeps_jsx(self):
+        code = r'''const type\u0046oo = <span onClick={() => true} />'''
+        self.assertEqual([('(anonymous)', 1, 1, 1)], summary('panel.tsx', code))
+
+    def test_generic_function_in_an_alias_return_type_keeps_later_jsx(self):
+        code = """type BuildParser = () => <T>(value: T) => T
+const parse = (value: number) => value
+const widget = () => <span />
+"""
+        self.assertEqual([('parse', 2, 2, 1), ('widget', 3, 3, 1)], summary('panel.tsx', code))
+
+    def test_contextual_function_after_type_alias_keeps_jsx(self):
+        for name in ('as', 'is'):
+            with self.subTest(name=name):
+                code = f"""const {name} = (widget: object) => widget;
+type Flag = boolean
+{name}(<span onClick={{() => true}} />)
+"""
+                self.assertEqual([(name, 1, 1, 1), ('(anonymous)', 3, 3, 1)], summary('panel.tsx', code))
+
     def test_contextual_call_after_type_alias_keeps_its_callback(self):
         for name in ('as', 'is'):
             for filename in ('types.ts', 'types.tsx'):
