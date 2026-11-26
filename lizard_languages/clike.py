@@ -94,14 +94,19 @@ class CppRValueRefStates(CodeStateMachine):
     _NON_LOGICAL_AND = "operator or label"
     _GROUPED_OPERAND = "grouped operand"
     _GROUPED_SUBSCRIPT = "grouped subscript"
+    _TYPE_DECLARATIONS = {"class", "struct", "union", "enum"}
+    _STATEMENT_BOUNDARIES = {"{", "}", ";"}
 
     def __init__(self, context, conditions):
         super().__init__(context)
         self._conditions = conditions
-        suffix = context.fileinfo.filename.lower().rsplit(".", 1)[-1] if context is not None else ""
-        self._recognize_references = context is not None and suffix != "c"
-        self._operator_keyword = suffix in ("cpp", "cc", "cxx", "hh", "hpp")
+        filename = context.fileinfo.filename.lower() if context is not None else ""
+        self._recognize_references = context is not None and not filename.endswith(".c")
+        self._cpp_source = filename.endswith((".cpp", ".cc", ".cxx", ".hh", ".hpp"))
         self._qualified_operator = False
+        self._unused_type_names = set()
+        self._statement_type_name = None
+        self._grouped_type = None
         # Track whether a counted && can still be deducted at an initializer.
         self._initializer_deduction = None
         self._label_probe_fallback = None
@@ -116,6 +121,15 @@ class CppRValueRefStates(CodeStateMachine):
             self._state(token)
         if token == "operator":
             self._qualified_operator = self.last_token == "::"
+        if self._cpp_source:
+            self._statement_type_name = None
+            if self.last_token in self._TYPE_DECLARATIONS and token.isidentifier():
+                self._unused_type_names.add(token)
+            elif token in self._unused_type_names:
+                # A prior use can introduce a name that shadows the class.
+                self._unused_type_names.remove(token)
+                if self.last_token in self._STATEMENT_BOUNDARIES:
+                    self._statement_type_name = token
         self.last_token = token
 
     def _set_state(self, state, events=None):
@@ -140,7 +154,8 @@ class CppRValueRefStates(CodeStateMachine):
         if not self._counts_and(token):
             return
         previous = self.last_token
-        if previous == "operator" and (self._operator_keyword or self._qualified_operator):
+        self._grouped_type = self._statement_type_name
+        if previous == "operator" and (self._cpp_source or self._qualified_operator):
             self.context.add_condition(-1)
             self._end_reference_scan()
             return
@@ -264,6 +279,11 @@ class CppRValueRefStates(CodeStateMachine):
         self._state_global(token)
 
     def _read_grouped_argument(self, token):
+        if token == "=" and self._grouped_type == self.last_token:
+            # T &&(name(T = value)) can declare a function returning T&&.
+            self.context.add_condition(-1)
+            self._end_reference_scan()
+            return
         if self.last_token == "(" and token[0].isdigit():
             self._end_reference_scan()
             return

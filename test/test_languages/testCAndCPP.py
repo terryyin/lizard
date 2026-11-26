@@ -704,23 +704,31 @@ bool binds(bool ready) {
 
     def test_grouped_reference_declarator_with_default_argument(self):
         result = get_cpp_function_list("""struct Entry {};
+struct ParameterEntry {};
+struct LocalEntry {};
+struct GlobalEntry {};
+bool GlobalEntry = true;
 bool read(bool);
 void declare_reader() {
     Entry &&(read(Entry = {}));
 }
 
-void check_entry(bool Entry) {
-    Entry && (read(Entry = {}));
+void check_entry(bool ParameterEntry) {
+    ParameterEntry && (read(ParameterEntry = {}));
 }
 
 void check_local() {
-    bool Entry = true;
-    Entry && (read(Entry = {}));
+    bool LocalEntry = true;
+    LocalEntry && (read(LocalEntry = {}));
+}
+
+void check_global() {
+    GlobalEntry && (read(GlobalEntry = {}));
 }
 """)
 
         self.assertEqual(
-            [("declare_reader", 1), ("check_entry", 2), ("check_local", 2)],
+            [("declare_reader", 1), ("check_entry", 2), ("check_local", 2), ("check_global", 2)],
             [(fn.name, fn.cyclomatic_complexity) for fn in result],
         )
 
