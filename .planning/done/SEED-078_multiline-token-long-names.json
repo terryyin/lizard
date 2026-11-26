@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-078#multiline-token-long-names",
+  "title": "Keep newlines out of long names and NLOC for multi-line type tokens",
+  "completedAt": "2026-11-26T15:01:41.781Z",
+  "developer": "Terry Yin",
+  "agent": "Kirara-chan",
+  "host": "codex",
+  "model": "gpt-6.2-sol"
+}

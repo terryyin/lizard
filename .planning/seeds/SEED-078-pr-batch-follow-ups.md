@@ -26,27 +26,6 @@ Source review: SEED-077#process-prs-past-48h at frozen master `f7a11e5248a388c1c
 - A logical operator outside any condition adds no ND.
 - `-ENS` results are unchanged.
 
-<a id="multiline-token-long-names"></a>
-
-### Keep newlines out of long names and NLOC for multi-line type tokens
-
-**Identity:** SEED-078#multiline-token-long-names
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/046-wrapped-type-token-reporting/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"aec57c3ebd925843921f291eab1015040ba9133cf3618bb1edd021ddef67bb4f","plan":"2a4dea3a25db3e5db5428b16271e4086e39a72b190e39c6d13f339bf6ac29e2f"}}
-```
-
-**Beneficiary:** Users who read or compare Lizard signatures and NLOC for wrapped generic types, including Java wildcard and C# and Kotlin nullable type arguments.
-
-**Goal:** Lizard reports a single-line `long_name` and code-line NLOC for signatures with wrapped type arguments that the shared tokenizer already groups as one token. Users can compare the signatures without reformatting the source and still locate the functions by their physical line ranges.
-
-**Scope:** Use the existing shared type-token rule and `line_counter` for every analysis that receives these tokens. Fold wrapping whitespace into a readable single-line signature. Count each nonblank continuation line toward function and file NLOC, and count every physical break toward source locations. Keep the type argument atomic so its question mark contributes no decision. Wrapping alone preserves the signature's token and parameter counts. Multiline string and comment handling and new type syntax are outside this correction. The shared repair supersedes the Java-only approach in [#656](https://github.com/terryyin/lizard/pull/656), which supplies the Java acceptance cases. Settle the PR disposition after the verified repair lands.
-
-**Key examples:**
-
-- Analyze Java `void m(Map<String,\n    ? extends List<String>> a) {}`, C# `void m(Dictionary<string,\n    int?> a) {}`, and Kotlin `fun m(a: Map<String,\n    Int?>) {}`. Each has the long name of its single-line form, function NLOC 2, one parameter, and CCN 1.
-- Insert an empty or spaces-and-tabs-only line inside the grouped argument. Function and file NLOC stay at their wrapped values. The function end and the following function's start each advance by one physical line.
-- Analyze #656's `GroupedValues.count` example. Its long name is `GroupedValues::count( Map <String, ? extends Number> values)`, function NLOC is 5, and file NLOC is 8. The original closing-brace line remains the function end.
-
 <a id="cognitive-ternary-in-control-headers"></a>
 
 ### Count ternaries in control headers for all brace languages
