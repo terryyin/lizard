@@ -145,6 +145,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self.last_tokens = token
                     self._prev_token = token
                     return
+        if token == 'using' and isinstance(token, UsingDeclaration):
+            self._declaration_binding = True
+            self.last_tokens = self._prev_token = token
+            return
         if self.as_object and self._handle_object_member(token):
             return
         if token in ('.', '?.'):

@@ -11,7 +11,7 @@ from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
-from .typescript_signatures import ReturnTypeColon, optional_type_argument_call, return_type_colon
+from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
@@ -305,19 +305,19 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                 if (self.context.class_field_annotations
                                         and isinstance(token, OptionalCallBinding)):
                                     tokens, lookahead = tee(tokens)
-                                    token.has_type_arguments = optional_type_argument_call(lookahead)
+                                    token.has_type_arguments = self._optional_type_argument_call(lookahead)
                                     del lookahead
                                     yield token
                                     break
+                    elif (token == 'using' and not member_access
+                          and self.context.class_field_annotations):
+                        tokens, lookahead = tee(tokens)
+                        if self._starts_using_declaration(lookahead, state):
+                            token = UsingDeclaration(token)
+                        del lookahead
+                        yield token
+                        break
                     else:
-                        if (token == 'using' and not member_access
-                                and self.context.class_field_annotations):
-                            tokens, lookahead = tee(tokens)
-                            if self._starts_using_declaration(lookahead, state):
-                                token = UsingDeclaration(token)
-                            del lookahead
-                            yield token
-                            break
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
                             member_access = False
@@ -340,6 +340,29 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 if keyword is not None:
                     yield keyword
                 return
+
+    @staticmethod
+    def _optional_type_argument_call(tokens):
+        """After `?.`, check that the type arguments end at a call."""
+        code = (token for token in tokens
+                if not token.isspace() and not token.startswith(('//', '/*')))
+        first = next(code, '')
+        if first != '<':
+            # TSX can tokenize a simple type argument as a single token.
+            return first.startswith('<') and first.endswith('>') and next(code, '') == '('
+
+        pairs = TypeScriptTypeAnnotationStates.BRACKETS
+        closing = ['>']
+        for token in code:
+            if token in pairs:
+                closing.append(pairs[token])
+            elif token == closing[-1]:
+                closing.pop()
+                if not closing:
+                    return next(code, '') == '('
+            elif token in (')', ']', '}', '>') or (token == ';' and len(closing) == 1):
+                break
+        return False
 
     @staticmethod
     def _starts_using_declaration(tokens, state):
