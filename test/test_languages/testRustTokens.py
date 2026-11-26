@@ -8,42 +8,6 @@ from .testRust import get_rust_function_list
 
 class TestRustTokens(unittest.TestCase):
 
-    def test_quote_interpolation_keeps_the_closing_brace(self):
-        result = get_rust_function_list('''use proc_macro2::TokenStream;
-        use quote::quote;
-
-        fn wrap(value: TokenStream) -> TokenStream {
-            quote! { #value }
-        }
-
-        fn empty() -> TokenStream {
-            quote! {}
-        }
-        ''')
-        self.assertEqual(
-            [('wrap', 4, 6, 1), ('empty', 8, 10, 1)],
-            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
-             for f in result])
-
-    def test_quote_keeps_raw_string_text_out_of_complexity(self):
-        result = get_rust_function_list('''use proc_macro2::TokenStream;
-        use quote::quote;
-
-        fn template() -> TokenStream {
-            quote! {
-                writer.push_str(r#"one " if flag {} fn example() {} "#);
-            }
-        }
-
-        fn empty() -> TokenStream {
-            quote! {}
-        }
-        ''')
-        self.assertEqual(
-            [('template', 4, 8, 1), ('empty', 10, 12, 1)],
-            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
-             for f in result])
-
     def test_closure_without_parameters_is_one_token(self):
         # `||` of a closure without parameters is one token of the source,
         # and not a logical or.
@@ -191,3 +155,98 @@ class TestRustTokens(unittest.TestCase):
             [('run', 1, 1, 24, 3), ('next', 2, 2, 17, 2)],
             [(f.name, f.start_line, f.end_line, f.token_count,
               f.cyclomatic_complexity) for f in result])
+
+    def test_quote_interpolation_keeps_the_closing_brace(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+        use quote::quote;
+
+        fn wrap(value: TokenStream) -> TokenStream {
+            quote! { #value }
+        }
+
+        fn empty() -> TokenStream {
+            quote! {}
+        }
+        ''')
+        self.assertEqual(
+            [('wrap', 4, 6, 1), ('empty', 8, 10, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_quote_keeps_raw_string_text_out_of_complexity(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+        use quote::quote;
+
+        fn template() -> TokenStream {
+            quote! {
+                writer.push_str(r#"one " if flag {} fn example() {} "#);
+            }
+        }
+
+        fn empty() -> TokenStream {
+            quote! {}
+        }
+        ''')
+        self.assertEqual(
+            [('template', 4, 8, 1), ('empty', 10, 12, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_quoted_condition_does_not_add_complexity(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+
+        fn checks(value: TokenStream) -> TokenStream {
+            quote::quote! {
+                #value; if condition {}
+            }
+        }
+        ''')
+        self.assertEqual(
+            [('checks', 3, 7, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_quoted_function_does_not_create_a_report(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+
+        fn declarations(value: TokenStream) -> TokenStream {
+            quote::quote! {
+                #value fn generated() {}
+            }
+        }
+
+        fn after() {}
+        ''')
+        self.assertEqual(
+            [('declarations', 3, 7), ('after', 9, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_quote_raw_string_keeps_the_later_delimiters(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+        use quote::quote;
+
+        fn template(value: TokenStream) -> TokenStream {
+            quote! { { let label = r#"text " { "#; #value } }
+        }
+
+        fn after() {}
+        ''')
+        self.assertEqual(
+            [('template', 4, 6), ('after', 8, 8)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_quote_spanned_counts_the_span_expression(self):
+        result = get_rust_function_list('''use proc_macro2::{Span, TokenStream};
+        use quote::quote_spanned;
+
+        fn annotate(value: TokenStream, cached: bool) -> TokenStream {
+            quote_spanned! {
+                if cached { Span::call_site() } else { Span::mixed_site() } =>
+                #value; if condition {}
+            }
+        }
+        ''')
+        self.assertEqual(
+            [('annotate', 4, 9, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
