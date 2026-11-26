@@ -6,6 +6,12 @@ from lizard import FileInfoBuilder, FunctionInfo
 
 DEFAULT_ND_THRESHOLD = 7
 
+# These readers have braced bodies or explicit statement terminators.
+_EXPLICIT_BRANCH_ENDS = frozenset((
+    'cpp', 'java', 'go', 'rust', 'swift', 'php', 'csharp', 'dart',
+    'objectivec', 'solidity',
+))
+
 
 class LizardExtension(object):  # pylint: disable=R0903
 
@@ -49,24 +55,25 @@ class LizardExtension(object):  # pylint: disable=R0903
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
+        # Reopen a branch only when ND can also find the end of its body.
+        reopen_else_if = not _EXPLICIT_BRANCH_ENDS.isdisjoint(
+            getattr(reader, 'language_names', ()))
         context = reader.context
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
-                context.clear_prev_was_else()
+                context.clear_else()
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
             if token in depth_tokens:
                 if token in block_ends:
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:
-                    context.clear_prev_was_else()
-                # Don't add nesting for "if" when it immediately follows "else" (else if)
-                # Syntactically else if is equivalent to else {if} but should not increase depth
+                    context.clear_else()
                 if token == 'else' and not getattr(token, 'is_member_name', False):
-                    context.set_prev_was_else(True)
-                elif token == 'if' and token in loops and context.get_prev_was_else():
-                    context.clear_prev_was_else()
+                    context.mark_else()
+                elif token == 'if' and token in loops and context.reuse_if_level(reopen_else_if):
+                    pass
                 # Handle opening parenthesis - start of condition
                 elif token == '(':
                     context.open_condition()
@@ -116,7 +123,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.nesting_depth = 0
         self.current_function.levels_awaiting_body = 0
         self.current_function.block_levels = []
-        self.current_function.prev_was_else = False
+        self.current_function.else_token_count = None
         self.reset_condition_tracking()
 
     def open_level(self):
@@ -193,14 +200,22 @@ class NDFileInfoAddition(FileInfoBuilder):
     def get_logical_operator_added(self):
         return self.current_function.logical_operator_added
 
-    def set_prev_was_else(self, value):
-        self.current_function.prev_was_else = value
+    def mark_else(self):
+        function = self.current_function
+        function.else_token_count = function.token_count
 
-    def get_prev_was_else(self):
-        return getattr(self.current_function, 'prev_was_else', False)
+    def reuse_if_level(self, reopen_else_if):
+        function = self.current_function
+        else_position = function.else_token_count
+        if else_position is None:
+            return False
+        function.else_token_count = None
+        # An adjacent else-if needs a new level if the prior body closed it.
+        return (not reopen_else_if or function.levels_awaiting_body > 0
+                or function.token_count != else_position + 1)
 
-    def clear_prev_was_else(self):
-        self.current_function.prev_was_else = False
+    def clear_else(self):
+        self.current_function.else_token_count = None
 
 
 def get_method(cls, name):
@@ -236,7 +251,7 @@ def _init_nesting_depth_data(self, *_):
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
-    self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
+    self.else_token_count = None  # Position of the last unmatched "else"
 
 
 patch(NDFileInfoAddition, FileInfoBuilder)
