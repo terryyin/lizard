@@ -109,6 +109,8 @@ def _mark_prefixed_strings(tokens):
 
 
 def _read_factory_string(source, start, prefix, scanner):
+    if prefix not in _FSTRING_PREFIXES and prefix not in ('t', 'tr', 'rt'):
+        return None
     pattern, token_class = scanner
     raw = _read_string(source, start, prefix, (pattern, None))
     if raw is None:
@@ -190,24 +192,27 @@ def _read_field(source, pos, quote, raw, scanner):
         pos = match.end()
         kind = match.lastgroup
         if kind == 'interpolated':
-            string = _read_string(source, pos, token.lower(), scanner)
-            if string is None:
+            if token_class is None:
+                parts.append(token)
+                result = _read_string(source, pos, token.lower(), scanner)
+            else:
+                result = _defer_nested_string(source, match, start, pattern)
+            if result is None:
                 return None
-            pos, tokens = string
-            parts.append(match if token_class is not None else token)
+            pos, tokens = result
             parts.extend(tokens)
             continue
         if not closers:
             if token == '}':
                 return pos, _field_parts(parts, source, start, pos - 1, scanner)
             if token.startswith(':'):
-                spec = _read_format(source, match.start() + 1, quote, raw, scanner)
-                if spec is None:
+                result = _read_format(source, match.start() + 1, quote, raw, scanner)
+                if result is None:
                     return None
-                end, tokens = spec
+                pos, tokens = result
                 parts.append(match if token_class is not None and token == ':' else ':')
                 parts.extend(tokens)
-                return end, _field_parts(parts, source, start, end - 1, scanner)
+                return pos, _field_parts(parts, source, start, pos - 1, scanner)
         if token in _CLOSERS:
             closers.append(_CLOSERS[token])
         elif token in (')', ']', '}'):
@@ -219,14 +224,49 @@ def _read_field(source, pos, quote, raw, scanner):
     return None
 
 
+def _defer_nested_string(source, match, field_start, pattern):
+    result = _read_string(source, match.end(), match.group().lower(), (pattern, None))
+    if result is None:
+        return None
+    end, _ = result
+    return end, [_NestedFactoryString(match.start() - field_start, end - field_start)]
+
+
 def _field_parts(parts, source, start, end, scanner):
     pattern, token_class = scanner
     if token_class is None:
         return parts
     # Factories receive matches against the replacement field, as before.
     field = source[start:end]
-    return [token_class(pattern.match(field, part.start() - start))
-            if isinstance(part, Match) else part for part in parts]
+    tokens = []
+    for part in parts:
+        if isinstance(part, Match):
+            tokens.append(token_class(pattern.match(field, part.start() - start)))
+        elif isinstance(part, _NestedFactoryString):
+            tokens.extend(part.render(field, scanner))
+        else:
+            tokens.append(part)
+    return tokens
+
+
+class _NestedFactoryString:
+    """Defer a nested string until the enclosing field's offsets are known."""
+
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+    def render(self, field, scanner):
+        pattern, token_class = scanner
+        prefix_match = pattern.match(field, self.start)
+        prefix = token_class(prefix_match)
+        yield prefix
+        if isinstance(prefix, str):
+            result = _read_factory_string(field, prefix_match.end(), prefix.lower(), scanner)
+            if result is not None and result[0] == self.end:
+                yield from result[1]
+                return
+        yield from tokens_in_span(pattern, field, prefix_match.end(), self.end, token_class)
 
 
 def _read_format(source, pos, quote, raw, scanner):
