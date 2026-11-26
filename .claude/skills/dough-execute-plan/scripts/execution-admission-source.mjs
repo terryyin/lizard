@@ -27,6 +27,10 @@ import {
   refused,
   versionsOf,
 } from "./execution-admission-reconcile.mjs";
+import {
+  ownedAdmissionDrafts,
+  readOwnedAdmissionText,
+} from "./execution-owned-admission.mjs";
 import { sectionOf, selectedPreparation, show } from "./execution-source.mjs";
 import { requireUnheld } from "./one-shot-ownership.mjs";
 import { backlogPath } from "./workspace-publication-ownership.mjs";
@@ -106,6 +110,16 @@ async function readQueuedAdmission(request, remoteRef, candidateSha, entry) {
 // claim's provenance decides.
 export async function readAdmissionSource(request, remoteRef, candidateSha) {
   const { repository, identity, link } = request;
+  const ownedSelection = request.ownedDraft
+    ? selectedPreparation(repository, link)
+    : undefined;
+  const ownedContent = ownedSelection
+    ? await readOwnedAdmissionText(
+        request,
+        ownedSelection.homePath,
+        candidateSha,
+      )
+    : undefined;
   const backlog = await show(repository, remoteRef, backlogPath);
   if (backlog === null) throw refused("fetched trunk has no product backlog");
   const document = parseBacklog(backlog);
@@ -133,9 +147,11 @@ export async function readAdmissionSource(request, remoteRef, candidateSha) {
     if (error instanceof BacklogError) throw refused(error.message);
     throw error;
   }
-  const selection = selectedPreparation(repository, link);
+  const selection = ownedSelection ?? selectedPreparation(repository, link);
   const { homePath } = selection;
-  const drafts = await draftsOf(request, remoteRef, candidateSha);
+  const drafts = ownedContent
+    ? await ownedAdmissionDrafts(request, remoteRef, homePath, ownedContent)
+    : await draftsOf(request, remoteRef, candidateSha);
   const home = await versionsOf(request, remoteRef, drafts, homePath);
   if (home.draft === null)
     throw refused(`selected canonical home ${homePath} is absent`);

@@ -1,19 +1,9 @@
 #!/usr/bin/env node
-// Reads the state Git itself keeps for a rebase or cherry-pick stopped in
-// progress in one checkout: which real revisions the stopped step is
-// replaying or picking, from Git's own state files rather than from the
-// "ours"/"theirs" conflict labels. `gitPath` and `gitLine` from
-// `product-backlog-git-repository.mjs` locate those files and resolve the
-// revisions they name.
+// Read the revisions and directory of a stopped rebase from Git's own state.
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { gitLine, gitPath } from "./product-backlog-git-repository.mjs";
 
-// Reads one small state file Git itself maintains for an in-progress
-// operation (inside a rebase's or the sequencer's own directory, or
-// cherry-pick's top-level marker), trimmed, or `undefined` when absent or
-// empty — the same "nothing here means no operation in progress" shape every
-// caller below shares.
 function readOperationStateFile(path) {
   try {
     const contents = readFileSync(path, "utf8").trim();
@@ -79,55 +69,5 @@ export function rebaseState(repoRoot) {
     replayedParent: gitLine(["rev-parse", `${replayedCommit}^`], repoRoot),
     destination: gitLine(["rev-parse", "HEAD"], repoRoot),
     onto: readOperationStateFile(join(state.directory, "onto")),
-  };
-}
-
-// The commit a stopped `todo` line names, however Git chose to abbreviate it
-// ("pick <sha> <subject>"), read only when `CHERRY_PICK_HEAD` itself is
-// absent — confirmed empirically to happen for one real, in-between state: a
-// human resolved Git's own "this step is now empty" stop by committing it
-// directly (`git commit --allow-empty`) rather than through this tool.
-// That commit clears `CHERRY_PICK_HEAD` immediately, before the sequencer has
-// advanced its own `todo` past that same line, so a cherry-pick genuinely
-// still in progress (confirmed by `git cherry-pick --continue` still working
-// correctly there) would otherwise be misreported as finished.
-function pendingPickedCommit(sequencerDirectory) {
-  const todo = readOperationStateFile(join(sequencerDirectory, "todo"));
-  const line = todo?.split("\n").find((entry) => entry.startsWith("pick "));
-  return line?.split(" ")[1];
-}
-
-// The real revisions a stopped cherry-pick is actually applying, read from
-// Git's own state under `.git/sequencer/` and the top-level
-// `CHERRY_PICK_HEAD` marker — confirmed empirically to live there, never
-// under `.git/rebase-merge`/`.git/rebase-apply` the way a rebase's own state
-// does. A cherry-pick (or a sequence still holding further commits) is
-// genuinely in progress whenever either marker exists; `CHERRY_PICK_HEAD`
-// alone is not a reliable "finished" signal (see `pendingPickedCommit`).
-// Unlike a rebase, cherry-pick's index stages are never reversed: stage 2
-// ("ours") is always the current branch (the destination), and stage 3
-// ("theirs") is always the commit being picked, the same convention an
-// ordinary merge uses. `mainline` is the same 1-based parent number a caller
-// would pass to `-m` for picking a merge commit (defaulting to 1, the same
-// default `git cherry-pick -m 1` would use, which is also correct for an
-// ordinary, non-merge picked commit). Returns `undefined` when no cherry-pick
-// is in progress.
-export function cherryPickState(repoRoot, mainline = 1) {
-  const sequencerDirectory = gitPath(repoRoot, "sequencer");
-  const pickedCommit =
-    readOperationStateFile(gitPath(repoRoot, "CHERRY_PICK_HEAD")) ??
-    (existsSync(sequencerDirectory)
-      ? pendingPickedCommit(sequencerDirectory)
-      : undefined);
-  if (!pickedCommit) {
-    return undefined;
-  }
-  return {
-    pickedCommit,
-    pickedParent: gitLine(
-      ["rev-parse", `${pickedCommit}^${mainline}`],
-      repoRoot,
-    ),
-    destination: gitLine(["rev-parse", "HEAD"], repoRoot),
   };
 }

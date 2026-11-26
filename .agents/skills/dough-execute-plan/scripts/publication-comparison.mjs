@@ -9,16 +9,15 @@ export async function isAncestor(workspace, ancestor, descendant) {
   }
 }
 
-// A retained comparison is optional for legacy callers. When supplied, both
-// ends must be fixed commit IDs and the base must belong to that candidate's
-// history. Validate before fetch, push, or registration; never infer a base
-// from the accepted tip's parent or today's target.
+// Both retained ends must be full commit IDs, and the base must belong to
+// the candidate's history. Validate before fetch, push, or registration.
 export async function validateRetainedComparison(
   workspace,
   candidateSha,
   suffixBase,
 ) {
-  if (suffixBase === undefined) return;
+  if (suffixBase === undefined)
+    throw new Error("retained comparison requires suffixBase");
   for (const sha of [suffixBase, candidateSha]) {
     if (
       typeof sha !== "string" ||

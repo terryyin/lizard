@@ -30,8 +30,8 @@
 // }
 //
 // Times are epoch milliseconds. An open period or command lasts until now.
-// A new session can settle them at lastClockCommandAt; older records use
-// their latest stored period or command timestamp. Host hooks do not move it.
+// A new session can settle them at lastClockCommandAt. Host hooks do not
+// move that timestamp.
 // `slice-clock-slices.mjs` holds what the entries mean: a slice and its
 // overrun; `slice-clock-active-time.mjs` holds active time and
 // `slice-clock-diagnosis.mjs` the rounds' rules.
