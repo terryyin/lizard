@@ -136,3 +136,25 @@ def _word_before(source, i, *, unicode_names=True):
             if opening >= 2 and source.startswith(r'\u{', opening - 2):
                 return None, i
     return source[i + 1:end], i
+
+
+def _skip_ws_and_comments_back(source, i):
+    while i >= 0:
+        ch = source[i]
+        if ch in _BASIC_WHITESPACE:
+            i -= 1
+        elif ch == '/' and i >= 1 and source[i - 1] == '*':
+            i -= 2
+            while i >= 1:
+                if source[i - 1] == '/' and source[i] == '*':
+                    i -= 2
+                    break
+                i -= 1
+        else:
+            break
+    return i
+
+
+def _is_property_before(source, i):
+    j = _skip_ws_and_comments_back(source, i)
+    return j >= 0 and source[j] == '.'

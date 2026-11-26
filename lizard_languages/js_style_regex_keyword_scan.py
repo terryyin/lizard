@@ -3,13 +3,14 @@
 import re
 
 from .js_style_regex_context import (
-    _BASIC_WHITESPACE,
     _EXPRESSION_KEYWORDS,
     _EXPRESSION_PUNCTUATION,
     _LINE_TERMINATORS,
     _REGEX_LITERAL_RE,
     _STRING_LINE_ENDS,
     _apply_marks,
+    _is_property_before,
+    _skip_ws_and_comments_back,
     _skip_ws_back,
     _word_before,
 )
@@ -108,7 +109,7 @@ def _consider_slash(source, i, marks, comments, literal_ends):
     word, before_word = _word_before(source, prev)
     if word in _EXPRESSION_KEYWORDS:
         prefix, _ = _before_comments(source, _skip_ws_back(source, before_word), comments)
-        if (prefix < 0 or source[prefix] not in '.#') and (
+        if (prefix < 0 or source[prefix] != '#') and not _is_property_before(source, prefix) and (
                 word != 'yield' or
                 _yield_starts_expression(source, prefix, before_word, line_comment, comments, literal_ends)):
             marks.append(i)
@@ -144,32 +145,14 @@ def _yield_starts_expression(source, prefix, before_word, line_comment, comments
 
 def _mark_jsx_slash(source, i, marks):
     """Use the keyword and arrow rules for the JSX source pre-scan."""
-    prev = _skip_jsx_trivia(source, i - 1)
+    prev = _skip_ws_and_comments_back(source, i - 1)
     if prev >= 1 and source[prev - 1:prev + 1] == '=>':
         marks.append(i)
         return
     word, before_word = _word_before(source, prev, unicode_names=False)
     if word in _EXPRESSION_KEYWORDS:
-        prefix = _skip_jsx_trivia(source, before_word)
-        if prefix < 0 or source[prefix] != '.':
+        if not _is_property_before(source, before_word):
             marks.append(i)
-
-
-def _skip_jsx_trivia(source, i):
-    while i >= 0:
-        ch = source[i]
-        if ch in _BASIC_WHITESPACE:
-            i -= 1
-        elif ch == '/' and i >= 1 and source[i - 1] == '*':
-            i -= 2
-            while i >= 1:
-                if source[i - 1] == '/' and source[i] == '*':
-                    i -= 2
-                    break
-                i -= 1
-        else:
-            break
-    return i
 
 
 def _skip_template(source, i, n, marks, comments, literal_ends):
