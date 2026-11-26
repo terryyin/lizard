@@ -1368,6 +1368,125 @@ class TestJavaScriptReaderFailure(unittest.TestCase):
               next = %s) {}""" % self.DEEP))
 
 
+class TestMemberCallRecursion(unittest.TestCase):
+
+    def test_php_recursion_uses_the_instance_receiver(self):
+        self.assertEqual([0, 2], cogc("retry.php", """
+            <?php
+            class RetryPlan {
+                public function refresh($fallback) { $fallback?->refresh(null); }
+                public function run(int $remaining): int {
+                    if ($remaining > 0) return $this->run($remaining - 1);
+                    return 0;
+                }
+            }"""))
+
+    def test_groovy_safe_and_spread_calls_use_the_receiver(self):
+        self.assertEqual([0, 0, 2, 2], cogc("RetryPlan.groovy", """
+            class RetryPlan {
+                def run(Plugin fallback) { fallback?.run() }
+                def refresh(List<Plugin> plugins) { plugins*.refresh() }
+                def retry(int remaining) {
+                    if (remaining > 0) this?.retry(remaining - 1)
+                }
+                def retryGrouped(int remaining) {
+                    if (remaining > 0) (this)?.retryGrouped(remaining - 1)
+                }
+            }"""))
+
+    def test_kotlin_recursion_on_a_nullable_extension_receiver(self):
+        self.assertEqual([2, 2, 0], cogc("WorkQueue.kt", """
+            class WorkQueue
+
+            fun WorkQueue?.drain(limit: Int) {
+                if (limit > 0) this?.drain(limit - 1)
+            }
+
+            fun WorkQueue?.refill(limit: Int) {
+                if (limit > 0) this!!.refill(limit - 1)
+            }
+
+            fun drain(other: WorkQueue?) {
+                other?.drain(3)
+            }"""))
+
+    def test_lua_same_named_method_on_another_table(self):
+        self.assertEqual([0, 2], cogc("retry.lua", """
+            local function drain(fallback)
+                fallback:drain()
+            end
+
+            local function retry(remaining)
+                if remaining > 0 then return retry(remaining - 1) end
+            end"""))
+
+
+    def test_php_grouped_self_receiver_is_still_recursive(self):
+        self.assertEqual([2, 0], cogc("RetryPlan.php", """
+            <?php
+            class RetryPlan {
+                public function retry(int $remaining): bool {
+                    return $remaining > 0 && ($this)?->retry($remaining - 1);
+                }
+                public function refresh($fallback) {
+                    return getProvider($fallback)?->refresh(null);
+                }
+            }
+        """))
+
+    def test_groovy_grouped_foreign_receiver_is_not_recursive(self):
+        self.assertEqual([0, 0], cogc("RetryPlan.groovy", """
+            class RetryPlan {
+                def run(Plugin fallback) { (fallback)?.run() }
+                def refresh(Plugin fallback) { getProvider(fallback)?.refresh() }
+            }
+        """))
+
+    def test_lua_assigned_methods_can_call_their_own_receiver(self):
+        self.assertEqual([2, 2, 1], cogc("RetryPlan.lua", """
+            local RetryPlan = {}
+            RetryPlan.retry = function(self, remaining)
+                if remaining > 0 then return self:retry(remaining - 1) end
+            end
+            RetryPlan.wrapped = function(self, remaining)
+                if remaining > 0 then return ((self)):wrapped(remaining - 1) end
+            end
+            local function run(self, remaining)
+                if remaining > 0 then return self:run(remaining - 1) end
+            end
+        """))
+
+
+    def test_lua_assigned_methods_use_their_explicit_receiver_parameter(self):
+        self.assertEqual([2, 2, 2], cogc("plan.lua", """
+            local Plan = {}
+            Plan.drain = function(plan, remaining)
+                if remaining > 0 then return plan:drain(remaining - 1) end
+            end
+            Plan.wrap = function(plan, remaining)
+                if remaining > 0 then return ((plan)):wrap(remaining - 1) end
+            end
+            Plan.describe = function(plan, remaining)
+                if remaining > 0 then return "retry " .. plan:describe(remaining - 1) end
+                return "done"
+            end
+        """))
+
+    def test_lua_receiver_parameter_does_not_identify_another_object(self):
+        self.assertEqual([0, 0, 0], cogc("plan.lua", """
+            local Plan = {}
+            Plan.forward = function(plan, fallback)
+                return fallback:forward()
+            end
+            Plan.refresh = function(plan, connection)
+                return connection.plan:refresh()
+            end
+            local function audit(plan)
+                return plan:audit()
+            end
+        """))
+
+
 class TestFlatLanguages(unittest.TestCase):
     """Blocks are not brace-delimited: increments without nesting penalty."""
 
