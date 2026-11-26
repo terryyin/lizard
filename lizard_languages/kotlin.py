@@ -118,6 +118,9 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     def generate_tokens(source_code, addition='', token_class=None):
         addition = (
             r"|`\w+`" +
+            # A typed name may have a comment before its colon.
+            # The literal scanner can end the token span at that comment.
+            r"|`[^`\r\n]+`(?=\s*(?::|/[/*])|[ \t]*\Z)" +
             r"|\w+\?" +
             r"|\w+\!!" +
             r"|\?\?" +

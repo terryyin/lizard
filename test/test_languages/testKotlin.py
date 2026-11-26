@@ -263,6 +263,22 @@ fun healthCode(): Int { return 200 }
 
 class Test_parser_for_Kotlin(unittest.TestCase):
 
+    def test_multiline_default_keeps_escaped_parameter_names(self):
+        functions = get_kotlin_function_list('''\
+fun notice(
+    `subject  line`: String,
+    `retry-count (max), !` /* Maximum attempts. */ : Int,
+    message: String = """Try
+later""".trimIndent(),
+): String {
+    return "$message!"
+}
+''')
+        self.assertEqual(
+            [("notice", ["subject  line", "retry-count (max), !", "message"], 3)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_empty(self):
         functions = get_kotlin_function_list("")
         self.assertEqual(0, len(functions))
