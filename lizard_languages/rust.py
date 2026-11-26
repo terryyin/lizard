@@ -160,7 +160,7 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
 
 _CHAR_LITERAL = re.compile(
     r"'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])'")
-_RAW_STRING = re.compile(r'b?r(#*)"')
+_RAW_STRING = re.compile(r'[bc]?r(#*)"')
 
 
 def _flatten_nested_comments(source):
@@ -196,7 +196,7 @@ def _flatten_nested_comments(source):
             i = j
             continue
         elif source[i] == '"' or (
-                source[i] in 'br' and (i == 0 or not (
+                source[i] in 'bcr' and (i == 0 or not (
                     source[i - 1].isalnum() or source[i - 1] == '_'))
                 and _RAW_STRING.match(source, i)):
             raw = _RAW_STRING.match(source, i) if source[i] != '"' else None
