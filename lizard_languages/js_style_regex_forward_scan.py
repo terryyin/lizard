@@ -7,14 +7,11 @@ from .js_style_regex_context import (
     _LINE_ENDS,
     _REGEX_LITERAL_RE,
     _RUBY_EXPRESSION_KEYWORDS,
-    _RUBY_REGEX_RE,
     _STRING_LINE_ENDS,
     _apply_marks,
 )
 from .ruby_documentation import match_opaque_span, may_have_documentation
-
-
-_RUBY_REGEXP_INTERPOLATION = re.compile(r"#\{[^{}\/]*\}")
+from . import ruby_regexp
 
 
 def mark_forward(source, js_family):
@@ -29,12 +26,14 @@ def mark_forward(source, js_family):
     pending_async = False
     pending_for = False
     marks = []
-    match_literal = (_REGEX_LITERAL_RE if js_family else _RUBY_REGEX_RE).match
+    match_literal = _REGEX_LITERAL_RE.match
     keywords = _EXPRESSION_KEYWORDS if js_family else _RUBY_EXPRESSION_KEYWORDS
     line_ends = _LINE_ENDS
     append_operator = None if js_family else re.compile(r"<<[^\S\r\n]*/")
     ruby_append = append_operator is not None and append_operator.search(source) is not None
     ruby_line_has_code = False
+    if not js_family:
+        match_literal = ruby_regexp.LITERAL.match
 
     def after_operand(next_can_regex=False, next_expect_property=False):
         nonlocal can_regex, expect_property, pending_async
@@ -131,13 +130,14 @@ def mark_forward(source, js_family):
             after_operand()
 
     def advance():
+        nonlocal ruby_line_has_code
         nonlocal i, can_regex, expect_property, pending_async, pending_for
-        nonlocal paren_depth, async_nesting, ruby_line_has_code
+        nonlocal paren_depth, async_nesting
         ch = source[i]
+        if ch == '\n' and not js_family:
+            ruby_line_has_code = False
 
         if ch in ' \t\v\f' or ch in line_ends:
-            if ch == '\n':
-                ruby_line_has_code = False
             i += 1
             return
         if ch == '\\' and not js_family:
@@ -160,6 +160,11 @@ def mark_forward(source, js_family):
                 i += 1
             i = min(i + 2, n)
             return
+        if not (js_family or can_regex or ruby_statement_start) and source.startswith('//', i):
+            # Division can touch the opening slash of its right operand.
+            i += 1
+            after_operand(next_can_regex=True)
+            return
         if not js_family and ch == '#':
             i += 1
             while i < n and source[i] not in '\r\n':
@@ -169,18 +174,13 @@ def mark_forward(source, js_family):
             matched = match_literal(source, i)
             if matched and not can_regex and '#{' in matched[0]:
                 # An inner slash may end the pattern before the interpolation.
-                if '#{' in _RUBY_REGEXP_INTERPOLATION.sub('', matched[0]):
+                if '#{' in ruby_regexp.COMPLETE_INTERPOLATION.sub('', matched[0]):
                     matched = None
             if matched:
                 marks.append(i)
                 i = matched.end()
                 after_operand()
                 return
-        if ch == '/' and not js_family and not can_regex and source.startswith('//', i):
-            # Division can touch the opening slash of its right operand.
-            i += 1
-            after_operand(next_can_regex=True)
-            return
         if ch in '"\'':
             skip_string(ch)
             after_operand()

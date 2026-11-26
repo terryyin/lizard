@@ -11,9 +11,9 @@ from .js_style_regex_context import (
     REGEX_TOKEN_JSX,
     REGEX_TOKEN_PUNCT,
     REGEX_TOKEN_PUNCT_JSX,
-    RUBY_REGEX_SUFFIX,
     mark_regex_literal_starts,
 )
+from .ruby_regexp import REGEX_SUFFIX as RUBY_REGEX_SUFFIX
 
 __all__ = (
     'REGEX_LITERAL',
