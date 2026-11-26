@@ -121,6 +121,28 @@ class Test_parser_for_Kotlin(unittest.TestCase):
                 ''')
         self.assertEqual("`get`", result[0].name)
 
+    def test_type_identifier_keeps_function_boundaries(self):
+        result = get_kotlin_function_list('''\
+data class Job(val type: String)
+
+fun label(job: Job): String {
+    return job.type
+}
+
+fun normalize(type: String): String {
+    if (type.isBlank()) return "unknown"
+    return type
+}
+
+fun fallback(): String {
+    return "unknown"
+}
+        ''')
+        self.assertEqual(
+            [("label", 3, 5, 1), ("normalize", 7, 10, 2), ("fallback", 12, 14, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in result],
+        )
+
     def test_generic_function(self):
         result = get_kotlin_function_list('''
             fun <T> f() {}
