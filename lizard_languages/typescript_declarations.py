@@ -17,6 +17,8 @@ _EXPRESSION_PREFIXES = (
 
 
 class TypeScriptDeclarationsMixin:
+    _annotating_class_field = False
+
     def _handle_type_declaration(self, token):
         if token in ('const', 'let', 'var'):
             self._declaration_binding = True
@@ -175,10 +177,12 @@ class TypeScriptDeclarationsMixin:
                     self.next(resume or self._state_global)
         self.next(consume)
 
-    def _consume_type_annotation(self, class_field=False):
+    def _consume_type_annotation(self):
         typeStates = TypeScriptTypeAnnotationStates(self.context)
 
         def callback():
+            class_field = self._annotating_class_field
+            self._annotating_class_field = False
             token = typeStates.saved_token
             if token == 'new' and self.context.newline:
                 if (self.as_class and self.last_token == 'abstract'

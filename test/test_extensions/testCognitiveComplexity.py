@@ -950,6 +950,15 @@ class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
                       static %s() { return this?.%s(); }   // +1 recursion
                     }""" % (name, name)))
 
+    def test_other_languages_can_call_a_structure_word(self):
+        self.assertEqual([4], cogc("a.pl", """
+sub catch {
+  my ($n) = @_;
+  if ($n) { return catch($n - 1); }   # +1 if, +2 catch, +1 recursion
+  return 0;
+}
+"""))
+
     def test_constructor_operator_does_not_recurse_into_new_method(self):
         self.assertEqual([0, 1, 2, 2, 2], cogc("factory.js", """
             class Factory {
@@ -967,15 +976,6 @@ class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
             class Grouped {
               static new(n) { if (n === 0) return []; return (this)?.new(n - 1); }
             }"""))
-
-    def test_other_languages_can_call_a_structure_word(self):
-        self.assertEqual([4], cogc("a.pl", """
-sub catch {
-  my ($n) = @_;
-  if ($n) { return catch($n - 1); }   # +1 if, +2 catch, +1 recursion
-  return 0;
-}
-"""))
 
     def test_goto_is_no_jump(self):
         code = """

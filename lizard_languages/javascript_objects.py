@@ -128,7 +128,8 @@ class JavaScriptObjectsMixin:
             return True
         if token == ':' and self.as_class and self._typed_class_member():
             self.function_name = self.last_tokens
-            self._consume_type_annotation(class_field=True)
+            self._annotating_class_field = True
+            self._consume_type_annotation()
             return True
         if token == ':':
             # Only set function_name for valid identifiers
