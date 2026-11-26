@@ -7,6 +7,7 @@ from itertools import tee
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
+from .typescript_signatures import CallTypeArgument, call_type_argument_token_count
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
@@ -159,6 +160,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     def _count_interpolation_conditions(self, token, in_expression):
         # Re-tokenize opaque interpolation spans; keyword members stay non-
         # conditions the same way as on the outer token stream (#546).
+        if isinstance(token, CallTypeArgument):
+            return
         conditions = self.conditions
         earlier = previous = None
         for start, end in interpolation_code(token, in_expression):
@@ -257,6 +260,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         keyword = None      # waits for the next token: `{ if: a }`
         tokens = iter(self.code_tokens(tokens))
         while True:
+            restart = False
             for token in tokens:
                 if not token.isspace():
                     if keyword is not None:
@@ -272,6 +276,29 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
+                    if (token == '<' and self._class_field_annotations
+                            and not getattr(self, '_in_call_type_arguments', False)
+                            and state.object_call_context()):
+                        tokens, lookahead = tee(tokens)
+                        type_tokens_to_mark = call_type_argument_token_count(lookahead)
+                        del lookahead
+                        restart = True
+                        if type_tokens_to_mark:
+                            self._in_call_type_arguments = True
+                            member_access = False
+                            yield CallTypeArgument(token)
+                            for part in tokens:
+                                if part == '\n':
+                                    if arrows or awaiting_function_body(state):
+                                        line_start = True
+                                    yield part
+                                elif not part.isspace():
+                                    yield CallTypeArgument(part)
+                                    type_tokens_to_mark -= 1
+                                    if not type_tokens_to_mark:
+                                        break
+                            self._in_call_type_arguments = False
+                            break
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False
@@ -307,6 +334,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             keyword = token
                             continue
                     yield token
+                    if restart:
+                        break
                 elif token == '\n':
                     if keyword is not None:
                         yield keyword

@@ -99,9 +99,10 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def _read_with_implied_semicolons(self, tokens, implied_semicolons):
         for token in tokens:
-            if implied_semicolons.before_token:
-                self._state(';')
-            self._state(token)
+            if not getattr(token, 'is_type_argument', False):
+                if implied_semicolons.before_token:
+                    self._state(';')
+                self._state(token)
             yield token
 
     def _indented_structures(self, tokens, reader):

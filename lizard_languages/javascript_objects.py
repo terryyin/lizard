@@ -158,6 +158,12 @@ class JavaScriptObjectsMixin:
                 return True
         return False
 
+    def object_call_context(self):
+        state = active_js_state(self)
+        return (state.holds_members and not state.as_class
+                and state._state == state._state_global and state._in_prop_value
+                and ends_expression(state.last_token or ''))
+
     def read_object(self):
         def callback(summary):
             self._pending_bindings = summary

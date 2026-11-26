@@ -102,6 +102,8 @@ class _Counter(object):  # pylint: disable=R0902
     def process(self, token, line=None, function=None):
         """Count the token for its function.  The held tokens come back with
         the line and the function they were read in."""
+        if getattr(token, 'is_type_argument', False):
+            return
         if function is None:
             context = self.context
             line, function = context.current_line, context.current_function

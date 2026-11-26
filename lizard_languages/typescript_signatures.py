@@ -5,6 +5,41 @@ from .javascript_expression import ends_expression, starts_statement
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 
 
+class CallTypeArgument(str):
+    """An erased token in a confirmed call's type arguments."""
+
+    is_type_argument = True
+
+
+def call_type_argument_token_count(tokens):
+    """Count confirmed type arguments up to their closing angle."""
+    annotation = TypeScriptTypeAnnotationStates(None)
+    consumed_type = False
+    has_separator = False
+    count = 0
+    for token in tokens:
+        if token.isspace():
+            continue
+        count += 1
+        if token.startswith(('//', '/*')):
+            continue
+        if not annotation(token):
+            consumed_type = True
+            continue
+        if not consumed_type:
+            return 0
+        if token == '>' and has_separator:
+            following = next((part for part in tokens if not part.isspace()
+                              and not part.startswith(('//', '/*'))), None)
+            return count if following == '(' else 0
+        if token != ',':
+            return 0
+        has_separator = True
+        annotation = TypeScriptTypeAnnotationStates(None)
+        consumed_type = False
+    return 0
+
+
 class ReturnTypeColon(str):
     """A colon confirmed to belong to an arrow's return annotation."""
 

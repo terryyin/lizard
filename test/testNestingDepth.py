@@ -1,4 +1,5 @@
 import unittest
+from itertools import permutations
 from lizard import FileAnalyzer, get_extensions
 from .testHelpers import get_cpp_function_list_with_extension
 from lizard_ext.lizardnd import LizardExtension as NestDepth
@@ -638,6 +639,123 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
           return false;
         }
         """, "a.ts"))
+
+    def test_generic_call_keeps_nested_logical_argument_depth_in_property(self):
+        cases = ('', '<number, string>', '<number, Box<string>>')
+        for type_arguments in cases:
+            with self.subTest(type_arguments=type_arguments):
+                source = f"""
+                function pack(a: string, b: string) {{
+                  return {{ a: a || format{type_arguments}(0, b || "b") }};
+                }}
+                """
+                analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+                functions = analyzer.analyze_source_code("a.ts", source).function_list
+
+                self.assertEqual([('pack', 2)], [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_type_argument_commas_keep_the_runtime_fallback_sequence(self):
+        source = """
+        function choose(a: string, b: string, c: string) {
+          return { value: a || fmt<TYPES>(0, b || "b") || fmt<TYPES>(0, c || "c") };
+        }
+        """
+        for extension_order in (["nd", "cognitive"], ["cognitive", "nd"]):
+            with self.subTest(extension_order=extension_order):
+                analyzer = FileAnalyzer(get_extensions(extension_order))
+                plain = analyzer.analyze_source_code("a.ts", source.replace("<TYPES>", "")).function_list
+                typed = analyzer.analyze_source_code(
+                    "a.ts", source.replace("TYPES", "number, string")).function_list
+
+                self.assertEqual([('choose', 3)], [(f.name, f.cognitive_complexity) for f in plain])
+                self.assertEqual([('choose', 3)], [(f.name, f.cognitive_complexity) for f in typed])
+
+    def test_conditional_type_arguments_do_not_add_runtime_depth(self):
+        source = """
+        function choose(a: string, b: string) {
+          return { value: a || fmt<TYPES>(0, b || "b") };
+        }
+        """
+        for extension_order in (["nd", "cognitive"], ["cognitive", "nd"]):
+            with self.subTest(extension_order=extension_order):
+                analyzer = FileAnalyzer(get_extensions(extension_order))
+                plain = analyzer.analyze_source_code("a.ts", source.replace("<TYPES>", "")).function_list
+                typed = analyzer.analyze_source_code(
+                    "a.ts", source.replace("TYPES", "number extends string ? boolean : number, string")
+                ).function_list
+
+                for functions in (plain, typed):
+                    self.assertEqual(
+                        [('choose', 2, 2, 3)],
+                        [(f.name, f.max_nesting_depth, f.cognitive_complexity,
+                          f.cyclomatic_complexity) for f in functions],
+                    )
+
+    def test_template_type_arguments_preserve_following_functions(self):
+        source = """
+        function pass<A, B>(_first: A, second: B) {
+            return second;
+        }
+
+        function render(a: string, b: string) {
+            return {value: a || pass<`x${number extends string ? boolean : number}`, string>('x1', b || 'b')};
+        }
+
+        function after(flag: boolean) {
+            if (flag) return 1;
+            return 0;
+        }
+
+        if (render('', '').value !== 'b' || after(true) !== 1) throw Error('Unexpected result');
+        """
+        for filename in ("a.ts", "a.tsx"):
+            with self.subTest(filename=filename):
+                analyzer = FileAnalyzer(get_extensions([]))
+                functions = analyzer.analyze_source_code(filename, source).function_list
+
+                self.assertEqual(
+                    [('pass', 1), ('render', 3), ('after', 2)],
+                    [(f.name, f.cyclomatic_complexity) for f in functions],
+                )
+                self.assertLess(functions[1].end_line, functions[2].start_line)
+
+    def test_type_member_keywords_do_not_open_nested_structures(self):
+        source = """
+        function pass<A, B>(_first: A, second: B) {
+            return second;
+        }
+
+        function render(a: string, b: string) {
+            return {value: a || pass<{if: number; for: boolean}, string>({if: 0, for: true}, b || 'b')};
+        }
+
+        if (render('', '').value !== 'b') throw Error('Unexpected result');
+        """
+        extensions = ('nd', 'ns', 'cognitive')
+        for filename in ("a.ts", "a.tsx"):
+            for size in range(1, len(extensions) + 1):
+                for order in permutations(extensions, size):
+                    if 'ns' not in order:
+                        continue
+                    with self.subTest(filename=filename, order=order):
+                        analyzer = FileAnalyzer(get_extensions(list(order)))
+                        functions = analyzer.analyze_source_code(filename, source).function_list
+
+                        self.assertEqual(
+                            [('pass', 0), ('render', 0)],
+                            [(f.name, f.max_nested_structures) for f in functions],
+                        )
+
+    def test_comparison_before_a_sibling_property_with_greater_than(self):
+        source = """
+        function compare(a: number, b: number, c: number, d: number) {
+          return { lower: a < b, higher: c > (d || 0) };
+        }
+        """
+        analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+        functions = analyzer.analyze_source_code("a.ts", source).function_list
+
+        self.assertEqual([('compare', 1)], [(f.name, f.max_nesting_depth) for f in functions])
 
     def test_tsx_generic_return_type(self):
         self.assertEqual(1, self.nesting_depth("""
