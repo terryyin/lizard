@@ -64,8 +64,7 @@ class TypeScriptDeclarationsMixin:
                     else:
                         self.last_tokens = 'type'
                         runtime = t == '=>' or (
-                            t in ('(', '`') and (
-                                self._expression_body or self._prev_token == 'return'))
+                            t in ('(', '`') and 'type' in self.context.current_function.parameters)
                         if runtime:
                             self._prev_token = 'type'
                         self.next(self._state_global)
