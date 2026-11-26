@@ -233,6 +233,36 @@ class TestCppNestingDepth(unittest.TestCase):
 
 class TestGoNestingDepth(unittest.TestCase):
 
+    def test_if_body_starts_after_boolean_composite_literal(self):
+        code = """
+        package work
+
+        func allowed(a, b, c, fallback, cached bool) bool {
+            if []bool{a && b, c}[0] && fallback {
+                if cached { return true }
+            }
+            return false
+        }
+
+        func allowedAt(a, b, c, fallback, cached bool) bool {
+            if slot := 0; [2]bool{a && b, c}[slot] && fallback {
+                if cached { return true }
+            }
+            return false
+        }
+
+        func allowedBy(a, b, c, cached bool) bool {
+            if a && []struct{ Ready bool }{{b && c}}[0].Ready {
+                if cached { return true }
+            }
+            return false
+        }
+        """
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'work.go', code).function_list
+        self.assertEqual([('allowed', 3), ('allowedAt', 3), ('allowedBy', 3)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_if_initializer_keeps_only_its_own_levels(self):
         code = """
         package work
