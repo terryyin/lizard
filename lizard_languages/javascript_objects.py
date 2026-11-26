@@ -126,7 +126,8 @@ class JavaScriptObjectsMixin:
             # a member name opens parameters.
             self._async_signature = (
                 self._prev_token == 'async' and (
-                    self.last_token != 'async' or self._in_prop_value))
+                    self._async_named_prefix or self._in_prop_value
+                    and self.last_token == 'async' and not self.context.newline))
             self._signature = self.last_token not in ('=', ':')
             if not self.started_function:
                 # When last_tokens is '=' we're in a field assignment
