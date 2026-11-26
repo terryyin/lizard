@@ -95,6 +95,56 @@ end
         self.assertEqual(2, len(result))
         self.assertEqual("g", result[1].name)
 
+    def test_long_comment_with_equal_signs_does_not_count_as_code(self):
+        result = get_function_list('''
+local function scale(value)
+  --[=[
+  if config.old_scale then
+    return value or 0
+  end
+  ]=]
+  return value * 2
+end
+''')
+        self.assertEqual(
+            [('scale', 2, 9, 1, 3)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity, f.nloc)
+             for f in result])
+
+    def test_long_string_ignores_a_shorter_closing_delimiter(self):
+        result = get_function_list('''
+local function query_script()
+  return [=[
+  local last = values[indexes[i]]
+  if last then
+    return last
+  end
+  ]=]
+end
+''')
+        self.assertEqual(
+            [('query_script', 2, 9, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_nested_long_delimiters_preserve_the_following_callback(self):
+        result = get_function_list('''
+describe("jobs", function()
+  it("waits for the child job", function()
+    child_exec_lua([[
+      ffi.cdef[=[ void start_job(void); ]=]
+      start({timeout = 300})
+    ]])
+    retry(function()
+      return child_ready()
+    end)
+  end)
+end)
+''')
+        self.assertEqual(
+            [(8, 10), (3, 11), (2, 12)],
+            [(f.start_line, f.end_line) for f in result])
+
     def test_do(self):
         result = get_function_list('''
             function k
