@@ -158,7 +158,7 @@ class TypeScriptDeclarationsMixin:
 
         def consume(token):
             nonlocal depth, braces
-            if token == '{':
+            if token in ('{', '${'):
                 braces += 1
             elif token == '}' and braces:
                 braces -= 1

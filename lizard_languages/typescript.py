@@ -2,6 +2,7 @@
 Language parser for TypeScript
 '''
 
+from .typescript_signatures import GenericArrowTypeOpen, generic_arrow_has_function_constraint
 from itertools import tee
 
 from .code_reader import CodeReader, CodeStateMachine, MemberName
@@ -246,7 +247,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         signatures = self.context.ended_signatures = []
         line_start = False
         state = self.parallel_states[0]
-        marked_punctuation = _MARKED_PUNCTUATION
+        marked_punctuation = _MARKED_PUNCTUATION | {'<'}
         member_access_tokens = _MEMBER_ACCESS
         structure_keywords = (_STRUCTURE_KEYWORDS | self.control_flow_keywords
                               | self.case_keywords)
@@ -277,6 +278,16 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         member_access = False
                     elif token in marked_punctuation:
                         # `1..catch`: the number and each dot are tokens.
+                        if (token == '<' and self.context.class_field_annotations
+                                and not getattr(token, 'is_jsx_markup', False)
+                                and state.generic_arrow_type_context()):
+                            tokens, lookahead = tee(tokens)
+                            if generic_arrow_has_function_constraint(lookahead):
+                                token = GenericArrowTypeOpen(token)
+                            del lookahead
+                            member_access = False
+                            yield token
+                            break
                         member_access = token in member_access_tokens
                         if token == '?':
 
