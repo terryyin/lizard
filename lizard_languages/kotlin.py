@@ -7,7 +7,7 @@ from .code_reader import CodeReader, CodeStateMachine
 from .golike import GoLikeStates
 from .kotlin_literals import (INTERPOLATION_CLOSE, INTERPOLATION_OPEN, TemplateText,
                               TemplateTokens, literal_tokens, may_have_nested_comment)
-from .swift import SwiftReplaceLabel
+from .swift import SwiftReplaceLabel, _is_local_name
 
 
 class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
@@ -214,7 +214,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         self._type_annotated = False
         self._parameter_angles = 0
         self._parameter_comma = None
-        self._parameter_default = False
+        self._parameter_name = None
+        self._parameter_default = None
 
     def _type_is_open(self):
         # The next token continues a type that has an open `<` or `(`, that
@@ -301,10 +302,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             self._state = self._expect_function_impl
         elif token not in ('(', ')'):
             function = self.context.current_function
-            if self.br_count == 1 and token in ('<', '>', ':'):
-                self._parameter_type_token(function, token)
-            elif self.br_count == 1 and token == '=':
-                self._parameter_default = True
+            if self.br_count == 1 and token in ('<', '>', ':', '='):
+                self._parameter_signature_token(function, token)
             if token == ',' and (self.br_count > 1 or self._parameter_angles):
                 # A type or default expression can have its own commas.
                 if self.br_count == 1:
@@ -313,21 +312,25 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                 function.full_parameters[-1] += " ,"
             else:
                 if token == ',':
-                    self._parameter_default = False
-                if self._parameter_default and '\n' in token:
-                    function.add_to_long_name(" " + token)
-                    function._append_parameter(function.full_parameters, token.replace('\n', ' '))
-                else:
-                    function.add_parameter(token)
+                    self._parameter_name = self._parameter_default = None
+                if self._parameter_default is not None and '\n' in token:
+                    function.record_parameter_name(*self._parameter_default)
+                function.add_parameter(token)
 
-    def _parameter_type_token(self, function, token):
+    def _parameter_signature_token(self, function, token):
         if token == '<':
             self._parameter_angles += 1
         elif token == '>':
             self._parameter_angles = max(0, self._parameter_angles - 1)
             if not self._parameter_angles:
                 self._parameter_comma = None
-        elif self._parameter_comma is not None:
+        elif token == '=':
+            self._parameter_default = self._parameter_name
+        else:
+            self._parameter_declaration_colon(function)
+
+    def _parameter_declaration_colon(self, function):
+        if self._parameter_comma is not None:
             # A declaration colon confirms a parameter after a comparison
             # such as `enabled: Boolean = low < high, timeout: Int`.
             index = self._parameter_comma
@@ -336,7 +339,9 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             function.full_parameters.append(text[index + len(" ,"):])
             self._parameter_comma = None
             self._parameter_angles = 0
-            self._parameter_default = False
+            self._parameter_name = self._parameter_default = None
+        if self._parameter_default is None and self.last_token and _is_local_name(self.last_token):
+            self._parameter_name = len(function.full_parameters) - 1, self.last_token.strip('`')
 
     def _receiver_type_end(self, token):
         # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
