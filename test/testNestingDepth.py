@@ -10,6 +10,16 @@ def get_cpp_with_nestdepth(source):
 
 class TestCppNestingDepth(unittest.TestCase):
 
+    def test_else_if_body_has_the_same_depth_as_the_if_body(self):
+        functions = get_cpp_with_nestdepth("""
+        bool allowed(bool blocked, bool cached, bool enabled) {
+            if (blocked) { return false; }
+            else if (cached) { if (enabled) { return true; } }
+            return false;
+        }
+        """)
+        self.assertEqual(2, functions[0].max_nesting_depth)
+
     def test_one_function_with_no_nd_condition(self):
         result = get_cpp_with_nestdepth("int fun(){}")
         self.assertEqual(0, result[0].max_nesting_depth)
