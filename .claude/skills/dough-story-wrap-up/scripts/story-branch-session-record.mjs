@@ -19,7 +19,7 @@ import { originTrackingRef } from "../../dough-execute-plan/scripts/publication-
 import { publishClosureRecord } from "./trunk-closure-session-record.mjs";
 
 const usage =
-  "usage: story-branch-session-record.mjs record --workspace PATH [--inspection PATH] --published-tip SHA --integrated-sha SHA --branch NAME [--target-ref refs/heads/<branch>] [--remote NAME] [--backlog-path PATH] [--landing-context PATH]";
+  "usage: story-branch-session-record.mjs record --workspace PATH [--inspection PATH] --published-tip SHA --integrated-sha SHA --branch NAME --target-ref refs/heads/<branch> [--remote NAME] [--backlog-path PATH] [--landing-context PATH]";
 
 export async function publishStoryBranchRecord({
   workspace,
@@ -27,11 +27,13 @@ export async function publishStoryBranchRecord({
   publishedTip,
   integratedSha,
   branch,
-  targetRef = "refs/heads/main",
+  targetRef,
   remote = "origin",
   backlogPath,
   landingContext,
 }) {
+  if (!targetRef) throw new Error(`missing --target-ref\n${usage}`);
+  const tracking = originTrackingRef(targetRef, remote);
   if (landingContext) {
     const { reference } = JSON.parse(await readFile(landingContext, "utf8"));
     adoptLaunchReference(workspace, reference);
@@ -40,7 +42,7 @@ export async function publishStoryBranchRecord({
     {
       workspace,
       inspection,
-      tracking: originTrackingRef(targetRef, remote),
+      tracking,
       branch,
       acceptedSha: integratedSha,
       closedSha: publishedTip,

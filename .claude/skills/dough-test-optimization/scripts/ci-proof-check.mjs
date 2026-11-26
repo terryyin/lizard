@@ -1,14 +1,12 @@
 // The check a CI proof read (./ci-proof-read.mjs) makes of a summary before
 // using it: valid by the collector contract (./ci-proof-contract.mjs), then
 // naming the asked attempt's repository, attempt and revision. Missing,
-// outdated or conflicting evidence is never a result. A usable summary is
-// read in the current version (the contract's currentSummaryOf: a version 1
-// summary's results as legacy evidence), so every reader, the dashboard's
-// and the lead reading alike, sees one version. A lead reading
+// outdated or conflicting evidence is never a result. A usable summary
+// has version 2 and declared units. A lead reading
 // (./ci-proof-leads.mjs) checks a summary retained elsewhere the same way,
 // or, when the project's CI could not name its attempt, by its repository
 // alone.
-import { currentSummaryOf, summaryProblems } from "./ci-proof-contract.mjs";
+import { summaryProblems } from "./ci-proof-contract.mjs";
 
 /**
  * The attempt a summary must name: its repository and revision, and a GitHub
@@ -75,7 +73,7 @@ function identityMismatch(summary, asked) {
 }
 
 /**
- * VALUE as ASKED's summary, in the current version: valid by the collector
+ * VALUE as ASKED's summary: valid by the collector
  * contract and naming the asked repository, attempt and revision; otherwise
  * why it is not.
  * @param {unknown} value
@@ -88,7 +86,7 @@ export function checkedSummary(value, asked) {
 
 /**
  * VALUE as a summary of REPOSITORY whose attempt the project's CI could not
- * name, in the current version: valid by the collector contract and naming
+ * name: valid by the collector contract and naming
  * the repository, its attempt and revision as it names them; otherwise why
  * it is not.
  * @param {unknown} value
@@ -104,5 +102,5 @@ function checked(value, mismatchOf) {
   if (problems.length > 0) return { why: "invalid", problems };
   const mismatch = mismatchOf(value);
   if (mismatch !== undefined) return { why: "mismatched", ...mismatch };
-  return { summary: currentSummaryOf(value) };
+  return { summary: value };
 }

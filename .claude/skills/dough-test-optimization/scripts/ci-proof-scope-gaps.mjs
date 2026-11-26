@@ -2,9 +2,8 @@
 // lead reading words them: an entry's missing and ambiguous parts, failed
 // and untimed results, results without a file breakdown, and results its
 // reports could not place in a file. Each names its results in their unit,
-// test cases, test files or legacy test results (./ci-proof-evidence.mjs),
-// and, beside another unit's results at the same entry, which unit's parts
-// it means.
+// test cases or test files. A part names its unit when the same entry holds
+// results in both units.
 import { unitNoun } from "./ci-proof-contract.mjs";
 
 /**
@@ -15,7 +14,7 @@ import { unitNoun } from "./ci-proof-contract.mjs";
  *   readonly path: string;
  *   readonly inside?: readonly string[];
  *   readonly named: boolean;
- *   readonly unit: "case" | "file" | "legacy";
+ *   readonly unit: import("./ci-proof-scope.mjs").ScopeUnit["unit"];
  * }} GapAt
  */
 

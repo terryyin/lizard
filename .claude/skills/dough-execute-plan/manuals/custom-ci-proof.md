@@ -14,14 +14,13 @@ attempt it finds by revision among the retained `discover` attempts.
 The `summary` value is the summary file's JSON object as the collector wrote it.
 A successful answer carries that complete summary; never trim entries or
 breakdowns for size, and never substitute `unavailable` because the summary is
-large. The collector writes schema version 2: each entry's `evidence` keeps one
-unit's results (test cases, test files, or legacy results reported without a
-unit) apart, with that unit's own counts, parts, optional `durationMs` (summed
+large. The collector writes schema version 2. Each entry's `evidence` keeps
+test cases and test files separate, with each unit's own counts, parts,
+optional `durationMs` (summed
 test execution time in milliseconds of the present parts that recorded one) and,
 from fragments written with `--by-file`, file breakdown, which the tab uses for
-a selected entry's or folder's figures. Answer a summary an earlier collector
-wrote (schema version 1) unchanged too; Intent reads its results as legacy test
-results, never as test cases or test files. When the summary is larger than the
+a selected entry's or folder's figures. Intent reports summaries outside
+version 2 or with undeclared evidence units as invalid. When a summary exceeds the
 1 MiB `proof` answer limit (the collector contract's summary read limit), still
 answer it whole so Intent can report the size failure: under Proof it shows a
 problem line that the attempt's CI proof is larger than the 1 MiB proof limit

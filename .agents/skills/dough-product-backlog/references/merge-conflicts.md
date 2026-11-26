@@ -1,67 +1,32 @@
 # Reconcile product backlog Git operations
 
-An authorized merge, rebase, or cherry-pick that combines two sides of this
-project's product backlog (often `PRODUCT-BACKLOG.md`) across branches or
-commits is not an ordinary same-branch edit. Run it through this project's
-installed product backlog Git adapters; do not run a raw `git merge`,
-`git rebase`, or `git cherry-pick` that touches the backlog path, or the done
-records under `done/` beside it, and then decide what to do only if Git
-reports a conflict. A clean Git result can
-still combine the backlog wrongly — an earlier step can silently absorb a
-concurrent change that a later step then changes again, unopposed at every
-single step — so the adapters must be in the invocation path itself, not
-consulted only after the fact.
-
-An ordinary same-branch edit to the backlog (adding, taking, placing, or
-completing an entry on the branch already checked out, with nothing to
-combine from another ref) is not one of these operations and needs none of
-this file's guidance; follow this project's ordinary backlog-maintenance
-guidance instead.
+Use the installed product backlog Git adapters from the start of an authorized
+merge or rebase that combines changes to the backlog or to the records in
+`done/` beside it. A clean Git result can still lose a concurrent change.
+For adding, taking, placing, or completing an entry on the current branch,
+follow the ordinary backlog-maintenance guidance.
 
 ## Resolve and run the installed adapters
 
-Resolve this project's installed skill directory inside the checkout actually
-performing the Git operation, the same way other checkout-bound installed
-skill tooling is resolved: normally `.agents/skills/dough-product-backlog`
-for Codex/Cursor or `.claude/skills/dough-product-backlog` for Claude Code.
-Do not reuse an installed directory resolved for another checkout. Each
-adapter below lives under that directory's `scripts/` module — for example
-`.../dough-product-backlog/scripts/product-backlog-git-merge.mjs`. If no
-installed skill directory can be resolved there, or the resolved adapter
-refuses for a reason this file does not cover (for example, a conflict in a
-file that adapter does not own), use
-[the fallback domain knowledge](#fallback-domain-knowledge) below instead.
+Resolve this project's installed skill directory in the checkout performing the
+operation. Use `.agents/skills/dough-product-backlog` for Codex and Cursor or
+`.claude/skills/dough-product-backlog` for Claude Code. Run the matching script
+under that directory's `scripts/`. Supply `--file` for a nondefault backlog path
+and `--cwd` to select the checkout.
 
-Otherwise, run the operation actually being performed, supplying the
-backlog's real path with `--file` when it is not this project's default:
-
-- Merge: `product-backlog-git-merge.mjs merge --ref <ref> [--file <path>]`.
-  A ref the current branch already contains, and is ahead of, stops as
-  `blocked` before any merge: nothing was merged or changed, and there is no
-  merge to `continue`.
-- Rebase: `product-backlog-git-rebase.mjs rebase --ref <upstream> [--onto <newbase>] [--branch <branch>] [--file <path>]`
-  Without `--onto`, this rebases the current branch onto `--ref`, or the
-  named `--branch` when that branch is not the one checked out. With
-  `--onto`, `--ref` is the cutoff and Git replays only commits after it onto
-  `<newbase>`, including on the named `--branch` when one is given. A caller
-  replaying an owned unpublished suffix passes that suffix's cutoff as
-  `--ref`; which revision that cutoff is belongs to the caller.
-  `--pre-rebase-tip` and `--destination-at-start` override only the
-  whole-rebase aggregate endpoints. They do not change which commits are
-  replayed. They default to that branch's tip and the onto (or `--ref`)
+- Merge. `product-backlog-git-merge.mjs merge --ref <ref> [--file <path>]`.
+  A ref already contained in the current branch stops as `blocked` when the
+  current branch is ahead. There is no merge to continue.
+- Rebase. `product-backlog-git-rebase.mjs rebase --ref <upstream> [--onto <newbase>] [--branch <branch>] [--file <path>]`.
+  Git rebases the current branch or the one named by `--branch`. With
+  `--onto`, `--ref` is the cutoff before the commits to replay and
+  `<newbase>` is their destination. Without `--onto`, `--ref` names the
   destination.
-- Cherry-pick: `product-backlog-git-cherry-pick.mjs pick --ref <rev[ rev...]>
-  [--mainline <n>] [--file <path>]`
 
-Each of these self-registers Git's own merge driver for the backlog path in
-this checkout on first use, then performs the actual Git operation; it never
-selects a side, aborts, resets, or repairs a conflict on its own.
-
-On success an adapter prints only its receipt on stdout and nothing on stderr,
-even when Git or this project's hooks printed messages along the way. Any
-other outcome also passes on everything Git, the backlog merge driver, and the
-hooks wrote to stderr during that run, so their diagnostics stay available when
-the operation stops, refuses, or fails.
+The commands share backlog and done catalog drivers. Success prints only its receipt.
+A stop also reports Git, driver and hook diagnostics. If the installed scripts
+are unavailable or a conflict falls outside their scope, use the
+[manual reconciliation rules](#fallback-domain-knowledge).
 
 ## A real conflict: resolve by hand, then continue through the same adapter
 
@@ -71,54 +36,31 @@ conflicted path — exactly as Git left it, fully recoverable. Resolve the
 backlog's own unmerged path by hand using
 [the domain knowledge below](#fallback-domain-knowledge), `git add` the
 resolved file, then run the same adapter's own `continue` verb (for example
-`product-backlog-git-merge.mjs continue [--file <path>]`) — never a raw
-`git merge --continue`/`git rebase --continue`/`git cherry-pick --continue`.
+`product-backlog-git-merge.mjs continue [--file <path>]`).
 The adapter's `continue` validates what is actually staged for the backlog
 against its own invariants before it lets Git proceed; it never re-runs
 reconciliation over a decision a human's resolution may deliberately differ
 from. An unresolved path, or a staged candidate that fails validation, stays
 stopped exactly where it was.
 
-Cherry-pick has two additional stop shapes with no merge/rebase analogue: a
-picked merge commit missing `--mainline`, and Git's own "this step is now
-empty" stop. Resolve an empty step only through this same adapter's `continue`
-(supplying whatever the sequence needs), never a raw `git cherry-pick --skip`
-or `--allow-empty`: a raw skip can silently cascade through every remaining
-clean step of the same invocation, bypassing this gate for the rest of the
-sequence with no further point to intervene.
-
 ## A clean but disputed result: validate, do not re-decide
 
-A rebase or cherry-pick sequence that finishes with no Git conflict anywhere
-on the backlog path is still checked once more, as a whole operation, before
-being reported as accepted. A `disputed` result means that check found the
-true pre-operation tip and the true destination-at-start disagree with the
-actual result. This is not a Git conflict: there is nothing staged to
-`git add` in the usual way, and the operation's own local commits are left
-exactly where the operation finished them — on the branch, unpublished, and
-fully recoverable.
-
-Repair the backlog by hand to the intended state, or decide the current
-result should stand as is; either way, run the same adapter's `validate` verb
-(for example `product-backlog-git-rebase.mjs validate [--file <path>]`)
-before the calling workflow continues or publishes. `validate` writes
-nothing and never re-runs the disputed reconciliation; it only confirms the
-branch's current bytes are a backlog this tooling can read. A merge has no
-`validate` verb: a single merge's own result is already checked by its own
-gate before it is ever offered for commit, so there is no separate
-whole-operation aggregate to revisit afterward.
+After a clean replay, the command compares the result with reconciliation of
+the branch's original tip and original destination. A `disputed` result leaves
+the replayed commits on the local branch. Repair the backlog or accept the
+current bytes, then run `product-backlog-git-rebase.mjs validate [--file <path>]`
+before continuing or publishing. This read-only check verifies that the current
+backlog can be read. A merge checks its candidate before committing.
 
 ## Done records and the done catalog beside the backlog
 
 Every adapter keeps the done catalog `done/.catalog.json` current and never
-stops on the catalog alone. When the operation changed `done/` — on either
-side of a merge, or in the replayed or picked commits — the merge commit
-carries a catalog rebuilt from the merged record files, and an accepted rebase
-or cherry-pick gains one commit at its tip changing only the catalog when the
-rebuilt catalog differs from the replayed one; that commit credits the
-developer like any other agent commit in an agent's owned workspace. A
-`conflict`, `blocked`, `refused`, `empty`, or `disputed` result rebuilds and
-commits no catalog; `continue` after the human's resolution does.
+stops on the catalog alone. When an operation changes `done/`, the merge
+commit includes the rebuilt catalog. An accepted rebase adds a catalog-only
+tip commit when the rebuilt catalog differs from the replayed one. That
+commit credits the developer in an agent's owned workspace. A stopped operation
+rebuilds the catalog when `continue` accepts the resolution. A disputed replay
+leaves the catalog as replayed.
 
 Done records under `done/` beside the backlog are one file per identity, so
 combine them as ordinary files: keep each side's added, replaced, or removed
@@ -137,7 +79,7 @@ and the `agents/` path it belongs at. Move each profile back to that path,
 that commits a profile under `done/` the same way, naming the same paths and
 pushing nothing.
 
-A rebase or cherry-pick whose catalog commit cannot be made, such as in an
+A rebase whose catalog commit cannot be made, such as in an
 agent's owned workspace whose developer credit is refused, reports
 `catalog-uncommitted`: the operation has finished and the rebuilt catalog is
 staged but not committed. Settle what the report names, then commit that
@@ -150,7 +92,7 @@ and Git blob hash, ordered newest first by completion time. Unreadable record
 files have their hash and no completion time, so a reader can order the records
 and read only the ones it needs. Titles, developers, agents, hosts, and models
 stay in the records. The catalog is derived from the record files: never edit or merge it
-by hand. `complete` and the installed merge, rebase, and cherry-pick adapters
+by hand. `complete` and the installed merge and rebase adapters
 keep it current, rebuilding it from the resulting records whenever they change.
 Rebuild with the installed `scripts/product-backlog.mjs catalog-done
 [--file <backlog>]` from the same installed skill directory and commit its result
@@ -223,7 +165,7 @@ those adapters apply automatically; it is not a different or looser standard.
    place in the queue requires a decision: removing work and reprioritizing it
    are different intentions, and neither wins because available context does
    not establish which one applies.
-6. Before completing the merge or continuing the rebase/cherry-pick, inspect the
+6. Before completing the merge or continuing the rebase, inspect the
    staged backlog against the per-identity changes from step 1. Verify both sides'
    intended changes are represented, each active identity appears once across
    both lists, every compatible removal stays absent, and references remain

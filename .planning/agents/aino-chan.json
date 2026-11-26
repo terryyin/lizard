@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Aino-chan",
-  "email": "aino-chan@example.org",
-  "identity": "SEED-074#process-prs-past-24h",
-  "mode": "trunk",
-  "branch": "origin/master",
-  "host": "codex"
-}

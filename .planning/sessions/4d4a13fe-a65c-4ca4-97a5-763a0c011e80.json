@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "sessionId": "4d4a13fe-a65c-4ca4-97a5-763a0c011e80",
+  "workflow": "dough-story-refinement",
+  "closedAt": "2026-11-25T23:07:03.980Z",
+  "story": "SEED-075#perl-word-operator-context",
+  "ranges": [
+    {
+      "base": "2d196509dedb0fc09090d46f198bbe6f6ffeb6b9",
+      "candidate": "10afe6c1fcdc49a6c17071a1b7cda7a009cca62b"
+    }
+  ]
+}

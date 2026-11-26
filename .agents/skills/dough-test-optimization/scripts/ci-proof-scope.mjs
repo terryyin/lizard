@@ -1,22 +1,18 @@
 // The part of one attempt's CI proof summary (./ci-proof-contract.mjs) that a
 // requested scope holds, at the granularity the summary supports, for a lead
 // reading to rank (./ci-proof-ranking.mjs). A summary is read in the current
-// version (./ci-proof-check.mjs): each entry holds its results in each unit
-// as `evidence` (./ci-proof-evidence.mjs, "Units"), test cases, test files or
-// legacy test results, and each unit's results stay that unit's here. Of each
+// version (./ci-proof-check.mjs): each entry holds test cases or test files
+// as separate `evidence` for each unit. Of each
 // unit's results the scope holds each in-scope test file of its breakdown
 // and, as one block each, results without a breakdown, parts reported
 // without one, and results its reports could not place in a file. Its gaps
 // keep partial figures visible (./ci-proof-scope-gaps.mjs).
-import { unitOf } from "./ci-proof-contract.mjs";
 import * as gapsOf from "./ci-proof-scope-gaps.mjs";
 
 /**
- * One unit's results, as a ranking groups them: `case`, `file`, or `legacy`
- * with the label its unit was spelled with, provenance only.
+ * One declared unit's results, as a ranking groups them.
  * @typedef {{
- *   readonly unit: "case" | "file" | "legacy";
- *   readonly label?: string | null;
+ *   readonly unit: "case" | "file";
  * }} ScopeUnit
  */
 
@@ -92,7 +88,7 @@ function scopeUnit(evidence) {
       .filter((part) => part.status === status)
       .map(({ part }) => part);
   return {
-    ...unitOf(evidence),
+    unit: evidence.unit,
     of: evidence.parts.length,
     present: numbers("present").length,
     missing: numbers("missing"),
@@ -109,7 +105,7 @@ function unitScope(evidence, at) {
     path,
     entry: at.path,
     kind,
-    ...unitOf(evidence),
+    unit: evidence.unit,
     ...extra,
     ...figures,
   });

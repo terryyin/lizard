@@ -5,17 +5,9 @@ delivered failures, close the observer through the current host adapter without
 waiting, and report pending CI as unobserved. On normal completion, use
 [the one bounded completion operation](ci-completion-wait.md#await-the-applicable-revision-at-completion)
 and handle its combined CI and shutdown receipt before considering continuation.
-
-At the final execution/review handoff, the supported live-Claude Story Branch
-coordinator may instead choose the explicit background alternative in
-[completion mechanics](ci-completion-wait.md#completion-command-and-receipt-mechanics), after any required review and
-execution-complete record publication below. That alternative satisfies the
-completion operation below: report its CI pending receipt and retained session,
-observer and resources instead of a successful shutdown. While this explicit
-background handoff's required CI/shutdown remains pending, retain that handoff;
-do not automatically continue into wrap-up. Shared completion `pending` or
-`completion_expired` likewise stops dependent continuation and cleanup on every
-host; retain and recover it under completion mechanics.
+Completion `pending` or `completion_expired` stops dependent continuation and
+cleanup; retain and recover it under
+[completion mechanics](ci-completion-wait.md#completion-command-and-receipt-mechanics).
 
 After all planned slices satisfy proof/delivery, `--skip-retro` skips only this
 execution's automatic retrospective; it changes no preferences or
@@ -94,7 +86,7 @@ Distinguish authorized closure duties from choices needing a human:
 - Keep an explicit review/retain/stop instruction and the selected review
   omissions effective. An explicitly skipped optional review creates no new
   question and invents no deferred process review. Provide explicitly requested details without inventing a review
-  stop. Preserve the explicit background-CI handoff above while it is pending.
+  stop.
 
 When no such stop remains, invoke
 [dough-story-wrap-up](../../dough-story-wrap-up/SKILL.md) now in the same session
@@ -150,8 +142,7 @@ session — its project, host, launch reference, and reporting command. Without
 that context, make no dashboard report at this handoff. This applies at the
 final execution/review handoff, before Dough Land or Story Wrap Up. For a completed handoff it is after the
 [execution-complete record](#record-execution-completion) is published and
-the completion operation's receipts are handled (including the background
-alternative's receipts, where that path was chosen).
+the completion operation's receipts are handled.
 
 At that completed handoff, settle the exact final response wording first. If
 it finished with a reminder, write that exact response to a message file,
