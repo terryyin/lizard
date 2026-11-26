@@ -86,8 +86,7 @@ class LizardExtension(ExtensionBase):
             bracket_indexes = get_all_indices('(', function.tokens)
             for idx in bracket_indexes[1:]:
                 # Suggestion ?
-                if function.tokens[idx - 1] not in (structures |
-                                                      punctuations):
+                if function.tokens[idx - 1] not in (structures | punctuations):
                     function.general_fan_out += 1
 
     def _add_to_fan_ins(self, new_funcs):
