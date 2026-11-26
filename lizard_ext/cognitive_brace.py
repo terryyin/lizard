@@ -6,6 +6,11 @@ from .cognitive_counter import (
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 
 
+# These infix tokens need an operand on each side. A bare '>' can also end
+# TypeScript type arguments, so it cannot supply the same guarantee.
+_JS_INFIX_CONTINUATIONS = frozenset(('&&', '||', '??', '==', '!=', '===', '!==', '<=', '>='))
+
+
 class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     """Nesting from braces, parentheses and semicolons (C-like languages).
 
@@ -31,7 +36,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             state.line = self.line
         line = self.line
         if line != state.line:
-            self._new_line(line)
+            self._new_line(line, token)
         if state.pending:
             self._resolve_pending(token)
         if _is_word(token):
@@ -78,7 +83,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
 
     # -- statement boundaries ---------------------------------------------------
 
-    def _new_line(self, line):
+    def _new_line(self, line, token):
         state = self.state
         state.line = line
         if not self.profile.newline_ends_statement or state.pdepth or \
@@ -86,6 +91,10 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             return
         if state.frames and not state.frames[-1].closing:
             top = state.frames[-1]
+            if (self.profile.nested_functions and top.kind == 'ternary'
+                    and (token in _JS_INFIX_CONTINUATIONS
+                         or state.prev in _JS_INFIX_CONTINUATIONS)):
+                return
             if top.phase == BODY and not top.braced:
                 self._statement_end()
 
