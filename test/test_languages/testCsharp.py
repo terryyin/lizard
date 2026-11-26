@@ -387,6 +387,29 @@ class Labels
                 ], [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity, f.nloc)
                     for f in functions])
 
+    def test_raw_literal_line_endings_keep_operands_distinct(self):
+        source = '''class Labels
+{
+    string[] Read()
+    {
+        return new[] {
+            """
+            first<newline>            second
+            """,
+            """
+            first
+            second
+            """
+        };
+    }
+}'''
+        for ending in ('\r', '\x85', '\u2028', '\u2029'):
+            with self.subTest(ending=repr(ending)):
+                analyzer = FileAnalyzer(get_extensions(['halstead']))
+                read, = analyzer.analyze_source_code('labels.cs', source.replace('<newline>', ending)).function_list
+                self.assertEqual((3, 15, 2, 2), (
+                    read.start_line, read.end_line, read.halstead_n2, read.halstead_N2))
+
     def test_nested_interpolation_keeps_following_method(self):
         source = """
 using System;
@@ -510,18 +533,21 @@ class Labels
             read.cyclomatic_complexity, read.max_nesting_depth, read.complex_tags))
 
     def test_type_patterns_can_end_a_ternary_condition(self):
-        source = '''class Labels
+        source = '''using System.Collections.Generic;
+class Labels
 {
     int One(object value) { return value is string ? 1 : 0; }
     int Many(object value) { return value is int[] ? 1 : 0; }
     string Render(object value) { return $"{(value is not string ? "other" : "text")}"; }
+    int Tuples(object value) { return value is List<(int, int)>[] ? 1 : 0; }
 }'''
         analyzer = FileAnalyzer(get_extensions(['nd', 'cognitive', 'complextags']))
         functions = analyzer.analyze_source_code('labels.cs', source).function_list
         self.assertEqual([
-            ('Labels::One', 2, 1, 1, [['?', 3]]),
-            ('Labels::Many', 2, 1, 1, [['?', 4]]),
-            ('Labels::Render', 2, 1, 1, [['?', 5]]),
+            ('Labels::One', 2, 1, 1, [['?', 4]]),
+            ('Labels::Many', 2, 1, 1, [['?', 5]]),
+            ('Labels::Render', 2, 1, 1, [['?', 6]]),
+            ('Labels::Tuples', 2, 1, 1, [['?', 7]]),
         ], [(f.name, f.cyclomatic_complexity, f.max_nesting_depth,
              f.cognitive_complexity, f.complex_tags) for f in functions])
 
