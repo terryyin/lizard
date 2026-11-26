@@ -607,6 +607,26 @@ class Job
         self.assertEqual([('Job::Build', 4, 18), ('Job::Next', 19, 19)], [
             (f.name, f.start_line, f.end_line) for f in functions])
 
+    def test_conditional_branches_can_supply_the_method_arrow(self):
+        source = '''using System;
+class Job
+{
+    Func<int> Build()
+#if DEBUG
+        => () => {
+            var count = 2;
+#else
+        => () => {
+            var count = 3;
+#endif
+            return count;
+        };
+    int Next() => 1;
+}'''
+        functions = get_csharp_function_list(source)
+        self.assertEqual([('Job::Build', 4, 13), ('Job::Next', 14, 14)], [
+            (f.name, f.start_line, f.end_line) for f in functions])
+
     def test_expression_object_initializer_does_not_emit_global_function(self):
         source = """
 class Job
