@@ -45,8 +45,13 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                 elif brackets[-1] == ')':
                     if token == ':':
                         self._parenthesis_parameter_type = True
-                    elif token in ('|', '&') and not self._parenthesis_parameter_type:
-                        # A grouped union or intersection is already a type.
+                    elif (not self._parenthesis_parameter_type
+                          and (token in ('|', '&', '[', '.', 'extends')
+                               or token.startswith('<')
+                               or self._parenthesis_first in (
+                                   'keyof', 'typeof', 'readonly', 'unique', 'infer')
+                               and token.isidentifier())):
+                        # A grouped type has no parameter list for an arrow.
                         self._parenthesis_first = '('
             if token in self.BRACKETS:
                 brackets.append(self.BRACKETS[token])
