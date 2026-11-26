@@ -72,3 +72,14 @@ const parse: $Parse = (value) => value
         for filename in ('types.ts', 'types.tsx'):
             with self.subTest(filename=filename):
                 self.assertEqual([('initialize', 4, 4, 1)], summary(filename, code))
+
+    def test_alias_keeps_following_new_and_array_expressions(self):
+        cases = [
+            ('{ enabled: boolean }', 'new (class Queue { run() { return true } })()', ['run']),
+            ('boolean', '[() => 1].map(run => run())', ['(anonymous)', '(anonymous)']),
+        ]
+        for alias_type, expression, expected_names in cases:
+            for filename in ('types.ts', 'types.tsx'):
+                with self.subTest(filename=filename, expression=expression):
+                    code = 'type Flag = ' + alias_type + '\n' + expression
+                    self.assertEqual([(name, 2, 2, 1) for name in expected_names], summary(filename, code))
