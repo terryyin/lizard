@@ -247,18 +247,21 @@ def _kotlin_else_if_branches(tokens, reader):
     previous = None
     after_else_if = False
     for token in tokens:
-        function = context.current_function
-        line = context.current_line
-        for region in reversed(regions):
-            if region.function is function and not region.read(token, line):
-                context.end_statement()
-                context.close_block()
-                regions.remove(region)
+        if regions:
+            function = context.current_function
+            for index in reversed(range(len(regions))):
+                region = regions[index]
+                if region.function is function and not region.read(token, context.current_line):
+                    context.end_statement()
+                    context.close_block()
+                    del regions[index]
         if token == '}' and token is not interpolation_end and braced_bodies:
+            function = context.current_function
             if braced_bodies[-1] == (function, len(function.block_levels)):
                 braced_bodies.pop()
                 context.end_statement()
         if headers and previous == ')':
+            function = context.current_function
             owner, depth = headers[-1]
             if owner is function and context.get_condition_depth() == depth:
                 headers.pop()
@@ -269,10 +272,12 @@ def _kotlin_else_if_branches(tokens, reader):
                     context.open_level()
                     context.open_block()
                     region = _KotlinIfBody(function)
-                    region.read(token, line)
+                    region.read(token, context.current_line)
                     regions.append(region)
-        if after_else_if and token == '(' and not function.levels_awaiting_body:
-            headers.append((function, context.get_condition_depth()))
+        if after_else_if and token == '(':
+            function = context.current_function
+            if not function.levels_awaiting_body:
+                headers.append((function, context.get_condition_depth()))
         after_else_if = (token == 'if' and previous == 'else'
                          and not getattr(token, 'is_member_name', False))
         previous = token
@@ -287,7 +292,7 @@ class _KotlinIfBody:
         '.', '?.', '::', '?:', '!!', '+', '-', '*', '/', '%', '&&', '||',
         '=', '+=', '-=', '*=', '/=', '%=', '==', '!=', '===', '!==',
         '<', '>', '<=', '>=', 'in', '!in', 'is', '!is', 'as', 'as?',
-        '..', '..<', ':', ',', '->', '!',
+        '..', '..<', ':', ',', '->', '!', 'catch', 'finally',
     ))
 
     def __init__(self, function):
