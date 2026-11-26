@@ -36,6 +36,10 @@ class LuaStateMachine(RubylikeStateMachine):
     BLOCK_KEYWORDS = ("begin", "do", "class", "module", "{", "${")
     LOOP_KEYWORDS = ("while", "for")
 
+    # Only tokens that can change scope need the shared Ruby state.
+    _STATE_TOKENS = frozenset(BLOCK_KEYWORDS + LOOP_KEYWORDS + (
+        FUNC_KEYWORD, "end", "}", "if", "unless", "=begin"))
+
     def __init__(self, context):
         super(LuaStateMachine, self).__init__(context)
         self.probable_function_name = None
@@ -45,7 +49,8 @@ class LuaStateMachine(RubylikeStateMachine):
             self.next(self._assigning)
             return
         self.probable_function_name = token
-        super(LuaStateMachine, self)._state_global(token)
+        if token in self._STATE_TOKENS:
+            RubylikeStateMachine._state_global(self, token)
 
     def _for_while(self, token):
         # A Lua loop always has `do`.  The reader only misses it when `#`,
@@ -62,7 +67,9 @@ class LuaStateMachine(RubylikeStateMachine):
         if token == self.FUNC_KEYWORD:
             self._state = self._anonymous_def
             return
-        self.next(self._state_global, token)
+        # The caller records this token after the state runs.
+        self._state = self._state_global
+        self._state(token)
 
     def _anonymous_def(self, token):
         if token != '(':
