@@ -21,7 +21,7 @@ Maintainers changing the Ruby reader find and extend its tests in topic files of
 
 - Name files `testRuby<Topic>.py` beside the existing ones. Suggested grouping, each well under 250 lines: Tokenizing (tokenizing class); `testRuby.py` keeps CCN and def parsing plus comment line continuation; KeywordMethodNames; BlockEnds (control-flow blocks: `case`/`until`, loops, `if` expressions and modifiers, tests at lines 293–489); EndlessMethods (endless, setter/operator and generated method definitions, 490–647); RSpecExamples (648–708); PercentLiterals. Execution may regroup within the 250-line limit as long as each file stays one topic.
 - Classes split from the blocks class keep their test method names; new class names describe their sub-topic.
-- Local gate: full `nix … develop -c make` per AGENTS.md (tests plus pep8/pylint, which the new files enter).
+- Local gate: full `nix develop -c make` per AGENTS.md. The new modules enter pytest discovery. The style targets check the product paths listed in the Makefile.
 
 ## Ordered slices
 
@@ -54,3 +54,9 @@ Execution context: Story Branch Mode in the established worktree on
 ## Concern evidence
 
 Slice-plan refinement not needed: one mechanical Structure slice with one proof loop and no design choices beyond grouping. No remaining slice-specific concern identified.
+
+## Execution complete
+
+Product advice: no change. The topic split advances the maintenance direction
+in the product backlog. The delivered test inventory and assertions match
+the established start, and the relocation stays within the Ruby test suite.
