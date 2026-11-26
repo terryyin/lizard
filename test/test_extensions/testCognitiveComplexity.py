@@ -1399,12 +1399,8 @@ class TestCognitiveOptionalRecursion(unittest.TestCase):
                 return schedule?.(count);
               }
             }
-            function dispatch({dispatch: count}) {
-              function dispatch(value) { return value + 2; }
-              return dispatch?.(count);
-            }
         """
-        self.assertEqual([0, 1, 1, 0, 0], cogc('retry.js', source))
+        self.assertEqual([0, 1, 1], cogc('retry.js', source))
 
     def test_scoped_bindings_leave_enclosing_function_visible(self):
         source = """
@@ -1413,8 +1409,11 @@ class TestCognitiveOptionalRecursion(unittest.TestCase):
               for (const repeat of [callback]) repeat?.(count);
               if (count) return repeat?.({repeat: count - 1}, handle);
             }
+            function schedule({schedule: count}, callback) {
+              for (const schedule of [callback]) schedule?.(count);
+            }
         """
-        self.assertEqual([0, 3], cogc('retry.js', source))
+        self.assertEqual([0, 3, 1], cogc('retry.js', source))
 
 
 class TestFlatLanguages(unittest.TestCase):

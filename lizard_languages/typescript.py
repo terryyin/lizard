@@ -245,6 +245,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         scopes = [self.context.recursive_var_shadows]
         while isinstance(state, TypeScriptStates):
             scopes.append(state.recursive_local_scope())
+            if state.recursive_statement_scope:
+                scopes.append(state.recursive_statement_scope)
             state = state._state
         return OptionalCallBinding(token, function, scopes)
 
