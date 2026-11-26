@@ -11,6 +11,8 @@ from .js_style_regex_context import (
     _REGEX_LITERAL_RE,
     _STRING_LINE_ENDS,
     _apply_marks,
+    _before_comments,
+    _follows_type_arguments,
     _is_js_dividend,
     _is_property_before,
     _skip_ws_and_comments_back,
@@ -116,7 +118,7 @@ class _FunctionScopes:
             self.arrows.pop()
 
 
-def mark_keyword_slashes(source, *, jsx=False, javascript_operators=False):
+def mark_keyword_slashes(source, *, jsx=False, operator_language=None):
     """Find-jump scan: C-level seeks between quotes, templates and slashes."""
     marks = []
     # The JSX tokenizer identifies element text after this scan has run.
@@ -184,7 +186,7 @@ def mark_keyword_slashes(source, *, jsx=False, javascript_operators=False):
                 i += 1
             continue
         if ch == '`':
-            i = _skip_template(source, i, n, marks, comments, literal_ends, javascript_operators)
+            i = _skip_template(source, i, n, marks, comments, literal_ends)
             continue
         if i + 1 < n and source[i + 1] in '/*':
             i = _read_comment(source, i, comments)
@@ -192,7 +194,7 @@ def mark_keyword_slashes(source, *, jsx=False, javascript_operators=False):
         in_generator = scopes is not None and scopes.in_generator()
         i = _consider_slash(
             source, i, marks, comments, literal_ends, closing,
-            in_generator=in_generator, javascript_operators=javascript_operators)
+            in_generator=in_generator, operator_language=operator_language)
     return _apply_marks(source, marks)
 
 
@@ -203,19 +205,10 @@ def _read_comment(source, i, comments):
     return end
 
 
-def _before_comments(source, i, comments):
-    line_comment = False
-    while i in comments:
-        start = comments[i]
-        line_comment = line_comment or source[start + 1] == '/'
-        i = _skip_ws_back(source, start - 1)
-    return i, line_comment
-
-
 def _consider_slash(source, i, marks, comments, literal_ends, closing=None, *,
-                    in_generator=False, javascript_operators=False):
+                    in_generator=False, operator_language=None):
     matched = _REGEX_LITERAL_RE.match(source, i)
-    divisor = _REGEX_DIVISOR.match(source, i) if javascript_operators else None
+    divisor = _REGEX_DIVISOR.match(source, i) if operator_language else None
     if matched is None and divisor is None:
         return i + 1
     if comments is None:
@@ -234,6 +227,8 @@ def _consider_slash(source, i, marks, comments, literal_ends, closing=None, *,
             marks.append(i)
         literal_ends.add(matched.end() - 1)
         return matched.end()
+    if prev < 0:
+        return i + 1
     if closing is not None and prev == closing[0]:
         if closing[1] and matched is not None:
             marks.append(i)
@@ -244,14 +239,18 @@ def _consider_slash(source, i, marks, comments, literal_ends, closing=None, *,
             literal_ends.add(divisor.end() - 1)
             return divisor.end()
         return i + 1
-    if matched is not None and prev >= 0 and (
-            (prev >= 1 and source[prev - 1:prev + 1] == '=>')
-            or (javascript_operators and source[prev] in '<>')):
+    operand = source[prev]
+    previous_pair = source[max(0, prev - 1):prev + 1]
+    type_close = (operator_language == 'typescript' and operand == '>'
+                  and previous_pair != '=>' and _follows_type_arguments(source, prev, comments))
+    binary_operator = operand in '<>' or operand == '+' and previous_pair != '++'
+    if matched is not None and (previous_pair == '=>' or (
+            operator_language and binary_operator and not type_close)):
         marks.append(i)
         literal_ends.add(matched.end() - 1)
         return matched.end()
     word, before_word = _word_before(source, prev)
-    if matched is not None and word in _EXPRESSION_KEYWORDS and prev >= 0:
+    if matched is not None and word in _EXPRESSION_KEYWORDS:
         prefix, _ = _before_comments(source, _skip_ws_back(source, before_word), comments)
         member = prefix >= 0 and (source[prefix] == '#'
                                   or source[prefix] == '.' and _is_property_before(source, prefix))
@@ -263,13 +262,12 @@ def _consider_slash(source, i, marks, comments, literal_ends, closing=None, *,
             return matched.end()
     # A same-line operand makes this division. Resume at its right operand
     # so the normal scan can keep strings and comments in their own spans.
-    if prev < 0:
-        return i + 1
-    operand = source[prev]
-    if divisor is not None and _is_js_dividend(source, prev, word):
+    if divisor is not None and (type_close or _is_js_dividend(source, prev, word)):
         marks.append(divisor.start(1))
         literal_ends.add(divisor.end() - 1)
         return divisor.end()
+    if type_close:
+        return i + 1
     if (word not in ('await', 'default', 'extends', 'yield') and (operand.isalnum() or operand in '_$]`"\'')
             and _LINE_BREAK.search(source, prev + 1, i) is None):
         return i + 1
@@ -307,7 +305,7 @@ def _mark_jsx_slash(source, i, marks):
             marks.append(i)
 
 
-def _skip_template(source, i, n, marks, comments, literal_ends, javascript_operators):
+def _skip_template(source, i, n, marks, comments, literal_ends):
     i += 1
     while i < n:
         c = source[i]
@@ -337,8 +335,7 @@ def _skip_template(source, i, n, marks, comments, literal_ends, javascript_opera
                         i += 1
                     continue
                 if ch == '`':
-                    i = _skip_template(
-                        source, i, n, marks, comments, literal_ends, javascript_operators)
+                    i = _skip_template(source, i, n, marks, comments, literal_ends)
                     continue
                 if ch == '{':
                     depth += 1

@@ -55,9 +55,10 @@ _MAYBE_KEYWORD_OPEN = re.compile(
 _LINE_TERMINATORS = '\r\n\u2028\u2029'
 _LINE_ENDS = frozenset(_LINE_TERMINATORS)
 # Keep a divisor's trivia in the lexical span where it belongs.
-_DIVISOR_LEAD = rf'/(?:\s|/\*(?:[^*]|\*(?!/))*\*/|//[^{_LINE_TERMINATORS}]*[{_LINE_TERMINATORS}])+'
+_OPERATOR_TRIVIA = rf'(?:[\s\ufeff]|/\*(?:[^*]|\*(?!/))*\*/|//[^{_LINE_TERMINATORS}]*[{_LINE_TERMINATORS}])'
+_DIVISOR_LEAD = '/' + _OPERATOR_TRIVIA + '+'
 _REGEX_DIVISOR = re.compile(_DIVISOR_LEAD + '(' + REGEX_LITERAL + ')')
-_JS_OPERATOR_SLASH = re.compile(r'(?:[<>]\s*|' + _DIVISOR_LEAD + r')/(?![/*])')
+_OPERATOR_SLASH = re.compile(r'(?:[+<>]' + _OPERATOR_TRIVIA + '*|' + _DIVISOR_LEAD + r')/(?![/*])')
 _JS_SPACES = (' \t\v\f\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005'
               '\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff')
 _JS_WHITESPACE = _LINE_ENDS | frozenset(_JS_SPACES)
@@ -98,15 +99,17 @@ def _mark_regex_literal_starts(source, language):
         from .js_style_regex_forward_scan import mark_forward
         return mark_forward(source, js_family=False)
     jsx = language == 'jsx'
-    javascript_operators = language == 'javascript' and _JS_OPERATOR_SLASH.search(source) is not None
+    operator_language = None
+    if not jsx and _OPERATOR_SLASH.search(source):
+        operator_language = 'javascript' if language == 'javascript' else 'typescript'
     if _NEEDS_FORWARD.search(source):
         from .js_style_regex_forward_scan import mark_forward
-        return mark_forward(source, js_family=True, jsx=jsx, javascript_operators=javascript_operators)
-    if (not javascript_operators and _MAYBE_KEYWORD_OPEN.search(source) is None
+        return mark_forward(source, js_family=True, jsx=jsx, operator_language=operator_language)
+    if (not operator_language and _MAYBE_KEYWORD_OPEN.search(source) is None
             and (jsx or _MAYBE_COMMENT_OPEN.search(source) is None)):
         return source
     from .js_style_regex_keyword_scan import mark_keyword_slashes
-    return mark_keyword_slashes(source, jsx=jsx, javascript_operators=javascript_operators)
+    return mark_keyword_slashes(source, jsx=jsx, operator_language=operator_language)
 
 
 def _apply_marks(source, marks):
@@ -128,6 +131,64 @@ def _is_js_dividend(source, prev, word):
         return False
     operand = source[prev]
     return operand.isalnum() or operand in '_$]"`\''
+
+
+def _follows_type_arguments(source, close, comments):
+    """Recognize a possible TypeScript angle group before a slash."""
+    angles = 1
+    group_depth = 0
+    pos = close - 1
+    while pos >= 0:
+        pos, _ = _before_comments(source, _skip_ws_back(source, pos), comments)
+        if pos < 0:
+            break
+        ch = source[pos]
+        if ch in '"\'`':
+            pos = _quoted_start(source, pos)
+        elif ch in ')]}':
+            group_depth += 1
+        elif ch in '([{':
+            if group_depth == 0:
+                return False
+            group_depth -= 1
+        elif group_depth == 0:
+            if ch == '>' and pos > 0 and source[pos - 1] == '=':
+                pos -= 1  # A function type's arrow.
+            elif ch == '>':
+                angles += 1
+            elif ch == '<':
+                angles -= 1
+                if angles == 0:
+                    return True
+            elif ch in ';=+*/%!^~':
+                return False
+            elif ch in '&|?.' and source.endswith(('&&', '||', '??', '?.'), 0, pos + 1):
+                return False
+        pos -= 1
+    return False
+
+
+def _quoted_start(source, end):
+    quote = source[end]
+    pos = end
+    while True:
+        pos = source.rfind(quote, 0, pos)
+        if pos < 0:
+            return pos
+        before = pos - 1
+        while before >= 0 and source[before] == '\\':
+            before -= 1
+        if (pos - before) % 2:
+            return pos
+
+
+def _before_comments(source, i, comments):
+    line_comment = False
+    while i in comments:
+        start = comments[i]
+        line_comment = line_comment or source[start + 1] == '/'
+        i = _skip_ws_back(source, start - 1)
+    return i, line_comment
 
 
 def _yield_after_operator(source, start):
