@@ -33,11 +33,14 @@ Both revisions report `f` with CCN 2 and `g` on line 2 with parameter `z` in the
 
 Type: Structure
 
-Status: planned
+Status: done
 
 Move the declaration logic in `lizard_languages/r.py` (293 lines) into a focused R declaration module. The seam includes recovering left-assignment names from recent tokens and consuming the header through the handoff to the body. Keep the `RReader` and `RStates` entry points, body and nested-function tracking, and post-body assignment handling in the existing reader. The global and nested declaration routes use the same declaration logic. Keep both edited modules within the [250-line file-size check](../../../.agents/skills/dough-post-change-refactor/references/refactor-checks.md#file-size).
 
 Run `nix develop -c python -m pytest -q test/test_languages/testR.py` and compare the analyzer observations above against pre-slice trunk. Pay particular attention to top-level, anonymous, nested, chained and right-assigned functions and to the exact metrics on ordinary declarations. Reuse the existing R test file for verification.
+
+- Proof: `lizard_languages/r.py` (187 lines) and `lizard_languages/r_declaration.py` (103 lines) both satisfy the 250-line check. `nix develop -c python -m pytest -q test/test_languages/testR.py test/test_analyzer.py` passed (51 passed), and pre- vs post-slice `analyze_file.analyze_source_code` JSON outputs were identical across 18 fixtures (31 functions) covering top-level, anonymous, nested, chained, right-assigned, single-line, parenthesized, S3 dotted, and baseline declarations. Independent post-change refactor pass returned `none — already clean`.
+- CI observation: GitHub Actions workflow `python-app.yml` (`Python application`) on `terryyin/lizard` branch `cursor/count-r-variadic-and-quoted-formals-with-nested`, mailbox `/tmp/dough-ci-501/watch-W9cyYD`.
 
 ### 2. Count complete R formal declarations
 
