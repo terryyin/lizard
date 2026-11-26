@@ -1,5 +1,6 @@
 import unittest
 
+from lizard import FileAnalyzer, get_extensions
 from .kotlin_helpers import get_kotlin_function_list
 
 
@@ -212,3 +213,21 @@ fun qualified(): @demo.A
         self.assertEqual(["projected", "repeated", "bounded", "soft", "receiver",
                           "task", "qualified"],
                          [f.name for f in result])
+
+
+class TestKotlinNestingDepth(unittest.TestCase):
+
+    def test_nullable_types_do_not_add_depth(self):
+        code = """
+        fun estimatedTotal(values: List<Int>?): Int {
+            if (values == null) return 0
+            return values.sum()
+        }
+        fun label(value: Any?): String? {
+            return value as? String ?
+        }
+        """
+        functions = FileAnalyzer(get_extensions(['nd'])).analyze_source_code(
+            "report.kt", code).function_list
+        self.assertEqual([('estimatedTotal', 1), ('label', 0)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
