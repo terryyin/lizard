@@ -145,6 +145,28 @@ failed""",
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
+    def test_named_annotation_arguments_do_not_replace_parameter_names(self):
+        functions = get_kotlin_function_list('''\
+annotation class Tuning(val description: String)
+annotation class Options(val title: String, val detail: String)
+
+fun retry(@Tuning(description = "Delay") timeout: Int, attempts: Int = 2): Int {
+    return timeout * attempts
+}
+
+fun status(
+    @Options(title = """Service
+unavailable""", detail = "Maintenance") message: String,
+    retries: Int = 2,
+): String {
+    return "$message ($retries)"
+}
+''')
+        self.assertEqual(
+            [("retry", ["timeout", "attempts"], 2), ("status", ["message", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_one_function_with_return_value(self):
         result = get_kotlin_function_list('''
             fun sayGoodbye(): String {return "bye"}
