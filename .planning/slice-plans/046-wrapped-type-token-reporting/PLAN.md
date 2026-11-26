@@ -16,6 +16,11 @@ Readers of Lizard results get a readable signature and accurate function and fil
 - Take the Java acceptance cases from [PR #656](https://github.com/terryyin/lizard/pull/656/files) and use the shared correction as its replacement. Settle the PR disposition once the verified replacement is on trunk under the applicable delivery instruction.
 - Run the focused regression file during the slice and the full suite before completing the change, per [AGENTS.md](../../../AGENTS.md). The shared processor reaches all reader and formatter consumers.
 
+## Execution context
+
+- Story Branch Mode in `.worktrees/keep-newlines-out-of-long-names-and-nloc-for-mul` on `codex/keep-newlines-out-of-long-names-and-nloc-for-mul`, with `origin/master` as the integration target. The established Take is `70c09234a41a6821c6d3d70f3d9a4347ff946f65` on both remote branches.
+- Codex observes the GitHub Actions `python-app.yml` workflow on the execution branch. The coordinator is `kirara-078` and its stream is `/tmp/dough-ci-501/watch-uuBSaI` (PID `78389`, shell session `76259`, cell `g646:6`).
+
 ## Decisive premises
 
 These observations used the owned preparation checkout at `7d0711a8`. Baseline fixtures and the disposable scratch edits were removed after the run.
@@ -34,7 +39,7 @@ These observations used the owned preparation checkout at `7d0711a8`. Baseline f
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 Behavior: Analyze a signature containing a wrapped wildcard or nullable type argument. The result displays the same long name and parameter and token counts as the flattened declaration, with no extra CCN. Function and file NLOC count the code lines inside the token. The function ranges and subsequent locations still use physical lines.
 
@@ -50,6 +55,12 @@ Add outside-in tests in `test/test_languages/test_wrapped_type_tokens.py`. Use s
 | Literal and other reader behavior | Assert the original metrics and locations on representative multiline literals with a blank payload line. Run the existing full suite for remaining tokenizer, reader, analyzer, CLI and formatter consumers. |
 
 Run `nix develop -c python -m pytest test/test_languages/test_wrapped_type_tokens.py` and `nix develop -c python -m pytest`. Use the unfixed analyzer first to confirm the new regressions distinguish both reported failures.
+
+**Accepted proof**
+
+The unmodified analyzer failed 21 of the 43 focused cases. Those failures captured multiline names, inflated NLOC on blank continuation lines, Kotlin's dropped parameter, and incorrect CSV cells. The other 22 cases established controls, including the physical ranges and literal metrics. All 43 passed after the fix and again after independent refactoring. The refactor reused the same nonblank LF-delimited segments for spelling and NLOC. The physical line counter still uses the raw LF count, and token generation still uses the existing grammar.
+
+The full suite passed with 4,043 tests and 7 skips. `nix develop -c make pep8` passed. The worktree's `open-dough/evidence` Git directory holds the baseline, focused, refactor and full-suite logs and the consumer trace.
 
 ## Concern evidence
 
