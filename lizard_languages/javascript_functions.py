@@ -118,8 +118,8 @@ class JavaScriptFunctionsMixin:
 
     def _arrow_function(self, token):
         self._push_arrow_function()
-        if self.started_function:
-            self.context.current_function.javascript_generic_async_arrow = (
+        if self.started_function and (self._generic_async_parameters or self._expression_body):
+            self.context.current_function._javascript_generic_async_arrow = (
                 self._generic_async_parameters)
         self._generic_async_parameters = False
         arrow_line = getattr(self, '_arrow_line', None)

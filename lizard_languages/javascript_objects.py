@@ -192,7 +192,7 @@ class JavaScriptObjectsMixin:
         if self.context.newline and (
                 previous == '!' or previous[0].isalpha() or previous[0] in '_$'):
             if (previous == 'await' and self._prev_token == 'await'
-                    and getattr(self.context.current_function, 'javascript_generic_async_arrow', False)):
+                    and getattr(self.context.current_function, '_javascript_generic_async_arrow', False)):
                 return True
             # A "{" that starts a line after a word or a '!' is almost always
             # a block: `return`, `x!`, `[1] as const`, `factory.of`.  An
