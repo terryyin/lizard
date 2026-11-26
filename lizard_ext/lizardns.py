@@ -83,9 +83,9 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         return super(LizardExtension, self).__call__(tokens, reader)
 
     def _start_file(self, reader):
+        super(LizardExtension, self)._start_file(reader)
         self._open_ifs = None
         self._if_head = False
-        super(LizardExtension, self)._start_file(reader)
         self.structure_piles = [0]
 
     def _unterminated_statements(self, tokens, reader):
