@@ -238,7 +238,8 @@ class TestGoNestingDepth(unittest.TestCase):
         package work
 
         func fromMap(ready, cached, enabled, online bool, key string) {
-            if map[string]bool{key: ready && cached}[key] && enabled {
+            if map
+                [string]bool{key: ready && cached}[key] && enabled {
                 if online { println(key) }
             }
         }
