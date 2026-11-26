@@ -105,7 +105,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     def _soft_keyword_lookahead(self, tokens):
         if 'python' not in self.language_names:
-            yield from self._gdscript_soft_keyword_lookahead(tokens)
+            yield from self._gdscript_soft_keywords(tokens)
             return
 
         at_line_start = True
@@ -158,7 +158,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                 return token == ':', header
         return False, header
 
-    def _gdscript_soft_keyword_lookahead(self, tokens):
+    def _gdscript_soft_keywords(self, tokens):
         """Wrap the token stream to pre-detect Python soft keywords.
 
         Yields tokens in the original order.  Before yielding 'case' or
