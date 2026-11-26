@@ -10,7 +10,8 @@ from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
-from .typescript_signatures import ReturnTypeColon, return_type_colon
+from .typescript_signatures import (
+    CALL_TYPE_ARGUMENTS_START, ReturnTypeColon, return_type_colon, type_arguments_followed_by_call)
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
@@ -275,6 +276,15 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False
+                    elif (token == '<' and self._class_field_annotations
+                          and state.object_call_context()):
+                        tokens, lookahead = tee(tokens)
+                        if type_arguments_followed_by_call(lookahead):
+                            token = CALL_TYPE_ARGUMENTS_START
+                        del lookahead
+                        member_access = False
+                        yield token
+                        break
                     elif token in marked_punctuation:
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens

@@ -5,7 +5,7 @@ from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
 from .javascript_expression import JSXChildBrace
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
-from .typescript_signatures import ReturnTypeColon
+from .typescript_signatures import CALL_TYPE_ARGUMENTS_START, ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
 
@@ -124,6 +124,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self.last_tokens = token
                     self._prev_token = token
                     return
+        if token is CALL_TYPE_ARGUMENTS_START:
+            self._consume_generic_type_params()
+            return
         if self.as_object and self._handle_object_member(token):
             return
         if token in ('.', '?.'):

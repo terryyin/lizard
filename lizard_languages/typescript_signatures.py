@@ -9,6 +9,35 @@ class ReturnTypeColon(str):
     """A colon confirmed to belong to an arrow's return annotation."""
 
 
+class _CallTypeArgumentsStart(str):
+    """The opening angle of a confirmed call's type arguments."""
+
+
+CALL_TYPE_ARGUMENTS_START = _CallTypeArgumentsStart('<')
+
+
+def type_arguments_followed_by_call(tokens):
+    """Confirm an angle group without passing a property boundary."""
+    annotation = TypeScriptTypeAnnotationStates(None)
+    consumed_type = False
+    for token in tokens:
+        if token.isspace() or token.startswith(('//', '/*')):
+            continue
+        if not annotation(token):
+            consumed_type = True
+            continue
+        if not consumed_type:
+            return False
+        if token == '>':
+            return next((item for item in tokens if not item.isspace()
+                         and not item.startswith(('//', '/*'))), None) == '('
+        if token != ',':
+            return False
+        annotation = TypeScriptTypeAnnotationStates(None)
+        consumed_type = False
+    return False
+
+
 def return_type_colon(tokens, depth):
     """Use the existing type reader; a conditional must keep its separator."""
     annotation = TypeScriptTypeAnnotationStates(None)
