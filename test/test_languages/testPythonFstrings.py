@@ -124,3 +124,31 @@ class Test_Python_fstring_complexity(unittest.TestCase):
             '    {value:x}\n'
             '    """\n')
         self.assertEqual(4, functions[0].nloc)
+
+    def test_fstring_fields_use_the_custom_token_factory(self):
+        from lizard_languages.python import PythonReader
+
+        positions = {}
+
+        def uppercase(match):
+            text = match.group()
+            positions[text] = match.span()
+            return text.upper()
+
+        tokens = list(PythonReader.generate_tokens(
+            'f"{ready if enabled else fallback}"', token_class=uppercase))
+
+        self.assertEqual(
+            ['F', 'READY', ' ', 'IF', ' ', 'ENABLED', ' ', 'ELSE', ' ', 'FALLBACK'],
+            tokens)
+        self.assertEqual((0, 1), positions['f'])
+        self.assertEqual((0, 5), positions['ready'])
+        self.assertEqual((6, 8), positions['if'])
+
+    def test_explicit_crlf_join_is_a_single_python_token(self):
+        from lizard_languages.python import PythonReader
+
+        source = 'return 1 + \\\r\n    2\r\n'
+        tokens = list(PythonReader.generate_tokens(source))
+        self.assertIn('\\\n', tokens)
+        self.assertNotIn('\\', tokens)

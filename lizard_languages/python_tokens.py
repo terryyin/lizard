@@ -100,13 +100,15 @@ def _mark_prefixed_strings(tokens):
         yield prefix
 
 
-def _read_string(source, start, prefix, pattern):
+def _read_string(source, start, prefix, scanner):
     quote = source[start:start + 3]
     if quote not in ('"""', "'" * 3):
         quote = quote[0]
     pos = literal_start = start + len(quote)
     parts = []
     raw = 'r' in prefix
+    if 't' in prefix:
+        scanner = (scanner[0], None)
     while pos < len(source):
         if source.startswith(quote, pos):
             end = pos + len(quote)
@@ -120,7 +122,7 @@ def _read_string(source, start, prefix, pattern):
         if source[pos:pos + 2] in ('{{', '}}'):
             pos += 2
         elif char == '{':
-            field = _read_field(source, pos + 1, quote, raw, pattern)
+            field = _read_field(source, pos + 1, quote, raw, scanner)
             if field is None:
                 return None
             _append_literal(parts, source, literal_start, pos, quote)
@@ -151,42 +153,57 @@ def _append_literal(parts, source, start, end, quote):
         parts.append(FStringLiteralToken(quote + text + quote))
 
 
-def _read_field(source, pos, quote, raw, pattern):
+def _read_field(source, pos, quote, raw, scanner):
+    pattern, token_class = scanner
+    start = pos
     parts = []
     closers = []
     while pos < len(source):
         match = pattern.match(source, pos)
         token = match.group()
         pos = match.end()
-        if match.lastgroup == 'interpolated':
-            string = _read_string(source, pos, token.lower(), pattern)
+        kind = match.lastgroup
+        if kind == 'interpolated':
+            string = _read_string(source, pos, token.lower(), scanner)
             if string is None:
                 return None
             pos, tokens = string
-            parts.append(token)
+            parts.append(match if token_class is not None else token)
             parts.extend(tokens)
             continue
         if not closers:
             if token == '}':
-                return pos, parts
+                return pos, _field_parts(parts, source, start, pos - 1, scanner)
             if token.startswith(':'):
-                spec = _read_format(source, match.start() + 1, quote, raw, pattern)
+                spec = _read_format(source, match.start() + 1, quote, raw, scanner)
                 if spec is None:
                     return None
                 end, tokens = spec
-                parts.append(':')
+                parts.append(match if token_class is not None and token == ':' else ':')
                 parts.extend(tokens)
-                return end, parts
+                return end, _field_parts(parts, source, start, end - 1, scanner)
         if token in _CLOSERS:
             closers.append(_CLOSERS[token])
         elif token in (')', ']', '}'):
             if not closers or token != closers.pop():
                 return None
-        parts.append(token)
+        if kind == 'crlf_join' and token_class is None:
+            token = '\\\n'
+        parts.append(match if token_class is not None else token)
     return None
 
 
-def _read_format(source, pos, quote, raw, pattern):
+def _field_parts(parts, source, start, end, scanner):
+    pattern, token_class = scanner
+    if token_class is None:
+        return parts
+    # Factories receive matches against the replacement field, as before.
+    field = source[start:end]
+    return [part if isinstance(part, str) else
+            token_class(pattern.match(field, part.start() - start)) for part in parts]
+
+
+def _read_format(source, pos, quote, raw, scanner):
     # '#' and quotes are ordinary format text. Only '{' opens a field here.
     literal_start = pos
     parts = []
@@ -196,7 +213,7 @@ def _read_format(source, pos, quote, raw, pattern):
             _append_literal(parts, source, literal_start, pos, quote)
             return pos + 1, parts
         if char == '{':
-            field = _read_field(source, pos + 1, quote, raw, pattern)
+            field = _read_field(source, pos + 1, quote, raw, scanner)
             if field is None:
                 return None
             _append_literal(parts, source, literal_start, pos, quote)
