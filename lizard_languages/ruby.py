@@ -6,7 +6,8 @@ import re
 
 from .rubylike import RubylikeReader
 from .js_style_regex_expression import js_style_regex_expression
-from .script_language import ScriptLanguageMixIn
+from .ruby_documentation import may_have_documentation, pattern_for_fragment
+from .source_documentation import tokens_ignoring_documentation
 
 
 class MyToken(str):
@@ -133,21 +134,15 @@ class RubyReader(RubylikeReader):
     @staticmethod
     @js_style_regex_expression(language='ruby')
     def generate_tokens(source_code, addition='', token_class=None):
-        def process_source(source, _, matcher):
-            return ScriptLanguageMixIn.generate_common_tokens(
-                source,
-                r"|^\=begin|^\=end" +
-                r"|\w+:" +
-                r"|\$\w+" +
-                r"|\.+" +
-                r"|:?\@{0,2}\w+\??\!?" +
-                r"|" + _PERCENT_LITERAL +
-                _, matcher)
-        matcher = MyToken
+        addition = (r"|\w+:|\$\w+|\.+|:?\@{0,2}\w+\??\!?"
+                    r"|" + _PERCENT_LITERAL + addition)
         bracket_stack = []
         source = source_code
         while source is not None:
-            for token in process_source(source, addition, matcher):
+            tokens = tokens_ignoring_documentation(
+                source, addition, MyToken, pattern_for_fragment(source, source is source_code),
+                may_have_documentation(source))
+            for token in tokens:
                 if token == "{":
                     bracket_stack.append("{")
                 elif token == "}":
