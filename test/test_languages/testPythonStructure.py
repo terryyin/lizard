@@ -215,14 +215,35 @@ class Parser:
         self.assertEqual("function1", functions[1].name)
         self.assertEqual(4, functions[1].end_line)
 
-    def xtest_one_line_functions(self):
-        class namespace8:
-            def a(): pass
+    def test_inline_methods_are_reported_before_next_definition_and_eof(self):
+        source = """\
+class Stream:
+    def read(self) -> str: ...
+    async def close(self) -> None: ..."""
+        functions = get_python_function_list(source)
+        self.assertEqual([("read", 2, 2), ("close", 3, 3)], [
+            (f.name, f.start_line, f.end_line) for f in functions
+        ])
 
-            def b(): pass
-        functions = get_python_function_list(inspect.getsource(namespace8))
-        self.assertEqual("a", functions[0].name)
-        self.assertEqual("b", functions[1].name)
+    def test_nested_inline_suite_keeps_its_continuation_and_enclosing_function(self):
+        source = """\
+def reader_factory():
+    def read(items): return (
+        items[0] if items else None
+    )
+    if cached:
+        return cached
+    return read
+"""
+        functions = get_python_function_list(source)
+        self.assertEqual([("reader_factory.read", 4, 2), ("reader_factory", 7, 2)], [
+            (f.name, f.end_line, f.cyclomatic_complexity) for f in functions
+        ])
+
+    def test_inline_docstring_shares_a_source_line_with_code(self):
+        source = 'def value(): """Return the value."""; return 1'
+        functions = get_python_function_list(source)
+        self.assertEqual([("value", 1)], [(f.name, f.nloc) for f in functions])
 
     def test_nested_depth_metric_multiple_continuous_loop_statements(self):
         class namespace9:
