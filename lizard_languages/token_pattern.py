@@ -112,10 +112,15 @@ def tokens_in_span(pattern, source, start, end, token_class=None,
                    macros=True):
     """With `macros`, a lone '#' starts a preprocessor line kept as one
     token; languages without a preprocessor keep '#' as its own token."""
+    return tokens_from_matches(pattern.finditer(source, start, end), token_class, macros)
+
+
+def tokens_from_matches(matches, token_class=None, macros=True):
+    """Yield tokens from a stream of lexical matches."""
     if token_class is None:
         token_class = _token_text
     macro = ""
-    for match in pattern.finditer(source, start, end):
+    for match in matches:
         token = token_class(match)
         if macro:
             if "\\\n" in token or "\n" not in token:

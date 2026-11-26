@@ -3,11 +3,12 @@ Language parser for Rust lang
 '''
 
 import re
+from collections import deque
 
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
-from .token_pattern import compiled_token_pattern, tokens_in_span
+from .token_pattern import compiled_token_pattern, tokens_from_matches
 
 
 # Rust punctuation is ASCII. U+200E and U+200F are whitespace in Rust.
@@ -54,7 +55,7 @@ class RustReader(CodeReader, CCppCommentsMixin):
             if token_class is None:
                 token_class = _rust_token_text
         source_code = _flatten_nested_comments(source_code)
-        if 'quote' not in source_code or _UNRECOGNIZED_RAW_START.search(source_code):
+        if 'quote' not in source_code:
             return CodeReader.generate_tokens(source_code, addition, token_class)
         return _quote_tokens(source_code, addition, token_class)
 
@@ -161,49 +162,106 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
 
 
 _QUOTE_MACROS = {'quote', 'quote_spanned'}
-_TOKEN_TREE_OPENERS = {'(', '[', '{'}
-_TOKEN_TREE_CLOSERS = {')', ']', '}'}
+_TOKEN_TREE_DEPTH = {'(': 1, '[': 1, '{': 1, ')': -1, ']': -1, '}': -1}
 # These prefixes can remain split into tokens. Their text can contain braces.
 _UNRECOGNIZED_RAW_START = re.compile(r'(?:\bcr|#b?r)#*"')
 
 
 def _quote_tokens(source, addition, token_class):
     """Keep the token count of quote input without parsing it as Rust code."""
+    matches = compiled_token_pattern(addition).finditer(source)
+    raw_starts = {match.start() for match in _UNRECOGNIZED_RAW_START.finditer(source)}
+    lookahead = _QuoteLookahead(matches, raw_starts) if raw_starts else None
+
     depth = 0
-    after_name = None
-    after_bang = None
     span_expression = False
+    after_name = after_bang = None
+    previous = before_previous = None
+    scope_depth = 0
+    local_macros = []
 
     def read_token(match):
-        nonlocal depth, after_name, after_bang, span_expression
+        nonlocal depth, span_expression, after_name, after_bang
+        nonlocal previous, before_previous, scope_depth
         token = match.group()
         text = token if token_class is None else token_class(match)
         if token.isspace() or token.startswith(('//', '/*')):
             return text
         if depth:
-            if token in _TOKEN_TREE_OPENERS:
-                depth += 1
-            elif token in _TOKEN_TREE_CLOSERS:
-                depth -= 1
+            depth += _TOKEN_TREE_DEPTH.get(token, 0)
             if span_expression and depth == 1 and token == '=>':
                 span_expression = False
             return text if span_expression and depth else _quote_data(text)
 
         macro = after_bang
         after_bang = after_name if token == '!' else None
-        after_name = token if token in _QUOTE_MACROS else None
-        if macro and token in _TOKEN_TREE_OPENERS:
+        if macro == 'macro_rules' and token in _QUOTE_MACROS:
+            local_macros.append((token, scope_depth))
+        is_macro = token == 'macro_rules' or (
+            token in _QUOTE_MACROS and _quote_name_visible(token, previous, before_previous, local_macros))
+        after_name = token if is_macro else None
+        before_previous, previous = previous, token
+
+        if macro in _QUOTE_MACROS and _TOKEN_TREE_DEPTH.get(token) == 1 and (
+                lookahead is None or not lookahead.has_ambiguous_raw(match)):
             depth = 1
             span_expression = macro == 'quote_spanned'
             return _quote_data(text)
+        if token == '{':
+            scope_depth += 1
+        elif token == '}':
+            while local_macros and local_macros[-1][1] == scope_depth:
+                local_macros.pop()
+            scope_depth -= 1
         return text
 
-    return tokens_in_span(compiled_token_pattern(addition), source, 0, len(source), read_token)
+    return tokens_from_matches(matches if lookahead is None else lookahead, read_token)
+
+
+def _quote_name_visible(token, previous, before_previous, local_macros):
+    if previous == '::':
+        return before_previous == 'quote'
+    return all(name != token for name, _ in local_macros)
 
 
 def _quote_data(token):
     # Like a string token, quoted text supplies data to the macro.
     return token if token.startswith(('"', "'")) else '"' + token
+
+
+class _QuoteLookahead:
+    """Look for an ambiguous literal inside this invocation using the same matches."""
+
+    def __init__(self, matches, raw_starts):
+        self._matches = matches
+        self._pending = deque()
+        self._raw_starts = raw_starts
+        self._last_raw_start = max(raw_starts)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self._pending.popleft() if self._pending else next(self._matches)
+
+    def has_ambiguous_raw(self, opener):
+        if opener.end() > self._last_raw_start:
+            return False
+        depth = 1
+        for match in self._peek():
+            start = match.start()
+            if start in self._raw_starts:
+                return True
+            depth += _TOKEN_TREE_DEPTH.get(match.group(), 0)
+            if not depth or start >= self._last_raw_start:
+                break
+        return False
+
+    def _peek(self):
+        yield from self._pending
+        for match in self._matches:
+            self._pending.append(match)
+            yield match
 
 
 _CHAR_LITERAL = re.compile(
