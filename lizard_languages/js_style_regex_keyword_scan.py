@@ -1,29 +1,37 @@
-'''Find-jump scan for keyword/=> regex opens punctuation lookbehind misses.'''
+'''Find regex openings after keywords, arrows and comments.'''
 
 import re
 
 from .js_style_regex_context import (
     _EXPRESSION_KEYWORDS,
-    _LINE_ENDS,
+    _EXPRESSION_PUNCTUATION,
+    _LINE_TERMINATORS,
     REGEX_LITERAL,
     _REGEX_LITERAL_RE,
     _STRING_LINE_ENDS,
     _apply_marks,
     _is_property_before,
     _skip_ws_and_comments_back,
+    _skip_ws_back,
     _word_before,
 )
+
+_COMMENT = re.compile(rf'//[^{_LINE_TERMINATORS}]*|/\*.*?(?:\*/|\Z)', re.S)
+_LINE_BREAK = re.compile(rf'[{_LINE_TERMINATORS}]')
+# Match an operator before an operand. Compound assignments and arrows can
+# precede yield, as can a single question mark in a conditional expression.
+_OPERAND_OPERATOR = re.compile(r'(?:[=!]=|(?<!<)<=|(?<!>)>=|(?<!=)>|\?\?|[<+*/%~!&|^-])\Z')
 
 
 _REGEX_DIVISOR = re.compile(r'/\s+(' + REGEX_LITERAL + ')')
 
 
-def mark_keyword_slashes(source, *, javascript_operators=False):
+def mark_keyword_slashes(source, *, jsx=False, javascript_operators=False):
     """Find-jump scan: C-level seeks between quotes, templates and slashes."""
     marks = []
-    match_literal = _REGEX_LITERAL_RE.match
-    keywords = _EXPRESSION_KEYWORDS
-    line_ends = _LINE_ENDS
+    # The JSX tokenizer identifies element text after this scan has run.
+    comments = None if jsx else {}
+    literal_ends = None if jsx else set()
     n = len(source)
     i = 0
     find = source.find
@@ -53,51 +61,117 @@ def mark_keyword_slashes(source, *, javascript_operators=False):
                 i += 1
             continue
         if ch == '`':
-            i = _skip_template(source, i, n, marks, match_literal, keywords, javascript_operators)
+            i = _skip_template(source, i, n, marks, comments, literal_ends, javascript_operators)
             continue
         if i + 1 < n and source[i + 1] in '/*':
-            if source[i + 1] == '/':
-                i += 2
-                while i < n and source[i] not in line_ends:
-                    i += 1
-            else:
-                i += 2
-                while i + 1 < n and not (source[i] == '*' and source[i + 1] == '/'):
-                    i += 1
-                i = i + 2 if i + 1 < n else n
+            i = _read_comment(source, i, comments)
             continue
-        i = _consider_slash(source, i, marks, match_literal, keywords, javascript_operators)
+        i = _consider_slash(source, i, marks, comments, literal_ends, javascript_operators)
     return _apply_marks(source, marks)
 
 
-def _consider_slash(source, i, marks, match_literal, keywords, javascript_operators):
-    matched = match_literal(source, i)
+def _read_comment(source, i, comments):
+    end = _COMMENT.match(source, i).end()
+    if comments is not None:
+        comments[_skip_ws_back(source, end - 1)] = i
+    return end
+
+
+def _before_comments(source, i, comments):
+    line_comment = False
+    while i in comments:
+        start = comments[i]
+        line_comment = line_comment or source[start + 1] == '/'
+        i = _skip_ws_back(source, start - 1)
+    return i, line_comment
+
+
+def _consider_slash(source, i, marks, comments, literal_ends, javascript_operators):
+    matched = _REGEX_LITERAL_RE.match(source, i)
     divisor = _REGEX_DIVISOR.match(source, i) if javascript_operators else None
     if matched is None and divisor is None:
         return i + 1
-    prev = _skip_ws_and_comments_back(source, i - 1)
+    if comments is None:
+        _mark_jsx_slash(source, i, marks)
+        return matched.end()
+    before = _skip_ws_back(source, i - 1)
+    prev, line_comment = _before_comments(source, before, comments)
+    commented = prev != before
+    if commented:
+        # A TypeScript non-null assertion leaves a completed operand.
+        while prev >= 0 and source[prev] == '!':
+            prev, skipped_line = _before_comments(source, _skip_ws_back(source, prev - 1), comments)
+            line_comment = line_comment or skipped_line
+    if matched is not None and (prev < 0 or source[prev] in _EXPRESSION_PUNCTUATION):
+        if commented:
+            marks.append(i)
+        literal_ends.add(matched.end() - 1)
+        return matched.end()
+    if matched is not None and prev >= 0 and (
+            (prev >= 1 and source[prev - 1:prev + 1] == '=>')
+            or (javascript_operators and source[prev] in '<>')):
+        marks.append(i)
+        literal_ends.add(matched.end() - 1)
+        return matched.end()
     word, before_word = _word_before(source, prev)
-    if matched is not None:
-        # '>' can close a type assertion in TypeScript.
-        if (prev >= 1 and source[prev - 1:prev + 1] == '=>'
-                or javascript_operators and prev >= 0 and source[prev] in '<>'):
+    if matched is not None and word in _EXPRESSION_KEYWORDS and prev >= 0:
+        prefix, _ = _before_comments(source, _skip_ws_back(source, before_word), comments)
+        member = prefix >= 0 and (source[prefix] == '#'
+                                  or source[prefix] == '.' and _is_property_before(source, prefix))
+        if not member and (
+                word != 'yield' or
+                _yield_starts_expression(source, prefix, before_word, line_comment, comments, literal_ends)):
             marks.append(i)
+            literal_ends.add(matched.end() - 1)
             return matched.end()
-        if word in keywords and not _is_property_before(source, before_word):
-            marks.append(i)
-            return matched.end()
-    if divisor is not None and prev >= 0 and word not in ('await', 'default', 'extends'):
-        # The first slash follows an operand, so the second can open a regex.
-        # A ')' can also close a control header before a regex statement.
-        operand = source[prev]
-        if operand.isalnum() or operand in '_$]"`\'':
-            marks.append(divisor.start(1))
-            return divisor.end()
+    # A same-line operand makes this division. Resume at its right operand
+    # so the normal scan can keep strings and comments in their own spans.
+    if prev < 0:
+        return i + 1
+    operand = source[prev]
+    if (divisor is not None and word not in ('await', 'default', 'extends')
+            and (operand.isalnum() or operand in '_$]"`\'')):
+        marks.append(divisor.start(1))
+        literal_ends.add(divisor.end() - 1)
+        return divisor.end()
+    if (word not in ('await', 'default', 'extends', 'yield') and (operand.isalnum() or operand in '_$]`"\'')
+            and _LINE_BREAK.search(source, prev + 1, i) is None):
+        return i + 1
     return matched.end() if matched is not None else i + 1
 
 
-def _skip_template(source, i, n, marks, match_literal, keywords, javascript_operators):
-    line_ends = _LINE_ENDS
+def _yield_starts_expression(source, prefix, before_word, line_comment, comments, literal_ends):
+    """A classic script can use yield as the operand of a division."""
+    if line_comment:
+        return False
+    if prefix < 0:
+        return True
+    end = prefix + 1
+    new_line = _LINE_BREAK.search(source, end, before_word + 1) is not None
+    if new_line and (prefix in literal_ends or source[max(0, end - 2):end] in ('++', '--')):
+        return True
+    if _OPERAND_OPERATOR.search(source, max(0, end - 2), end):
+        return False
+    word, before_operator = _word_before(source, prefix)
+    if word in ('in', 'instanceof'):
+        receiver, _ = _before_comments(source, _skip_ws_back(source, before_operator), comments)
+        return receiver >= 0 and source[receiver] in '.#'
+    return new_line or word not in ('typeof', 'void', 'delete', 'new', 'await')
+
+
+def _mark_jsx_slash(source, i, marks):
+    """Use the keyword and arrow rules for the JSX source pre-scan."""
+    prev = _skip_ws_and_comments_back(source, i - 1)
+    if prev >= 1 and source[prev - 1:prev + 1] == '=>':
+        marks.append(i)
+        return
+    word, before_word = _word_before(source, prev, unicode_names=False)
+    if word in _EXPRESSION_KEYWORDS:
+        if not _is_property_before(source, before_word):
+            marks.append(i)
+
+
+def _skip_template(source, i, n, marks, comments, literal_ends, javascript_operators):
     i += 1
     while i < n:
         c = source[i]
@@ -128,7 +202,7 @@ def _skip_template(source, i, n, marks, match_literal, keywords, javascript_oper
                     continue
                 if ch == '`':
                     i = _skip_template(
-                        source, i, n, marks, match_literal, keywords, javascript_operators)
+                        source, i, n, marks, comments, literal_ends, javascript_operators)
                     continue
                 if ch == '{':
                     depth += 1
@@ -139,20 +213,10 @@ def _skip_template(source, i, n, marks, match_literal, keywords, javascript_oper
                     i += 1
                     continue
                 if ch == '/' and i + 1 < n and source[i + 1] in '/*':
-                    if source[i + 1] == '/':
-                        i += 2
-                        while i < n and source[i] not in line_ends:
-                            i += 1
-                    else:
-                        i += 2
-                        while i + 1 < n and not (
-                                source[i] == '*' and source[i + 1] == '/'):
-                            i += 1
-                        i = i + 2 if i + 1 < n else n
+                    i = _read_comment(source, i, comments)
                     continue
                 if ch == '/':
-                    i = _consider_slash(
-                        source, i, marks, match_literal, keywords, javascript_operators)
+                    i = _consider_slash(source, i, marks, comments, literal_ends, javascript_operators)
                     continue
                 i += 1
             continue
