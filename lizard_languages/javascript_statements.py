@@ -130,8 +130,8 @@ class ImpliedSemicolons:
                             loop_ends = False
                             busy = True
                     elif token == '}':
-                        last_closed_operand = context.last_closed_function_operand
                         object_ended = bool(blocks) and is_object
+                        last_closed_operand = context.last_closed_function_operand
                         if blocks:
                             (groups, head, open_loops, loop_ends,
                              is_object) = blocks.pop()

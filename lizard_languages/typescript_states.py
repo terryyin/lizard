@@ -12,7 +12,10 @@ from .typescript_declarations import (
 # Ordinary tokens skip declaration and marker dispatch together.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
 _SPECIAL_TOKENS = DECLARATION_WORDS | _MARKER_TOKENS
-_TAIL_TOKENS = frozenset(('`', ':', ',', '!', '{'))
+_TAIL_TOKENS = frozenset(('`', ':', ',', '!'))
+
+
+_BODY_AND_TAIL_TOKENS = _TAIL_TOKENS | {'{'}
 # These operators require a value on their right.
 _FUNCTION_OPERAND_PREFIXES = frozenset(('=', '||', '&&', '??', '?'))
 
@@ -20,10 +23,6 @@ _FUNCTION_OPERAND_PREFIXES = frozenset(('=', '||', '&&', '??', '?'))
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        JavaScriptObjectsMixin, TypeScriptDeclarationsMixin,
                        CodeStateMachine):
-    _async_function_operand = False
-    _function_operand = False
-    function_operand_body = False
-
     def __init__(self, context):
         super().__init__(context)
         self.last_tokens = ''
@@ -141,8 +140,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if token == 'function' and not getattr(token, 'is_member_name', False):
             if self.started_function and not self.as_object:
                 self._pop_function_from_stack()
-            self._signature = True
             self._function_operand = self._starts_function_operand()
+            self._signature = True
             self._state = self._function
         elif (token in ('if', 'switch', 'for', 'while', 'catch')
               and not getattr(token, 'is_member_name', False)):
@@ -238,7 +237,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 and (not self._expression_body or self.last_token == ',')):
             self._end_statement()
 
-        if token in _TAIL_TOKENS:
+        if token in _BODY_AND_TAIL_TOKENS:
             if token == '{' and self._function_operand and self.started_function and not self._expression_body:
                 self._state.function_operand_body = True
                 self._function_operand = False
@@ -308,6 +307,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
     def _state_template_literal(self, token):
         if token == '`':
             self.next(self._state_global)
+
+    _async_function_operand = False
+    _function_operand = False
+    function_operand_body = False
 
     def _starts_function_operand(self):
         """Check whether the explicit function is in expression position."""
