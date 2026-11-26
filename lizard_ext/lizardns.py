@@ -24,7 +24,8 @@ def _with_expression_counter(read):
     @wraps(read)
     def dispatch(self, tokens, reader=None):
         languages = getattr(reader, 'language_names', ())
-        if languages and languages[0] in ('kotlin', 'scala'):
+        if (languages and languages[0] in ('kotlin', 'scala')
+                and not getattr(reader, 'interpolation_braces', None)):
             counter = _ConditionalExpressionStructures()
             return read(counter, counter.track(tokens, reader), reader)
         return read(self, tokens, reader)
@@ -258,12 +259,10 @@ class _ConditionalExpressionStructures(LizardExtension):
 
     def track(self, tokens, reader):
         scala_interpolation = getattr(reader, 'has_scala_interpolation', False)
-        braces = getattr(reader, 'interpolation_braces', None)
         scopes = []
         for token in tokens:
-            interpolation = (
-                (scala_interpolation and getattr(token, 'is_scala_interpolation', False))
-                or (braces and (token is braces[0] or token is braces[1])))
+            interpolation = (scala_interpolation and token in ('{', '}')
+                             and getattr(token, 'is_scala_interpolation', False))
             if interpolation:
                 self._track_interpolation_scope(scopes, token)
             else:
