@@ -2,6 +2,8 @@ __author__ = 'David Baum'
 
 import unittest
 from lizard import analyze_file, FileAnalyzer, get_extensions
+from lizard_core.file_info_builder import FileInfoBuilder
+from lizard_languages.scala import ScalaReader
 
 
 def get_scala_function_list(source_code):
@@ -82,6 +84,24 @@ class TestScala(unittest.TestCase):
                           ('planned', 1, 0, 0), ('size', 1, 0, 0)],
                          [(f.name, f.cyclomatic_complexity,
                            f.max_nesting_depth, f.cognitive_complexity) for f in result])
+
+    def test_preprocessing_preserves_positioned_tokens(self):
+        class PositionedToken(str):
+            def __new__(cls, match):
+                token = super().__new__(cls, match.group())
+                token.offset = match.start()
+                return token
+
+        source = "def ask(worker: Worker) = worker ? 42"
+        reader = ScalaReader(FileInfoBuilder("requests.scala"))
+        tokens = list(reader.generate_tokens(source, token_class=PositionedToken))
+        positioned_question = next(token for token in tokens if token == '?')
+
+        result = list(reader.preprocess(iter(tokens)))
+        question = next(token for token in result if token == '?')
+
+        self.assertIs(question, positioned_question)
+        self.assertEqual(source.index('?'), question.offset)
 
     def test_placeholder_is_the_body_of_an_if(self):
         analyzer = FileAnalyzer(get_extensions(['cognitive']))
