@@ -280,3 +280,24 @@ class Parser:
         functions = get_python_function_list(code)
         self.assertEqual(9, functions[0].cyclomatic_complexity)
         self.assertEqual(8, functions[0].max_nesting_depth)
+
+    def test_return_annotation_interpolations_keep_the_whole_function(self):
+        for annotation in (
+                'f"{version}"',
+                'f"{metadata["["]}"',
+                'f"""Schema {metadata["tag"]}"""',
+                't"{metadata["["]}"'):
+            with self.subTest(annotation=annotation):
+                source = (
+                    'class Parser:\n'
+                    '    def read(self, value) -> Annotated[int, ' + annotation + ',\n'
+                    '        "payload",\n'
+                    '    ]:\n'
+                    '        if value:\n'
+                    '            return 1\n'
+                    '        return 0\n')
+                functions = get_python_function_list(source)
+                self.assertEqual([('read', 2, 7, 2)], [
+                    (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                    for f in functions
+                ])
