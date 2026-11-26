@@ -152,3 +152,20 @@ type Assert = (value: unknown) => asserts value
 is(() => true)
 """
         self.assertEqual([('is', 1, 1, 1), ('(anonymous)', 4, 4, 1)], summary('types.ts', code))
+
+    def test_type_alias_between_typed_arrows_preserves_both_functions(self):
+        code = """type Box<T> = { value: T }
+const fromGroup = <T extends string>(
+  value: T,
+  map: (value: T) => unknown
+): Box<T> =>
+  map(value) as Box<T>
+type Chain<T> = ReadonlyArray<
+  Box<T>
+>
+const middlewareChain = <T extends string>(value: T): Chain<T> => [{ value }]
+"""
+        for filename in ('types.ts', 'types.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([('fromGroup', 5, 6, 1), ('middlewareChain', 10, 10, 1)],
+                                 summary(filename, code))
