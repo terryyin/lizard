@@ -10,10 +10,13 @@ from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
-from .typescript_signatures import ReturnTypeColon, return_type_colon
+from .typescript_signatures import (
+    ConstructorTypeOpen, ReturnTypeColon, constructor_has_function_type, return_type_colon)
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
+from .javascript_expression import active_js_state, ends_expression, starts_statement
+from .typescript_signatures import template_call_type_arguments
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -110,6 +113,12 @@ _NAMED_KEYWORDS = frozenset(('function',))
 # `<T>` as one token.
 _NAME_FOLLOWERS = frozenset((':', '='))
 _PARAMETER_STARTS = frozenset(('(', '<'))
+# Prefixes of named and namespace exports, including type-only exports.
+_EXPORT_FOLLOWERS = {
+    'export': ('{', '*', 'type'),
+    'type': ('{', '*'),
+    '*': ('as',),
+}
 
 
 def _ends_a_number(token):
@@ -126,6 +135,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     # JS/TS split templates into '${' + expression tokens; only TSX/JSX keep
     # atomic templates that need a backtick scan on the fast path.
     _scan_atomic_templates = False
+    measure_template_types = False
+    _in_call_type_arguments = False
+    starts_statement = staticmethod(starts_statement)
     _class_field_annotations = True
 
     # Separated condition categories
@@ -156,12 +168,39 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         """Tokens of a piece of code; Vue tokenizes its files as markup."""
         return self.generate_tokens(code)
 
-    def _count_interpolation_conditions(self, token, in_expression):
+    def type_annotation_owns_question_mark(self):
+        state = active_js_state(self.parallel_states[0])._state
+        return isinstance(state, TypeScriptTypeAnnotationStates) and state.owns_question_mark()
+
+    def in_template_literal_type(self):
+        if not self.context.class_field_annotations:
+            return False
+        active = active_js_state(self.parallel_states[0])
+        state = active._state
+        if self._in_call_type_arguments or isinstance(state, TypeScriptTypeAnnotationStates):
+            return True
+        return (getattr(state, 'in_type_alias', False)
+                and not (self.context.newline and ends_expression(active.last_token or '')))
+
+    def _count_interpolation_conditions(self, token, in_expression, measure=None):
+        if getattr(token, 'interpolation_measured', False):
+            return None
+        tokens = self._interpolation_tokens(token, in_expression, measure is not None)
+        result = measure(tokens) if measure is not None else None
+        for _ in tokens:
+            pass
+        return result
+
+    def _interpolation_tokens(self, token, in_expression, emit):
         # Re-tokenize opaque interpolation spans; keyword members stay non-
         # conditions the same way as on the outer token stream (#546).
         conditions = self.conditions
         earlier = previous = None
-        for start, end in interpolation_code(token, in_expression):
+        for part in interpolation_code(token, in_expression, delimiters=emit):
+            if isinstance(part, str):
+                yield part
+                continue
+            start, end = part
             for inner in self.script_tokens(token[start:end]):
                 # A word after a dot names a member; `1. ? a : b` is a ternary.
                 if (inner in conditions and (previous not in _MEMBER_ACCESS
@@ -173,6 +212,13 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 elif not (inner.isspace()
                           or inner.startswith(_COMMENT_STARTS)):
                     earlier, previous = previous, inner
+                if emit:
+                    if inner.startswith(_COMMENT_STARTS):
+                        # Interpolation comments cannot end the source file.
+                        for _ in inner.splitlines()[1:]:
+                            yield '\n'
+                    else:
+                        yield inner
 
     def _count_conditions_from_token(self, previous, token):
         # Split JS/TS exposes '${' then the expression; atomic TSX/JSX
@@ -252,13 +298,21 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                               | self.case_keywords)
         # `{ function: f }` also needs the mark: the state reads `function`.
         name_keywords = structure_keywords | _NAMED_KEYWORDS
+        export_prefix = ''
         member_access = False
         before_dot = ''
+        track_templates = self.measure_template_types and self.context.class_field_annotations
+        type_tokens = 0
         keyword = None      # waits for the next token: `{ if: a }`
+        constructor = None
         tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
                 if not token.isspace():
+                    if track_templates:
+                        self._in_call_type_arguments = bool(type_tokens)
+                        if type_tokens:
+                            type_tokens -= 1
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
                         if token in _NAME_FOLLOWERS or (
@@ -270,11 +324,43 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
                         end_before_line_token(state, arrows, token)
+                    if export_prefix and not token.startswith(_COMMENT_STARTS):
+                        if export_prefix in ('{', 'as') and token in structure_keywords:
+                            token = _MemberName(token)
+                        if export_prefix != '{' or token == '}':
+                            export_prefix = (
+                                token if token in _EXPORT_FOLLOWERS.get(export_prefix, ()) else '')
+                    if (constructor is not None or token == 'new') and not token.startswith(_COMMENT_STARTS):
+                        if (token == 'new' and self.context.class_field_annotations
+                                and state.last_token not in member_access_tokens):
+                            constructor = 'name'
+                        elif constructor == 'name' and (token[0].isalpha() or token[0] in '_$#'):
+                            constructor = 'arguments'
+                        elif constructor == 'arguments' and token == '.':
+                            constructor = 'name'
+                        else:
+                            check_arguments = constructor == 'arguments' and token == '<'
+                            constructor = None
+                            if check_arguments:
+                                tokens, lookahead = tee(tokens)
+                                if constructor_has_function_type(lookahead):
+                                    token = ConstructorTypeOpen(token)
+                                del lookahead
+                                yield token
+                                break
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False
+                    elif (track_templates and token == '<' and not self._in_call_type_arguments
+                          and ends_expression(state.last_token or '')):
+                        tokens, lookahead = tee(tokens)
+                        type_tokens = template_call_type_arguments(lookahead, self.script_tokens)
+                        del lookahead
+                        member_access = False
+                        yield token
+                        break
                     elif token in marked_punctuation:
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens
@@ -303,7 +389,10 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
                             member_access = False
-                        if token in name_keywords:
+                        elif (not export_prefix and token == 'export'
+                              and not getattr(token, 'is_jsx_markup', False)):
+                            export_prefix = token
+                        if token in name_keywords and not isinstance(token, _MemberName):
                             keyword = token
                             continue
                     yield token

@@ -70,6 +70,7 @@ class TypeScriptDeclarationsMixin:
                         phase[0] = 3
                     elif t == '=':
                         phase[0] = 2
+                        handle_type_alias.in_type_alias = True
                     elif t == ';':
                         self.next(self._state_global)
                         return True
@@ -158,7 +159,7 @@ class TypeScriptDeclarationsMixin:
 
         def consume(token):
             nonlocal depth, braces
-            if token == '{':
+            if token in ('{', '${'):
                 braces += 1
             elif token == '}' and braces:
                 braces -= 1

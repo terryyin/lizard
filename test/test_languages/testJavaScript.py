@@ -630,3 +630,53 @@ class Test_tokenizing_JavaScript(unittest.TestCase):
 
     def test_tokenizing_template_literal_multiline(self):
         self.check_tokens(['`','`hello\nworld`', '`'], '`hello\nworld`')
+
+
+class TestJavaScriptExportComplexity(unittest.TestCase):
+    def test_named_export_aliases(self):
+        code = """\
+const each = 1;
+const skip = 2;
+export { each as for, skip as continue };
+"""
+        self.assertEqual([('*global*', 1)], self.complexities('exports.mjs', code))
+
+    def test_multiline_reexport_keeps_global_control_flow(self):
+        code = """\
+export {
+  for as each,
+  retry as /* public name */
+    while
+} from './queue.mjs';
+if (ready) start();
+"""
+        self.assertEqual([('*global*', 2)], self.complexities('exports.mjs', code))
+
+    def test_namespace_export_alias(self):
+        code = """\
+export * as for from './collection.mjs';
+if (ready) start();
+"""
+        self.assertEqual([('*global*', 2)], self.complexities('exports.mjs', code))
+
+    def test_typescript_type_export_alias(self):
+        code = """\
+type Queue = { ready: boolean };
+export type { Queue as while };
+"""
+        self.assertEqual([('*global*', 1)], self.complexities('exports.ts', code))
+
+    def test_export_property_before_a_block(self):
+        code = """\
+registry.export
+{
+  if (ready) start()
+}
+"""
+        self.assertEqual([('*global*', 2)], self.complexities('exports.mjs', code))
+
+    @staticmethod
+    def complexities(filename, code):
+        analyzer = FileAnalyzer(get_extensions(['outside']))
+        result = analyzer.analyze_source_code(filename, code)
+        return [(f.name, f.cyclomatic_complexity) for f in result.function_list]
