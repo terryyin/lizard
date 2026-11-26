@@ -7,6 +7,7 @@ from lizard import FileInfoBuilder, FunctionInfo
 DEFAULT_ND_THRESHOLD = 7
 _EXPRESSION_BLOCK_LANGUAGES = frozenset(('cpp', 'java'))
 _CONTROL_HEADERS = frozenset(('if', 'for', 'while', 'catch'))
+_EXPRESSION_STATEMENTS = _CONTROL_HEADERS | {'return', 'try', 'do'}
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -47,13 +48,13 @@ class LizardExtension(object):  # pylint: disable=R0903
             indent_indicator = reader.indent_indicator
         else:
             indent_indicator = ';'
+        keep_condition = not _EXPRESSION_BLOCK_LANGUAGES.isdisjoint(
+            getattr(reader, 'language_names', ()))
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
-        ).union(block_ends, block_starts, loops)
+        ).union(block_ends, block_starts, loops, _EXPRESSION_STATEMENTS if keep_condition else ())
         context = reader.context
-        keep_condition = not _EXPRESSION_BLOCK_LANGUAGES.isdisjoint(
-            getattr(reader, 'language_names', ()))
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
@@ -61,6 +62,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
             if token in depth_tokens:
+                if keep_condition and token in _EXPRESSION_STATEMENTS:
+                    context.begin_expression_statements()
                 if token in block_ends:
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:
@@ -135,27 +138,39 @@ class NDFileInfoAddition(FileInfoBuilder):
     def open_block(self):
         """The block takes over the levels awaiting their body."""
         function = self.current_function
-        levels = function.levels_awaiting_body
         if function.control_body_pending and function.condition_depth:
-            # A lambda or initializer in the header has its own block.
-            levels = (levels, function.condition_depth, function.logical_operator_added)
-            self.reset_condition_tracking()
-        function.block_levels.append(levels)
+            function.block_levels.append(_ConditionBrace(function))
+            return
+        function.block_levels.append(function.levels_awaiting_body)
         function.levels_awaiting_body = 0
         function.control_body_pending = False
+
+    def begin_expression_statements(self):
+        """A statement keyword distinguishes a lambda body from an initializer."""
+        function = self.current_function
+        if function.block_levels:
+            block = function.block_levels[-1]
+            if isinstance(block, _ConditionBrace) and not block.has_statements:
+                block.has_statements = True
+                function.levels_awaiting_body -= block.levels
+                function.control_body_pending = False
+                self.reset_condition_tracking()
 
     def close_block(self):
         """A block end releases the levels its block took over."""
         function = self.current_function
         levels = function.block_levels.pop() if function.block_levels else 1
-        if isinstance(levels, tuple):
+        if not isinstance(levels, _ConditionBrace):
+            return self.add_nd_condition(-levels)
+        if levels.has_statements:
             depth = self.end_statement()
-            (function.levels_awaiting_body, function.condition_depth,
-             function.logical_operator_added) = levels
+            function.levels_awaiting_body = levels.levels
+            function.condition_depth = levels.condition_depth
+            function.logical_operator_added = levels.logical_operator_added
             function.control_body_pending = True
             function.in_condition = True
             return depth
-        return self.add_nd_condition(-levels)
+        return function.nesting_depth
 
     def end_statement(self):
         """A statement ends the levels of a braceless body."""
@@ -224,6 +239,16 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def clear_prev_was_else(self):
         self.current_function.prev_was_else = False
+
+
+class _ConditionBrace:  # pylint: disable=R0903
+    """The enclosing condition of an expression brace that may hold statements."""
+
+    def __init__(self, function):
+        self.levels = function.levels_awaiting_body
+        self.condition_depth = function.condition_depth
+        self.logical_operator_added = function.logical_operator_added
+        self.has_statements = False
 
 
 def get_method(cls, name):
