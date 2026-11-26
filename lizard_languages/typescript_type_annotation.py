@@ -1,7 +1,56 @@
 """Consume type-owned brackets and return enclosing runtime delimiters."""
 
 from .code_reader import CodeStateMachine
-from .javascript_expression import starts_statement
+from .javascript_expression import (
+    JSXMarkup, OPERAND_WORDS, is_identifier, is_identifier_part, starts_statement)
+
+
+# These words introduce an expression. A following '<' starts an angle
+# assertion or a generic arrow rather than specializing that word.
+_EXPRESSION_PREFIXES = OPERAND_WORDS | frozenset((
+    'return', 'throw', 'case', 'default', 'else', 'do', 'function',
+    'const', 'let', 'var', 'export', 'async', 'extends'))
+_NON_TYPE_OPERATORS = frozenset((
+    '+', '*', '/', '%', '**', '&&', '||', '??', '++', '--', '!',
+    '==', '!=', '===', '!==', '<=', '>=', '<<=', '>>=', '^'))
+_TYPE_SEPARATORS = frozenset(('<', '>', ',', '|', '&'))
+_TYPE_PREFIXES = frozenset(('<', ',', '.', '|', '&', 'keyof', 'readonly'))
+# These tokens cannot be operands of a greater-than comparison.
+_STATEMENTS_ONLY = frozenset((
+    'if', 'else', 'for', 'while', 'do', 'switch', 'case', 'default', 'try',
+    'catch', 'finally', 'break', 'continue', 'return', 'throw', 'debugger',
+    'const', 'var', 'export', ')', ']', '}'))
+
+
+def can_take_type_arguments(previous):
+    """Whether '<' can specialize the value or type before it."""
+    return previous and (previous in (')', ']', '!') or
+                         (previous not in _EXPRESSION_PREFIXES
+                          and (previous[0].isalpha() or previous[0] in '_$#')
+                          and not isinstance(previous, JSXMarkup)))
+
+
+def packed_type_arguments(token):
+    """TSX can supply a simple '<Name>' as one token."""
+    return (len(token) > 2 and token[1].isalpha() and token.endswith('>')
+            and not isinstance(token, JSXMarkup))
+
+
+def followed_by_new_statement(tokens, simple_type_arguments):
+    """Check only the gap after '>', plus the first following code token."""
+    newline = False
+    for token in tokens:
+        if token.isspace() or token.startswith(('//', '/*')):
+            newline |= '\n' in token
+        else:
+            if not newline:
+                return False
+            # A balanced group may look like a type to the annotation
+            # reader. Require a real statement boundary in that case.
+            if not simple_type_arguments:
+                return token in _STATEMENTS_ONLY
+            return starts_statement(token)
+    return False
 
 
 class TypeScriptTypeAnnotationStates(CodeStateMachine):
@@ -9,13 +58,15 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         'any', 'unknown', 'never', 'number', 'bigint', 'boolean', 'string',
         'symbol', 'object', 'void', 'undefined', 'null', 'this', 'true', 'false'))
     BRACKETS = {'(': ')', '[': ']', '{': '}', '<': '>', '${': '}'}
+    CLOSERS = frozenset(BRACKETS.values())
     END_TOKENS = frozenset(('=', ';', ')', ']', '}', ',', '=>',
                             '||', '&&', '??', '?', ':', '+', '-', '*', '/',
                             '%', '**', '==', '===', '!=', '!==', '>', '>=', '<=',
                             'instanceof', 'in', '^'))
 
-    def __init__(self, context, return_type=False, class_member=False):
+    def __init__(self, context, return_type=False, class_member=False, runtime_assertion=False):
         super().__init__(context)
+        self.runtime_assertion = runtime_assertion
         self.saved_token = None
         self._brackets = []
         self._expect_type = True
@@ -145,3 +196,124 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
             if token == 'is':
                 return not self._assertion_predicate
         return token not in ('extends', 'is', 'in', 'as') and starts_statement(token)
+
+    def has_complete_type(self):
+        return not (self._expect_type or self._conditional_type
+                    or self._conditional_questions or self._qualified_type)
+
+    def mismatched_closer(self, token):
+        return (self._brackets and token in self.CLOSERS
+                and token != self._brackets[-1])
+
+
+class TypeAliasContext(TypeScriptTypeAnnotationStates):
+    """Recognize an alias in the stream without changing function parsing."""
+
+    def __init__(self):
+        super().__init__(None)
+        self.in_body = False
+        self.next(self._name)
+
+    def _name(self, token):
+        if token.isspace():
+            if '\n' in token:
+                self.statemachine_return()
+        elif token == '\\':
+            self.next(self._escaped_name)
+        elif is_identifier(token):
+            self.next(self._name_parts)
+        else:
+            self.statemachine_return()
+
+    def _after_name(self, token):
+        if token == '=':
+            self.in_body = True
+            self.next(self._state_global)
+        elif token == '<':
+            self.br_count = 1
+            self.next(self._type_parameters)
+        elif not token.isspace() and not (
+                token[0] == '<' and packed_type_arguments(token)):
+            self.statemachine_return()
+
+    def _name_parts(self, token):
+        # The lexer can split an identifier at a combining mark, a
+        # connector other than underscore, or a zero-width joiner.
+        if token == '\\':
+            self.next(self._escaped_name)
+        elif not is_identifier_part(token):
+            self.next(self._after_name)
+            self._after_name(token)
+
+    def _escaped_name(self, token):
+        # The tokenizer splits identifier escapes, including the braces in
+        # a Unicode code point escape, into separate tokens.
+        if token[0] in '<=' or token.isspace():
+            self.next(self._after_name)
+            self._after_name(token)
+        elif token not in ('\\', '{', '}') and not is_identifier_part(token):
+            self.statemachine_return()
+
+    def _type_parameters(self, token):
+        if token == '<':
+            self.br_count += 1
+        elif token == '>':
+            self.br_count -= 1
+            if not self.br_count:
+                self.next(self._after_name)
+
+
+class TypeArguments:  # pylint: disable=too-few-public-methods
+    """Follow a possible '<...>' while its tokens pass through the reader."""
+
+    def __init__(self):
+        self._argument = TypeScriptTypeAnnotationStates(None)
+        self._previous = '<'
+        self.simple = True
+
+    def __call__(self, token):
+        """Return the next state and whether this token closes the list."""
+        if token.startswith(('//', '/*')):
+            return self, False
+        if token in _NON_TYPE_OPERATORS or isinstance(token, JSXMarkup):
+            return None, False
+        if self.simple:
+            self.simple = _simple_type_token(self._previous, token)
+        self._previous = token
+        argument = self._argument
+        if argument is None:
+            if token == '>':  # An optional trailing comma.
+                return None, True
+            argument = self._argument = TypeScriptTypeAnnotationStates(None)
+        if argument.mismatched_closer(token):
+            return None, False
+        if argument(token):
+            if token == ',' and argument.has_complete_type():
+                self._argument = None
+            else:
+                return None, token == '>' and argument.has_complete_type()
+        return self, False
+
+
+def _simple_type_token(previous, token):
+    """Recognize reference types without ambiguous expression groups."""
+    if token == 'super':
+        return False
+    if previous == '[':
+        return token == ']'  # An array suffix, but not a value subscript.
+    if token in _TYPE_SEPARATORS or token == '[':
+        return True
+    if token == '.':
+        return (previous.replace('$', '_').isidentifier()
+                and previous not in TypeScriptTypeAnnotationStates.NON_GENERIC_TYPES)
+    first = token[0]
+    if first == '<' and packed_type_arguments(token):
+        return True
+    if previous == 'typeof':
+        return token not in _EXPRESSION_PREFIXES and token.replace('$', '_').isidentifier()
+    # TSX keeps a whole template in one token, including any expressions.
+    return (previous == '-' and first.isdigit()
+            or previous in _TYPE_PREFIXES
+            and (first in "'\"-" or first.isdigit()
+                 or first == '`' and '${' not in token
+                 or is_identifier(token)))

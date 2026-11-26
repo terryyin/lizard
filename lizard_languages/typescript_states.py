@@ -8,7 +8,7 @@ from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
-from .typescript_type_annotation import TypeScriptTypeAnnotationStates
+from .typescript_type_annotation import TypeScriptTypeAnnotationStates, can_take_type_arguments
 
 # Ordinary tokens skip declaration and marker dispatch together.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
@@ -84,16 +84,18 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             else:
                 self._pop_function_from_stack()
 
-    def _consume_type_annotation(self, return_type=False):
+    def _consume_type_annotation(self, return_type=False, runtime_assertion=False):
         # A signature stays tentative while its return type is read.
-        return_type = return_type or (
-            self.started_function and not self._expression_body and self.last_token == ')')
+        return_type = return_type or (not runtime_assertion and
+                        self.started_function and not self._expression_body and self.last_token == ')')
         declaration = self._signature == 'function' or (
             self.as_class and self._signature and not self._in_prop_value)
         body_candidate = return_type and declaration
         if body_candidate:
             self.next(self._expecting_body_after_return_type)
-        super()._consume_type_annotation(return_type=return_type, class_member=body_candidate and self.as_class)
+        super()._consume_type_annotation(
+            return_type=return_type, class_member=body_candidate and self.as_class,
+            runtime_assertion=runtime_assertion)
 
     def _expecting_body_after_return_type(self, token):
         # Later child states resume ordinary parsing.
@@ -107,6 +109,22 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self.context.current_function.abandoned = True
         self.context.forgive = True
         self._pop_function_from_stack()
+
+    def type_argument_context(self):
+        if isinstance(self._state, TypeScriptStates):
+            return self._state.type_argument_context()
+        previous = self.last_token
+        if self._class_body_pending or self.started_function and not self._expression_body:
+            return False
+        if self.as_object and not self.holds_members:
+            return False
+        if self._state != self._state_global and not (
+                isinstance(self._state, TypeScriptTypeAnnotationStates)
+                and self._state.runtime_assertion):
+            return False
+        if previous == '!':
+            return getattr(self, '_postfix_operand', False)
+        return can_take_type_arguments(previous)
 
     def _state_global(self, token):
         if self._pending_bindings:
