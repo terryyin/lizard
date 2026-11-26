@@ -21,25 +21,11 @@ _CONTINUES_AT_LINE_END = frozenset((
 _CONDITION_KEYWORDS = frozenset(('if', 'while', 'for'))
 
 
-class _LeadingInfixName(str):
-    """The identifier part of a Scala 3 operator such as ``and_+``."""
-
-    is_leading_infix = True
-
-
-def _symbolic_suffix(token):
-    if not token or token.startswith(('//', '/*')):
-        return False
-    first = token[0]
-    return first in '!#%&*+-/:<=>?@\\^|~' or category(first) in ('Sm', 'So')
-
-
 class ScalaReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
     ext = ['scala']
     language_names = ['scala']
-    track_leading_infix = False
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'for', 'while', 'catch', 'do'}
@@ -48,6 +34,7 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
     _ternary_operators = {'?'}
 
     def __init__(self, context):
+        self.track_leading_infix = False
         super(ScalaReader, self).__init__(context)
         self.parallel_states = [ScalaStates(context)]
 
@@ -92,6 +79,19 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
                     yield token
             else:
                 return
+
+
+class _LeadingInfixName(str):
+    """The identifier part of a Scala 3 operator such as ``and_+``."""
+
+    is_leading_infix = True
+
+
+def _symbolic_suffix(token):
+    if not token or token.startswith(('//', '/*')):
+        return False
+    first = token[0]
+    return first in '!#%&*+-/:<=>?@\\^|~' or category(first) in ('Sm', 'So')
 
 
 class ScalaStates(GoLikeStates):  # pylint: disable=R0903
