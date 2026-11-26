@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Ai-chan",
-  "email": "ai-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-078#multiline-token-long-names",
-  "host": "codex",
-  "model": "gpt-6.2-sol"
-}
