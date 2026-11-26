@@ -101,9 +101,8 @@ class CSharpStates(CLikeStates):
 
     def read_scope_token(self, token, nesting):
         in_expression = self._expression_depth is not None
-        if in_expression and isinstance(token, _ConditionalCode):
-            for directive in token.directives:
-                self._read_expression_directive(directive)
+        if in_expression:
+            self._read_expression_directives(token)
         self(token)
         if not in_expression and not (
                 token in ('class', 'struct') and self._state == self._state_constraints):
@@ -117,7 +116,7 @@ class CSharpStates(CLikeStates):
 
     def _state_dec_to_imp(self, token):
         if token == '=>':
-            self._start_expression_body(method=True)
+            self._start_expression_body(token, method=True)
         elif token == 'where':
             self._state = self._state_constraints
         else:
@@ -127,7 +126,7 @@ class CSharpStates(CLikeStates):
         if token in ('{', '=>', ';'):
             self.next(self._state_dec_to_imp, token)
 
-    def _start_expression_body(self, method):
+    def _start_expression_body(self, token, method):
         self._expression_depth = 0
         self._expression_method = method
         if method:
@@ -135,6 +134,7 @@ class CSharpStates(CLikeStates):
             # An expression body starts at the arrow, before any braces.
             self.context.add_bare_nesting()
         self._state = self._state_expression_body
+        self._read_expression_directives(token)
 
     def _state_expression_body(self, token):
         if token == '{':
@@ -149,6 +149,11 @@ class CSharpStates(CLikeStates):
             self._expression_depth = None
             self._expression_branches.clear()
             self._state = self._state_global
+
+    def _read_expression_directives(self, token):
+        if isinstance(token, _ConditionalCode):
+            for directive in token.directives:
+                self._read_expression_directive(directive)
 
     def _read_expression_directive(self, directive):
         depth = self._expression_depth
@@ -175,7 +180,7 @@ class CSharpStates(CLikeStates):
 
     def _state_global(self, token):
         if token == '=>':
-            self._start_expression_body(method=False)
+            self._start_expression_body(token, method=False)
             return
         if token == '{':
             self._open_braces += 1
