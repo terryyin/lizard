@@ -288,6 +288,20 @@ fun fallback(): Int { return 1 }
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
+    def test_typed_lambda_default_keeps_its_own_commas(self):
+        functions = get_kotlin_function_list('''\
+fun applyOffset(
+    calculate: (Int, Int) -> Int = { left: Int, right: Int -> left + right },
+    offset: Int = 0,
+): Int {
+    return calculate(1, 2) + offset
+}
+''')
+        self.assertEqual(
+            [("applyOffset", ["calculate", "offset"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_one_function_with_return_value(self):
         result = get_kotlin_function_list('''
             fun sayGoodbye(): String {return "bye"}
