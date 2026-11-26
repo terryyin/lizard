@@ -113,33 +113,41 @@ planted: 2026-11-26
 
 #### Review dispositions
 
-Seven parallel reviews ran against the frozen master. Their accepted PRs were integrated on the local branch `seed077-all`, together with these corrections:
+Seven parallel reviews ran against the frozen master. The accepted PRs were integrated, with corrections, on top of the current master (`seed077-all3`). Full pytest (3989 passed, 7 skipped) and `make` pass there.
 
-- #635: a special function starts only outside a function body and before `(`.
+Corrections made during integration:
+
+- #635: a special function starts only outside a function body and before `(`. A Go-like `SPECIAL_FUNCTIONS` hook replaced the per-token wrapper after it measured +9% CPU.
 - #718: raw C strings `cr#"…"#`.
 - #672: removed a workaround that #718 made unnecessary.
 - #679: dropped the runtime-patched handling of Unicode line separators in comments.
 - #659 and #700: one fix in the shared name builder.
 - #724: adapted to that name-builder fix.
 - #689: zero default through the analyzer's default mechanism.
-- #691: kept the CSV layout while doubling quotes.
+- #691: keeps the CSV layout while doubling quotes. The PL/SQL formal CSV test expectation was updated to match.
 - #655: removed an unused hook.
 - #690: no `None` threshold comparison.
-- #647, #638, #639 and #645: complete their SEED-075 corrections.
+- #639: national-character prefix.
+- #647: comment scan resumes after each literal. Master's SEED-075 implementation was kept when it conflicted.
 - #621, #617, #625 and #627: moved test files into `test/test_languages/`.
-
-Full pytest (4028 passed, 7 skipped) and `make` pass on the combined candidate.
 
 | Disposition | PRs |
 | --- | --- |
-| Accepted, staged for merge | #616 #617 #618 #619 #620 #621 #623 #624 #625 #626 #627 #628 #629 #630 #631 #632 #633 #635 #637 #638 #639 #640 #641 #645 #647 #648 #649 #651 #652 #653 #654 #655 #658 #659 #660 #662 #663 #664 #666 #670 #672 #673 #674 #676 #678 #679 #680 #681 #682 #683 #685 #687 #688 #689 #690 #691 #692 #700 #713 #718 #720 #724 #730 #735 #738 |
+| Merged | #616 #617 #618 #620 #621 #623 #624 #625 #626 #627 #628 #629 #630 #631 #632 #633 #635 #637 #639 #640 #641 #647 #648 #649 #650 (via #680) #651 #652 #653 #654 #655 #658 #659 #660 #662 #663 #664 #666 #670 #672 #673 #674 #676 #678 #679 #680 #682 #683 #685 #687 #689 #690 #691 #692 #700 #713 #718 #720 #724 #730 #735 #738 |
+| Held for quiet-machine timing | #619, #681 and #688, which touch the shared C-like tokenizer and the C++ rvalue scan. The developer chose to hold them. |
+| Handed to the active SEED-075 owner | #638 → r-raw-literal-delimiters, now on master; #645 → plsql-nonstrict-case, planned by another session |
 | Already fixed on master | #613 (834313ae); #634 #636 #642 #646 (SEED-075 corrections) |
-| Duplicate | #614 of #678; #615 of #662; #622 of #653; #650 of #680; #717 of #623 |
-| Deferred | #643 → SEED-075#r-formal-parameter-boundaries; #644 → SEED-075#plsql-formal-parameter-boundaries; #656 → SEED-078#multiline-token-long-names; #684 → SEED-078#cognitive-ternary-in-control-headers |
+| Duplicate | #614 of #678; #615 of #662; #622 of #653; #717 of #623 |
+| Deferred | #643 → SEED-075#r-formal-parameter-boundaries; #644 → SEED-075#plsql-formal-parameter-boundaries, since completed on master; #656 → SEED-078#multiline-token-long-names; #684 → SEED-078#cognitive-ternary-in-control-headers |
 | Declined | #694: the filename only selects a reader and is never used as a path |
-| Developer-approved beyond direction | #690, merged with the `None` correction |
+| Developer-approved beyond direction | #690 |
 | Issue | #693 → SEED-078#nd-without-logical-operators. The developer approved the metric change, and the reply was posted. |
 
-#### Performance status
+#### Performance evidence
 
-On 2026-11-26 the paired timing could not resolve the 3% bound. Host load averaged 22–29 from unrelated work. Round 1 used 1.2 s batches, and round 2 used 4 s batches. Most intervals were ±10% wide. Solidity's API interval was +11.8% to +24.1%, Erlang's +1.4% to +18.0%. Deterministic cProfile call counts were within ±3% on every corpus except Solidity, at +5.7%. That increase comes with 168 measured functions instead of 45, because constructor, receive and fallback are now reported. Call counts do not see regex cost. The developer chose to hold every merge until the timing is repeated on a quiet machine.
+Unrelated work kept the host loaded throughout (load average 9–29). Three paired wall-clock rounds stayed mostly inconclusive at the 3% bound. The evidence is retained under the integration worktree's `.planning/evidence/`.
+
+- Deterministic cProfile call counts per language and extension are within ±3%.
+- Solidity's measured +9% per-token cost was corrected to about +3%, with an interval that includes zero.
+- The warm CLI path has +0.4% calls. A one-time ~90 ms regex compile comes from six new tokenizer variants.
+- The developer chose to merge everything except the C-family PRs before a quiet-machine timing.
