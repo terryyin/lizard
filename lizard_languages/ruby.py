@@ -4,7 +4,7 @@ Language parser for Ruby
 
 import re
 
-from .rubylike import RubylikeReader, RubylikeStateMachine
+from .rubylike import RubylikeReader, RubylikeStateMachine, _ends_value
 from .js_style_regex_expression import js_style_regex_expression
 from .ruby_documentation import may_have_documentation, pattern_for_fragment
 from .source_documentation import tokens_ignoring_documentation
@@ -35,6 +35,7 @@ _KEYWORDS = frozenset((
     'try', 'catch', 'finally', 'except', 'switch', 'with', 'return',
     'yield'))
 _NAME_BEFORE = frozenset(('.', 'def'))
+_BRANCH_BOUNDARIES = frozenset(('then', 'elsif', 'else', 'when', 'in', 'ensure'))
 
 
 def _paired(opening, closing):
@@ -79,7 +80,16 @@ class RubyStateMachine(RubylikeStateMachine):
     ns_structures = frozenset(('if', 'for', 'while', 'do'))
     modifier_structure = False
     structure_peak = 0
-    closed_structure_peak = 0
+    statement_structure_peak = 0
+
+    def _state_global(self, token):
+        if self.structure_depth is not None and (
+                token == ';' or (
+                    token in _BRANCH_BOUNDARIES and not getattr(token, 'is_member_name', False))
+                or (self.is_newline() and self.last_token is not None
+                    and _ends_value(self.last_token) and token not in ('.', '&', ')', ']', '}'))):
+            self.statement_structure_peak = 0
+        super()._state_global(token)
 
     def _read_block(self, opener, callback=None, token=None, function_body=False):
         if self.structure_depth is None:
@@ -94,7 +104,7 @@ class RubyStateMachine(RubylikeStateMachine):
 
         def finish_block():
             if not function_body:
-                self.closed_structure_peak = child.structure_peak
+                self.statement_structure_peak = max(self.statement_structure_peak, child.structure_peak)
                 self.structure_peak = max(self.structure_peak, child.structure_peak)
             if callback is not None:
                 callback()
@@ -112,9 +122,7 @@ class RubyStateMachine(RubylikeStateMachine):
             self._record_structure(self._modified_statement_depth() + 1)
 
     def _modified_statement_depth(self):
-        if self.last_token in ('end', '}') and not self.is_newline():
-            return max(self.structure_depth, self.closed_structure_peak)
-        return self.structure_depth
+        return max(self.structure_depth, self.statement_structure_peak)
 
     def _record_structure(self, depth):
         self.structure_peak = max(self.structure_peak, depth)

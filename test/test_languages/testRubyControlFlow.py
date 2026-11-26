@@ -107,6 +107,35 @@ end
 
         self.assertEqual(3, function.max_nested_structures)
 
+    def test_modifier_wraps_the_complete_call_expression(self):
+        source = '''
+def rendered_jobs(jobs, ready)
+  jobs.map do |job|
+    job.render if job.active?
+  end.compact if ready
+end
+
+def scheduled_jobs(jobs, ready)
+  if ready then jobs.each do |job|
+    job.run if job.active?
+  end else warn('No jobs') if jobs.empty?
+  end
+end
+
+def later_guard(jobs, ready)
+  jobs.map do |job|
+    job.render if job.active?
+  end.compact
+  log_jobs if ready
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['ns']))
+
+        functions = analyzer.analyze_source_code('jobs.rb', source).function_list
+
+        self.assertEqual([('rendered_jobs', 3), ('scheduled_jobs', 3), ('later_guard', 2)],
+                         [(function.name, function.max_nested_structures) for function in functions])
+
     def test_basic_if_with_then_on_one_line(self):
         result = get_ruby_function_list('''
             def f
