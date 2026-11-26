@@ -50,10 +50,11 @@ class ImpliedSemicolons:
     brackets or an object literal, or while a structure waits for its
     head or its body, `if (ready)` + line break + `run()`."""
 
-    __slots__ = ('before_token',)
+    __slots__ = ('before_token', 'while_closes_do_body')
 
     def __init__(self):
         self.before_token = False
+        self.while_closes_do_body = False
 
     # pylint: disable=R0912,R0914,R0915,R1702
     def read(self, tokens, context):
@@ -166,10 +167,12 @@ class ImpliedSemicolons:
                             head_starts = busy = True
                             # In `do while (a) run(); while (b)` the first
                             # "while" is the body.
-                            if (token == 'while' and open_loops
-                                    and not body_started):
-                                open_loops -= 1
-                                loop_ends = True
+                            if token == 'while':
+                                self.while_closes_do_body = bool(
+                                    open_loops and not body_started)
+                                if self.while_closes_do_body:
+                                    open_loops -= 1
+                                    loop_ends = True
                         elif token in UNHEADED:
                             body_starts = busy = True
                             if token == 'do':
