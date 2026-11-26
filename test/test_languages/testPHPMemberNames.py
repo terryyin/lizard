@@ -175,3 +175,20 @@ function isReady($job) {
     return Or\Rules::matches($job) and \is_readable($job->path);
 }
 """))
+
+    def test_word_from_ambiguous_template_does_not_count(self):
+        metrics = php_metrics("""<?php
+function render($view, $ready, $visible) {
+    $show = $ready and $visible;
+    return "Preview: {$view->capture(function () { ?>
+<script>
+    const sample = "Use '<?' to reopen PHP and then close the blocks with }}.";
+</script>
+<?php
+})}
+See the report if maintenance is active.";
+}
+function status() { return 'ready'; }
+""")
+        self.assertEqual([('render', 2, 1), ('status', 1, 0)],
+                         [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
