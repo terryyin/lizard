@@ -9,74 +9,28 @@ planted: 2026-11-24
 Source review [SEED-074](https://github.com/terryyin/lizard/blob/6f33c36786a1d85d49ca7b908964c512e6a64804/.planning/seeds/SEED-074-process-prs-past-24h.md#process-prs-past-24h) at
 frozen master `6ff51711d14d7aebca1d72690130fab6e1889fe8`.
 
-<a id="ruby-percent-literal-context"></a>
-
-### Preserve Ruby modulo alongside percent literals
-
-**Identity:** SEED-075#ruby-percent-literal-context
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/036-ruby-percent-literal-context/PLAN.md"}
-```
-
-**Goal:** Ruby users can count decisions after modulo or modulo assignment while literal punctuation still protects text.
-
-**Scope:** Correct the specific language reader behavior reproduced during review of [#646](https://github.com/terryyin/lizard/pull/646) at `50e9f92334eede41a4287b8ab12ae90cda23bb27`.
-
-**Finding:** On #646, `def f(a); a%=2; if a==0 then a else 0 end; end` reports CCN 1. Master reports 2 and Ruby accepts the source. The broad delimiter rule consumes the assignment and part of the condition as a percent literal.
-
-**Plan:** [Preserve Ruby modulo alongside percent literals](../slice-plans/036-ruby-percent-literal-context/PLAN.md)
-
-
-<a id="source-documentation-directives"></a>
-
-### Keep Perl and Ruby documentation from acting as Lizard directives
-
-**Identity:** SEED-075#source-documentation-directives
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/037-source-documentation-directives/PLAN.md"}
-```
-
-**Goal:** Perl and Ruby users keep correct function lists and source locations when embedded documentation contains text that resembles analyzer directives.
-
-**Scope:** Correct the specific language reader behavior reproduced during review of [#636](https://github.com/terryyin/lizard/pull/636) at `7e89c51a83bdc2254ac832872e01acf5d97c4430`, [#642](https://github.com/terryyin/lizard/pull/642) at `0bf972c66cce3e4b6cb44d8fa450ca2b5a303ddb`.
-
-**Finding:** With GENERATED CODE between a Perl =head1 and =cut or a Ruby =begin and =end, the proposed reader stops before the later executable function. The same sources retain that function on master. Both proposals route opaque documentation through the shared comment directive handler.
-
-**Plan:** [Keep Perl and Ruby documentation from acting as Lizard directives](../slice-plans/037-source-documentation-directives/PLAN.md)
-
-
-<a id="perl-word-operator-context"></a>
-
-### Count Perl word operators only in operator positions
-
-**Identity:** SEED-075#perl-word-operator-context
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/038-perl-word-operator-context/PLAN.md"}
-```
-
-**Goal:** Perl users get the extra CCN for short-circuit logic while calls named `and` or `or` keep their original CCN.
-
-**Scope:** Correct the specific language reader behavior reproduced during review of [#634](https://github.com/terryyin/lizard/pull/634) at `3ab95dca71d145de86dd79ba264644c096a926cf`.
-
-**Finding:** The valid subroutine `sub f { return $obj->and(); }` changes from CCN 1 to 2 on #634. Both real word operators and an actual method name reach the same condition set.
-
-**Plan:** [Count Perl word operators only in operator positions](../slice-plans/038-perl-word-operator-context/PLAN.md)
-
-
 <a id="kotlin-adjacent-nested-comments"></a>
 
 ### Resume Kotlin tokenization after each complete block comment
 
 **Identity:** SEED-075#kotlin-adjacent-nested-comments
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/039-kotlin-adjacent-nested-comments/PLAN.md"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/039-kotlin-adjacent-nested-comments/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"6442bac3c44d29c69c5f1ded186902878caa1ad18dfe20771669b45d174dc5b3","plan":"9b7bd0708e0934516ed5152bd8406503aceff9dc2b30d928afe20370e3c15dc3"}}
 ```
 
 **Goal:** Kotlin users get accurate function metrics when consecutive nested comments contain quotes or apparent executable code.
 
-**Scope:** Correct the specific language reader behavior reproduced during review of [#647](https://github.com/terryyin/lizard/pull/647) at `a30a5c63f1e7b2e2b2bdc8cf7dbf282beeceb2f1`.
+**Scope:** Correct the specific language reader behavior reproduced during review of [#647](https://github.com/terryyin/lizard/pull/647) at `a30a5c63f1e7b2e2b2bdc8cf7dbf282beeceb2f1`. Follow #647's direction: Kotlin block comments nest, and the text a whole comment covers adds no tokens. Resume scanning for strings, line comments and comments right after each complete block comment, so a quote or backtick inside one comment cannot hide the next comment's opener. Preserve #647's nested-comment and comment-marker-in-literal behavior and unrelated reader behavior. Out of scope: other SEED-075 reader corrections, non-Kotlin languages, Kotlin string templates, and unterminated block comments.
 
-**Finding:** Put `/* " */` before `/* outer /* inner */ if (hidden) {} */` followed by `val s = "x"` and one real if. #647 still reports CCN 3 instead of 2. A trivia match that starts inside an already consumed comment can skip the following nested comment.
+**Finding:** Put `/* " */` before `/* outer /* inner */ if (hidden) {} */` followed by `val s = "x"` and one real if. #647 still reports CCN 3 instead of 2. A trivia match that starts inside an already consumed comment can skip the following nested comment. Master reports CCN 3 for the same input because it lacks nested-comment support.
+
+**Key examples:**
+
+- Adjacent comments: `fun f() {` / `/* " */` / `/* outer /* inner */ if (hidden) {} */` / `val s = "x"` / `if (real) {}` / `}` / `fun g() {}` → f has CCN 2 and NLOC 4; g starts at line 7 with CCN 1; file NLOC 5. (#647 and master: f CCN 3.)
+- The same shape with `"""` or `'` inside the first comment and a following raw string or character literal → f CCN 2.
+- A backtick inside the first comment and a backtick identifier after the nested comment → f CCN 2 (already true on #647).
+- #647's nested cases, `/* outer /* inner */ if (fake) {} */` and deeper or multi-line nesting, before a real if → f CCN 2, and the following function keeps its start line.
+- `/*` inside an ordinary string, raw string, backtick identifier or line comment opens no comment (#647's literal cases).
 
 **Plan:** [Resume Kotlin tokenization after each complete block comment](../slice-plans/039-kotlin-adjacent-nested-comments/PLAN.md)
 

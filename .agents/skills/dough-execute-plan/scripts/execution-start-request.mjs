@@ -12,6 +12,7 @@ import {
   sessionPolicy,
   sessionPolicyChoices,
 } from "./session-policy.mjs";
+import { parseOwnedDraft } from "./execution-owned-admission.mjs";
 import { stopped } from "./workspace-publication-ownership.mjs";
 import { defaultCheckoutRequest } from "./workspace-publication-select.mjs";
 
@@ -116,6 +117,25 @@ export function startRequest(requestInput) {
         return stopped("invalid-request", {
           error: `admission requires ${field}`,
         });
+  if (request.ownedDraft !== undefined) {
+    const draft = parseOwnedDraft(request.ownedDraft);
+    if (!draft || request.admit !== true || request.carry === true)
+      return stopped("invalid-request", {
+        error:
+          "--owned-draft requires an admission with a draft basis and one-line goal",
+      });
+    request.ownedDraft = draft;
+  }
+  if (
+    request.retryAdmission !== undefined &&
+    (request.retryAdmission !== "true" ||
+      !request.ownedDraft ||
+      !request.retained ||
+      request.mode !== "trunk")
+  )
+    return stopped("invalid-request", {
+      error: "--retry-admission requires a retained owned draft in Trunk Mode",
+    });
   const reportError = agentReportError(request);
   if (reportError) return stopped("invalid-request", { error: reportError });
   // Permission to work is separate from permission to publish: only a start

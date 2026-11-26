@@ -4,7 +4,10 @@
 // completeRevision for one ordinary CI_OBSERVER receipt. Same owner input as
 // resume; never starts a Codex stream.
 import { resolve } from "node:path";
-import { resolveCheckoutRuntime } from "./ci-checkout-runtime.mjs";
+import {
+  checkoutRuntimeReceipt,
+  resolveCheckoutRuntime,
+} from "./ci-checkout-runtime.mjs";
 import {
   hostSessionOwner,
   missingIdentityReason,
@@ -160,11 +163,7 @@ export async function recoverExecutionCompletion(request) {
     ok: true,
     observation,
     receipt,
-    runtime: {
-      alias: runtime.alias,
-      skillRoot: runtime.skillRoot,
-      entrypoint: runtime.entrypoint,
-    },
+    runtime: checkoutRuntimeReceipt(runtime),
   };
 }
 

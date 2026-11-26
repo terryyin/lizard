@@ -205,9 +205,6 @@ export class GitHubRequests {
     if (reply.answer === undefined) {
       const answer = unasked(
         reply.failure ??
-          (reply.refused === "operation-unavailable"
-            ? { kind: "owner-unavailable", cause: "operation-unavailable" }
-            : undefined) ??
           (reply.refused ? { kind: "failed" } : ownerFailure(undefined)),
       );
       this.#failed({ cause: answer.failure.kind, startedAtMs, answer, owner });

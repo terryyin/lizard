@@ -56,9 +56,8 @@ const USAGE = `usage: ci-proof-summary.mjs fragment
          --revision <revision> --out <summary file>
 A Playwright record's tests are test cases. --unit file counts each outcomes line as one
 test file's aggregate outcome, however many cases the file holds; --unit case as one test
-case. Declare each entry once per unit it reports, with that unit's part count. Outcomes
-without --unit are legacy test results; a declaration without :<unit> takes whichever
-one unit its entry's fragments report.`;
+case. Outcomes reports require --unit. Every --expect declares one entry, its part count
+and its unit. Repeat --expect for an entry that reports both units.`;
 
 function jsonFiles(directory) {
   return readdirSync(directory, { recursive: true, withFileTypes: true })
@@ -113,6 +112,10 @@ function runFragment(argv) {
     );
     fragments = fragmentFromPlaywrightRecord(record, identity, byFile);
   } else if (values.outcomes !== undefined) {
+    if (values.unit === undefined) {
+      throw new Error("--unit is required with --outcomes");
+    }
+    const unit = declaredUnit("unit", values.unit);
     const text = readFileSync(values.outcomes, "utf8");
     const times =
       values.times === undefined
@@ -120,9 +123,7 @@ function runFragment(argv) {
         : readFileSync(values.times, "utf8");
     fragments = fragmentsFromOutcomes(text, identity, times, {
       ...byFile,
-      ...(values.unit === undefined
-        ? {}
-        : { unit: declaredUnit("unit", values.unit) }),
+      unit,
     });
   } else {
     throw new Error("--playwright-record or --outcomes is required");
@@ -145,9 +146,10 @@ function runSummarize(argv) {
     optional: ["run-id", "attempt", "attempt-id"],
     multiple: ["expect"],
   });
+  const expect = values.expect.map(parseExpect);
   const { summary, notes } = summarize({
     fragments: readFragments(values.fragments),
-    expect: values.expect.map(parseExpect),
+    expect,
     run: {
       repository: values.repository,
       ...attemptIdentity("summarize", values, {
@@ -170,8 +172,8 @@ function runSummarize(argv) {
     process.stdout.write(`${line}\n`);
 }
 
-// As dough-execute-plan's isDirectCliEntry, repeated so the copied collector
-// needs no installed skill: a symlinked spelling of argv still runs the CLI.
+// The standalone collector uses the same realpath check as isDirectCliEntry
+// so a platform path alias such as macOS `/tmp` still invokes the CLI.
 function isDirectEntry() {
   if (!process.argv[1]) return false;
   if (import.meta.url === pathToFileURL(process.argv[1]).href) return true;

@@ -3,204 +3,113 @@
 // backlog file. It applies a decision; it never decides value, priority,
 // prerequisites, completion, or who may execute the work.
 
-import { dirname } from "node:path";
 import { parseArgs } from "node:util";
-import { addQueueEntry } from "./product-backlog-add.mjs";
-import { adoptIdentities } from "./product-backlog-adopt.mjs";
 import {
-  closeBesideBacklog,
-  completeEntry,
-  rebuildDoneCatalog,
-} from "./product-backlog-complete.mjs";
-import { setDirection } from "./product-backlog-direction.mjs";
-import { printIdentityEvidence } from "./product-backlog-identity-evidence.mjs";
-import { placeEntry } from "./product-backlog-place.mjs";
-import { refreshEntry } from "./product-backlog-refresh.mjs";
-import { BacklogError } from "./product-backlog-refusal.mjs";
-import {
-  options,
-  readCompletionTime,
-  readIntentCoverage,
-  readPlacement,
-  readPlan,
-  resolvePath,
-} from "./product-backlog-request.mjs";
-import {
-  reportAdd,
-  reportAdopt,
-  reportCatalogDone,
-  reportComplete,
-  reportDirection,
-  reportPlace,
-  reportRefresh,
-  reportTake,
-} from "./product-backlog-report.mjs";
-import {
-  applyReportedChange,
-  applyToBacklog,
-  holdingBacklog,
-} from "./product-backlog-store.mjs";
-import {
-  readState,
-  recordState,
-} from "./product-backlog-story-state-command.mjs";
-import { preparationRefusal } from "./product-backlog-story-state-home.mjs";
-import {
-  readDependencies,
-  updateDependency,
-} from "./product-backlog-story-dependencies-command.mjs";
+  catalogDone,
+  complete,
+} from "./product-backlog-completion-command.mjs";
 import {
   readConsumers,
   visitConsumers,
 } from "./product-backlog-dependency-consumers.mjs";
 import { resolveDependency } from "./product-backlog-dependency-resolution.mjs";
-import { takeEntry } from "./product-backlog-take.mjs";
-import { usage } from "./product-backlog-usage.mjs";
+import { direction, refresh } from "./product-backlog-edit-command.mjs";
+import { printIdentityEvidence } from "./product-backlog-identity-evidence.mjs";
+import { add, place, take } from "./product-backlog-queue-command.mjs";
+import { BacklogError } from "./product-backlog-refusal.mjs";
+import { options, resolvePath } from "./product-backlog-request.mjs";
+import {
+  readDependencies,
+  updateDependency,
+} from "./product-backlog-story-dependencies-command.mjs";
+import {
+  readState,
+  recordState,
+} from "./product-backlog-story-state-command.mjs";
+import { preparationRefusal } from "./product-backlog-story-state-home.mjs";
 
-async function add(file, values) {
-  const request = {
-    identity: values.identity,
-    title: values.title,
-    href: values.link,
-    backlogDirectory: dirname(file),
-    ...readPlacement(values),
-  };
-  await applyToBacklog(file, (source) => addQueueEntry(source, request));
-  console.log(reportAdd(request.identity, values.file));
-}
-
-async function place(file, values) {
-  const request = {
-    identity: values.identity,
-    returning: values.return,
-    ...readPlacement(values),
-  };
-  const outcome = await applyReportedChange(file, (source) =>
-    placeEntry(source, request),
-  );
-  console.log(reportPlace(outcome, values.file));
-}
-
-async function take(file, values) {
-  const request = {
-    identity: values.identity,
-    plan: readPlan(values),
-    backlogDirectory: dirname(file),
-  };
-  const outcome = await applyReportedChange(file, (source) =>
-    takeEntry(source, request),
-  );
-  console.log(reportTake(outcome, values.file));
-}
-
-// Keep the backlog hold through record writes and the catalog rebuild.
-async function complete(file, values) {
-  const now = readCompletionTime();
-  const intentCoverage = readIntentCoverage(values);
-  const outcome = await applyReportedChange(
-    file,
-    (source) => completeEntry(source, { identity: values.identity }),
-    ({ entry }) =>
-      closeBesideBacklog(dirname(file), {
-        entry,
-        dropped: values.dropped,
-        now,
-        intentCoverage,
-      }),
-  );
-  console.log(reportComplete(outcome, values.file));
-}
-
-// Rebuilds the done catalog under the backlog's lock, changing nothing else.
-async function catalogDone(file, values) {
-  const catalog = await holdingBacklog(file, () =>
-    rebuildDoneCatalog(dirname(file)),
-  );
-  console.log(reportCatalogDone(catalog, values.file));
-}
-
-// Dropping a reference is not on offer, so a caller who asks for it is told
-// rather than having the option quietly ignored.
-async function refresh(file, values) {
-  if (values["no-plan"]) {
-    throw new BacklogError(
-      `refresh repoints a reference the entry already carries and never ` +
-        `drops one, so --no-plan asks for something this operation does ` +
-        `not do.`,
-    );
-  }
-  const request = {
-    identity: values.identity,
-    title: values.title,
-    href: values.link,
-    plan: values.plan,
-    backlogDirectory: dirname(file),
-  };
-  const outcome = await applyReportedChange(file, (source) =>
-    refreshEntry(source, request),
-  );
-  console.log(reportRefresh(outcome, values.file));
-}
-
-// Every option this verb takes belongs to it alone, so what a direction
-// request means — including which of them must be stated together — is read
-// where the direction itself is owned rather than split across this boundary.
-async function direction(file, values) {
-  const request = {
-    text: values.text,
-    clearing: values.clear,
-    expected: values.expect,
-    expectingNone: values["expect-none"],
-  };
-  const outcome = await applyReportedChange(file, (source) =>
-    setDirection(source, request),
-  );
-  console.log(reportDirection(outcome, values.file));
-}
-
-async function adopt(file, values) {
-  if (!values.all) {
-    throw new BacklogError(
-      `adopt needs --all, so that recording identities for every active ` +
-        `entry is always an explicit request.\n\n${usage}`,
-    );
-  }
-  const outcome = await applyReportedChange(file, (source) =>
-    adoptIdentities(source, dirname(file)),
-  );
-  console.log(reportAdopt(outcome, values.file));
-}
+const placement = "(--after <id> | --before <id> | --position first|last)";
+const dependencyRequest =
+  "--identity <id> --link <href> --dependency-file <path> --expect-dependencies <sha256>";
+const acceptedSupplier =
+  "--accepted-revision <sha> --remote <remote> --target <branch>";
 
 // Operations on canonical story homes; their refusals say nothing was
 // written rather than that the backlog was unchanged.
 const preparationOperations = {
-  "record-state": recordState,
-  "read-state": readState,
-  "discover-consumers": readConsumers,
-  "visit-consumers": visitConsumers,
-  "resolve-dependency": resolveDependency,
-  "read-dependencies": readDependencies,
-  "update-dependency": updateDependency,
+  "record-state": [
+    recordState,
+    "--identity <id> --link <href> --refinement not-refined|refined\n" +
+      "    --approach unselected|planned|planless [--plan <home-relative-path>]\n" +
+      "    [--assessment ready|not-ready --expect-document <sha256> [--expect-plan <sha256>] [--reason <text>...]]",
+  ],
+  "read-state": [readState, "--link <href>"],
+  "read-dependencies": [readDependencies, "--link <href>"],
+  "update-dependency": [updateDependency, dependencyRequest],
+  "discover-consumers": [readConsumers, "--supplier-identity <id>"],
+  "visit-consumers": [
+    visitConsumers,
+    `--supplier-identity <id>\n    ${acceptedSupplier}`,
+  ],
+  "resolve-dependency": [
+    resolveDependency,
+    `${dependencyRequest}\n    ${acceptedSupplier} [--correct-agreement]\n` +
+      "    [--plan <backlog-relative-path>] [--planless-complete --completion-file <repo-relative-path>]",
+  ],
 };
 
 const operations = {
-  add,
-  place,
-  take,
-  complete,
-  "catalog-done": catalogDone,
-  refresh,
-  direction,
-  adopt,
-  "identity-evidence": printIdentityEvidence,
+  add: [add, `--identity <id> --title <title> --link <href>\n    ${placement}`],
+  place: [place, `--identity <id> ${placement} [--return]`],
+  take: [take, "--identity <id> (--plan <backlog-relative-path> | --no-plan)"],
+  complete: [
+    complete,
+    "--identity <id> [--dropped | --intent-coverage <path> | --intent-coverage-unavailable <reason>]",
+  ],
+  "catalog-done": [catalogDone],
+  refresh: [
+    refresh,
+    "--identity <id> [--title <title>] [--link <href>] [--plan <backlog-relative-path>]",
+  ],
+  direction: [
+    direction,
+    "(--text <text> | --clear) (--expect <text> | --expect-none)",
+  ],
+  "identity-evidence": [
+    printIdentityEvidence,
+    "[--identity <id>] [--seeds <path>]",
+  ],
   ...preparationOperations,
 };
+
+const usage = [
+  "Usage: product-backlog.mjs [--file <path>] <operation> [options]",
+  "       product-backlog.mjs --help",
+  "",
+  ...Object.entries(operations).map(([name, [, form = ""]]) =>
+    `  ${name} ${form}`.trimEnd(),
+  ),
+  "",
+  "See dough-product-backlog/SKILL.md in the installed skills for procedures.",
+].join("\n");
+
+function unknownOperation(name) {
+  return new BacklogError(`Unknown operation: ${name || "(none)"}\n\n${usage}`);
+}
 
 async function main(argv) {
   let parsed;
   try {
     parsed = parseArgs({ args: argv, options, allowPositionals: true });
   } catch (error) {
+    const [command] = argv;
+    if (
+      command &&
+      !command.startsWith("-") &&
+      !Object.hasOwn(operations, command)
+    ) {
+      throw unknownOperation(command);
+    }
     throw new BacklogError(`${error.message}\n\n${usage}`);
   }
   const { values, positionals } = parsed;
@@ -211,11 +120,10 @@ async function main(argv) {
   }
   const named = positionals.length === 1 ? positionals[0] : "";
   if (!Object.hasOwn(operations, named)) {
-    throw new BacklogError(
-      `Unknown operation: ${positionals.join(" ") || "(none)"}\n\n${usage}`,
-    );
+    throw unknownOperation(positionals.join(" "));
   }
-  await operations[named](resolvePath(values.file), values);
+  const [run] = operations[named];
+  await run(resolvePath(values.file), values);
 }
 
 try {
