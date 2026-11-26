@@ -22,19 +22,100 @@ _LINE_BREAK = re.compile(rf'[{_LINE_TERMINATORS}]')
 _OPERAND_OPERATOR = re.compile(r'(?:[=!]=|(?<!<)<=|(?<!>)>=|(?<!=)>|\?\?|[<+*/%~!&|^-])\Z')
 
 
-# A direct generator body reserves yield. Read an ordinary header without
-# consuming expressions or quoted text in parameters.
-_GENERATOR_HEADER = (
-    r"""(?<![\w$.])function\s*\*\s*(?:[$\w]+\s*)?\([^(){}'"/`]*\)\s*\{"""
+# The scope scan only runs for ambiguous yield spellings.
+_SCOPE_TRIVIA = rf'(?:[\s\ufeff]|/\*(?:[^*]|\*(?!/))*\*/|//[^{_LINE_TERMINATORS}]*[{_LINE_TERMINATORS}])*'
+_FUNCTION_HEAD = (
+    rf'(?<![$\w.])function\b{_SCOPE_TRIVIA}'
+    rf'(?:(?P<star>\*){_SCOPE_TRIVIA})?(?:[$\w]+{_SCOPE_TRIVIA})?(?=\()'
 )
-_GENERATOR_EVENT = re.compile('(?P<generator>' + _GENERATOR_HEADER + r""")|[/`'"{}]""")
+_GENERATOR_EVENT = re.compile('(?P<function>' + _FUNCTION_HEAD + r""")|=>|[/`'"{}()[\],;]""")
+_BODY_OPEN = re.compile(_SCOPE_TRIVIA + r'\{')
+_ANNOTATED_BODY_OPEN = re.compile(rf'{_SCOPE_TRIVIA}:{_SCOPE_TRIVIA}[$\w]+{_SCOPE_TRIVIA}\{{')
+_CONTROL_HEADS = frozenset(('if', 'while', 'for', 'with', 'switch', 'catch'))
 _AMBIGUOUS_YIELD = re.compile(rf'(?:\byield\s*\*\s*|>\s*[{_LINE_TERMINATORS}]\s*)yield\b')
 
 
 _AFTER_PAREN = re.compile(r'\)\s*(?:(?:' + _COMMENT.pattern + r')\s*)*/(?![/*])', re.S)
 _PAREN_EVENTS = re.compile(r"""[/()`"']""")
-_PAREN_AND_GENERATOR_EVENTS = re.compile(_GENERATOR_EVENT.pattern + r'|[()]')
 _CONTROL_HEADERS = frozenset(('if', 'while', 'for', 'with'))
+
+
+class _FunctionScopes:
+    """Track yield's function scope while the slash scan skips opaque text."""
+
+    def __init__(self, source):
+        self.source = source
+        self.depth = 0
+        self.braces = []
+        self.parameters = []
+        self.arrows = []
+        self.next_parameters = {}
+        self.body_starts = {}
+
+    def in_generator(self):
+        return bool(self.braces and self.braces[-1] and not self.arrows)
+
+    def read(self, event, comments):
+        """Update scope. Return True for events consumed in full."""
+        token = event.group()
+        pos = event.start()
+        if event.lastgroup == 'function':
+            prefix, _ = _before_comments(self.source, _skip_ws_back(self.source, pos - 1), comments)
+            if prefix < 0 or self.source[prefix] not in '.#':
+                self.next_parameters[event.end()] = event.group('star') is not None
+            return True
+        if token == '=>':
+            if not self._expect_body(event.end(), False):
+                self.arrows.append(self.depth)
+            return True
+        if token in '([{':
+            if token == '(':
+                self.parameters.append(self._parameter_role(pos, comments))
+            elif token == '{':
+                self.braces.append(self.body_starts.pop(pos, self.in_generator()))
+            self.depth += 1
+        elif token in ')]}':
+            if token == ')' and self.parameters:
+                generator, method = self.parameters.pop()
+                if generator is not None:
+                    self._expect_body(event.end(), generator, method=method, annotated=True)
+            elif token == '}' and self.braces:
+                self.braces.pop()
+            self.depth -= 1
+            self._end_arrows(self.depth + 1)
+        elif token in ',;':
+            self._end_arrows(self.depth)
+        return False
+
+    def _parameter_role(self, pos, comments):
+        if pos in self.next_parameters:
+            return self.next_parameters.pop(pos), False
+        prev, _ = _before_comments(self.source, _skip_ws_back(self.source, pos - 1), comments)
+        if prev < 0:
+            return None, False
+        word, before_word = _word_before(self.source, prev)
+        prefix, _ = _before_comments(self.source, _skip_ws_back(self.source, before_word), comments)
+        if word in _CONTROL_HEADS:
+            if prefix < 0 or self.source[prefix] not in '.#':
+                self._end_arrows(self.depth)
+            return None, False
+        # A named method body can start after an object opener or separator.
+        if word and prefix >= 0 and self.source[prefix] in '{,':
+            return False, True
+        return None, False
+
+    def _expect_body(self, pos, generator, *, method=False, annotated=False):
+        opening = _BODY_OPEN.match(self.source, pos)
+        if opening is None and annotated:
+            opening = _ANNOTATED_BODY_OPEN.match(self.source, pos)
+        if opening is None or method and _LINE_BREAK.search(self.source, pos, opening.end()):
+            return False
+        self.body_starts[opening.end() - 1] = generator
+        return True
+
+    def _end_arrows(self, depth):
+        while self.arrows and self.arrows[-1] >= depth:
+            self.arrows.pop()
 
 
 def mark_keyword_slashes(source, *, jsx=False):
@@ -45,14 +126,10 @@ def mark_keyword_slashes(source, *, jsx=False):
     literal_ends = None if jsx else set()
     scan_generators = not jsx and _AMBIGUOUS_YIELD.search(source) is not None
     scan_parens = not jsx and _AFTER_PAREN.search(source) is not None
-    if scan_parens:
-        events = _PAREN_AND_GENERATOR_EVENTS if scan_generators else _PAREN_EVENTS
-    else:
-        events = _GENERATOR_EVENT if scan_generators else None
+    events = _GENERATOR_EVENT if scan_generators else _PAREN_EVENTS if scan_parens else None
+    scopes = _FunctionScopes(source) if scan_generators else None
     roles = []
     closing = None
-    braces = 0
-    generator_bodies = []
     n = len(source)
     i = 0
     find = source.find
@@ -62,14 +139,8 @@ def mark_keyword_slashes(source, *, jsx=False):
             if event is None:
                 break
             i = event.start()
-            if event.lastgroup == 'generator':
-                prev, _ = _before_comments(source, _skip_ws_back(source, i - 1), comments)
-                if prev < 0 or source[prev] not in '.#':
-                    braces += 1
-                    generator_bodies.append(braces)
-                    i = event.end()
-                else:
-                    i += len('function')
+            if scopes is not None and scopes.read(event, comments):
+                i = event.end()
                 continue
         else:
             j_slash = find('/', i)
@@ -81,7 +152,7 @@ def mark_keyword_slashes(source, *, jsx=False):
                 break
             i = min(candidates)
         ch = source[i]
-        if ch == '(':
+        if scan_parens and ch == '(':
             prev, _ = _before_comments(source, _skip_ws_back(source, i - 1), comments)
             word, before = _word_before(source, prev)
             control = word in _CONTROL_HEADERS
@@ -91,19 +162,12 @@ def mark_keyword_slashes(source, *, jsx=False):
             roles.append(control)
             i += 1
             continue
-        if ch == ')':
+        if scan_parens and ch == ')':
             if roles:
                 closing = i, roles.pop()
             i += 1
             continue
-        if ch == '{':
-            braces += 1
-            i += 1
-            continue
-        if ch == '}':
-            if generator_bodies and generator_bodies[-1] == braces:
-                generator_bodies.pop()
-            braces -= 1
+        if ch in '(){}[],;':
             i += 1
             continue
         if ch == '"' or ch == "'":
@@ -127,9 +191,9 @@ def mark_keyword_slashes(source, *, jsx=False):
         if i + 1 < n and source[i + 1] in '/*':
             i = _read_comment(source, i, comments)
             continue
-        direct_generator = bool(generator_bodies and generator_bodies[-1] == braces)
+        in_generator = scopes is not None and scopes.in_generator()
         i = _consider_slash(
-            source, i, marks, comments, literal_ends, closing, direct_generator=direct_generator)
+            source, i, marks, comments, literal_ends, closing, in_generator=in_generator)
     return _apply_marks(source, marks)
 
 
@@ -149,7 +213,7 @@ def _before_comments(source, i, comments):
     return i, line_comment
 
 
-def _consider_slash(source, i, marks, comments, literal_ends, closing=None, *, direct_generator=False):
+def _consider_slash(source, i, marks, comments, literal_ends, closing=None, *, in_generator=False):
     matched = _REGEX_LITERAL_RE.match(source, i)
     if matched is None:
         return i + 1
@@ -186,7 +250,7 @@ def _consider_slash(source, i, marks, comments, literal_ends, closing=None, *, d
         member = prefix >= 0 and (source[prefix] == '#'
                                   or source[prefix] == '.' and _is_property_before(source, prefix))
         if not member and (
-                word != 'yield' or direct_generator or
+                word != 'yield' or in_generator or
                 _yield_starts_expression(source, prefix, before_word, line_comment, comments, literal_ends)):
             marks.append(i)
             literal_ends.add(matched.end() - 1)

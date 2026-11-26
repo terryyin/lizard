@@ -376,6 +376,87 @@ function report(text) {
 '''
         self.assert_functions(source, [('report', 2, 5, 3)], extensions=('js', 'ts'))
 
+    def test_delegated_yield_in_a_nested_block_keeps_following_functions(self):
+        source = '''\
+function* matches(enabled) {
+  if (enabled) {
+    yield* yield /["]?colou?r/;
+  }
+}
+function next() {
+  return "color";
+}
+'''
+        self.assert_functions(source, [('matches', 1, 5, 2), ('next', 6, 8, 1)],
+                              extensions=('js',))
+
+    def test_nested_functions_inside_a_generator_keep_yield_division(self):
+        source = '''\
+function* matches(scale) {
+  function normalize(yield, count) {
+    return yield * yield / (count || 1) / 100;
+  }
+  const callback = () => yield * yield / (scale || 1) / 100
+  if (scale) {
+    yield* yield /["]?colou?r/;
+  }
+}
+function next() { return "color"; }
+'''
+        self.assert_functions(source, [('normalize', 2, 4, 2), ('callback', 5, 5, 2),
+                                       ('matches', 1, 9, 2), ('next', 10, 10, 1)],
+                              extensions=('js',))
+
+    def test_nested_methods_keep_yield_division(self):
+        source = '''\
+function* matches(scale) {
+  const details = { read(yield, count) { return yield * yield / (count || 1) / 100; } };
+  if (scale) {
+    yield* yield /["]?colou?r/;
+  }
+}
+function next() { return "color"; }
+'''
+        self.assert_functions(source, [('read', 2, 2, 2), ('matches', 1, 6, 2),
+                                       ('next', 7, 7, 1)], extensions=('js',))
+
+    def test_nested_typed_functions_keep_yield_division(self):
+        source = '''\
+function* matches(scale: number) {
+  function normalize(yield: number, count: number): number {
+    return yield * yield / (count || 1) / 100;
+  }
+  if (scale) {
+    yield* yield /["]?colou?r/;
+  }
+}
+function next() { return "color"; }
+'''
+        self.assert_functions(source, [('normalize', 2, 4, 2), ('matches', 1, 8, 2),
+                                       ('next', 9, 9, 1)], extensions=('ts',))
+
+    def test_generator_yield_after_instantiation_with_function_typed_parameter(self):
+        source = '''\
+function* patterns(parse: <T>(input: string) => T) {
+  const parseNumber = parse<number>
+  yield /colou?r/
+  return parseNumber
+}
+'''
+        self.assert_functions(source, [('patterns', 1, 5, 1)], extensions=('ts',))
+
+    def test_typed_generator_yield_in_a_nested_block(self):
+        source = '''\
+function* patterns(parse: <T>(input: string) => T, enabled: boolean) {
+  if (enabled) {
+    const parseNumber = parse<number>
+    yield /colou?r/
+    return parseNumber
+  }
+}
+'''
+        self.assert_functions(source, [('patterns', 1, 7, 2)], extensions=('ts',))
+
     def test_return_regex_exposes_following_condition(self):
         source = (
             'function a(s) { return /#/.test(s) || s === 1; }\n'
