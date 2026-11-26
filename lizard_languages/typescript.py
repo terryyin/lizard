@@ -271,16 +271,11 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         line_start = False
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
-                        signatures.pop().end_signature_before(token)
-                    if member_access and token in structure_keywords:
-                        token = _MemberName(token)
-                        member_access = False
-                    elif token in marked_punctuation:
-                        # `1..catch`: the number and each dot are tokens.
-                        member_access = token in member_access_tokens
                         if token == '?' and self.context.class_field_annotations:
                             signature = state.pending_async_parameter()
                             if signature is not None:
+                                signatures.pop()
+                                member_access = False
                                 tokens, lookahead = tee(tokens)
                                 follower = next((item for item in lookahead if not (
                                     item.isspace() or item.startswith(_COMMENT_STARTS))), None)
@@ -291,6 +286,14 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     signature._begin_grouped_async_expression()
                                 yield token
                                 break
+                        signatures.pop().end_signature_before(token)
+                    if member_access and token in structure_keywords:
+                        token = _MemberName(token)
+                        member_access = False
+                    elif token in marked_punctuation:
+                        # `1..catch`: the number and each dot are tokens.
+                        member_access = token in member_access_tokens
+                        if token == '?' and self.context.class_field_annotations:
                             if state.optional_member_context():
                                 token = _OPTIONAL_MEMBER_QUESTION
                         elif token == ':' and state.last_token == ')':
