@@ -128,6 +128,27 @@ function ignored() {}
                                  [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
                                   for f in functions])
 
+    def test_reference_return_names(self):
+        functions = get_php_function_list("""<?php
+function &findEntry(array &$entries, string $key) {
+    return $entries[$key];
+}
+
+class Registry {
+    private array $entries = [];
+
+    public function &getEntry(string $key) {
+        return $this->entries[$key];
+    }
+}
+
+$lookup = function & (array &$entries, string $key) {
+    return $entries[$key];
+};
+""")
+        self.assertEqual(['findEntry', 'Registry::getEntry', '$lookup'],
+                         [f.name for f in functions])
+
     def test_simple_function(self):
         functions = get_php_function_list("<?php function foo(){} ?>")
         self.assertEqual("foo", functions[0].name)
