@@ -64,6 +64,8 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                             '%', '**', '==', '===', '!=', '!==', '>', '>=', '<=',
                             'instanceof', 'in', '^'))
 
+    _class_abstract_prefix = False
+
     def __init__(self, context, return_type=False, class_member=False, runtime_assertion=False):
         super().__init__(context)
         self.runtime_assertion = runtime_assertion
@@ -89,6 +91,10 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
             return
         newline = self._line_break or self.context is not None and self.context.newline
         self._line_break = False
+        if token == 'abstract' and self._class_member and not self._brackets:
+            self._class_abstract_prefix = (
+                self._expect_type and not (self._qualified_type or self._assertion_subject)
+                and self.last_token not in ('typeof', 'keyof', 'readonly', 'unique', 'infer'))
         brackets = self._brackets
         if brackets:
             if self._parenthesis_first is None and len(brackets) == 1:
@@ -139,7 +145,8 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
             self.statemachine_return()
         elif token in self.BRACKETS:
             self._reference_parenthesis = (
-                token == '(' and not self._expect_type and not self._closed_type)
+                token == '(' and not self._expect_type and not self._closed_type
+                and not (self._class_member and self.last_token == 'new'))
             brackets.append(self.BRACKETS[token])
             self._parenthesis_first = None if token == '(' else token
             self._function_arrow = False
@@ -186,6 +193,8 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
 
     def _ends_line(self, token):
         if self._class_member:
+            if token == 'new' and self._class_abstract_prefix and self.last_token == 'abstract':
+                return False
             # A postfix '[' stays on the same line. A wrapped 'extends'
             # can constrain an 'infer' variable in an open conditional type.
             # 'as' can only continue a mapped type inside its brackets.

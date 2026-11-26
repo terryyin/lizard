@@ -85,6 +85,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 self._pop_function_from_stack()
 
     def _consume_type_annotation(self, return_type=False, runtime_assertion=False):
+        if self._in_abstract_context and self.last_token == ')':
+            self._in_abstract_context = False
+            super()._consume_type_annotation(return_type=True, class_member=True)
+            return
         # A signature stays tentative while its return type is read.
         return_type = return_type or (
             not runtime_assertion and self.started_function
