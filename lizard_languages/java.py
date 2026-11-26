@@ -2,6 +2,7 @@
 Language parser for Java
 '''
 
+from lizard_core.function_info import FunctionInfo, Namespace
 from lizard_languages.code_reader import CodeStateMachine
 from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
 
@@ -117,6 +118,9 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         self._state = self._state_global
 
     def _state_imp(self, token):
+        function = self.context.current_function
+        if "." in function.long_name:
+            self._qualify_nested_signature(function)
         # When entering a function implementation, set the flag
         self.in_method_body = True
 
@@ -125,6 +129,25 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
             self.in_method_body = False
             self.next(self._state_global)
         self.sub_state(JavaFunctionBodyStates(self.context, True), callback, token)
+
+    def _qualify_nested_signature(self, function):
+        # An enclosing method's name includes its class. That class may
+        # already have its own entry on the nesting stack.
+        names = []
+        namespace = ''
+        prefix_length = 0
+        for scope in self.context.nesting_stack:
+            name = scope.name_in_space
+            if not name:
+                continue
+            prefix_length += len(name)
+            if namespace and isinstance(scope, FunctionInfo) and name.startswith(namespace):
+                name = name[len(namespace):]
+            names.append(name)
+            namespace = name if isinstance(scope, Namespace) else ''
+        prefix = ''.join(names)
+        if len(prefix) < prefix_length:
+            function.long_name = prefix + function.long_name[prefix_length:]
 
     def try_new_function(self, name):
         # Don't create a function for record compact constructor

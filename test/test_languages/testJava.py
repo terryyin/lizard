@@ -406,6 +406,25 @@ class A {
 """)
         self.assertEqual(["B::f", "A::g", "R::r", "A::R"], [f.name for f in result])
 
+    def test_local_method_signatures_include_each_enclosing_class_once(self):
+        result = get_java_function_list("""class Report {
+    Runnable printLater() {
+        class Printer implements Runnable {
+            public void run() {
+                class Sink { void flush() {} }
+                new Sink().flush();
+            }
+        }
+        return new Printer();
+    }
+}
+""")
+        self.assertEqual(
+            [('Sink::flush', 'Report::printLater.Printer::run.Sink::flush()'),
+             ('Printer::run', 'Report::printLater.Printer::run()'),
+             ('Report::printLater', 'Report::printLater()')],
+            [(function.name, function.long_name) for function in result])
+
     def test_interface_methods_with_bodies(self):
         result = get_java_function_list("""
 interface I {
