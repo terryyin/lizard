@@ -1278,27 +1278,6 @@ class TestJavaScriptArrowBodyInParentheses(unittest.TestCase):
         self.assertEqual(0, outer)
 
 
-class TestJavaScriptReaderFailure(unittest.TestCase):
-    """The reader stops at code that nests too deep.  The functions that
-    ended before it keep their score."""
-
-    DEEP = "g(" * 1200 + ")" * 1200
-
-    def test_function_after_grouped_expression(self):
-        self.assertEqual([1], cogc("a.js", """
-            function outer() {
-              const x = (get());
-              function done() { if (v) use(v); }            // +1
-              return %s;
-            }""" % self.DEEP))
-
-    def test_function_in_parameter_default(self):
-        self.assertEqual([1], cogc("a.js", """
-            function outer(
-              first = function done() { if (v) use(v); },   // +1
-              next = %s) {}""" % self.DEEP))
-
-
 class TestCognitiveOptionalRecursion(unittest.TestCase):
     def test_destructured_parameter_key_and_binding(self):
         source = """
@@ -1414,6 +1393,27 @@ class TestCognitiveOptionalRecursion(unittest.TestCase):
             }
         """
         self.assertEqual([0, 3, 1], cogc('retry.js', source))
+
+
+class TestJavaScriptReaderFailure(unittest.TestCase):
+    """The reader stops at code that nests too deep.  The functions that
+    ended before it keep their score."""
+
+    DEEP = "g(" * 1200 + ")" * 1200
+
+    def test_function_after_grouped_expression(self):
+        self.assertEqual([1], cogc("a.js", """
+            function outer() {
+              const x = (get());
+              function done() { if (v) use(v); }            // +1
+              return %s;
+            }""" % self.DEEP))
+
+    def test_function_in_parameter_default(self):
+        self.assertEqual([1], cogc("a.js", """
+            function outer(
+              first = function done() { if (v) use(v); },   // +1
+              next = %s) {}""" % self.DEEP))
 
 
 class TestFlatLanguages(unittest.TestCase):

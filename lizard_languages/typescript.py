@@ -4,10 +4,11 @@ Language parser for TypeScript
 
 from itertools import tee
 
+from .javascript_bindings import OptionalCallBinding
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
-from .javascript_bindings import JavaScriptBindings, OptionalCallBinding
+from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
