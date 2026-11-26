@@ -354,7 +354,7 @@ class _Counter(object):  # pylint: disable=R0902
                     # A Lua table assignment can declare the receiver as
                     # its first parameter. A local function can name any
                     # parameter ``self`` without owning that table.
-                    calls = (getattr(function, '_lua_member_assignment', False)
+                    calls = (function in self.context.lua_member_assignments
                              and function.parameters[:1] == ['self'])
             if calls:
                 state.pending_call = True

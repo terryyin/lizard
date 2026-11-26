@@ -25,6 +25,7 @@ class LuaReader(RubylikeReader):
             return token
 
     def __init__(self, context):
+        context.lua_member_assignments = set()
         super(LuaReader, self).__init__(context)
         self.parallel_states = [LuaStateMachine(context)]
 
@@ -72,5 +73,5 @@ class LuaStateMachine(RubylikeStateMachine):
             return
         self.context.push_new_function(self.probable_function_name)
         if self._member_assignment:
-            self.context.current_function._lua_member_assignment = True
+            self.context.lua_member_assignments.add(self.context.current_function)
         self.next(self._def_parameters)
