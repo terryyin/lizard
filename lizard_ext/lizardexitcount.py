@@ -9,15 +9,8 @@ class LizardExtension:  # pylint: disable=R0903
     FUNCTION_INFO = {"exit_count": {"caption": "exits", "default": 1}}
 
     def __call__(self, tokens, reader):
-        first_return = False
         for token in tokens:
-            if not hasattr(reader.context.current_function, "exit_count"):
-                reader.context.current_function.exit_count = 1
-                first_return = True
-            if token == "return" and \
-                    not getattr(token, 'is_member_name', False):
-                if first_return:
-                    first_return = False
-                else:
-                    reader.context.current_function.exit_count += 1
+            if token == 'return' and not getattr(token, 'is_member_name', False):
+                function = reader.context.current_function
+                function.exit_count = getattr(function, 'exit_count', 0) + 1
             yield token
