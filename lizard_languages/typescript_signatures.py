@@ -4,7 +4,7 @@ from .javascript_bindings import JavaScriptBindings
 from .javascript_expression import ends_expression, starts_statement
 from .javascript_templates import (
     NESTED_SUBSTITUTION_END, NESTED_SUBSTITUTION_START, NESTED_TEMPLATE_END,
-    NESTED_TEMPLATE_START, interpolation_code)
+    NESTED_TEMPLATE_START, TemplateBoundary, interpolation_code)
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 
 
@@ -62,12 +62,10 @@ def _has_branch_separators(tokens, required):
 
 def template_call_type_arguments(tokens, tokenize, optional=False):
     """Confirm template literal types in calls and instantiation expressions."""
-    annotation = TypeScriptTypeAnnotationStates(None)
+    annotation = _TemplateType()
     saw_template = in_interpolation = False
     count = 0
     for token in tokens:
-        if token is NESTED_TEMPLATE_END or token is NESTED_SUBSTITUTION_END:
-            return 0
         if token.isspace():
             continue
         count += 1
@@ -79,21 +77,15 @@ def template_call_type_arguments(tokens, tokenize, optional=False):
             in_interpolation = False
         elif token == '${':
             saw_template = in_interpolation = True
-        elif token is NESTED_TEMPLATE_START:
-            size = _template_type_size(tokens)
-            if size is None:
-                return 0
-            count += size
-            saw_template = True
         elif token.startswith('`') and '${' in token:
             if not _template_is_type(token, tokenize, in_expression=False):
                 return 0
             saw_template = True
         if annotation(token):
-            if not _complete_template_type(annotation):
+            if not annotation.complete():
                 return 0
             if token == ',':
-                annotation = TypeScriptTypeAnnotationStates(None)
+                annotation = _TemplateType()
             elif token == '>' and saw_template:
                 return count if _follows_type_arguments(tokens, optional) else 0
             else:
@@ -101,31 +93,125 @@ def template_call_type_arguments(tokens, tokenize, optional=False):
     return 0
 
 
-def _template_type_size(tokens):
-    """Validate each substitution and count the flattened template tokens."""
-    depth = 1
-    substitutions = []
-    count = 0
-    for token in tokens:
+def erase_template_types(tokens):
+    """Keep runtime groups and remove complete type arguments in an interpolation."""
+    tokens = list(tokens)
+    groups = _template_groups(tokens)
+    index = 0
+    previous = ''
+    while index < len(tokens):
+        token = tokens[index]
+        group = groups.get(index)
+        if (token == '<' and group and group.valid and group.has_template
+                and (previous == '?.' or ends_expression(previous))
+                and _follows_type_arguments(
+                    _tokens_from(tokens, group.end + 1), previous == '?.')):
+            index = group.end + 1
+            continue
+        index += 1
         if token is NESTED_TEMPLATE_END:
-            depth -= 1
-            if not depth:
-                return count if not substitutions else None
             continue
-        if token.isspace():
+        if not _type_whitespace(token):
+            previous = token
+        yield str(token) if isinstance(token, TemplateBoundary) else token
+
+
+def _tokens_from(tokens, start):
+    for index in range(start, len(tokens)):
+        yield tokens[index]
+
+
+class _TypeGroup:
+    __slots__ = ('end', 'valid', 'has_template')
+
+    def __init__(self, end, valid=False, has_template=False):
+        self.end = end
+        self.valid = valid
+        self.has_template = has_template
+
+
+def _template_groups(tokens):
+    """Summarize closed groups from the inside out, visiting each child once."""
+    groups = {}
+    openers = []
+    for index, token in enumerate(tokens):
+        closer = _group_closer(token)
+        if closer is not None:
+            openers.append((index, closer))
             continue
-        count += 1
-        if token is NESTED_SUBSTITUTION_START:
-            substitutions.append(_TemplateSubstitution())
-        elif token is NESTED_SUBSTITUTION_END:
-            if not substitutions.pop().complete():
-                return None
-        elif not _type_whitespace(token):
-            if substitutions[-1](token):
-                return None
-            if token is NESTED_TEMPLATE_START:
-                depth += 1
-    return None
+        if (token in (')', ']', '}') or token is NESTED_TEMPLATE_END):
+            # An unmatched comparison cannot extend across a closing group.
+            while openers and openers[-1][1] == '>':
+                openers.pop()
+        if openers and _closes_group(token, openers[-1][1]):
+            start, _ = openers.pop()
+            groups[start] = _summarize_group(tokens, start, index, groups)
+    return groups
+
+
+def _group_closer(token):
+    if token is NESTED_TEMPLATE_START:
+        return NESTED_TEMPLATE_END
+    if token is NESTED_SUBSTITUTION_START:
+        return NESTED_SUBSTITUTION_END
+    return TypeScriptTypeAnnotationStates.BRACKETS.get(token)
+
+
+def _closes_group(token, closer):
+    if isinstance(token, TemplateBoundary) or isinstance(closer, TemplateBoundary):
+        return token is closer
+    return token == closer
+
+
+def _summarize_group(tokens, start, end, groups):
+    opening = tokens[start]
+    is_template = opening is NESTED_TEMPLATE_START
+    brackets = not isinstance(opening, TemplateBoundary) and opening != '<'
+    annotation = _TemplateType()
+    if brackets:
+        annotation(opening)
+    has_template = is_template
+    index = start + 1
+    while index < end:
+        child = groups.get(index)
+        if child:
+            if not child.valid:
+                return _TypeGroup(end)
+            has_template |= child.has_template
+            if not is_template and any(annotation(part) for part in _group_tokens(tokens, index, child.end)):
+                return _TypeGroup(end)
+            index = child.end + 1
+            continue
+        token = tokens[index]
+        index += 1
+        if _type_whitespace(token):
+            continue
+        if is_template:
+            return _TypeGroup(end)
+        if annotation(token):
+            if opening != '<' or token != ',' or not annotation.complete():
+                return _TypeGroup(end)
+            annotation = _TemplateType()
+    valid = is_template or (not (brackets and annotation(tokens[end])) and annotation.complete())
+    return _TypeGroup(end, valid, has_template)
+
+
+def _group_tokens(tokens, start, end):
+    opening = tokens[start]
+    if opening is NESTED_TEMPLATE_START:
+        yield "''"
+        return
+    yield opening
+    if opening == '(':
+        # The type reader distinguishes a grouped type from parameter names.
+        for index in range(start + 1, end):
+            token = tokens[index]
+            if not _type_whitespace(token):
+                if token == '(':
+                    yield '('
+                    yield ')'
+                break
+    yield tokens[end]
 
 
 def _follows_type_arguments(tokens, optional):
@@ -147,39 +233,52 @@ def _follows_type_arguments(tokens, optional):
 
 
 def _template_is_type(source, tokenize, in_expression):
-    def tokens():
-        for part in interpolation_code(source, in_expression, delimiters=True, track_nested=True):
-            if isinstance(part, str):
-                yield part
-            else:
-                start, end = part
-                yield from tokenize(source[start:end])
-        yield NESTED_TEMPLATE_END
+    tokens = [NESTED_TEMPLATE_START]
+    for part in interpolation_code(source, in_expression, delimiters=True, track_nested=True):
+        if isinstance(part, str):
+            tokens.append(part)
+        else:
+            start, end = part
+            tokens.extend(tokenize(source[start:end]))
+    tokens.append(NESTED_TEMPLATE_END)
+    group = _template_groups(tokens).get(0)
+    return group is not None and group.valid
 
-    return _template_type_size(tokens()) is not None
 
+class _TemplateType(TypeScriptTypeAnnotationStates):
+    """Type lookahead must keep runtime decisions in the token stream."""
 
-class _TemplateSubstitution(TypeScriptTypeAnnotationStates):
-    """A type substitution needs a type role for each question mark."""
+    _CLASS_MEMBER_FOLLOWERS = (':', '?', '(', '<')
 
     def __init__(self):
         super().__init__(None)
         self._conditional_depths = set()
+        self._class_parameter_depths = set()
         self._expected = ()
 
     def complete(self):
-        return not self._expected and _complete_template_type(self)
+        return not (self._expected or self._brackets or self._expect_type
+                    or self._conditional_type or self._conditional_questions
+                    or self._qualified_type)
 
     def _state_global(self, token):
-        if token in ('&&', '||', '??') or (
-                self._expected and token not in self._expected):
+        depth = len(self._brackets)
+        expected = self._expected
+        self._expected = ()
+        if expected is self._CLASS_MEMBER_FOLLOWERS and token.startswith('<'):
+            if token == '<':
+                self._class_parameter_depths.add(depth)
+            elif token.endswith('>'):
+                self._expected = ('(',)
+            else:
+                self.statemachine_return()
+                return
+        elif token in ('&&', '||', '??') or (expected and token not in expected):
+            self._expected = expected
             self.statemachine_return()
             return
-        self._expected = ()
-        depth = len(self._brackets)
         if token == 'class' and self.last_token not in ('.', '?.'):
-            # A class expression can have 'extends' at the same depth as '?'.
-            self._expected = (':', '?', '(', '<')
+            self._expected = self._CLASS_MEMBER_FOLLOWERS
         elif token == 'extends' and (self.last_token == '>'
                                      or ends_expression(self.last_token or '')):
             self._conditional_depths.add(depth)
@@ -188,14 +287,13 @@ class _TemplateSubstitution(TypeScriptTypeAnnotationStates):
                 self._expected = (':', ',', ')', ']')
             self._conditional_depths.discard(depth)
         super()._state_global(token)
-        if len(self._brackets) < depth:
+        after = len(self._brackets)
+        if after < depth:
             self._conditional_depths.discard(depth)
-
-
-def _complete_template_type(annotation):
-    return not (annotation._brackets or annotation._expect_type
-                or annotation._conditional_type or annotation._conditional_questions
-                or annotation._qualified_type)
+            if after in self._class_parameter_depths:
+                self._class_parameter_depths.discard(after)
+                # Generic methods must have parameters. Classes can have heritage.
+                self._expected = ('(',)
 
 
 def _type_whitespace(token):

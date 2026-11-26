@@ -15,8 +15,7 @@ from .javascript_templates import LINE_COMMENT, interpolation_code, template_tok
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
 from .javascript_expression import active_js_state, ends_expression, starts_statement
-from .typescript_signatures import template_call_type_arguments
-from . import javascript_templates
+from .typescript_signatures import erase_template_types, template_call_type_arguments
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -184,47 +183,11 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         and token.count('`') > (0 if in_expression else 2))
         tokens = self._interpolation_tokens(token, in_expression, emit, track_nested)
         if track_nested:
-            tokens = self._erase_template_types(tokens, len(token) * 2)
+            tokens = erase_template_types(tokens)
         result = measure(tokens) if measure is not None else None
         for _ in tokens:
             pass
         return result
-
-    def _erase_template_types(self, tokens, budget):
-        """Remove confirmed template type arguments from a measurement stream."""
-        def bounded(lookahead):
-            # Rejected candidates can share a long suffix. Limit their total reads.
-            nonlocal budget
-            for part in lookahead:
-                budget -= 1
-                yield part
-                if not budget:
-                    return
-
-        previous = ''
-        while True:
-            for token in tokens:
-                if token is javascript_templates.NESTED_TEMPLATE_END:
-                    continue
-                if budget and token == '<' and (previous == '?.' or ends_expression(previous)):
-                    tokens, lookahead = tee(tokens)
-                    count = template_call_type_arguments(
-                        bounded(lookahead), self.script_tokens, optional=previous == '?.')
-                    del lookahead
-                    if count and budget:
-                        for part in tokens:
-                            count -= not part.isspace()
-                            if not count:
-                                break
-                    else:
-                        yield token
-                        previous = token
-                    break
-                if not token.isspace():
-                    previous = token
-                yield str(token) if isinstance(token, javascript_templates.TemplateBoundary) else token
-            else:
-                return
 
     def _interpolation_tokens(self, token, in_expression, emit, track_nested=False):
         # Re-tokenize opaque interpolation spans; keyword members stay non-
