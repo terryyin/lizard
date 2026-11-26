@@ -285,6 +285,23 @@ namespace Network {
             [('catch', 9, 3)],
             [(f.name, f.start_line, f.cyclomatic_complexity) for f in functions])
 
+    def test_semicolonless_namespace_keyword_method_overloads(self):
+        code = '''namespace Network {
+  export class Retry {
+    catch(error: Error): Error
+    catch(error: string): Error
+    catch(error: string | Error): Error {
+      if (typeof error === "string") return new Error(error);
+      return error;
+    }
+  }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('catch', 5, 8, 1, 2)], [
+            (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+            for f in functions])
+
     def test_iife(self):
         """Immediately invoked function expressions should be detected"""
         code = '''
