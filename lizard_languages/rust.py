@@ -173,55 +173,185 @@ def _quote_tokens(source, addition, token_class):
     raw_starts = {match.start() for match in _UNRECOGNIZED_RAW_START.finditer(source)}
     lookahead = _QuoteLookahead(matches, raw_starts) if raw_starts else None
 
+    observe_macro = _quote_macro_tracker()
+    frames = []
     depth = 0
-    span_expression = False
-    after_name = after_bang = None
-    previous = before_previous = None
-    scope_depth = 0
-    local_macros = []
+    pending_quote = None
 
     def read_token(match):
-        nonlocal depth, span_expression, after_name, after_bang
-        nonlocal previous, before_previous, scope_depth
+        nonlocal depth, pending_quote
         token = match.group()
         text = token if token_class is None else token_class(match)
         if token.isspace() or token.startswith(('//', '/*')):
             return text
-        if depth:
-            depth += _TOKEN_TREE_DEPTH.get(token, 0)
-            if span_expression and depth == 1 and token == '=>':
-                span_expression = False
-            return text if span_expression and depth else _quote_data(text)
 
-        macro = after_bang
-        after_bang = after_name if token == '!' else None
-        if macro == 'macro_rules' and token in _QUOTE_MACROS:
-            local_macros.append((token, scope_depth))
-        is_macro = token == 'macro_rules' or (
-            token in _QUOTE_MACROS and _quote_name_visible(token, previous, before_previous, local_macros))
-        after_name = token if is_macro else None
-        before_previous, previous = previous, token
+        change = _TOKEN_TREE_DEPTH.get(token, 0)
+        if frames:
+            opening_depth, evaluate_span = frames[-1]
+            if depth == opening_depth + 1:
+                if change == -1:
+                    frames.pop()
+                    depth -= 1
+                    return _quote_data(text)
+                if evaluate_span and token == '=>':
+                    frames[-1] = (opening_depth, False)
+                    return _quote_data(text)
+            if not evaluate_span:
+                depth += change
+                return _quote_data(text)
 
-        if macro in _QUOTE_MACROS and _TOKEN_TREE_DEPTH.get(token) == 1 and (
+        if pending_quote and change == 1 and (
                 lookahead is None or not lookahead.has_ambiguous_raw(match)):
-            depth = 1
-            span_expression = macro == 'quote_spanned'
+            frames.append((depth, pending_quote == 'quote_spanned'))
+            depth += 1
+            pending_quote = None
             return _quote_data(text)
-        if token == '{':
-            scope_depth += 1
-        elif token == '}':
-            while local_macros and local_macros[-1][1] == scope_depth:
-                local_macros.pop()
-            scope_depth -= 1
+        if frames:
+            depth += change
+        pending_quote = observe_macro(token)
         return text
 
     return tokens_from_matches(matches if lookahead is None else lookahead, read_token)
 
 
-def _quote_name_visible(token, previous, before_previous, local_macros):
-    if previous == '::':
-        return before_previous == 'quote'
-    return all(name != token for name, _ in local_macros)
+def _quote_macro_tracker():
+    bindings = _QuoteBindings()
+    previous = before_previous = None
+    qualifier = ()
+    use_tokens = None
+    macro_use = False
+
+    def observe(token):
+        nonlocal previous, before_previous, qualifier, use_tokens, macro_use
+        if use_tokens is not None:
+            if token == ';':
+                bindings.import_names(use_tokens)
+                use_tokens = None
+            else:
+                use_tokens.append(token)
+            return None
+
+        macro = None
+        if token == '!' and before_previous != '$':
+            macro = bindings.resolve(qualifier + (previous,))
+        elif token == 'use' and previous != '+':
+            use_tokens = []
+        elif previous == '!' and before_previous == 'macro_rules':
+            bindings.define_macro(token)
+        elif token == 'macro_use' and previous == '[' and before_previous == '#':
+            macro_use = True
+        elif token == '{':
+            bindings.open_scope(previous if before_previous == 'mod' else None, macro_use)
+            macro_use = False
+        elif token == '}':
+            bindings.close_scope()
+        elif token == ';':
+            if macro_use and previous == 'quote' and before_previous == 'crate':
+                bindings.import_quote_crate()
+            macro_use = False
+
+        if token == '::':
+            qualifier = qualifier + (previous,) if previous and previous.isidentifier() else ()
+        elif previous != '::':
+            qualifier = ()
+        before_previous, previous = previous, token
+        return macro
+
+    return observe
+
+
+class _QuoteBindings:
+    """Resolve quote imports visible in this file."""
+
+    def __init__(self):
+        self._imports = [{}]
+        self._local_macros = [set()]
+        self._modules = []
+        self._module_paths = set()
+        self._exports = {}
+
+    def resolve(self, path):
+        if len(path) == 1:
+            return self._resolve_bare(path[0])
+
+        current = self._module_path()
+        roots = {'crate': (), 'self': current, 'super': current[:-1]}
+        if path[0] in roots:
+            return self._exports.get(roots[path[0]] + path[1:])
+        if (len(path) == 2 and path[0] == 'quote' and path[1] in _QUOTE_MACROS
+                and (current + ('quote',)) not in self._module_paths
+                and ('quote',) not in self._module_paths):
+            return path[1]
+        return self._exports.get(current + path, self._exports.get(path))
+
+    def _resolve_bare(self, name):
+        if any(name in scope for scope in self._local_macros):
+            return None
+        start = self._modules[-1][0] if self._modules else 0
+        for scope in reversed(self._imports[start:]):
+            if name in scope:
+                return scope[name]
+        return None
+
+    def import_names(self, tokens):
+        for path, name in _import_paths(tokens):
+            macro = self.resolve(path)
+            self._imports[-1][name] = macro
+            if self._modules and self._modules[-1][0] == len(self._imports) - 1:
+                self._exports[self._module_path() + (name,)] = macro
+
+    def define_macro(self, name):
+        self._local_macros[-1].add(name)
+
+    def import_quote_crate(self):
+        self._imports[-1].update((name, name) for name in _QUOTE_MACROS)
+
+    def open_scope(self, module, macro_use):
+        self._imports.append({})
+        self._local_macros.append(set())
+        if module:
+            self._modules.append((len(self._imports) - 1, module, macro_use))
+            self._module_paths.add(self._module_path())
+
+    def close_scope(self):
+        if len(self._imports) == 1:
+            return
+        macros = self._local_macros.pop()
+        self._imports.pop()
+        if self._modules and self._modules[-1][0] == len(self._imports):
+            _, _, macro_use = self._modules.pop()
+            if macro_use:
+                self._local_macros[-1].update(macros)
+
+    def _module_path(self):
+        return tuple(module for _, module, _ in self._modules)
+
+
+def _import_paths(tokens):
+    if '{' not in tokens:
+        prefix, entries = [], [tokens]
+    else:
+        group_start = tokens.index('{')
+        if tokens[-1] != '}' or '{' in tokens[group_start + 1:]:
+            return
+        prefix, entries = tokens[:group_start], [[]]
+        for token in tokens[group_start + 1:-1]:
+            if token == ',':
+                entries.append([])
+            else:
+                entries[-1].append(token)
+
+    for entry in entries:
+        if not entry:
+            continue
+        if 'as' in entry:
+            rename = entry.index('as')
+            name, entry = entry[-1], entry[:rename]
+        else:
+            name = entry[-1]
+        path = tuple(token for token in prefix + entry if token != '::')
+        if path and all(part.isidentifier() for part in path) and name != '_':
+            yield path, name
 
 
 def _quote_data(token):
@@ -250,7 +380,7 @@ class _QuoteLookahead:
         depth = 1
         for match in self._peek():
             start = match.start()
-            if start in self._raw_starts:
+            if start in self._raw_starts and not _raw_c_boundaries_agree(match.string, start):
                 return True
             depth += _TOKEN_TREE_DEPTH.get(match.group(), 0)
             if not depth or start >= self._last_raw_start:
@@ -262,6 +392,21 @@ class _QuoteLookahead:
         for match in self._matches:
             self._pending.append(match)
             yield match
+
+
+_RAW_C_PREFIX = re.compile(r'cr(#*)"')
+_COOKED_STRING = re.compile(r'"(?:\\.|[^"\\])*"', re.S)
+
+
+def _raw_c_boundaries_agree(source, start):
+    literal = _RAW_C_PREFIX.match(source, start)
+    if not literal:
+        return False
+    closing = source.find('"', literal.end())
+    if closing == -1 or not source.startswith(literal.group(1), closing + 1):
+        return False
+    cooked = _COOKED_STRING.match(source, literal.end() - 1)
+    return cooked is not None and cooked.end() == closing + 1
 
 
 _CHAR_LITERAL = re.compile(
