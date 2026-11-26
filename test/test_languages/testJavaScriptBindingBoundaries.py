@@ -98,6 +98,52 @@ def test_typescript_generic_arrow_property_keeps_parameters(separator):
     assert summaries(functions(source, 'ts')) == [('f', 1, line, line, ['x'])]
 
 
+@pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
+def test_quoted_arrow_property_keeps_parameters(suffix):
+    source = '''const listeners = {
+  'onUpdate:modelValue': (value: boolean) => {
+    console.log(value)
+  },
+  "onUpdate:enabled": <T,>(enabled: T) => enabled,
+  'show:dialog': (Math.random() > 0.5),
+};
+'''
+    assert summaries(functions(source, suffix)) == [
+        ('(anonymous)', 1, 2, 4, ['value']),
+        ('(anonymous)', 1, 5, 5, ['enabled']),
+    ]
+
+
+@pytest.mark.parametrize('suffix', ('ts', 'tsx'))
+def test_quoted_arrow_with_parenthesized_return_type_keeps_its_body(suffix):
+    source = '''const hooks = {
+  'format:label': (text: string): (string | null) => {
+    if (!text) return null;
+    return text.trim();
+  },
+};
+'''
+    assert [(f.start_line, f.end_line, f.cyclomatic_complexity, f.parameter_count)
+            for f in functions(source, suffix)] == [(2, 5, 2, 1)]
+
+
+@pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
+def test_quoted_property_group_keeps_arrow_in_an_assignment(suffix):
+    source = '''let cached: (text: string) => string | null;
+const hooks = {
+  'format:label': (cached = (text: string): (string | null) => {
+    if (!text) return null;
+    return text.trim();
+  }),
+  ready() { return true; },
+};
+'''
+    assert summaries(functions(source, suffix)) == [
+        ('cached', 2, 3, 6, ['text']),
+        ('ready', 1, 7, 7, []),
+    ]
+
+
 @pytest.mark.parametrize('suffix', SUFFIXES)
 def test_template_substitutions_keep_members_and_enclosing_callback(suffix):
     source = ("it('t', () => {\n"
