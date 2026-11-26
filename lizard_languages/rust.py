@@ -203,6 +203,9 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
 
 
 _QUOTE_MACROS = {'quote', 'quote_spanned'}
+_MIXED_QUOTE = object()
+_USE_START = re.compile(r'\buse\b(?=\s*(?:::|[^\W\d]|/))')
+_QUOTE_INTERPOLATION = re.compile(r'\s*(?:\(|[^\W\d])')
 _TOKEN_TREE_DEPTH = {'(': 1, '[': 1, '{': 1, ')': -1, ']': -1, '}': -1}
 # These prefixes can remain split into tokens. Their text can contain braces.
 _UNRECOGNIZED_RAW_START = re.compile(r'(?:\bcr|#b?r)#*"')
@@ -212,15 +215,17 @@ def _quote_tokens(source, addition, token_class):
     """Keep the token count of quote input without parsing it as Rust code."""
     matches = compiled_token_pattern(addition).finditer(source)
     raw_starts = {match.start() for match in _UNRECOGNIZED_RAW_START.finditer(source)}
-    lookahead = _QuoteLookahead(matches, raw_starts) if raw_starts else None
+    use_starts = {match.start() for match in _USE_START.finditer(source)}
+    lookahead = _QuoteLookahead(matches, raw_starts, use_starts) if raw_starts or use_starts else None
 
-    observe_macro = _quote_macro_tracker()
+    bindings = _QuoteBindings()
+    observe_macro = _quote_macro_tracker(bindings)
     frames = []
     depth = 0
-    pending_quote = None
+    pending_path = None
 
     def read_token(match):
-        nonlocal depth, pending_quote
+        nonlocal depth, pending_path
         token = match.group()
         text = token if token_class is None else token_class(match)
         if token.isspace() or token.startswith(('//', '/*')):
@@ -228,35 +233,41 @@ def _quote_tokens(source, addition, token_class):
 
         change = _TOKEN_TREE_DEPTH.get(token, 0)
         if frames:
-            opening_depth, evaluate_span = frames[-1]
-            if depth == opening_depth + 1:
-                if change == -1:
-                    frames.pop()
-                    depth -= 1
+            opening_depth, mode = frames[-1]
+            if depth == opening_depth + 1 and change == -1:
+                frames.pop()
+                depth -= 1
+                if mode is not _MIXED_QUOTE:
                     return _quote_data(text)
-                if evaluate_span and token == '=>':
-                    frames[-1] = (opening_depth, False)
-                    return _quote_data(text)
-            if not evaluate_span:
+                change = 0
+            elif mode == 'quote_spanned' and depth == opening_depth + 1 and token == '=>':
+                frames[-1] = (opening_depth, 'quote')
+                return _quote_data(text)
+            elif mode == 'quote':
                 depth += change
                 return _quote_data(text)
+            elif mode is _MIXED_QUOTE and token == '#' and _QUOTE_INTERPOLATION.match(match.string, match.end()):
+                # Keep every executable token and stop the hash from swallowing delimiters.
+                text = _quote_data(text)
 
-        if pending_quote and change == 1 and (
-                lookahead is None or not lookahead.has_ambiguous_raw(match)):
-            frames.append((depth, pending_quote == 'quote_spanned'))
-            depth += 1
-            pending_quote = None
-            return _quote_data(text)
+        if pending_path and change == 1:
+            bindings.index_imports(lookahead, match)
+            mode = bindings.resolve(pending_path)
+            if mode and (lookahead is None or not lookahead.has_ambiguous_raw(match)):
+                frames.append((depth, mode))
+                if mode is not _MIXED_QUOTE:
+                    depth += 1
+                    pending_path = None
+                    return _quote_data(text)
         if frames:
             depth += change
-        pending_quote = observe_macro(token)
+        pending_path = observe_macro(token)
         return text
 
     return tokens_from_matches(matches if lookahead is None else lookahead, read_token)
 
 
-def _quote_macro_tracker():
-    bindings = _QuoteBindings()
+def _quote_macro_tracker(bindings):
     previous = before_previous = None
     qualifier = ()
     use_tokens = None
@@ -274,7 +285,7 @@ def _quote_macro_tracker():
 
         macro = None
         if token == '!' and before_previous != '$':
-            macro = bindings.resolve(qualifier + (previous,))
+            macro = qualifier + (previous,)
         elif token == 'use' and previous != '+':
             use_tokens = []
         elif previous == '!' and before_previous == 'macro_rules':
@@ -305,15 +316,18 @@ class _QuoteBindings:
     def __init__(self):
         self._imports = [{}]
         self._local_macros = [set()]
+        self._indexed_imports = [False]
         self._modules = []
         self._module_paths = set()
         self._exports = {}
 
-    def resolve(self, path):
+    def resolve(self, path, scope=None):
+        if scope is None:
+            scope = len(self._imports) - 1
         if len(path) == 1:
-            return self._resolve_bare(path[0])
+            return self._resolve_bare(path[0], scope)
 
-        current = self._module_path()
+        current = self._module_path(scope)
         roots = {'crate': (), 'self': current, 'super': current[:-1]}
         if path[0] in roots:
             return self._exports.get(roots[path[0]] + path[1:])
@@ -323,47 +337,69 @@ class _QuoteBindings:
             return path[1]
         return self._exports.get(current + path, self._exports.get(path))
 
-    def _resolve_bare(self, name):
-        if any(name in scope for scope in self._local_macros):
+    def _resolve_bare(self, name, scope):
+        if any(name in macros for macros in self._local_macros[:scope + 1]):
             return None
-        start = self._modules[-1][0] if self._modules else 0
-        for scope in reversed(self._imports[start:]):
-            if name in scope:
-                return scope[name]
+        start = next((depth for depth, _, _ in reversed(self._modules) if depth <= scope), 0)
+        for imports in reversed(self._imports[start:scope + 1]):
+            if name in imports:
+                return imports[name]
         return None
 
-    def import_names(self, tokens):
+    def index_imports(self, lookahead, opener):
+        if lookahead is None or not lookahead.has_later_import(opener):
+            return
+        if all(self._indexed_imports):
+            return
+        first = self._indexed_imports.index(False)
+        for scope, tokens in lookahead.imports_after(first, len(self._imports) - 1):
+            if not self._indexed_imports[scope]:
+                self.import_names(tokens, scope)
+        self._indexed_imports[:] = [True] * len(self._imports)
+
+    def import_names(self, tokens, scope=None):
+        if scope is None:
+            scope = len(self._imports) - 1
         for path, name in _import_paths(tokens):
-            macro = self.resolve(path)
-            self._imports[-1][name] = macro
-            if self._modules and self._modules[-1][0] == len(self._imports) - 1:
-                self._exports[self._module_path() + (name,)] = macro
+            self._bind_import(scope, name, self.resolve(path, scope))
+
+    def _bind_import(self, scope, name, macro):
+        imports = self._imports[scope]
+        if name in imports and imports[name] != macro:
+            # Source analysis has no Cargo feature selection.
+            macro = _MIXED_QUOTE
+        imports[name] = macro
+        if any(depth == scope for depth, _, _ in self._modules):
+            self._exports[self._module_path(scope) + (name,)] = macro
 
     def define_macro(self, name):
         self._local_macros[-1].add(name)
 
     def import_quote_crate(self):
-        self._imports[-1].update((name, name) for name in _QUOTE_MACROS)
+        for name in _QUOTE_MACROS:
+            self._bind_import(len(self._imports) - 1, name, name)
 
     def open_scope(self, module, macro_use):
         self._imports.append({})
         self._local_macros.append(set())
+        self._indexed_imports.append(False)
         if module:
             self._modules.append((len(self._imports) - 1, module, macro_use))
-            self._module_paths.add(self._module_path())
+            self._module_paths.add(self._module_path(len(self._imports) - 1))
 
     def close_scope(self):
         if len(self._imports) == 1:
             return
         macros = self._local_macros.pop()
         self._imports.pop()
+        self._indexed_imports.pop()
         if self._modules and self._modules[-1][0] == len(self._imports):
             _, _, macro_use = self._modules.pop()
             if macro_use:
                 self._local_macros[-1].update(macros)
 
-    def _module_path(self):
-        return tuple(module for _, module, _ in self._modules)
+    def _module_path(self, scope):
+        return tuple(module for depth, module, _ in self._modules if depth <= scope)
 
 
 def _import_paths(tokens):
@@ -399,13 +435,15 @@ def _quote_data(token):
 
 
 class _QuoteLookahead:
-    """Look for an ambiguous literal inside this invocation using the same matches."""
+    """Inspect later imports and raw literals without lexing the source again."""
 
-    def __init__(self, matches, raw_starts):
+    def __init__(self, matches, raw_starts, use_starts):
         self._matches = matches
         self._pending = deque()
         self._raw_starts = raw_starts
-        self._last_raw_start = max(raw_starts)
+        self._last_raw_start = max(raw_starts, default=-1)
+        self._use_starts = use_starts
+        self._last_use_start = max(use_starts, default=-1)
 
     def __iter__(self):
         return self
@@ -426,11 +464,47 @@ class _QuoteLookahead:
                 break
         return False
 
+    def has_later_import(self, opener):
+        return opener.end() <= self._last_use_start
+
+    def imports_after(self, first, scope):
+        # Imports apply to their whole scope. Skip groups opened after the call.
+        depth = 1  # The call opener has already been read.
+        matches = self._peek()
+        for match in matches:
+            start = match.start()
+            if start > self._last_use_start:
+                break
+            if start in self._raw_starts and not _raw_c_boundaries_agree(match.string, start):
+                break
+            token = match.group()
+            if depth:
+                depth += _TOKEN_TREE_DEPTH.get(token, 0)
+            elif start in self._use_starts:
+                yield scope, _read_import(matches)
+            elif token == '}':
+                scope -= 1
+                if scope < first:
+                    break
+            elif _TOKEN_TREE_DEPTH.get(token) == 1:
+                depth += 1
+
     def _peek(self):
         yield from self._pending
         for match in self._matches:
             self._pending.append(match)
             yield match
+
+
+def _read_import(matches):
+    tokens = []
+    for match in matches:
+        token = match.group()
+        if token == ';':
+            break
+        if not token.isspace() and not token.startswith(('//', '/*')):
+            tokens.append(token)
+    return tokens
 
 
 _RAW_C_PREFIX = re.compile(r'cr(#*)"')
