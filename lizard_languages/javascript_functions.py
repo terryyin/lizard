@@ -238,6 +238,9 @@ class JavaScriptFunctionsMixin:
             return
         event = self._read_parameter_binding(token)
         if event.ended:
+            if (self.started_function and not self._expression_body
+                    and hasattr(self.context, 'cognitive_formals_end')):
+                self.context.cognitive_formals_end = self.context.current_function
             self._state = self._expecting_func_opening_bracket
             self.context.ended_signatures.append(self)
         elif (not event.in_expression or event.root_separator) and token != '(':

@@ -18,6 +18,8 @@ _TAIL_TOKENS = frozenset(('`', ':', ',', '!'))
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        JavaScriptObjectsMixin, TypeScriptDeclarationsMixin,
                        CodeStateMachine):
+    _property_formals = None
+
     def __init__(self, context):
         super().__init__(context)
         self.last_tokens = ''
@@ -48,9 +50,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_condition = False  # Inside `if (...)` / `for (...)`
 
     def __call__(self, token, reader=None):
-        if self._binding_candidate:
+        bindings = self._binding_candidate or self._property_formals
+        if bindings:
             # Only named-formal readers need events for initializer dispatch.
-            self._binding_candidate.read_token(token, report=False)
+            bindings.read_token(token, report=False)
         return CodeStateMachine.__call__(self, token, reader)
 
     def next(self, state, token=None):

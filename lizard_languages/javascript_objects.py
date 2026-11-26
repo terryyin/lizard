@@ -1,5 +1,7 @@
 """JavaScript object and class members, including computed method names."""
 
+from .javascript_bindings import BindingSummary, JavaScriptBindings
+from .javascript_bindings import QuotedFormals
 from .javascript_expression import active_js_state, ends_expression
 from .javascript_statements import opens_object
 
@@ -97,6 +99,10 @@ class JavaScriptObjectsMixin:
             name = self.last_tokens
             if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
                 self.function_name = name
+            elif (name == self.last_token and name.startswith(('"', "'"))
+                  and name[-1] == name[0]):
+                # This colon introduces the value after a quoted key.
+                self._prev_token = token
             self._in_prop_value = True
             return True
         elif (token == '<' or token.startswith('<') and token.endswith('>')) and (
@@ -119,7 +125,11 @@ class JavaScriptObjectsMixin:
             if self._in_prop_value and self.last_tokens != '=' and (
                     not self.function_name
                     or self.last_tokens != self.function_name):
-                self._read_parenthesis_group()
+                if (self._prev_token in (':', 'async')
+                        and self.last_tokens.startswith(('"', "'"))):
+                    self._read_quoted_property_group()
+                else:
+                    self._read_parenthesis_group()
                 self._prev_token = token
                 return True
             # Only "field = (" and "key: (" can open a group; a "(" after
@@ -198,6 +208,39 @@ class JavaScriptObjectsMixin:
             return False
         # The token of a regular expression starts with a space.
         return opens_object(previous.lstrip())
+
+    def _read_quoted_property_group(self):
+        """Collect possible parameters while the group reads expressions."""
+        group = self.__class__(self.context)
+        group._call_group = True
+        parameters = []
+        formals = group._property_formals = JavaScriptBindings(')', parameters=parameters)
+        owner = self.context.current_function
+        complexity = owner.cyclomatic_complexity
+        quoted = None
+        if hasattr(self.context, 'quoted_formals'):
+            quoted = self.context.quoted_formals = QuotedFormals()
+
+        def after_group(token):
+            if token in ('=>', ':'):
+                self._pending_bindings = BindingSummary(
+                    formals.defaults - group._confirmed_binding_defaults,
+                    owner.cyclomatic_complexity - complexity, 0, parameters,
+                    quoted_formals=quoted)
+            elif quoted is not None:
+                quoted.resolved = True
+            if token == ':':
+                self.next(self._state_global)
+                self._consume_type_annotation()
+                return
+            self.next(self._state_global, token)
+
+        def close_group():
+            if quoted is not None:
+                quoted.closed = True
+            self.next(after_group)
+
+        self.sub_state(group, close_group)
 
     def _collect_computed_name(self):
         # Collect tokens between [ and its ]

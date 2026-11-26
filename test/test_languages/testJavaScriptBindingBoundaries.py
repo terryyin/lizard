@@ -98,6 +98,137 @@ def test_typescript_generic_arrow_property_keeps_parameters(separator):
     assert summaries(functions(source, 'ts')) == [('f', 1, line, line, ['x'])]
 
 
+@pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
+def test_quoted_arrow_property_keeps_parameters(suffix):
+    source = '''const listeners = {
+  'onUpdate:modelValue': (value: boolean) => {
+    console.log(value)
+  },
+  "onUpdate:enabled": <T,>(enabled: T) => enabled,
+  'show:dialog': (Math.random() > 0.5),
+};
+'''
+    assert summaries(functions(source, suffix)) == [
+        ('(anonymous)', 1, 2, 4, ['value']),
+        ('(anonymous)', 1, 5, 5, ['enabled']),
+    ]
+
+
+@pytest.mark.parametrize('suffix', ('ts', 'tsx'))
+@pytest.mark.parametrize('return_type', ('string', '(string | null)'))
+def test_quoted_arrow_return_type_keeps_body_and_formals(suffix, return_type):
+    source = '''const hooks = {
+  'format:label': (text: string, fallback: string): RETURN => {
+    if (!text) return fallback;
+    return text.trim();
+  },
+};
+'''.replace('RETURN', return_type)
+    assert summaries(functions(source, suffix)) == [
+        ('(anonymous)', 2, 2, 5, ['text', 'fallback']),
+    ]
+
+
+@pytest.mark.parametrize('suffix', ('ts', 'tsx'))
+def test_quoted_arrows_keep_grouped_types_and_function_return_types(suffix):
+    source = '''type Entry = { id: string; count: number };
+const callbacks = {
+  'entry:list': (entry: Entry): (string[]) => {
+    if (entry.id) return [entry.id];
+    return [];
+  },
+  'entry:value': (entry: Entry): (Entry['id']) => entry.id,
+  'entry:key': (entry: Entry): (keyof Entry) => 'count',
+  'entry:render': (entry: Entry): (id: string | null) => string => {
+    return (id) => id || entry.id;
+  },
+  getId(entry: Entry) { return entry.id; },
+};
+'''
+    assert summaries(functions(source, suffix)) == [
+        ('(anonymous)', 2, 3, 6, ['entry']),
+        ('(anonymous)', 1, 7, 7, ['entry']),
+        ('(anonymous)', 1, 8, 8, ['entry']),
+        ('(anonymous)', 2, 10, 10, ['id']),
+        ('(anonymous)', 1, 9, 11, ['entry']),
+        ('getId', 1, 12, 12, ['entry']),
+    ]
+
+
+@pytest.mark.parametrize('literal', ("'hit'", '200', '-1', 'true'))
+def test_quoted_arrow_keeps_grouped_literal_return_type(literal):
+    source = (
+        "const responses = {\n"
+        f"  'cache:hit': (cached: boolean): ({literal}) => {{\n"
+        f"    if (cached) return {literal};\n"
+        "    throw new Error('Cache miss');\n"
+        "  },\n"
+        "};\n"
+    )
+
+    assert summaries(functions(source, 'ts')) == [
+        ('(anonymous)', 2, 2, 5, ['cached']),
+    ]
+
+
+def test_quoted_arrow_keeps_a_grouped_generic_callable_return():
+    source = """export const handlers = {
+  'callback:generic': (enabled: boolean): (<T>(value: T) => T) => {
+    return <T>(value: T) => {
+      if (!enabled) throw new Error('disabled');
+      return value;
+    };
+  },
+};
+"""
+
+    assert summaries(functions(source, 'ts')) == [
+        ('(anonymous)', 2, 3, 6, ['value']),
+        ('(anonymous)', 1, 2, 7, ['enabled']),
+    ]
+
+
+@pytest.mark.parametrize('suffix', ('js', 'ts'))
+def test_quoted_arrow_default_ccn_belongs_to_the_arrow(suffix):
+    source = '''function configure(ready) {
+  return {
+    'cache:set': (ttl = ready ? 10 : 20) => ttl,
+    set: (ttl = ready ? 10 : 20) => ttl,
+    'cache:reset': ({ttl = ready ? 10 : 20} = {}) => ttl,
+    reset: ({ttl = ready ? 10 : 20} = {}) => ttl,
+  };
+}
+function response(text) {
+  return {'length': (text || '').length};
+}
+'''
+    result = functions(source, suffix, 'ND')
+
+    assert [(f.name, f.parameters, f.cyclomatic_complexity) for f in result] == [
+        ('(anonymous)', ['ttl'], 3), ('set', ['ttl'], 3),
+        ('(anonymous)', ['ttl'], 4), ('reset', ['ttl'], 4),
+        ('configure', ['ready'], 1), ('response', ['text'], 2),
+    ]
+    assert result[-1].max_nesting_depth == 1
+
+
+@pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
+def test_quoted_property_group_keeps_arrow_in_an_assignment(suffix):
+    source = '''let cached: (text: string) => string | null;
+const hooks = {
+  'format:label': (cached = (text: string): (string | null) => {
+    if (!text) return null;
+    return text.trim();
+  }),
+  ready() { return true; },
+};
+'''
+    assert summaries(functions(source, suffix)) == [
+        ('cached', 2, 3, 6, ['text']),
+        ('ready', 1, 7, 7, []),
+    ]
+
+
 @pytest.mark.parametrize('suffix', SUFFIXES)
 def test_template_substitutions_keep_members_and_enclosing_callback(suffix):
     source = ("it('t', () => {\n"
