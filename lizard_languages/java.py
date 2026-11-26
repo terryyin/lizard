@@ -135,18 +135,17 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         # already have its own entry on the nesting stack.
         names = []
         namespace = ''
-        prefix_length = 0
+        prefix_length = len(self.context.with_namespace(''))
         for scope in self.context.nesting_stack:
             name = scope.name_in_space
             if not name:
                 continue
-            prefix_length += len(name)
             if namespace and isinstance(scope, FunctionInfo) and name.startswith(namespace):
                 name = name[len(namespace):]
             names.append(name)
             namespace = name if isinstance(scope, Namespace) else ''
         prefix = ''.join(names)
-        if len(prefix) < prefix_length:
+        if prefix != function.long_name[:prefix_length]:
             function.long_name = prefix + function.long_name[prefix_length:]
 
     def try_new_function(self, name):
