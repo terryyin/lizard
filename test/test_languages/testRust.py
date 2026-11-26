@@ -307,19 +307,21 @@ class TestRust(unittest.TestCase):
             [(f.name, f.start_line, f.end_line) for f in result])
 
     def test_attribute_in_const_argument_keeps_the_body(self):
-        result = get_rust_function_list('''pub struct Tag<const N: usize>;
+        for attribute in ('#[allow(unused)]', '#[cfg_attr(target_pointer_width = "64", allow(unused))]'):
+            with self.subTest(attribute=attribute):
+                result = get_rust_function_list('''pub struct Tag<const N: usize>;
 
-        fn header(present: bool) -> Option<Tag<{
-            #[allow(unused)]
-            { 1 }
-        }>> {
-            if present { Some(Tag) } else { None }
-        }
-        ''')
-        self.assertEqual(
-            [('header', 3, 8, 2)],
-            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
-             for f in result])
+                fn header(present: bool) -> Option<Tag<{
+                    %s
+                    { 1 }
+                }>> {
+                    if present { Some(Tag) } else { None }
+                }
+                ''' % attribute)
+                self.assertEqual(
+                    [('header', 3, 8, 2)],
+                    [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                     for f in result])
 
     def test_nested_functions(self):
         result = get_rust_function_list('''
