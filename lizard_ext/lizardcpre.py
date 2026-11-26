@@ -16,9 +16,10 @@ class LizardExtension(object):  # pylint: disable=R0903
             if_stack = []
             for token in tokens:
                 if token.startswith("#"):
-                    if_stack.append(token)
-                    else_count += token.count("#else")
-                    if token.startswith("#endif"):
+                    directive = "#" + token[1:].lstrip(" \t\v\f\r")
+                    if_stack.append(directive)
+                    else_count += directive.count("#else")
+                    if directive.startswith("#endif"):
                         while if_stack:
                             last = if_stack.pop()
                             else_count -= last.count("#else")
