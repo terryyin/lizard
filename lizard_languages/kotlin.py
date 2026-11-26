@@ -160,7 +160,6 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         elif self._ends_declaration(token):
             # `abstract fun f(): Int` or `private set` has no body. Its first
             # line and token were already counted in the enclosing scope.
-            self._finish_declaration_forgiveness(token)
             self.fold_into_enclosing_function()
             self.context.current_function.nloc -= 1
             self.context.current_function.token_count -= 1
@@ -196,6 +195,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                 and (self.last_token == self._accessor_name
                      or self.last_token in self._ACCESSOR_MODIFIERS))))
         self._track_type(token)
+        if ends:
+            self._finish_declaration_forgiveness(token)
         return ends
 
     def _start_header(self):
