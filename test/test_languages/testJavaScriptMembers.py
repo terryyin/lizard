@@ -88,8 +88,15 @@ const next = async => {
     return await
     { if (await) { run(); } }
 };
+class Service {
+    async
+    start(await) {
+        return await
+        { if (await) { run(); } }
+    }
+}
 """)
-        self.assertEqual([('inner', 2), ('load', 2), ('next', 2)], [
+        self.assertEqual([('inner', 2), ('load', 2), ('next', 2), ('start', 2)], [
             (f.name, f.cyclomatic_complexity) for f in functions])
 
     def test_class_with_complex_constructor_and_methods(self):
