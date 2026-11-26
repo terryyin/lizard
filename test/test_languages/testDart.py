@@ -6,6 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import lizard
+from lizard_languages.dart import DartReader
 
 from .dart_helpers import get_dart_function_list
 
@@ -198,6 +199,33 @@ int f(int? x, [int fallback = 0]) {
         self.assertEqual('f', result[0].name)
         self.assertEqual(2, result[0].cyclomatic_complexity)
         self.assertEqual(2, result[0].parameter_count)
+
+
+class TestDartTokenFactory(unittest.TestCase):
+
+    def test_nullable_question_keeps_caller_class_and_span(self):
+        class LocatedToken(str):
+            def __new__(cls, match):
+                token = super().__new__(cls, match.group())
+                token.span = match.span()
+                return token
+
+        source = 'List<int>? items;'
+        tokens = list(DartReader.generate_tokens(source, token_class=LocatedToken))
+
+        self.assertTrue(all(type(token) is LocatedToken for token in tokens))
+        self.assertEqual((9, 10), next(token.span for token in tokens if token == '?'))
+
+    def test_nullable_declaration_accepts_non_string_factory(self):
+        source = 'List<int> /* cached */ ? items;'
+
+        def located_token(match):
+            return match.group(), match.span()
+
+        tokens = list(DartReader.generate_tokens(source, token_class=located_token))
+
+        self.assertEqual(source, ''.join(token for token, _ in tokens))
+        self.assertIn(('?', (23, 24)), tokens)
 
 
 class TestDartStringsAndCommentsInert(unittest.TestCase):
