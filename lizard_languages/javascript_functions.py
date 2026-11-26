@@ -239,6 +239,9 @@ class JavaScriptFunctionsMixin:
 
     def _after_possible_async_parameter(self, token):
         if self._follows_async_parameter(token):
+            if getattr(token, 'is_optional', False):
+                # The default condition counter charged the spaced '?'.
+                self.context.add_condition(-1)
             self._read_parameter_binding('async')
             self.next(self._dec, token)
         else:
