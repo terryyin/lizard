@@ -20,6 +20,19 @@ from .js_style_regex_context import (
 
 _COMMENT = re.compile(rf'//[^{_LINE_TERMINATORS}]*|/\*.*?(?:\*/|\Z)', re.S)
 _LINE_BREAK = re.compile(rf'[{_LINE_TERMINATORS}]')
+# A direct generator body reserves yield. Read an ordinary header without
+# consuming expressions or quoted text in parameters.
+_GENERATOR_HEADER = (
+    r"""(?<![\w$.])function\s*\*\s*(?:[$\w]+\s*)?\([^(){}'"/`]*\)\s*\{"""
+)
+_GENERATOR_EVENT = re.compile('(?P<generator>' + _GENERATOR_HEADER + r""")|[/`'"{}]""")
+_AMBIGUOUS_YIELD = re.compile(rf'(?:\byield\s*\*\s*|>\s*[{_LINE_TERMINATORS}]\s*)yield\b')
+
+
+_AFTER_PAREN = re.compile(r'\)\s*(?:(?:' + _COMMENT.pattern + r')\s*)*/(?![/*])', re.S)
+_PAREN_EVENTS = re.compile(r"""[/()`"']""")
+_PAREN_AND_GENERATOR_EVENTS = re.compile(_GENERATOR_EVENT.pattern + r'|[()]')
+_CONTROL_HEADERS = frozenset(('if', 'while', 'for', 'with'))
 
 
 def mark_keyword_slashes(source, *, jsx=False, javascript_operators=False):
@@ -28,19 +41,69 @@ def mark_keyword_slashes(source, *, jsx=False, javascript_operators=False):
     # The JSX tokenizer identifies element text after this scan has run.
     comments = None if jsx else {}
     literal_ends = None if jsx else set()
+    scan_generators = not jsx and _AMBIGUOUS_YIELD.search(source) is not None
+    scan_parens = not jsx and _AFTER_PAREN.search(source) is not None
+    if scan_parens:
+        events = _PAREN_AND_GENERATOR_EVENTS if scan_generators else _PAREN_EVENTS
+    else:
+        events = _GENERATOR_EVENT if scan_generators else None
+    roles = []
+    closing = None
+    braces = 0
+    generator_bodies = []
     n = len(source)
     i = 0
     find = source.find
     while i < n:
-        j_slash = find('/', i)
-        j_dq = find('"', i)
-        j_sq = find("'", i)
-        j_tmpl = find('`', i)
-        candidates = [j for j in (j_slash, j_dq, j_sq, j_tmpl) if j >= 0]
-        if not candidates:
-            break
-        i = min(candidates)
+        if events:
+            event = events.search(source, i)
+            if event is None:
+                break
+            i = event.start()
+            if event.lastgroup == 'generator':
+                prev, _ = _before_comments(source, _skip_ws_back(source, i - 1), comments)
+                if prev < 0 or source[prev] not in '.#':
+                    braces += 1
+                    generator_bodies.append(braces)
+                    i = event.end()
+                else:
+                    i += len('function')
+                continue
+        else:
+            j_slash = find('/', i)
+            j_dq = find('"', i)
+            j_sq = find("'", i)
+            j_tmpl = find('`', i)
+            candidates = [j for j in (j_slash, j_dq, j_sq, j_tmpl) if j >= 0]
+            if not candidates:
+                break
+            i = min(candidates)
         ch = source[i]
+        if ch == '(':
+            prev, _ = _before_comments(source, _skip_ws_back(source, i - 1), comments)
+            word, before = _word_before(source, prev)
+            control = word in _CONTROL_HEADERS
+            if control:
+                receiver, _ = _before_comments(source, _skip_ws_back(source, before), comments)
+                control = receiver < 0 or source[receiver] not in '.#'
+            roles.append(control)
+            i += 1
+            continue
+        if ch == ')':
+            if roles:
+                closing = i, roles.pop()
+            i += 1
+            continue
+        if ch == '{':
+            braces += 1
+            i += 1
+            continue
+        if ch == '}':
+            if generator_bodies and generator_bodies[-1] == braces:
+                generator_bodies.pop()
+            braces -= 1
+            i += 1
+            continue
         if ch == '"' or ch == "'":
             quote = ch
             i += 1
@@ -62,7 +125,10 @@ def mark_keyword_slashes(source, *, jsx=False, javascript_operators=False):
         if i + 1 < n and source[i + 1] in '/*':
             i = _read_comment(source, i, comments)
             continue
-        i = _consider_slash(source, i, marks, comments, literal_ends, javascript_operators)
+        direct_generator = bool(generator_bodies and generator_bodies[-1] == braces)
+        i = _consider_slash(
+            source, i, marks, comments, literal_ends, closing,
+            direct_generator=direct_generator, javascript_operators=javascript_operators)
     return _apply_marks(source, marks)
 
 
@@ -82,7 +148,8 @@ def _before_comments(source, i, comments):
     return i, line_comment
 
 
-def _consider_slash(source, i, marks, comments, literal_ends, javascript_operators):
+def _consider_slash(source, i, marks, comments, literal_ends, closing=None, *,
+                    direct_generator=False, javascript_operators=False):
     matched = _REGEX_LITERAL_RE.match(source, i)
     divisor = _REGEX_DIVISOR.match(source, i) if javascript_operators else None
     if matched is None and divisor is None:
@@ -103,6 +170,16 @@ def _consider_slash(source, i, marks, comments, literal_ends, javascript_operato
             marks.append(i)
         literal_ends.add(matched.end() - 1)
         return matched.end()
+    if closing is not None and prev == closing[0]:
+        if closing[1] and matched is not None:
+            marks.append(i)
+            literal_ends.add(matched.end() - 1)
+            return matched.end()
+        if not closing[1] and divisor is not None:
+            marks.append(divisor.start(1))
+            literal_ends.add(divisor.end() - 1)
+            return divisor.end()
+        return i + 1
     if matched is not None and prev >= 0 and (
             (prev >= 1 and source[prev - 1:prev + 1] == '=>')
             or (javascript_operators and source[prev] in '<>')):
@@ -115,7 +192,7 @@ def _consider_slash(source, i, marks, comments, literal_ends, javascript_operato
         member = prefix >= 0 and (source[prefix] == '#'
                                   or source[prefix] == '.' and _is_property_before(source, prefix))
         if not member and (
-                word != 'yield' or
+                word != 'yield' or direct_generator or
                 _yield_starts_expression(source, prefix, before_word, line_comment, comments, literal_ends)):
             marks.append(i)
             literal_ends.add(matched.end() - 1)
@@ -211,7 +288,7 @@ def _skip_template(source, i, n, marks, comments, literal_ends, javascript_opera
                     i = _read_comment(source, i, comments)
                     continue
                 if ch == '/':
-                    i = _consider_slash(source, i, marks, comments, literal_ends, javascript_operators)
+                    i = _consider_slash(source, i, marks, comments, literal_ends)
                     continue
                 i += 1
             continue
