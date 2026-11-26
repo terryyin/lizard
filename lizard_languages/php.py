@@ -4,13 +4,16 @@ Language parser for PHP
 
 import re
 from functools import lru_cache
+from itertools import compress
 
-from .code_reader import CodeReader
+from .code_reader import CodeReader, MemberName, _STRUCTURE_KEYWORDS
 from .clike import CCppCommentsMixin
 from .php_states import MEMBER_ACCESS, PHPLanguageStates
 from .token_pattern import compiled_token_pattern
 
 _BEFORE_MEMBER_NAME = MEMBER_ACCESS | {'function'}
+_DECLARATION_KEYWORDS = {'class', 'trait', 'use', 'function'}
+_COMMENT_STARTS = ('//', '/*', '#')
 _OPENING_TAG = re.compile(r"<\?(?:php)?")
 _EXPLICIT_OPENING_TAG = r"<\?(?:=|(?i:php)(?=[ \t\r\n]|\Z))"
 _TEMPLATE_OPENING_TAG = re.compile(_EXPLICIT_OPENING_TAG + r"|<\?")
@@ -99,6 +102,13 @@ def _expression_end(source, pos):
             return None
 
 
+def _adjacent_php_code(tokens, index, step):
+    index += step
+    while 0 <= index < len(tokens) and (tokens[index] == '\n' or tokens[index].startswith(_COMMENT_STARTS)):
+        index += step
+    return index
+
+
 class _AttributeStart(str):
     starts_attribute = True
 
@@ -171,4 +181,12 @@ class PHPReader(CodeReader, CCppCommentsMixin):
 
     def preprocess(self, tokens):
         # `$promise->catch($f)` and `function catch()` name a member.
-        return self.mark_member_names(tokens, _BEFORE_MEMBER_NAME)
+        tokens = self.mark_member_names(tokens, _BEFORE_MEMBER_NAME)
+        keywords = _STRUCTURE_KEYWORDS | _DECLARATION_KEYWORDS | self.control_flow_keywords | self.case_keywords
+        for index in compress(range(len(tokens)), map(keywords.__contains__, tokens)):
+            before = _adjacent_php_code(tokens, index, -1)
+            if before >= 0 and tokens[before] in ('(', ','):
+                after = _adjacent_php_code(tokens, index, 1)
+                if after < len(tokens) and tokens[after] == ':':
+                    tokens[index] = MemberName(tokens[index])
+        return tokens
