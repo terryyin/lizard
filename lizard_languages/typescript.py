@@ -287,7 +287,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     # Keep type-only angles out of statement detection even
                     # when the runtime reader has left a multiline alias.
                     type_alias = _read_type_alias(type_alias, token)
-                    type_arguments = None
                 if not token.isspace():
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
@@ -302,10 +301,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
-                    if track_angles and type_alias is None:
-                        if token == 'type':
+                    if type_alias is not None and type_alias.in_body:
+                        type_arguments = None
+                    elif track_angles:
+                        if token == 'type' and type_alias is None:
                             type_alias = TypeAliasContext()
-                        elif type_arguments is not None or token == '<' or packed_angles and token[0] == '<':
+                        if type_arguments is not None or token == '<' or packed_angles and token[0] == '<':
                             type_arguments, closes_arguments, simple_arguments = _read_type_arguments(
                                 type_arguments, token, state)
                             if closes_arguments:

@@ -160,6 +160,7 @@ class TypeAliasContext(TypeScriptTypeAnnotationStates):
 
     def __init__(self):
         super().__init__(None)
+        self.in_body = False
         self.next(self._name)
 
     def _name(self, token):
@@ -169,21 +170,29 @@ class TypeAliasContext(TypeScriptTypeAnnotationStates):
         elif token == '\\':
             self.next(self._escaped_name)
         elif token.replace('$', '_').isidentifier():
-            self.next(self._after_name)
+            self.next(self._name_parts)
         else:
             self.statemachine_return()
 
     def _after_name(self, token):
         if token == '=':
+            self.in_body = True
             self.next(self._state_global)
         elif token == '<':
             self.br_count = 1
             self.next(self._type_parameters)
-        elif token == '\\':
-            self.next(self._escaped_name)
         elif not token.isspace() and not (
                 token[0] == '<' and packed_type_arguments(token)):
             self.statemachine_return()
+
+    def _name_parts(self, token):
+        # The lexer can split an identifier at a combining mark, a
+        # connector other than underscore, or a zero-width joiner.
+        if token == '\\':
+            self.next(self._escaped_name)
+        elif not _identifier_part(token):
+            self.next(self._after_name)
+            self._after_name(token)
 
     def _escaped_name(self, token):
         # The tokenizer splits identifier escapes, including the braces in
@@ -191,7 +200,7 @@ class TypeAliasContext(TypeScriptTypeAnnotationStates):
         if token[0] in '<=' or token.isspace():
             self.next(self._after_name)
             self._after_name(token)
-        elif token not in ('\\', '{', '}') and not ('_' + token.replace('$', '_')).isidentifier():
+        elif token not in ('\\', '{', '}') and not _identifier_part(token):
             self.statemachine_return()
 
     def _type_parameters(self, token):
@@ -201,6 +210,11 @@ class TypeAliasContext(TypeScriptTypeAnnotationStates):
             self.br_count -= 1
             if not self.br_count:
                 self.next(self._after_name)
+
+
+def _identifier_part(token):
+    return (token in ('\u200c', '\u200d')
+            or ('_' + token.replace('$', '_')).isidentifier())
 
 
 class TypeArguments:  # pylint: disable=too-few-public-methods
