@@ -179,6 +179,9 @@ class JavaScriptObjectsMixin:
         previous = self.last_token
         if self._class_body_pending:
             return True
+        if (previous == 'await' and self._prev_token == 'await'
+                and getattr(self.context.current_function, 'javascript_async_body', False)):
+            return True
         if previous is None:
             # A group's first token, `f({`, but in a block, `finally { {`.
             return not self.as_object
@@ -189,9 +192,6 @@ class JavaScriptObjectsMixin:
             # The end of a regular expression can be a token of its own,
             # `"" + /a/` + line break + `{`.  Nothing divides by an object.
             return False
-        if (previous == 'await' and self._prev_token == 'await'
-                and getattr(self.context.current_function, 'javascript_async_body', False)):
-            return True
         if self.context.newline and (
                 previous == '!' or previous[0].isalpha() or previous[0] in '_$'):
             # A "{" that starts a line after a word or a '!' is almost always
