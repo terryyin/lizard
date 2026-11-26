@@ -14,7 +14,6 @@ from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
-from .javascript_objects import COMPUTED_PROPERTY_START, computed_property_follows
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -84,7 +83,7 @@ class _OptionalMemberQuestion(str):
 
 
 _OPTIONAL_MEMBER_QUESTION = _OptionalMemberQuestion('?')
-_ANNOTATION_PUNCTUATION = frozenset(('?', ':', '['))
+_ANNOTATION_PUNCTUATION = frozenset(('?', ':'))
 
 
 class _MemberName(str):
@@ -97,7 +96,7 @@ class _MemberName(str):
 _MEMBER_ACCESS = ('.', '?.')
 _COMMENT_STARTS = ('//', '/*')
 # The tokens that preprocess looks at, in one set for the hot loop.
-_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset(_MEMBER_ACCESS)
+_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset((*_MEMBER_ACCESS, '['))
 # With the reader's conditions: the keywords that a metric counts as a
 # structure or a jump.
 _STRUCTURE_KEYWORDS = frozenset((
@@ -312,13 +311,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             if (self.context.class_field_annotations
                                     and state.optional_member_context()):
                                 token = _OPTIONAL_MEMBER_QUESTION
-                        elif token == '[' and state.computed_property_context():
-                            tokens, lookahead = tee(tokens)
-                            if computed_property_follows(lookahead):
-                                token = COMPUTED_PROPERTY_START
-                            del lookahead
-                            yield token
-                            break
                         elif token == ':' and state.last_token == ')':
                             annotation = state.return_annotation_context()
                             if annotation is not None:
@@ -333,6 +325,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     yield token
                                     # Resume with the buffered iterator.
                                     break
+                        elif token == '[' and state.computed_property_context():
+                            tokens, lookahead = tee(tokens)
+                            token = state.computed_property_token(lookahead) or token
+                            del lookahead
+                            yield token
+                            break
                         elif member_access:
                             before_dot = token == '.' and state.last_token
                     else:

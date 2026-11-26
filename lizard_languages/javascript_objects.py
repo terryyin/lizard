@@ -15,21 +15,6 @@ class _ComputedPropertyStart(str):
 COMPUTED_PROPERTY_START = _ComputedPropertyStart('[')
 
 
-def computed_property_follows(tokens):
-    """Distinguish a property key from an array or a TypeScript tuple."""
-    depth = 1
-    for token in tokens:
-        if token.isspace() or token.startswith(('//', '/*')):
-            continue
-        if not depth:
-            return token in (':', '(')
-        if token == '[':
-            depth += 1
-        elif token == ']':
-            depth -= 1
-    return False
-
-
 class JavaScriptObjectsMixin:
     # A class body or an object literal: braces that hold members.  The
     # reader also reads blocks such as `catch {` or `case 1: {` as objects.
@@ -57,6 +42,21 @@ class JavaScriptObjectsMixin:
         return (state.holds_members and not state.as_class
                 and state._state == state._state_global
                 and not state._in_prop_value and not state._default_value)
+
+    @staticmethod
+    def computed_property_token(tokens):
+        """Distinguish a property key from an array or a TypeScript tuple."""
+        depth = 1
+        for token in tokens:
+            if token.isspace() or token.startswith(('//', '/*')):
+                continue
+            if not depth:
+                return COMPUTED_PROPERTY_START if token in (':', '(') else None
+            if token == '[':
+                depth += 1
+            elif token == ']':
+                depth -= 1
+        return None
 
     def _end_field_before_modifier(self):
         """A modifier at a line start begins the next class member, so a
@@ -115,7 +115,9 @@ class JavaScriptObjectsMixin:
                 # An array value, {list: [[1], 2]}, not a computed name.
                 self._read_binding_candidate(']')
             else:
-                self._collect_computed_name(token is COMPUTED_PROPERTY_START)
+                if token is COMPUTED_PROPERTY_START:
+                    self.context.js_object_property = self.context.fileinfo.token_count
+                self._collect_computed_name()
             return True
         if token == ':' and self.as_class and self._typed_class_member():
             self.function_name = self.last_tokens
@@ -226,14 +228,13 @@ class JavaScriptObjectsMixin:
         # The token of a regular expression starts with a space.
         return opens_object(previous.lstrip())
 
-    def _collect_computed_name(self, confirmed):
+    def _collect_computed_name(self):
         # Collect tokens between [ and its ]
         tokens = []
         depth = [0]
         position = self.context.fileinfo.token_count
-        if confirmed:
-            self.context.js_object_property = position
-        starts_property = confirmed or self._next_property_key == position
+        starts_property = (self._next_property_key == position or
+                           self.context.__dict__.get('js_object_property') == position)
 
         def collect(token):
             depth[0] += {'[': 1, ']': -1}.get(token, 0)
