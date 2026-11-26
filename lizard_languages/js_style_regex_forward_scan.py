@@ -9,6 +9,7 @@ from .js_style_regex_context import (
     _RUBY_EXPRESSION_KEYWORDS,
     _STRING_LINE_ENDS,
     _apply_marks,
+    _word_before,
 )
 from .ruby_documentation import match_opaque_span, may_have_documentation
 
@@ -210,6 +211,10 @@ def mark_forward(source, js_family):
                 i += 1
             after_operand(next_expect_property=True)
             return
+        if ch == '!' and js_family and not can_regex and _after_assertion_operand(source, i):
+            i += 1
+            after_operand()
+            return
         if ch in '=,({[?:!&|;':
             i += 1
             after_operand(next_can_regex=True)
@@ -248,3 +253,20 @@ def mark_forward(source, js_family):
         while i < n:
             advance()
     return _apply_marks(source, marks)
+
+
+def _after_assertion_operand(source, pos):
+    """A same-line identifier, index or assertion can take a postfix '!'."""
+    operand = pos - 1
+    while operand >= 0 and source[operand].isspace() and source[operand] not in _LINE_ENDS:
+        operand -= 1
+    if operand < 0:
+        return False
+    character = source[operand]
+    if character in ']!':
+        return True
+    if not (character.isalnum() or character in '_$'):
+        return False
+    # A module can use prefix '!' after 'export default' or top-level 'await'.
+    word, before = _word_before(source, operand)
+    return word not in ('await', 'default') or (before >= 0 and source[before] == '.')
