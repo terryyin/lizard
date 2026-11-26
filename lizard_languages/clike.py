@@ -279,6 +279,8 @@ class _LambdaHeader:
             if token in ("{", "requires"):
                 self.references += 1
         if token == "{":
+            if self._section == "requires" and previous == "requires":
+                return 0  # A trailing requires clause needs a constraint before the body.
             if self._section != "requires-expression":
                 return self.references
             self._section = "requires"
