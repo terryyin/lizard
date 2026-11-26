@@ -339,6 +339,96 @@ class TestRustTokens(unittest.TestCase):
             [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
              for f in result])
 
+    def test_unresolved_quote_invocations_keep_executable_conditions(self):
+        for source in (
+                '''macro_rules! evaluate { ($body:expr) => { $body }; }
+                use evaluate as quote;
+                fn choose(flag: bool) -> usize { quote!(if flag { 1 } else { 0 }) }
+                ''',
+                '''#[macro_use]
+                mod local {
+                    macro_rules! quote { ($body:expr) => { $body }; }
+                }
+                fn choose(flag: bool) -> usize { quote!(if flag { 1 } else { 0 }) }
+                ''',
+                '''macro_rules! define_chooser {
+                    ($quote:ident) => {
+                        fn choose(flag: bool) -> usize { $quote!(if flag { 1 } else { 0 }) }
+                    };
+                }
+                macro_rules! eval { ($body:expr) => { $body }; }
+                define_chooser!(eval);
+                '''):
+            with self.subTest(source=source):
+                result = get_rust_function_list(source)
+                self.assertEqual(
+                    [('choose', 2)],
+                    [(f.name, f.cyclomatic_complexity) for f in result])
+
+    def test_quote_reexport_keeps_function_delimiters(self):
+        result = get_rust_function_list('''mod reexport {
+            pub(crate) use quote::quote;
+        }
+
+        fn emit(value: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+            reexport::quote! { #value }
+        }
+
+        fn after() {}
+        ''')
+        self.assertEqual(
+            [('emit', 5, 7, 1), ('after', 9, 9, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_bare_function_cast_before_quote_keeps_next_function(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+        use quote::quote;
+
+        fn convert(value: usize) -> TokenStream {
+            let id = (|value: usize| value) as fn(_) -> _;
+            let value = id(value);
+            quote! { #value }
+        }
+
+        fn after() -> TokenStream { quote!(fixed) }
+        ''')
+        self.assertEqual(
+            [('convert', 4, 8, 1), ('after', 10, 10, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_quote_with_raw_c_text_keeps_the_closing_brace(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+        use quote::quote;
+
+        fn emit(value: TokenStream) -> TokenStream {
+            quote! { let label = cr#"default"#; #value }
+        }
+
+        fn after() {}
+        ''')
+        self.assertEqual(
+            [('emit', 4, 6, 1), ('after', 8, 8, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_quote_in_span_expression_keeps_generated_function_out(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+        use quote::{quote, quote_spanned};
+
+        fn emit(value: TokenStream) -> TokenStream {
+            quote_spanned!(quote!(fn generated() { if ready {} })
+                .into_iter().next().unwrap().span()=> #value)
+        }
+
+        fn after() {}
+        ''')
+        self.assertEqual(
+            [('emit', 4, 7, 1), ('after', 9, 9, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
     def test_quote_spanned_counts_the_span_expression(self):
         result = get_rust_function_list('''use proc_macro2::{Span, TokenStream};
         use quote::quote_spanned;
