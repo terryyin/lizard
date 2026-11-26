@@ -25,6 +25,9 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         super(_BraceCounter, self).__init__(reader, profile, gated)
         language = reader.language_names[0]
         self.logical_statement_lines = language in ('kotlin', 'scala', 'swift')
+        self.named_infix = language in ('kotlin', 'scala')
+        if language == 'scala':
+            reader.track_leading_infix = True
         self.comment_line_count = 0
         self.last_counted_comment = None
         if language == 'kotlin':
@@ -106,15 +109,19 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
 
     def _reset_logical_at_line_start(self, token):
         state = self.state
-        previous = state.prev
-        # Scala also permits a leading infix operator in backticks or
-        # with an alphanumeric prefix ending in an underscore.
-        if not _is_word(token) or token.endswith('_') or token in self._LINE_EXPRESSION_WORDS:
+        if (not token or not (token[0].isalnum() or token[0] == '_')
+                or token in self._LINE_EXPRESSION_WORDS or getattr(token, 'is_leading_infix', False)):
             return
-        if (previous in (')', ']', '}', '++', '--', '!!')
-                or (previous and (previous[0].isalnum() or previous[0] in "_\"'`")
-                    and previous not in self._OPERAND_PREFIX_WORDS)):
+        previous = state.prev
+        if self.named_infix and _is_word(previous) and self._ends_line_operand(state.prev2):
+            return  # a named infix operator still needs its right operand
+        if self._ends_line_operand(previous):
             state.logical.pop(0, None)
+
+    def _ends_line_operand(self, token):
+        return (token in (')', ']', '}', '++', '--', '!!')
+                or (token and (token[0].isalnum() or token[0] in "_\"'`")
+                    and token not in self._OPERAND_PREFIX_WORDS))
 
     def _count_kotlin_comment(self, token):
         comment = self.read_comment(token)
