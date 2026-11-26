@@ -132,6 +132,29 @@ end
             [('page_count', 2, 4), ('create_frame', 6, 8), ('start_session', 10, 12)],
             [(f.name, f.start_line, f.end_line) for f in result])
 
+    def test_unless_is_a_regular_lua_callback(self):
+        result = get_function_list('''
+local function deliver(request, unless)
+  unless(request)
+end
+''')
+        self.assertEqual(
+            [('deliver', 2, 4)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_if_after_a_statement_can_wrap_before_then(self):
+        result = get_function_list('''
+local function enable(account)
+  account:refresh() if account.active
+  then
+    account:enable()
+  end
+end
+''')
+        self.assertEqual(
+            [('enable', 2, 7)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
     def test_class_field_in_a_test_callback_preserves_the_enclosing_function(self):
         result = get_function_list('''
 local function register_dns_tests()
