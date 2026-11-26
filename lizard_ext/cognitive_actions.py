@@ -6,6 +6,9 @@ from .cognitive_profile import (
     _is_word)
 
 
+_TERNARY_KINDS = ('ternary', 'ternary_true')
+
+
 class _BraceActions(object):
     """Keyword increments, lookaheads, and languages without brace blocks."""
 
@@ -23,6 +26,8 @@ class _BraceActions(object):
                 actions[token] = action
         if profile.ternary:
             actions['?'] = self._question
+            if self.track_ternary_arms:
+                actions[':'] = self._ternary_colon
         return actions
 
     def _if(self):

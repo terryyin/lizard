@@ -1,6 +1,6 @@
 """Brace, parenthesis, and semicolon nesting for cognitive complexity."""
 
-from .cognitive_actions import _BraceActions
+from .cognitive_actions import _BraceActions, _TERNARY_KINDS
 from .cognitive_counter import (
     BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE)
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
@@ -15,17 +15,13 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     ``finally`` and the ``while`` of a ``do`` bind to the right structure.
     """
 
-    _TERNARY_KINDS = ('ternary', 'ternary_true')
-
     def __init__(self, reader, profile, gated):
+        self.track_ternary_arms = reader.language_names[0] in ('cpp', 'objectivec')
         super(_BraceCounter, self).__init__(reader, profile, gated)
         self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
         self.actions = self._keyword_actions(profile)
         if not profile.nesting:
             self._process = self._process_flat
-        self.track_ternary_arms = reader.language_names[0] in ('cpp', 'objectivec')
-        if self.track_ternary_arms:
-            self.actions[':'] = self._ternary_colon
 
     def _process(self, token):  # pylint: disable=E0202
         if token == '?' and getattr(token, 'is_optional', False):
@@ -68,7 +64,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 return
         if frames:
             top = frames[-1]
-            if top.kind in self._TERNARY_KINDS:
+            if top.kind in _TERNARY_KINDS:
                 top = self._top_structure()
             if top is not None and top.phase != BODY and \
                     self._in_head(top, token):
@@ -93,7 +89,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
 
     def _top_structure(self):
         for frame in reversed(self.state.frames):
-            if frame.kind not in self._TERNARY_KINDS:
+            if frame.kind not in _TERNARY_KINDS:
                 return frame
         return None
 
@@ -119,7 +115,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         frames = state.frames
         for index in range(len(frames) - 1, -1, -1):
             frame = frames[index]
-            if (frame.kind not in self._TERNARY_KINDS or frame.pdepth != state.pdepth
+            if (frame.kind not in _TERNARY_KINDS or frame.pdepth != state.pdepth
                     or frame.depth != state.depth):
                 return
             if frame.kind == 'ternary_true':
@@ -131,7 +127,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         """A ';' at bracket depth 0 finishes the braceless bodies around it."""
         state = self.state
         frames = state.frames
-        while frames and frames[-1].kind in self._TERNARY_KINDS:
+        while frames and frames[-1].kind in _TERNARY_KINDS:
             frames.pop()
         for frame in reversed(frames):
             if frame.braced or frame.depth != state.depth or \
