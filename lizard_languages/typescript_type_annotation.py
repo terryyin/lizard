@@ -95,3 +95,30 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                 '|', '&', 'keyof', 'typeof', 'readonly', 'unique', 'infer',
                 'extends', 'is', 'in', 'as')
             self._function_arrow = False
+
+
+class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
+    """An alias consumes function types and stops before runtime calls."""
+
+    def __init__(self, context):
+        super().__init__(context)
+        self._after_type_parameters = False
+        self._import_type = False
+
+    def _state_global(self, token):
+        if not self._brackets and not token.isspace():
+            if (token == '(' and not self._expect_type
+                    and not (self._after_type_parameters or self._import_type)):
+                # An IIFE can begin on the line after a complete alias.
+                self.saved_token = token
+                self.statemachine_return()
+                return
+            self._after_type_parameters = self._expect_type and token[0] == '<'
+            self._import_type = token == 'import' and not self._qualified_type
+            if token == 'new' and not self._qualified_type:
+                # A constructor type has its own parameters and return arrow.
+                self._expect_type = True
+                return
+            if self._qualified_type:
+                self._expect_type = True
+        super()._state_global(token)

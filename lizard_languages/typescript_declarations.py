@@ -1,6 +1,6 @@
 """TypeScript declarations and type syntax excluded from runtime functions."""
 
-from .typescript_type_annotation import TypeScriptTypeAnnotationStates
+from .typescript_type_annotation import TypeScriptTypeAliasStates, TypeScriptTypeAnnotationStates
 from .javascript_expression import OPERAND_WORDS, ends_expression
 from .js_style_regex_context import _EXPRESSION_KEYWORDS
 
@@ -49,27 +49,25 @@ class TypeScriptDeclarationsMixin:
         # Skip type alias declarations: type Name = { ... }
         # These contain arrow signatures that are not runtime functions.
         if token == 'type' and not self.as_object:
-            phase = [0]        # 0=expect name, 1=expect =, 2=after =
-            brace_count = [0]
-            generic_depth = [0]
             name = []
 
             def handle_type_alias(t):
-                if phase[0] == 0:
+                if not name:
                     if not self.context.newline and _starts_alias_name(t):
                         name.append(t)
-                        phase[0] = 1
                     else:
                         self.last_tokens = 'type'
                         self.next(self._state_global)
                         self._state_global(t)
                         return True
-                elif phase[0] == 1:
+                else:
                     if t == '<':
-                        generic_depth[0] = 1
-                        phase[0] = 3
+                        self._consume_generic_type_params(handle_type_alias)
+                    elif t.startswith('<') and t.endswith('>'):
+                        return False  # One packed type parameter list in TSX.
                     elif t == '=':
-                        phase[0] = 2
+                        self.next(self._state_global)
+                        self._read_type_annotation(TypeScriptTypeAliasStates(self.context))
                     elif t == ';':
                         self.next(self._state_global)
                         return True
@@ -84,31 +82,6 @@ class TypeScriptDeclarationsMixin:
                             self._replay_token(part)
                         self._state_global(t)
                         return True
-                elif phase[0] == 2:
-                    if t == '{':
-                        brace_count[0] = 1
-                        phase[0] = 4
-                    elif t == ';' or self.context.newline:
-                        self.next(self._state_global)
-                        if t != ';':
-                            self._state_global(t)
-                        return True
-                elif phase[0] == 3:
-                    if t == '<':
-                        generic_depth[0] += 1
-                    elif t == '>':
-                        generic_depth[0] -= 1
-                        if generic_depth[0] == 0:
-                            phase[0] = 1
-                elif phase[0] == 4:
-                    # A template literal type's '${' closes with '}' too.
-                    if t in ('{', '${'):
-                        brace_count[0] += 1
-                    elif t == '}':
-                        brace_count[0] -= 1
-                        if brace_count[0] == 0:
-                            self.next(self._state_global)
-                            return True
                 return False
 
             self.next(handle_type_alias)
@@ -179,12 +152,13 @@ class TypeScriptDeclarationsMixin:
         self.next(consume)
 
     def _consume_type_annotation(self):
-        typeStates = TypeScriptTypeAnnotationStates(self.context)
+        self._read_type_annotation(TypeScriptTypeAnnotationStates(self.context))
 
+    def _read_type_annotation(self, annotation):
         def callback():
-            if typeStates.saved_token:
-                self._replay_token(typeStates.saved_token)
-        self.sub_state(typeStates, callback)
+            if annotation.saved_token:
+                self._replay_token(annotation.saved_token)
+        self.sub_state(annotation, callback)
 
     def _read_runtime_colon(self):
         binding = self._binding_candidate
