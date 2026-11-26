@@ -109,7 +109,9 @@ def _consider_slash(source, i, marks, comments, literal_ends):
     word, before_word = _word_before(source, prev)
     if word in _EXPRESSION_KEYWORDS:
         prefix, _ = _before_comments(source, _skip_ws_back(source, before_word), comments)
-        if (prefix < 0 or source[prefix] != '#') and not _is_property_before(source, prefix) and (
+        member = prefix >= 0 and (source[prefix] == '#'
+                                  or source[prefix] == '.' and _is_property_before(source, prefix))
+        if not member and (
                 word != 'yield' or
                 _yield_starts_expression(source, prefix, before_word, line_comment, comments, literal_ends)):
             marks.append(i)
