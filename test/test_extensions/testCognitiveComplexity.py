@@ -681,6 +681,37 @@ class TestOtherBraceLanguages(unittest.TestCase):
             }"""))
 
 
+class TestLogicalStatementBoundaries(unittest.TestCase):
+
+    def test_kotlin_two_statements_with_a_multiline_and_sequence(self):
+        self.assertEqual([2], cogc("Permissions.kt", """
+            fun audit(enabled: Boolean, ready: Boolean, record: () -> Boolean) {
+                enabled && record()
+                    && ready
+                ready && record()
+            }"""))
+
+    def test_swift_logical_sequence_before_if(self):
+        self.assertEqual([3], cogc("Permissions.swift", """
+            func visible(_ enabled: Bool, _ verified: Bool) -> Bool {
+                let ready = enabled && verified
+                if ready && enabled {
+                    return true
+                }
+                return false
+            }"""))
+
+    def test_scala_two_statements_with_a_multiline_and_sequence(self):
+        self.assertEqual([2], cogc("Permissions.scala", """
+            object Permissions {
+              def audit(enabled: Boolean, ready: Boolean, record: () => Boolean): Unit = {
+                enabled && record() &&
+                  ready
+                ready && record()
+              }
+            }"""))
+
+
 class TestJavaScriptNestedFunctions(unittest.TestCase):
     """A nested function is measured on its own.  Its brackets must not
     change how the rest of the enclosing function is counted."""
