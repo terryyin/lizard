@@ -544,6 +544,32 @@ end
             [(f.name, f.max_nesting_depth, f.max_nested_structures)
              for f in result.function_list])
 
+    def test_repeat_loops_end_at_until(self):
+        source = '''
+local function send(socket)
+  repeat
+    if socket.ready then
+      socket:send()
+    end
+  until not socket.retry
+end
+
+local function save(socket)
+  repeat
+    socket:send()
+  until not socket.retry
+  if socket.closed then
+    socket:save()
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['nd', 'ns']))
+        result = analyzer.analyze_source_code('socket.lua', source)
+        self.assertEqual(
+            [('send', 2, 8, 2, 2), ('save', 10, 17, 1, 1)],
+            [(f.name, f.start_line, f.end_line, f.max_nesting_depth, f.max_nested_structures)
+             for f in result.function_list])
+
     def test_standalone_do_and_inner_functions_have_their_own_scopes(self):
         source = '''
 local function register(queue)
