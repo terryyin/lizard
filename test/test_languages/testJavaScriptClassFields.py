@@ -28,16 +28,6 @@ class Test_JavaScript_member_modifier_after_a_field(unittest.TestCase):
             [(f.name, f.start_line, f.end_line, f.parameter_count)
              for f in get_js_function_list(code)])
 
-    def test_async_value_on_the_next_line_is_still_the_field_value(self):
-        code = (
-            "class A {\n"
-            "  handler =\n"
-            "    async () => { return 1; }\n"
-            "}\n"
-        )
-        self.assertEqual(['handler'],
-                         [f.name for f in get_js_function_list(code)])
-
     def test_multiline_field_keeps_grouped_constructor_callback(self):
         code = '''
 class Metric {
@@ -55,3 +45,13 @@ class Dashboard {
             [('constructor', 1, ['normalize']), ('valueOf', 1, []),
              ('(anonymous)', 2, ['value']), ('read', 1, [])],
             [(f.name, f.cyclomatic_complexity, f.parameters) for f in functions])
+
+    def test_async_value_on_the_next_line_is_still_the_field_value(self):
+        code = (
+            "class A {\n"
+            "  handler =\n"
+            "    async () => { return 1; }\n"
+            "}\n"
+        )
+        self.assertEqual(['handler'],
+                         [f.name for f in get_js_function_list(code)])
