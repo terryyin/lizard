@@ -183,7 +183,7 @@ class PHPLanguageStates(CodeStateMachine):
         elif token == ')':
             self.bracket_level -= 1
             if self.bracket_level == 0:
-                self._state = self._function_body_or_return_type
+                self._state = self._function_return_type_or_body
         elif token.startswith('$'):
             # Found a parameter (PHP parameters start with $)
             if self.started_function:
@@ -191,7 +191,7 @@ class PHPLanguageStates(CodeStateMachine):
                 self.context.add_to_long_function_name(" " + token)
                 self.context.parameter(token)
 
-    def _function_body_or_return_type(self, token):
+    def _function_return_type_or_body(self, token):
         if token == '{':
             self._enter_function_body()
         elif token == ';':
