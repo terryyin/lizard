@@ -82,6 +82,7 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         self._predicate_subject = None if return_type else False
         self._assertion_subject = False
         self._assertion_predicate = False
+        self._assertion_escape = ''
 
     def _state_global(self, token):
         if token.isspace():
@@ -113,6 +114,8 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         if newline and not (self._expect_type or self._qualified_type) and self._ends_line(token):
             self.saved_token = token
             self.statemachine_return()
+            return
+        if self._assertion_predicate and self._consume_assertion_escape(token, newline):
             return
         if (self._qualified_type or self._assertion_subject) and self._consume_type_identifier(token, newline):
             return
@@ -175,12 +178,27 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
             self._assertion_subject = False
             if not newline and (token == '\\' or token.replace('$', '_').isidentifier()):
                 self._assertion_predicate = True
+                if token == '\\':
+                    self._assertion_escape = token
                 return True
         if self._qualified_type and token.replace('$', '_').isidentifier():
             self._qualified_type = False
             self._closed_type = False
             self._expect_type = False
             self._function_arrow = False
+            return True
+        return False
+
+    def _consume_assertion_escape(self, token, newline):
+        previous = self._assertion_escape
+        self._assertion_escape = ''
+        if newline:
+            return False
+        if token == '\\' or previous == '\\' and token == 'u':
+            self._assertion_escape = token
+            return True
+        if previous == 'u' and token == '{':
+            self._brackets.append('}')
             return True
         return False
 
