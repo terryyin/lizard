@@ -33,12 +33,12 @@ class LuaStateMachine(RubylikeStateMachine):
     FUNC_KEYWORD = 'function'
     PARAMETERS_ON_DEF_LINE = False
     # Lua has no `case`, and its `until` ends a `repeat` loop.
-    BLOCK_KEYWORDS = ("begin", "do", "class", "module", "{", "${")
+    BLOCK_KEYWORDS = ("do", "{", "${")
     LOOP_KEYWORDS = ("while", "for")
 
     # Only tokens that can change scope need the shared Ruby state.
     _STATE_TOKENS = frozenset(BLOCK_KEYWORDS + LOOP_KEYWORDS + (
-        FUNC_KEYWORD, "end", "}", "if", "unless", "=begin"))
+        FUNC_KEYWORD, "end", "}", "if", "=begin"))
 
     def __init__(self, context):
         super(LuaStateMachine, self).__init__(context)

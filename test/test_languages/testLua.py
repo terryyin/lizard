@@ -114,6 +114,47 @@ class Test_parser_for_Lua(unittest.TestCase):
         self.assertEqual(2, len(result))
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
+    def test_ruby_block_words_are_lua_identifiers(self):
+        result = get_function_list('''
+local function page_count(record_count, module)
+  return math.ceil(record_count / module.page_size)
+end
+
+local function create_frame(class, options)
+  return class.new(options)
+end
+
+local function start_session(begin, name)
+  return begin(name)
+end
+''')
+        self.assertEqual(
+            [('page_count', 2, 4), ('create_frame', 6, 8), ('start_session', 10, 12)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_unless_is_a_regular_lua_callback(self):
+        result = get_function_list('''
+local function deliver(request, unless)
+  unless(request)
+end
+''')
+        self.assertEqual(
+            [('deliver', 2, 4)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_class_field_in_a_test_callback_preserves_the_enclosing_function(self):
+        result = get_function_list('''
+local function register_dns_tests()
+  it("returns a DNS record", function()
+    return { class = 1 }
+  end)
+  register_cache_tests()
+end
+''')
+        self.assertEqual(
+            [('(anonymous)', 3, 5), ('register_dns_tests', 2, 7)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
     def test_repeat_until(self):
         result = get_function_list('''
         function f(n)
