@@ -233,6 +233,40 @@ class TestRust(unittest.TestCase):
         ''')
         self.assertEqual([], result)
 
+    def test_const_arguments_do_not_start_function_bodies(self):
+        result = get_rust_function_list('''pub struct Tag<const N: u8>;
+
+        pub trait Header {
+            fn tag() -> Tag<{ b'A' + 1 }>;
+            fn size() -> usize { 4 }
+        }
+
+        fn header(cached: bool) -> Option<Tag<{ b'A' + 1 }>> {
+            if cached { Some(Tag) } else { None }
+        }
+        ''')
+        self.assertEqual(
+            [('size', 5, 5, 1), ('header', 8, 10, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_braced_macro_in_return_type_does_not_start_function_body(self):
+        result = get_rust_function_list('''macro_rules! header_type {
+            ($size:expr) => { [u8; $size] };
+        }
+
+        fn magic() -> header_type!{4} {
+            *b"RIFF"
+        }
+
+        fn wait() -> ! {
+            loop { std::thread::park(); }
+        }
+        ''')
+        self.assertEqual(
+            [('magic', 5, 7), ('wait', 9, 11)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
     def test_nested_functions(self):
         result = get_rust_function_list('''
         fn main() {
