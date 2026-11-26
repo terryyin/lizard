@@ -456,7 +456,7 @@ fun label() = "${if (a) ", b" else ""}" + (if (c) "x" else "y")
 fun after() {}
         ''')
         self.assertEqual(
-            [("label", 2, 2, 2), ("after", 3, 3, 1)],
+            [("label", 2, 2, 3), ("after", 3, 3, 1)],
             [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in result],
         )
 

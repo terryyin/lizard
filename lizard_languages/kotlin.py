@@ -8,6 +8,7 @@ from . import swift
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine, _previous_code
 from .golike import GoLikeStates
+from .kotlin_literals import INTERPOLATION_CLOSE, INTERPOLATION_OPEN, TemplateText, TemplateTokens, string_tokens
 from .swift import SwiftReplaceLabel
 
 
@@ -35,6 +36,12 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         self.parallel_states = [KotlinStates(context, expression_bodies=self._expression_bodies)]
 
     def preprocess(self, tokens):
+        if isinstance(tokens, TemplateTokens):
+            self.interpolation_braces = INTERPOLATION_OPEN, INTERPOLATION_CLOSE
+            self.parallel_states[0] = _TemplateStates(self.parallel_states[0])
+        return self._read_expression_bodies(tokens)
+
+    def _read_expression_bodies(self, tokens):
         # Kotlin has optional semicolons, so the end of a line can end an
         # expression body. Ending it here, before the next token is counted,
         # counts that token in the enclosing scope.
@@ -45,20 +52,34 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         enders = KotlinExpressionBody.ENDERS
         statement_ends = self._statement_ends
         tokens = self._mark_labels(tokens)
+        interpolation_scopes = []
         indexed_tokens = enumerate(tokens)
         for index, token in indexed_tokens:
-            if bodies:
+            if token is INTERPOLATION_OPEN:
+                interpolation_scopes.append((len(bodies), line_start))
+                line_start = False
+                yield token
+                continue
+            if token is INTERPOLATION_CLOSE:
+                outer_bodies, line_start = interpolation_scopes.pop()
+                while len(bodies) > outer_bodies:
+                    bodies[-1].end()
+                yield token
+                continue
+            outer_bodies = interpolation_scopes[-1][0] if interpolation_scopes else 0
+            if len(bodies) > outer_bodies:
                 if token == '\n':
                     line_start = True
                 elif line_start or token in enders:
                     if line_start and token[:2] in ('//', '/*'):
                         if '#lizard forgive' in token:
-                            line_start = not (yield from self._read_forgiven_declaration(tokens, indexed_tokens, index))
+                            line_start = not (yield from self._read_forgiven_declaration(
+                                tokens, indexed_tokens, index, outer_bodies))
                         else:
                             yield token
                         continue
                     ended = False
-                    while bodies and bodies[-1].ends_before(token, line_start, tokens, index):
+                    while len(bodies) > outer_bodies and bodies[-1].ends_before(token, line_start, tokens, index):
                         bodies[-1].end()
                         ended = True
                     line_start = False
@@ -75,7 +96,7 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
         while bodies:
             bodies[-1].end()
 
-    def _read_forgiven_declaration(self, tokens, indexed_tokens, index):
+    def _read_forgiven_declaration(self, tokens, indexed_tokens, index, body_floor):
         comment = (self.get_comment_from_token(tokens[index]) or '').strip()
         following = None
         if (comment.startswith('#lizard forgive')
@@ -87,7 +108,7 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
             target = tokens[following]
             bodies = self._expression_bodies
             # Close before the comment reaches the shared forgiveness counter.
-            while bodies and bodies[-1].ends_before(target, True, tokens, following):
+            while len(bodies) > body_floor and bodies[-1].ends_before(target, True, tokens, following):
                 bodies[-1].end()
                 ended = True
         yield tokens[index]
@@ -133,8 +154,7 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        return CodeReader.generate_tokens(
-            source_code,
+        addition = (
             r"|`\w+`" +
             r"|\w+\?" +
             r"|\w+\!!" +
@@ -142,6 +162,41 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
             r"|\?:" +
             addition
         )
+        if '${' in source_code:
+            return TemplateTokens(string_tokens(source_code, addition))
+        if '"""' in source_code or '$$"' in source_code:
+            return string_tokens(source_code, addition)
+        return CodeReader.generate_tokens(source_code, addition)
+
+
+class _TemplateStates:
+    """Read each interpolation in its own state. Pass the whole string to its owner."""
+
+    def __init__(self, state):
+        self.states = [state]
+        self.owners = []
+
+    def __call__(self, token):
+        state = self.states[-1]
+        if token is INTERPOLATION_OPEN:
+            self.owners.append(state.context.current_function)
+            self.states.append(state.statemachine_clone())
+        elif token is INTERPOLATION_CLOSE:
+            self.states.pop().statemachine_before_return()
+            owner = self.owners.pop()
+            context = state.context
+            if owner in context.stacked_functions:
+                while context.current_function is not owner:
+                    state.fold_into_enclosing_function()
+        elif isinstance(token, TemplateText):
+            if token.literal is not None:
+                state(token.literal)
+        else:
+            state(token)
+
+    def statemachine_before_return(self):
+        for state in reversed(self.states):
+            state.statemachine_before_return()
 
 
 class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
