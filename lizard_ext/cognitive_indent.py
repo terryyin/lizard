@@ -1,8 +1,8 @@
-"""Indentation nesting for cognitive complexity, and counter selection."""
+"""Language-specific cognitive counters and counter selection."""
 
 from lizard_languages.python import PythonReader
 
-from .cognitive_brace import _BraceCounter, _GoCounter
+from .cognitive_brace import _BraceCounter
 from .cognitive_counter import BODY, _Counter, _EXPRESSION_FRAMES, _Frame
 from .cognitive_profile import (
     _EXPRESSION_BREAKERS, _GATED_LANGUAGES, _PROFILES, _PYTHON, _Profile,
@@ -103,6 +103,48 @@ class _IndentCounter(_Counter):
     def _push_expression(self, kind):
         self.state.frames.append(_Frame(kind, BODY, pdepth=self.state.pdepth))
 
+
+class _GoCounter(_BraceCounter):
+    """End a logical sequence where Go inserts a semicolon."""
+
+    _NON_TERMINATING_KEYWORDS = frozenset((
+        'case', 'chan', 'const', 'default', 'defer', 'else', 'for', 'func',
+        'go', 'goto', 'if', 'import', 'interface', 'map', 'package', 'range',
+        'select', 'struct', 'switch', 'type', 'var'))
+    _STATEMENT_ENDS = frozenset((
+        'break', 'continue', 'fallthrough', 'return', '++', '--', ')', ']', '}'))
+
+    def __init__(self, reader, profile, gated):
+        super().__init__(reader, profile, gated)
+        reader.track_comment_line_offsets()
+
+    def _switch_function(self, function):
+        previous_state = self.state
+        super()._switch_function(function)
+        state = self.state
+        if state.line is not None and previous_state.prev == '}':
+            # The child consumed the last token of the function literal.
+            state.prev2, state.prev = state.prev, '}'
+            state.line = previous_state.line
+
+    def _new_line(self, line):
+        state = self.state
+        if (state.logical and self._inserts_semicolon(state.prev, state.prev2)
+                and (not self.reader.comment_line_offsets
+                     or self.reader.source_line_changed(state.line, line))):
+            state.logical.pop(state.pdepth, None)
+        super()._new_line(line)
+
+    @classmethod
+    def _inserts_semicolon(cls, token, previous):
+        if not token or token in cls._NON_TERMINATING_KEYWORDS:
+            return False
+        if token == '.':
+            # The shared tokenizer splits a float such as 0. into two tokens.
+            return bool(previous) and previous[0].isdigit()
+        first = token[0]
+        return (first.isalnum() or first in "_'\"`"
+                or token in cls._STATEMENT_ENDS)
 
 def _counter_for(reader):
     if isinstance(reader, PythonReader):
