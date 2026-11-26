@@ -38,7 +38,7 @@ class CSharpReader(CLikeReader):
         super(CSharpReader, self).__init__(context)
         self.parallel_states = [
             CSharpStates(context),
-            CLikeNestingStackStates(context)
+            _CSharpNestingStackStates(context)
         ]
 
     @staticmethod
@@ -58,6 +58,11 @@ def _name(token):
     if token[0] == '@' and token[1:2].isidentifier():
         return token[1:]
     return token
+
+
+class _CSharpNestingStackStates(CLikeNestingStackStates):
+    # C# allows "template" as an ordinary identifier.
+    _reads_cpp_templates = False
 
 
 class CSharpStates(CLikeStates):
