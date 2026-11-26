@@ -16,40 +16,15 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     """
 
     def __init__(self, reader, profile, gated):
-        super(_BraceCounter, self).__init__(reader, profile, gated)
-        self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
-        self.actions = self._keyword_actions(profile)
-        braces = getattr(reader, 'interpolation_braces', None)
-        if not profile.nesting:
-            self._process = self._process_flat
-        elif braces:
+        if profile.nesting and (braces := getattr(reader, 'interpolation_braces', None)):
             self._interpolation_open, self._interpolation_close = braces
             self._interpolations = []
             self._process = self._process_interpolation
-
-    def _process_interpolation(self, token):
-        state = self.state
-        if token is self._interpolation_open:
-            self._interpolations.append((state, state.logical, state.depth, len(state.frames)))
-            state.logical = {}
-            self._open_block()
-        elif token is self._interpolation_close:
-            if state.pending:
-                self._resolve_pending(token)
-            if state.pending_ternary:
-                self._resolve_pending_ternary(token)
-            # Finish the expression without ending the enclosing statement.
-            outer, logical, depth, frame_count = self._interpolations.pop()
-            outer.logical = logical
-            outer.depth = depth
-            del outer.frames[frame_count:]
-            if outer is not state:
-                outer.prev = token
-        else:
-            if state.prev is self._interpolation_close:
-                # Newlines in the remaining literal text continue the string.
-                state.line = self.line
-            _BraceCounter._process(self, token)
+        super(_BraceCounter, self).__init__(reader, profile, gated)
+        self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
+        self.actions = self._keyword_actions(profile)
+        if not profile.nesting:
+            self._process = self._process_flat
 
     def _process(self, token):  # pylint: disable=E0202
         if token == '?' and getattr(token, 'is_optional', False):
@@ -279,3 +254,27 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     def _semicolon(self):
         if not self.state.pdepth:
             self._statement_end()
+
+    def _process_interpolation(self, token):
+        state = self.state
+        if token is self._interpolation_open:
+            self._interpolations.append((state, state.logical, state.depth, len(state.frames)))
+            state.logical = {}
+            self._open_block()
+        elif token is self._interpolation_close:
+            if state.pending:
+                self._resolve_pending(token)
+            if state.pending_ternary:
+                self._resolve_pending_ternary(token)
+            # Finish the expression without ending the enclosing statement.
+            outer, logical, depth, frame_count = self._interpolations.pop()
+            outer.logical = logical
+            outer.depth = depth
+            del outer.frames[frame_count:]
+            if outer is not state:
+                outer.prev = token
+        else:
+            if state.prev is self._interpolation_close:
+                # Newlines in the remaining literal text continue the string.
+                state.line = self.line
+            _BraceCounter._process(self, token)
