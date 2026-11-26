@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Yui-chan",
-  "email": "yui-chan@example.org",
-  "activity": "preparation",
-  "identity": "SEED-075#r-formal-parameter-boundaries",
-  "host": "codex",
-  "model": "gpt-6.2-sol"
-}
