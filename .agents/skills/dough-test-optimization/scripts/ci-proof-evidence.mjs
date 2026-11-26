@@ -7,10 +7,7 @@
 //
 // Units. Every result is counted in one unit: `case`, one test case outcome
 // a runner reported; `file`, one aggregate outcome for running one file,
-// however many cases that file holds; or `legacy`, results whose publisher
-// declared no unit. Legacy results keep the raw `label` their counted unit
-// was spelled with (`tests`, `checks`, or null when nothing said) as
-// provenance only: a label is never read as `case` or `file`.
+// however many cases that file holds.
 import {
   addedFigures,
   breakdownProblems,
@@ -22,45 +19,25 @@ import {
 
 export const PART_STATUSES = ["present", "missing", "ambiguous"];
 
-// The units a publisher declares, and the unit of results it declared none
-// for.
 export const DECLARED_UNITS = ["case", "file"];
-export const LEGACY_UNIT = "legacy";
-export const UNITS = [...DECLARED_UNITS, LEGACY_UNIT];
-
-// The unit of VALUE, a fragment or summary evidence: `{unit}`, with a legacy
-// unit's `label`.
-export const unitOf = ({ unit, label }) =>
-  unit === LEGACY_UNIT ? { unit, label } : { unit };
 
 // What results are called in each unit, as Intent names them.
 const UNIT_NOUNS = {
   case: ["test case", "test cases"],
   file: ["test file", "test files"],
-  legacy: ["legacy test result", "legacy test results"],
 };
 
 // What COUNT results in UNIT are called: "1 test case", "3 test files".
 export const unitNoun = (unit, count) => UNIT_NOUNS[unit][count === 1 ? 0 : 1];
 
-// Why VALUE's `unit` is not one of UNITS, or its `label` not one a legacy
-// unit carries (text, or also null where NULLABLE) or carried by another
-// unit; empty when they are.
-export function unitProblems(value, where, nullable) {
-  if (!UNITS.includes(value.unit)) {
-    return [`${where}unit is not ${UNITS.join(", ")}`];
+// Why VALUE does not use an allowed unit, or its label is invalid.
+export function unitProblems(value, where) {
+  if (!DECLARED_UNITS.includes(value.unit)) {
+    return [`${where}unit is not ${DECLARED_UNITS.join(", ")}`];
   }
-  if (value.unit !== LEGACY_UNIT) {
-    return value.label === undefined
-      ? []
-      : [`${where}label is given for ${value.unit} results`];
-  }
-  if (isText(value.label) || (nullable && value.label === null)) return [];
-  return [
-    nullable
-      ? `${where}label is neither a string nor null`
-      : `${where}label is not a string`,
-  ];
+  return value.label === undefined
+    ? []
+    : [`${where}label is given for ${value.unit} results`];
 }
 
 function partProblems(part, index, where) {
@@ -90,9 +67,9 @@ function brokenDownFigures(results) {
     : { ...total, untimed: undefined };
 }
 
-// Why RESULTS, one unit's results at the entry PATH (a version 1 entry's, or
-// a version 2 entry's evidence), do not account for their figures, parts and
-// file breakdown; their breakdown is checked only once PATH is known and
+// Why RESULTS, one unit's evidence at entry PATH, do not account for their
+// figures, parts and file breakdown. The breakdown is checked once PATH is
+// known and
 // nothing else is wrong.
 export function resultsProblems(results, where, path) {
   const problems = figuresProblems(results, where);

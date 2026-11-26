@@ -106,7 +106,7 @@ export function evaluateGuard(input, projectDir) {
       permissionDecisionReason:
         `Direct ${toolName} edits to ${defaultBacklogPath} are blocked. Use ` +
         "the installed dough-product-backlog scripts (product-backlog.mjs " +
-        "and its Git merge/rebase/cherry-pick adapters) to change the " +
+        "and its Git merge and rebase adapters) to change the " +
         "backlog instead.",
     },
   };

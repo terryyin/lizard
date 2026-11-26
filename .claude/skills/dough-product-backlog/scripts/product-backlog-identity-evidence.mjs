@@ -2,8 +2,8 @@
 // identities it has used, so whoever allocates a new one can choose above all
 // of it. It reads the active seed directory, the backlog's two lists, and the
 // done records and catalog beside the backlog, and the Git history reachable
-// from HEAD of the seed and done directories (which still shows seeds and
-// records cleanup has since removed), and reports each source's highest seed
+// from HEAD of numbered seed files and done records (including files cleanup
+// has since removed), and reports each source's highest seed
 // number with the file, record, or adding commit behind it, the next number
 // above every source read, and each source or file it could not read. A
 // supplied candidate identity is reported as active, completed, in history,
@@ -47,10 +47,8 @@ function highestOf(named) {
 
 // A candidate is "active" while the backlog lists it, else "completed" while
 // a done record names it, else "in-history" when history shows its own done
-// record, a declared legacy story, or its seed ID while no active seed carries
-// that ID, else
-// "unlisted". Whatever history shows of it is reported under `history` with
-// every status.
+// record or its seed ID while no active seed carries that ID, else "unlisted".
+// Whatever history shows of it is reported under `history` with every status.
 function candidateStatus(identity, { seeds, backlog, records, history }) {
   const listed = backlog.named.find((entry) => entry.identity === identity);
   const record = records.named.find((each) => each.identity === identity);
@@ -80,7 +78,6 @@ function candidateStatus(identity, { seeds, backlog, records, history }) {
   const activeSeed = seeds.named.some((entry) => entry.identity === seed);
   if (
     traced?.record !== undefined ||
-    traced?.story !== undefined ||
     (traced?.seed !== undefined && !activeSeed)
   )
     return { identity, status: "in-history", ...inHistory };
@@ -107,7 +104,11 @@ function reportedHighest(highest) {
  */
 export async function readIdentityEvidence(
   file,
-  { seedDirectory = join(dirname(file), defaultSeedDirectory), identity },
+  {
+    seedDirectory = join(dirname(file), defaultSeedDirectory),
+    identity,
+    includeSeedUse = false,
+  },
 ) {
   const backlogDirectory = dirname(file);
   const doneFiles = readDoneRecordFiles(backlogDirectory);
@@ -122,6 +123,7 @@ export async function readIdentityEvidence(
     doneCatalogSource(backlogDirectory, doneFiles),
     history,
   ];
+  const seed = includeSeedUse && identity ? seedNumberOf(identity) : undefined;
   const overall = highestOf(
     sources.flatMap(({ source, named }) =>
       named.map((entry) => ({ ...entry, source })),
@@ -146,6 +148,15 @@ export async function readIdentityEvidence(
     gaps: sources.flatMap(({ source, gaps }) =>
       gaps.map((gap) => ({ source, ...gap })),
     ),
+    ...(seed === undefined
+      ? {}
+      : {
+          seedInUse: sources.some(({ named }) =>
+            named.some(
+              (entry) => seedNumberOf(entry.identity)?.number === seed.number,
+            ),
+          ),
+        }),
     ...(identity === undefined
       ? {}
       : {

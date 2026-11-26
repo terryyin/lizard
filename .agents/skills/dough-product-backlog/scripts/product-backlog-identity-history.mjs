@@ -1,5 +1,5 @@
-// The identity-evidence history source: the seed and done-record files the
-// Git history reachable from HEAD shows added, which still shows seeds and
+// The identity-evidence history source: the numbered seed and done-record
+// files Git history reachable from HEAD shows added, including seeds and
 // records cleanup has since removed, each with the commit that first added
 // it. It reports in the shape of the other sources
 // (`product-backlog-identity-sources.mjs`) and reads Git only through the
@@ -21,7 +21,6 @@ import {
 } from "./product-backlog-git-repository.mjs";
 import {
   posixPath,
-  seedDocumentEvidence,
   seedIdentityFromFileName,
   seedNumberOf,
   unread,
@@ -78,45 +77,6 @@ function repositoryPath(root, backlogReal, backlogDirectory, directory) {
   return posixPath(relative(root, real)) || ".";
 }
 
-// Unnumbered legacy paths may start as context and acquire identities later.
-// Inspect their material versions; newest-first overwrite retains each identity's
-// earliest declaring commit, without rewriting or migrating any history.
-function legacyDocumentHistory(root, revision, file, evidence) {
-  const commits = git(
-    [
-      "log",
-      "--full-history",
-      "--no-renames",
-      "--diff-filter=AM",
-      "--format=%H",
-      revision,
-      "--",
-      file,
-    ],
-    root,
-  )
-    .trim()
-    .split("\n")
-    .filter(Boolean);
-  const named = new Map();
-  const gaps = [];
-  for (const commit of commits) {
-    const text = git(["show", `${commit}:${file}`], root);
-    const document = seedDocumentEvidence(text, posix.basename(file), evidence);
-    for (const entry of document.named) {
-      named.set(`${entry.kind}:${entry.identity}`, {
-        ...entry,
-        evidence,
-        commit,
-      });
-    }
-    gaps.push(
-      ...document.gaps.map((gap) => ({ path: evidence, commit, ...gap })),
-    );
-  }
-  return { named: [...named.values()], gaps };
-}
-
 function readHistory(backlogDirectory, seedDirectory) {
   let root;
   try {
@@ -163,11 +123,7 @@ function readHistory(backlogDirectory, seedDirectory) {
     if (directory === seeds) {
       if (!fileName.endsWith(".md")) continue;
       const seed = seedIdentityFromFileName(fileName);
-      if (seed === undefined || seedNumberOf(seed) === undefined) {
-        const legacy = legacyDocumentHistory(root, revision, file, evidence);
-        named.push(...legacy.named);
-        gaps.push(...legacy.gaps);
-      } else {
+      if (seed !== undefined && seedNumberOf(seed) !== undefined) {
         named.push({ identity: seed, evidence, commit, kind: "seed" });
       }
     } else if (isDoneRecordFileName(fileName)) {
@@ -200,17 +156,12 @@ export async function historySource(backlogDirectory, seedDirectory) {
 }
 
 // What the history shows of `identity`: the done record its own file name
-// held (`record`), an explicitly declared legacy identity (`story`), and the
-// first file of the same seed ID in the history's
-// order, a seed file before a done record (`seed`). Undefined when history
-// shows neither.
+// held (`record`) and the first file of the same seed ID in the history's
+// order, a numbered seed file before a done record (`seed`).
 export function historyFact(identity, history) {
   const seed = seedNumberOf(identity)?.seed;
   const record = history.named.find(
     (entry) => entry.kind === "done-record" && entry.identity === identity,
-  );
-  const story = history.named.find(
-    (entry) => entry.kind === "story" && entry.identity === identity,
   );
   const sameSeed =
     seed === undefined
@@ -219,9 +170,6 @@ export function historyFact(identity, history) {
           (entry) => seedNumberOf(entry.identity)?.seed === seed,
         );
   const fact = {
-    ...(story === undefined
-      ? {}
-      : { story: { evidence: story.evidence, commit: story.commit } }),
     ...(record === undefined
       ? {}
       : { record: { evidence: record.evidence, commit: record.commit } }),

@@ -11,9 +11,7 @@ not write host settings.
 
 The hooks inspect local mailbox files only, without network calls, AI calls,
 or waiting for CI. Stop hooks deliver only ready events; pending or successful
-CI does not extend the agent turn. The explicitly enrolled live-Claude
-[background handoff](ci-background-handoff.md) adds a bounded asynchronous
-local Stop waiter; the synchronous hook leaves its delivery to that waiter.
+CI does not extend the agent turn.
 
 Run this harmless probe from the checkout root using the normal Shell/Bash
 tool, not an implementation agent or a tool that hides its stdout:
@@ -150,8 +148,7 @@ settings on shutdown.
   third-party compatibility, the Claude adapter ignores its `cursor_version`
   payload so only the native Cursor adapter can claim notifications.
 
-The ordinary bridge delivers at a tool/stop boundary of the ongoing coordinator.
-The explicit live-Claude background handoff wakes only for actionable failure,
-never for periodic polling, pending or success. Native hook support must
-pass the readiness probe on the installed host; do not infer it from the
-product name or from merely running the script in a terminal.
+The bridge delivers at a tool/stop boundary of the ongoing coordinator.
+Native hook support must pass the readiness probe on the installed host; do
+not infer it from the product name or from merely running the script in a
+terminal.

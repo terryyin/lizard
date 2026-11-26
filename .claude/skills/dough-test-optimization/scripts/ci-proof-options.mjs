@@ -1,6 +1,6 @@
 // The collector command line's options (ci-proof-summary.mjs): a
 // command's string options and flags, positive integers, the attempt they
-// name, and the units `--unit` and `--expect <entry>=<parts>[:<unit>]`
+// name, and the units `--unit` and `--expect <entry>=<parts>:<unit>`
 // declare, each refused naming the option it came from. Node built-ins
 // only, like the rest of the collector.
 import { parseArgs } from "node:util";
@@ -73,19 +73,17 @@ export function declaredUnit(name, text) {
   return text;
 }
 
-// `<entry>=<parts>` or `<entry>=<parts>:<unit>`.
+// `<entry>=<parts>:<unit>`.
 export function parseExpect(declaration) {
   const equals = declaration.lastIndexOf("=");
   const entry = declaration.slice(0, equals);
-  if (equals <= 0) {
-    throw new Error(`--expect ${declaration} is not <entry>=<parts>[:<unit>]`);
-  }
   const [parts, ...unit] = declaration.slice(equals + 1).split(":");
+  if (equals <= 0 || unit.length === 0) {
+    throw new Error(`--expect ${declaration} is not <entry>=<parts>:<unit>`);
+  }
   return {
     entry,
     parts: positive("expect", parts),
-    ...(unit.length === 0
-      ? {}
-      : { unit: declaredUnit(`expect ${declaration}`, unit.join(":")) }),
+    unit: declaredUnit(`expect ${declaration}`, unit.join(":")),
   };
 }
