@@ -70,7 +70,7 @@ class CSharpReader(CLikeReader):
         if token_class is None and '?' in source_code:
             tokens = _mark_questions(tokens)
         if token_class is None and '#' in source_code and _CONDITIONAL_DIRECTIVE.search(source_code):
-            tokens = _mark_conditional_code(tokens)
+            tokens = _mark_conditional_terminators(_mark_conditional_code(tokens))
         return tokens
 
     @staticmethod
@@ -159,6 +159,10 @@ class CSharpStates(CLikeStates):
             self._expression_depth -= 1
             self.context.pop_nesting()
         elif token == ';' and not self._expression_depth:
+            closed = getattr(token, 'closed_before_alternate', None)
+            # An alternate within the body can supply its own terminator.
+            if closed is not None and closed < len(self._expression_branches):
+                return
             if self._expression_method:
                 self.context.pop_nesting()
             self._expression_depth = None
@@ -520,11 +524,12 @@ _CONDITIONAL_DIRECTIVE = re.compile(r'#\s*(if|elif|else|endif)\b')
 
 
 class _ConditionalCode(str):
-    """An expression boundary with the preceding conditional directives."""
+    """An expression boundary with adjacent conditional directives."""
 
-    def __new__(cls, token, directives):
+    def __new__(cls, token, directives, closed_before_alternate=None):
         code = super().__new__(cls, token)
         code.directives = directives
+        code.closed_before_alternate = closed_before_alternate
         return code
 
 
@@ -540,3 +545,36 @@ def _mark_conditional_code(tokens):
             token = _ConditionalCode(token, directives)
             directives = []
         yield token
+
+
+def _mark_conditional_terminators(tokens):
+    """Look past an expression terminator for an alternate in the same conditional."""
+    pending = None
+    trailing = []
+    closed = 0
+    for token in tokens:
+        if pending is not None:
+            directive = _CONDITIONAL_DIRECTIVE.match(token) if token.startswith('#') else None
+            directive = directive.group(1) if directive else None
+            if directive == 'endif':
+                closed += 1
+            elif not (token.isspace() or token.startswith(('//', '/*'))):
+                if directive in ('elif', 'else'):
+                    pending = _ConditionalCode(pending, getattr(pending, 'directives', ()), closed)
+                yield pending
+                yield from trailing
+                pending = None
+                trailing.clear()
+            if pending is not None:
+                trailing.append(token)
+                continue
+
+        if token == ';' and not isinstance(token, _InterpolationPart):
+            pending = token
+            closed = 0
+        else:
+            yield token
+
+    if pending is not None:
+        yield pending
+        yield from trailing
