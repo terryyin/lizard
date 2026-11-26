@@ -1335,6 +1335,34 @@ class TestTypeScriptSignatures(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptConditionalLineBreaks(unittest.TestCase):
+
+    def test_conditional_delimiters_can_start_lines(self):
+        self.assertEqual([3], cogc("labels.js", """
+            function label(ready, retry) { return ready
+              ? 1
+              : retry ? 2 : 3; }
+        """))
+
+    def test_conditional_branch_operands_can_start_lines(self):
+        self.assertEqual([6], cogc("labels.ts", """
+            function label(enabled: boolean, ready: boolean, retry: boolean) {
+              if (enabled)
+                return ready ?
+                  1 :
+                  retry ? 2 : 3;
+            }
+        """))
+
+    def test_next_statement_ends_the_conditional(self):
+        self.assertEqual([2], cogc("labels.js", """
+            function label(ready, retry) {
+              const first = ready ? 1 : 2
+              return retry ? first : 3
+            }
+        """))
+
+
 class TestJavaScriptArrowBodyInParentheses(unittest.TestCase):
     """The reader starts an arrow function at the ``(`` of its body.  That
     function is no grouped expression, also when the reader discards it."""
@@ -1518,6 +1546,42 @@ class TestFunctionsTheExtensionNeverSees(unittest.TestCase):
         self.assertEqual(0, result.returncode, msg=result.stderr or result.stdout)
         self.assertRegex(result.stdout, r"\s0\s+OneLinerTest::empty_oneliner@")
         self.assertRegex(result.stdout, r"\s1\s+OneLinerTest::condition_oneliner@")
+
+
+class TestCognitiveConditionalContinuations(unittest.TestCase):
+    def test_nested_conditional_keeps_its_nesting_across_a_comparison(self):
+        formats = (
+            'v >= 2015',
+            'v\n                  >= 2015',
+            'v >= /* edition threshold */\n                  2015',
+        )
+        for filename, parameter in (('edition.js', 'v'), ('edition.ts', 'v: number')):
+            for comparison in formats:
+                with self.subTest(filename=filename, comparison=comparison):
+                    source = """
+                        const edition = (%s) =>
+                          v === 0 ? 2026 : %s ? v - 2009 : v;
+                    """ % (parameter, comparison)
+                    self.assertEqual([3], cogc(filename, source))
+
+    def test_wrapped_logical_condition_keeps_its_ternary_parent(self):
+        for condition in ('quoted ||\n                apostrophe',
+                          'quoted\n                || apostrophe'):
+            with self.subTest(condition=condition):
+                source = """
+                    const attrEnd = (missing, quoted, apostrophe, end) =>
+                      missing ? end : %s ? end + 1 : end;
+                """ % condition
+                self.assertEqual([4], cogc('attribute.js', source))
+
+    def test_asi_ends_a_conditional_before_the_next_statement(self):
+        source = """
+            function edition(v: number, available: number | undefined) {
+              const first = v === 0 ? 2026 : available!
+              return v >= 2015 ? v - 2009 : first
+            }
+        """
+        self.assertEqual([2], cogc('edition.ts', source))
 
 
 class TestCommandLine(unittest.TestCase):

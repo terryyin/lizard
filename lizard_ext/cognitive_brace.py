@@ -26,6 +26,9 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if token == '?' and getattr(token, 'is_optional', False):
             return
         state = self.state
+        if (self.profile.nested_functions and self.line != state.line
+                and self._conditional_continues(token)):
+            state.line = self.line
         line = self.line
         if line != state.line:
             self._new_line(line)
@@ -119,6 +122,17 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 break
             frame.phase = BODY
             frame.closing = True
+
+    # A bare '>' can also end TypeScript type arguments.
+    _JS_INFIX_CONTINUATIONS = frozenset(('&&', '||', '??', '==', '!=', '===', '!==', '<=', '>='))
+
+    def _conditional_continues(self, token):
+        state = self.state
+        if token in ('?', ':') or state.prev in ('?', ':'):
+            return True
+        return (bool(state.frames) and state.frames[-1].kind == 'ternary'
+                and (token in self._JS_INFIX_CONTINUATIONS
+                     or state.prev in self._JS_INFIX_CONTINUATIONS))
 
     def _block_closed(self):
         """A '}' has just brought the brace depth down to state.depth."""
