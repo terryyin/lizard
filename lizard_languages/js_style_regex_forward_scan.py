@@ -7,14 +7,14 @@ from .js_style_regex_context import (
     _JS_WHITESPACE,
     _EXPRESSION_KEYWORDS,
     _LINE_ENDS,
-    _OPERAND_OPERATOR,
+    _is_js_dividend,
+    _skip_ws_and_comments_back,
+    _yield_after_operator,
     _REGEX_DIVISOR,
     _REGEX_LITERAL_RE,
     _RUBY_EXPRESSION_KEYWORDS,
     _STRING_LINE_ENDS,
     _apply_marks,
-    _is_js_dividend,
-    _skip_ws_and_comments_back,
     _word_before,
 )
 from .ruby_documentation import match_opaque_span, may_have_documentation
@@ -268,15 +268,3 @@ def mark_forward(source, js_family, *, jsx=False, javascript_operators=False):
         while i < n:
             advance()
     return _apply_marks(source, marks)
-
-
-def _yield_after_operator(source, start):
-    prev = _skip_ws_and_comments_back(source, start - 1)
-    if prev < 0 or _OPERAND_OPERATOR.search(source, max(0, prev - 1), prev + 1) is None:
-        return False
-    # A second yield can be the expression delegated by yield*.
-    if source[prev] == '*':
-        word, _ = _word_before(source, _skip_ws_and_comments_back(source, prev - 1))
-        if word == 'yield':
-            return False
-    return True

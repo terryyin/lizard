@@ -173,3 +173,15 @@ def _is_js_dividend(source, prev, word):
         return False
     operand = source[prev]
     return operand.isalnum() or operand in '_$]"`\''
+
+
+def _yield_after_operator(source, start):
+    prev = _skip_ws_and_comments_back(source, start - 1)
+    if prev < 0 or _OPERAND_OPERATOR.search(source, max(0, prev - 1), prev + 1) is None:
+        return False
+    # A second yield can be the expression delegated by yield*.
+    if source[prev] == '*':
+        word, _ = _word_before(source, _skip_ws_and_comments_back(source, prev - 1))
+        if word == 'yield':
+            return False
+    return True
