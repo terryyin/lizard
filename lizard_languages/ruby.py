@@ -8,6 +8,7 @@ from .rubylike import RubylikeReader
 from .js_style_regex_expression import js_style_regex_expression
 from .ruby_documentation import may_have_documentation, pattern_for_fragment
 from .source_documentation import tokens_ignoring_documentation
+from .token_pattern import compiled_token_pattern, tokens_in_span
 
 
 class MyToken(str):
@@ -74,6 +75,9 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
                     r"[a-z]*)")
 
 
+_PERCENT_INTERPOLATION = re.compile(r"\\.|#\{", re.S)
+
+
 class RubyReader(RubylikeReader):
     # pylint: disable=R0903
 
@@ -136,6 +140,7 @@ class RubyReader(RubylikeReader):
     def generate_tokens(source_code, addition='', token_class=None):
         addition = (r"|\w+:|\$\w+|\.+|:?\@{0,2}\w+\??\!?"
                     r"|" + _PERCENT_LITERAL + addition)
+        percent_strings = '%(' in source_code or '%Q(' in source_code
         bracket_stack = []
         source = source_code
         while source is not None:
@@ -159,6 +164,48 @@ class RubyReader(RubylikeReader):
                         bracket_stack.append(sep)
                         source = source[token.begin + token.find(sep)+2:]
                         break
-                yield token
+                if percent_strings and token.startswith(('%(', '%Q(')) and '#{' in token:
+                    yield from _percent_interpolation_tokens(token, addition)
+                else:
+                    yield token
             else:
                 source = None
+
+
+def _percent_interpolation_tokens(token, addition):
+    start = token.index('(') + 1
+    end = len(token) - 1
+    fragments = []
+    pattern = compiled_token_pattern(r'|\#[^\n]*' + addition)
+
+    while start < end:
+        marker = next((match for match in _PERCENT_INTERPOLATION.finditer(token, start, end)
+                       if match[0] == '#{'), None)
+        if marker is None:
+            break
+        expression, closing = _percent_expression(token, marker.end(), end, pattern)
+        if closing is None:
+            return [token]
+        fragments.extend(('"'+token[start:marker.start()]+'"', '${'))
+        fragments.extend(expression)
+        fragments.append(closing)
+        start = closing.begin + 1
+
+    if not fragments:
+        return [token]
+    fragments.append('"'+token[start:end]+'"')
+    return fragments
+
+
+def _percent_expression(token, start, end, pattern):
+    parts = []
+    braces = 0
+    for current in tokens_in_span(pattern, token, start, end, MyToken):
+        if current == '{':
+            braces += 1
+        elif current == '}':
+            if not braces:
+                return parts, current
+            braces -= 1
+        parts.append(current)
+    return parts, None
