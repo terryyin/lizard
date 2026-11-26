@@ -2,6 +2,8 @@
 Language parser for Lua
 '''
 
+import re
+
 from .rubylike import RubylikeReader, RubylikeStateMachine
 
 
@@ -13,10 +15,13 @@ class LuaReader(RubylikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        # Read long brackets and nonempty comments before the empty-comment fallback.
+        lua_patterns = r"|--(?:\[\[.*?\]\]|[^\n]+)|\[\[.*?\]\]"
+        if "[=" in source_code:
+            lua_patterns = _leveled_brackets(source_code, addition) + lua_patterns
         return RubylikeReader.generate_tokens(
             source_code,
-            r"|\-\-\[\[.*?\]\]" +
-            r"|\[\=*\[.*?\]\=*\]" +
+            lua_patterns +
             r"|\-\-.*?$" +
             addition)
 
@@ -84,3 +89,11 @@ class LuaStateMachine(RubylikeStateMachine):
             return
         self.context.push_new_function(self.probable_function_name)
         self.next(self._def_parameters)
+
+
+def _leveled_brackets(source_code, addition):
+    if not addition:
+        return r"|(?:--\[=|\[=)(?P<lua_level>=*)\[.*?\]=(?P=lua_level)\]"
+    # Use literal levels so Lua's pattern cannot renumber caller captures.
+    levels = sorted(set(re.findall(r"(?=\[(=+)\[)", source_code)))
+    return "".join(rf"|(?:--)?\[{level}\[.*?\]{level}\]" for level in levels)
