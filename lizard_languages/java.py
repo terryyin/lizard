@@ -5,6 +5,9 @@ Language parser for Java
 from lizard_languages.code_reader import CodeStateMachine
 from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
 
+# A backslash escapes the next character. An unescaped triple quote ends the block.
+_JAVA_TEXT_BLOCK = r'|"""[ \t\f]*(?:\r\n?|\n)[^"\\]*(?:(?:\\.|"(?!""))[^"\\]*)*"""'
+
 # "record" is a keyword for type declarations, but a valid method/field name.
 # Treat as keyword only when it cannot be the name in "Type name" (field/method/parameter).
 _JAVA_CLASS_MODIFIERS = frozenset({
@@ -59,6 +62,8 @@ class JavaReader(CLikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        if '"""' in source_code:
+            addition = _JAVA_TEXT_BLOCK + addition
         return clike_tokens(source_code, addition, token_class)
 
 
