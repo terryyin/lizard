@@ -121,3 +121,57 @@ function boot() {
              ('*global*', 1)],
             [(f.name, f.cyclomatic_complexity)
              for f in result.function_list])
+
+
+class Test_PHP_logical_operators(unittest.TestCase):
+
+    def test_word_operators_count_and_keep_their_case_insensitive_sequences(self):
+        self.assertEqual(
+            [('canPublish', 5, 3, 1, 1,
+              [['if', 3], ['and', 3], ['and', 3], ['or', 3]])],
+            php_metrics("""<?php
+function canPublish($ready, $approved, $verified, $isAdmin) {
+    if ($ready and $approved AND $verified or $isAdmin) {
+        return true;
+    }
+    return false;
+}
+"""))
+
+    def test_xor_keeps_both_operands_on_the_same_path(self):
+        self.assertEqual(
+            [('matchesOne', 2, 1, 1, 1, [['if', 3]])],
+            php_metrics("""<?php
+function matchesOne($primary, $fallback) {
+    if ($primary xor $fallback) {
+        return true;
+    }
+    return false;
+}
+"""))
+
+    def test_word_operator_names_count_only_when_used_as_operators(self):
+        self.assertEqual(
+            [('Rule::or', 1, 0, 0, 0, []),
+             ('validate', 2, 1, 0, 0, [['or', 10]])],
+            php_metrics("""<?php
+class Rule {
+    public const AND = 1, OR = 2;
+
+    public function or($alternative) {
+        return new self($this, self::OR, $alternative);
+    }
+}
+function validate($rule, $alternative, $value) {
+    return $rule->or($alternative)->matches($value) OR $value === null;
+}
+"""))
+
+    def test_word_operator_next_to_a_qualified_name(self):
+        self.assertEqual(
+            [('isReady', 2, 1, 0, 0, [['and', 3]])],
+            php_metrics(r"""<?php
+function isReady($job) {
+    return Or\Rules::matches($job) and \is_readable($job->path);
+}
+"""))
