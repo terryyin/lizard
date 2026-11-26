@@ -360,13 +360,13 @@ def patch_append_method(frm, accept_class, method_name):
 def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
     self.max_nesting_depth = 0
-    self.standalone_logical_added = False
-    self.standalone_groups = []
-    self.standalone_square_depth = 0
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
+    self.standalone_logical_added = False
+    self.standalone_groups = []
+    self.standalone_square_depth = 0
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
 
