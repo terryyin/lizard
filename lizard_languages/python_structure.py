@@ -1,7 +1,10 @@
 """Python indentation and function declaration states."""
 
 from .code_reader import CodeStateMachine
-from .python_tokens import FStringExpressionToken
+from .python_tokens import FStringExpressionToken, FStringLiteralToken, PrefixedStringToken
+
+
+_INTERPOLATED_PREFIXES = frozenset(('f', 'fr', 'rf', 't', 'tr', 'rt'))
 
 
 def count_spaces(token):
@@ -18,6 +21,11 @@ class PythonIndents:  # pylint: disable=R0902
         if self.deferred_function_indent is None and spaces > self.indents[-1] and \
                 self.context.pending_function is self.context.current_function:
             self.deferred_function_indent = spaces
+
+    def restore_function_indent(self):
+        if self.deferred_function_indent is not None:
+            self.set_nesting(self.deferred_function_indent)
+            self.deferred_function_indent = None
 
     def set_nesting(self, spaces, token=""):
         while self.indents[-1] > spaces and (not token.startswith(")")):
@@ -136,9 +144,14 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
             self.next(self._state_global)
 
     def _state_return_annotation(self, token):
-        if isinstance(token, FStringExpressionToken):
-            return
-        if token in ('def', 'class'):
+        if isinstance(token, (FStringExpressionToken, FStringLiteralToken)) or (
+                isinstance(token, PrefixedStringToken) and '{' in token and
+                self.last_token.lower() in _INTERPOLATED_PREFIXES):
+            # Reused quotes can expose a field delimiter as an ordinary token.
+            self.indents.restore_function_indent()
+            self.reading_return_annotation = False
+            self.next(self._state_global)
+        elif token in ('def', 'class'):
             self.reading_return_annotation = False
             self.next(self._state_global, token)
         elif token in ('(', '[', '{'):
@@ -164,7 +177,7 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
             inline = self.annotation_colon_line == self.context.current_line - token.count('\n')
             if inline:
                 # Preserve the indent that used to attach this inline function.
-                self.indents.set_nesting(self.indents.deferred_function_indent)
+                self.indents.restore_function_indent()
             self.annotation_colon_line = 0
         if token.startswith('"""') or token.startswith("'''"):
             self.context.add_nloc(-token.count('\n') - (not inline))
