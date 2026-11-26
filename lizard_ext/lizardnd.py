@@ -237,37 +237,116 @@ def patch_append_method(frm, accept_class, method_name):
 
 
 def _kotlin_else_if_branches(tokens, reader):
-    """Reopen a closed else-if level for a block or a direct nested if."""
+    """Give a reopened else-if level to the body that owns it."""
     context = reader.context
     interpolation = getattr(reader, 'interpolation_braces', None)
-    interpolation_start = interpolation[0] if interpolation else None
+    interpolation_start, interpolation_end = interpolation or (None, None)
     headers = []
+    regions = []
+    braced_bodies = []
     previous = None
     after_else_if = False
     for token in tokens:
+        function = context.current_function
+        line = context.current_line
+        for region in reversed(regions):
+            if region.function is function and not region.read(token, line):
+                context.end_statement()
+                context.close_block()
+                regions.remove(region)
+        if token == '}' and token is not interpolation_end and braced_bodies:
+            if braced_bodies[-1] == (function, len(function.block_levels)):
+                braced_bodies.pop()
+                context.end_statement()
         if headers and previous == ')':
-            function, depth, nested = headers[-1]
-            if function is context.current_function and context.get_condition_depth() == depth:
+            owner, depth = headers[-1]
+            if owner is function and context.get_condition_depth() == depth:
                 headers.pop()
-                braced = token == '{' and token is not interpolation_start
-                direct_if = token == 'if' and not getattr(token, 'is_member_name', False)
-                if not nested and (braced or direct_if):
+                if token == '{' and token is not interpolation_start:
                     context.open_level()
-                if direct_if:
-                    headers.append((function, depth, True))
-                elif nested and not braced:
-                    # The nested condition has recorded its depth. A plain
-                    # body has no explicit block to close the reopened level.
-                    function.levels_awaiting_body -= 1
-                    context.add_nd_condition(-1)
-        if after_else_if and token == '(':
-            function = context.current_function
-            if function.levels_awaiting_body == 0:
-                headers.append((function, context.get_condition_depth(), False))
+                    braced_bodies.append((function, len(function.block_levels) + 1))
+                elif token == 'if' and not getattr(token, 'is_member_name', False):
+                    context.open_level()
+                    context.open_block()
+                    region = _KotlinIfBody(function)
+                    region.read(token, line)
+                    regions.append(region)
+        if after_else_if and token == '(' and not function.levels_awaiting_body:
+            headers.append((function, context.get_condition_depth()))
         after_else_if = (token == 'if' and previous == 'else'
                          and not getattr(token, 'is_member_name', False))
         previous = token
         yield token
+
+
+class _KotlinIfBody:
+    """Find the end of a nested if, including its nearest matching else."""
+
+    _CLOSING = {'(': ')', '[': ']', '{': '}'}
+    _CONTINUED = frozenset((
+        '.', '?.', '::', '?:', '!!', '+', '-', '*', '/', '%', '&&', '||',
+        '=', '+=', '-=', '*=', '/=', '%=', '==', '!=', '===', '!==',
+        '<', '>', '<=', '>=', 'in', '!in', 'is', '!is', 'as', 'as?',
+        '..', '..<', ':', ',', '->', '!',
+    ))
+
+    def __init__(self, function):
+        self.function = function
+        self.alternates = []
+        self.groups = []
+        self.phase = 'body'
+        self.previous = None
+        self.line = None
+
+    def read(self, token, line):
+        if self.groups:
+            self._read_group(token)
+        elif token == 'else' and self.phase in ('plain', 'done'):
+            if not self._attach_else():
+                return False
+        elif self.phase == 'done' or token in (')', ']', '}'):
+            return False
+        elif self.phase == 'plain' and self._starts_sibling(token, line):
+            return False
+        elif token == 'if' and self.phase in ('body', 'plain'):
+            self.alternates.append(False)
+            self.phase = 'head'
+        elif token == ';':
+            self.phase = 'done'
+        else:
+            if self.phase == 'body':
+                self.phase = 'block' if token == '{' else 'plain'
+            if token in self._CLOSING:
+                self.groups.append(self._CLOSING[token])
+        self.previous, self.line = token, line
+        return True
+
+    def _read_group(self, token):
+        if token in self._CLOSING:
+            self.groups.append(self._CLOSING[token])
+        elif token == self.groups[-1]:
+            self.groups.pop()
+            if not self.groups:
+                if self.phase == 'head':
+                    self.phase = 'body'
+                elif self.phase == 'block':
+                    self.phase = 'done'
+
+    def _attach_else(self):
+        while self.alternates and self.alternates[-1]:
+            self.alternates.pop()
+        if not self.alternates:
+            return False
+        self.alternates[-1] = True
+        self.phase = 'body'
+        return True
+
+    def _starts_sibling(self, token, line):
+        return (line - token.count('\n') != self.line
+                and self.previous not in self._CONTINUED
+                and token not in self._CONTINUED
+                and token not in self._CLOSING
+                and token != ';')
 
 
 def _init_nesting_depth_data(self, *_):
