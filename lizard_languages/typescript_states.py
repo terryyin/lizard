@@ -101,7 +101,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._consume_type_annotation()
                     return
                 if token == 'async' and hasattr(self.context, 'bare_recursive_functions'):
-                    self._async_declaration_start = not self.as_object and self._at_function_declaration_start()
+                    self._async_declaration_start = not self.holds_members and self._at_function_declaration_start()
                 if token == 'static':
                     # Hot path: most `static`/`async` tokens are not inside an
                     # open field value; avoid the helper call overhead there.
