@@ -292,6 +292,213 @@ class Test_parser_for_Kotlin(unittest.TestCase):
         self.assertEqual("sayGoodbye", result[0].name)
         self.assertEqual(2, result[0].parameter_count)
 
+    def test_multiline_default_keeps_its_parameter_name(self):
+        functions = get_kotlin_function_list('''\
+fun readNotice(locale: String, notice: String = """
+    Service is unavailable.
+    Try again later.
+"""): String {
+    return "$locale: $notice"
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["locale", "notice"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_multiline_annotation_argument_keeps_the_formal_parameter_name(self):
+        functions = get_kotlin_function_list('''\
+annotation class Note(val text: String)
+
+fun readNotice(
+    @Note(text = """First line
+second line""") value: Int,
+    last: Int,
+): Int {
+    return value + last
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["value", "last"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_named_call_argument_is_not_a_formal_parameter(self):
+        functions = get_kotlin_function_list('''\
+fun render(title: String, detail: String): String { return "$title: $detail" }
+
+fun readNotice(
+    label: String = render(
+        title = "Service unavailable",
+        detail = """Try again
+later.""",
+    ),
+    retries: Int = 2,
+): String {
+    return "$label ($retries)"
+}
+''')
+        self.assertEqual(
+            [("render", ["title", "detail"], 2), ("readNotice", ["label", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_multiline_default_keeps_the_name_after_an_annotation(self):
+        functions = get_kotlin_function_list('''\
+annotation class Description(val text: String)
+
+fun readNotice(
+    @Description(text = "Public status") status: String = """Service unavailable
+Try again later.""",
+    retries: Int = 2,
+): String {
+    return "$status ($retries)"
+}
+''')
+        self.assertEqual(
+            [("readNotice", ["status", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_multiline_defaults_count_each_declared_parameter_once(self):
+        functions = get_kotlin_function_list('''\
+annotation class NotePair(val title: String, val detail: String)
+
+fun formatNotice(title: String, detail: String): String { return "$title $detail" }
+
+fun fromCall(
+    message: String = formatNotice(
+        title = """Connection
+failed""",
+        detail = "Try later",
+    ),
+    retries: Int = 2,
+): String {
+    return "$message ($retries)"
+}
+
+fun fromAnnotation(
+    @NotePair(title = "Public", detail = "Warning") message: String = """Connection
+failed""",
+    retries: Int = 2,
+): String {
+    return "$message ($retries)"
+}
+''')
+        self.assertEqual(
+            [("formatNotice", ["title", "detail"], 2),
+             ("fromCall", ["message", "retries"], 2),
+             ("fromAnnotation", ["message", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_generic_type_before_multiline_default_keeps_the_formal_name(self):
+        functions = get_kotlin_function_list('''\
+fun notice(
+    messages: Map<String, String> = mapOf("error" to """Connection
+failed"""),
+    retries: Int = 2,
+): String {
+    return messages.getValue("error").repeat(retries)
+}
+''')
+        self.assertEqual(
+            [("notice", ["messages", "retries"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_parameters_ignore_commas_inside_parentheses(self):
+        functions = get_kotlin_function_list('''\
+fun applyOffset(
+    calculate: (left: Int, right: Int) -> Int,
+    offset: Int = maxOf(1, 2),
+): Int {
+    return calculate(1, 2) + offset
+}
+''')
+        self.assertEqual(
+            [("applyOffset", ["calculate", "offset"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_raw_defaults_do_not_change_parameter_depth(self):
+        functions = get_kotlin_function_list('''\
+fun delimiters(
+    prefix: String = """" ( " """,
+    suffix: String = """" ) " """,
+    count: Int = 0,
+): Int {
+    return prefix.length + suffix.length + count
+}
+
+fun fallback(): Int { return 1 }
+''')
+        self.assertEqual(
+            [("delimiters", ["prefix", "suffix", "count"], 3), ("fallback", [], 0)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_nested_comments_do_not_change_parameter_depth(self):
+        functions = get_kotlin_function_list('''\
+fun retry(
+    delay: Int = 2 /* Previous expression /* fallback */ maxOf( */,
+    limit: Int = 3 /* Previous expression /* fallback */ 100) */,
+    count: Int = 1,
+): Int {
+    return delay + limit + count
+}
+''')
+        self.assertEqual(
+            [("retry", ["delay", "limit", "count"], 3)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_typed_lambda_default_keeps_its_own_commas(self):
+        functions = get_kotlin_function_list('''\
+fun applyOffset(
+    calculate: (Int, Int) -> Int = { left: Int, right: Int -> left + right },
+    offset: Int = 0,
+): Int {
+    return calculate(1, 2) + offset
+}
+''')
+        self.assertEqual(
+            [("applyOffset", ["calculate", "offset"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_generic_arguments_keep_their_commas_and_comparisons_end_the_default(self):
+        functions = get_kotlin_function_list('''\
+fun format(
+    pair: Pair<Int, String> = Pair<Int, String>(1, "active"),
+    retry: Boolean = 1 < 2,
+    count: Int = maxOf(1, 2),
+): String {
+    return pair.second.repeat(if (retry) count else 1)
+}
+''')
+        self.assertEqual(
+            [("format", ["pair", "retry", "count"], 3)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
+    def test_comparison_default_before_multiline_parameter_annotation(self):
+        functions = get_kotlin_function_list('''\
+annotation class Tuning(val description: String)
+
+fun retryDelay(
+    backoff: Boolean = 3 < 4,
+    @Tuning(description = """Request
+timeout""") timeout: Int = 1,
+): Int {
+    return if (backoff) timeout else 0
+}
+''')
+        self.assertEqual(
+            [("retryDelay", ["backoff", "timeout"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_one_function_with_return_value(self):
         result = get_kotlin_function_list('''
             fun sayGoodbye(): String {return "bye"}

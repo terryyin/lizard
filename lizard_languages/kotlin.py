@@ -176,6 +176,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         'fun', 'class', 'interface', 'val', 'var',
     }
     _TYPE_PUNCTUATION = {'.', '?', '<', '>', ',', '(', ')', '->', '*'}
+    _PARAMETER_DELIMITERS = {'(': 1, '[': 1, '{': 1, ')': -1, ']': -1, '}': -1}
     # Words that start a declaration when they begin a line.
     _DECLARATION_STARTS = {
         '@', 'fun', 'val', 'var', 'class', 'interface', 'object', 'typealias',
@@ -333,6 +334,8 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _start_header(self):
         self._type_depth = 0
         self._type_annotated = False
+        self._parameter_angles = 0
+        self._parameter_comma = None
 
     def _type_is_open(self):
         # The next token continues a type that has an open `<` or `(`, that
@@ -368,6 +371,72 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _expect_function_dec(self, token):
         if not self._receiver_type_end(token):
             super()._expect_function_dec(token)
+
+    def _function_dec(self, token):
+        self.br_count += self._PARAMETER_DELIMITERS.get(token, 0)
+        if self.br_count == 0:
+            self._finish_parameter_names()
+            self._state = self._expect_function_impl
+        elif token == '(' and self.br_count == 1:
+            self._start_parameter_names()
+        elif token not in ('(', ')'):
+            function = self.context.current_function
+            if self.br_count == 1 and token in ('<', '>', ':'):
+                self._parameter_type_token(function, token)
+            self._read_parameter_names(token, self.br_count == 1)
+            if token == ',' and (self.br_count > 1 or self._parameter_angles):
+                # A type or default expression can have its own commas.
+                if self.br_count == 1:
+                    self._parameter_comma = len(function.full_parameters[-1])
+                function.add_to_long_name(" ,")
+                function.full_parameters[-1] += " ,"
+            else:
+                function.add_parameter(token)
+        self._before_parameter_name = self.last_token
+
+    def _parameter_type_token(self, function, token):
+        if token == '<':
+            self._parameter_angles += 1
+        elif token == '>':
+            self._parameter_angles = max(0, self._parameter_angles - 1)
+            if not self._parameter_angles:
+                self._parameter_comma = None
+        elif self._parameter_comma is not None:
+            # A declaration colon confirms a parameter after a comparison.
+            index = self._parameter_comma
+            text = function.full_parameters[-1]
+            function.full_parameters[-1] = text[:index]
+            function.full_parameters.append(text[index + len(" ,"):])
+            self._parameter_comma = None
+            self._parameter_angles = 0
+
+    def _start_parameter_names(self):
+        self._parameter_names = []
+        self._can_read_parameter_name = True
+        self._reading_parameter_default = False
+        self._multiline_parameter_default = False
+
+    def _read_parameter_names(self, token, at_top_level):
+        if at_top_level:
+            if token == ',':
+                self._can_read_parameter_name = True
+            elif token == ':' and self._can_read_parameter_name:
+                name = self.last_token
+                # Skip annotation use-site targets and anonymous object types.
+                if self._before_parameter_name != '@' and name not in (None, 'object') and swift._is_local_name(name):
+                    self._parameter_names.append(name.strip('`'))
+                    self._can_read_parameter_name = False
+                    self._reading_parameter_default = False
+            elif token == '=' and self._parameter_names:
+                self._reading_parameter_default = True
+        if self._reading_parameter_default and '\n' in token:
+            self._multiline_parameter_default = True
+
+    def _finish_parameter_names(self):
+        # A multiline default can hide a name or expose a nested argument
+        # to the shared matcher. Use the names from the whole signature.
+        if self._multiline_parameter_default:
+            self.context.current_function.record_parameter_names(self._parameter_names)
 
     def _receiver_type_end(self, token):
         # In `fun String.f()` and `fun List<T>?.f()`, the name read so far
