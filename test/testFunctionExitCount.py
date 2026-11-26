@@ -18,6 +18,28 @@ class TestFunctionExitCount(unittest.TestCase):
         result = get_cpp_function_list_with_extension("int fun(){return 0;return 1;}", ExitCounter())
         self.assertEqual(2, result[0].exit_count)
 
+    def test_iterator_return_members_do_not_count_as_exits(self):
+        examples = [
+            ("cleanup.js", """
+function closeIterator(iterator) {
+    iterator./* Close the iterator. */return();
+    return true;
+}
+"""),
+            ("cleanup.ts", """
+async function closeIterator(iterator?: AsyncIterator<string>) {
+    if (iterator?.return) {
+        await iterator.return?.();
+    }
+}
+"""),
+        ]
+        for filename, source in examples:
+            with self.subTest(filename=filename):
+                analyzer = FileAnalyzer(get_extensions([ExitCounter()]))
+                functions = analyzer.analyze_source_code(filename, source).function_list
+                self.assertEqual([("closeIterator", 1)], [(f.name, f.exit_count) for f in functions])
+
     def test_three_returns_should_count_as_3(self):
         # Using the example from: https://ator1699.home.xs4all.nl/Work/GBS/Doc_and_download/doc/metrics.html#STM19
         code = """
