@@ -75,7 +75,7 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
             bodies[-1].end()
 
     def _read_forgiven_declaration(self, tokens, indexed_tokens, index):
-        comment = self.get_comment_from_token(tokens[index]).strip()
+        comment = (self.get_comment_from_token(tokens[index]) or '').strip()
         following = None
         if (comment.startswith('#lizard forgive')
                 and not comment.startswith(('#lizard forgive global', '#lizard forgives('))
