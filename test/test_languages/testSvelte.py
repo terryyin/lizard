@@ -216,6 +216,30 @@ class TestSvelte(unittest.TestCase):
 ''')
         self.assertEqual([('format', 7, 7, 1)], function_summaries(functions))
 
+    def test_brace_in_static_script_attribute_keeps_the_script(self):
+        functions = get_svelte_function_list('''
+<script data-label="{">
+function actual() { return 1 }
+</script>
+<p>{"}"}</p>
+''')
+        self.assertEqual([('actual', 3, 3, 1)], function_summaries(functions))
+
+    def test_static_style_attributes_are_text_before_a_script(self):
+        for label in ('{', '{disabled ? 1 : 0}'):
+            with self.subTest(label=label):
+                source = f'''
+<style data-label="{label}">p {{ color: red }}</style>
+{{@html `<script>function phantom() {{ return 2 }}</script>`}}
+<p>Text</p>
+<script>
+function actual() {{ return 1 }}
+</script>
+'''
+                info = analyze_file.analyze_source_code('preview.svelte', source)
+                self.assertEqual([('actual', 1), (COMPONENT, 1)],
+                                 [(f.name, f.cyclomatic_complexity) for f in info.function_list])
+
     def test_typescript_script_reads_class_field_annotations(self):
         typed = get_svelte_function_list(
             '<script lang="ts">'
