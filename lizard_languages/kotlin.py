@@ -358,6 +358,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
     _TAKES_BLOCK_ON_NEXT_LINE = {'when', 'try', 'finally', 'do'}
     # Tokens that can follow a `<` in type arguments, `Map<K, List<V>?>`.
     _TYPE_ARGUMENT_TOKENS = {'<', '>', '.', ',', '?', '*', '@', ':', '->', '&', 'in', 'out'}
+    _TYPE_GROUP_PREFIXES = {'<', ',', '(', '->', ':', '.', '&', 'in', 'out', 'suspend', 'context'}
     _TYPE_OPERATORS = {'as', 'as?', 'is'}
     _TYPE_PREFIXES = _TYPE_OPERATORS | {'.'}
     # Words that are not operands, so a name after them is not an infix call.
@@ -519,22 +520,45 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
 
     def _find_type_argument_end(self, tokens, index):
         depth = self._open_types
+        groups = []
+        previous = ','
         index = _next_significant(tokens, index + 1)
         while index is not None:
             token = tokens[index]
-            if token in ('(', '['):
-                index = self._after_annotation_group(tokens, index)
+            if token == '@':
+                index = self._after_annotations(tokens, index)
                 continue
-            if token == '<':
+            if token == '(':
+                # A group can start a type or follow its modifiers. A name
+                # followed by parentheses, such as abs(value), is a call.
+                if previous not in self._TYPE_GROUP_PREFIXES:
+                    break
+                groups.append(previous)
+            elif token == ')':
+                if not groups:
+                    break
+                prefix = groups.pop()
+                if prefix in ('context', 'suspend'):
+                    index = _next_significant(tokens, index + 1)
+                    if index is None:
+                        break
+                    if prefix == 'suspend' and tokens[index] != '->':
+                        break
+                    if prefix == 'context' and tokens[index] in (',', '>', ')'):
+                        break
+                    previous = prefix if prefix == 'context' else token
+                    continue
+            elif token == '<':
                 depth += 1
             elif token == '>':
                 depth -= 1
                 if not depth:
-                    return index if self._has_type_argument_suffix(tokens, index) else -1
+                    return index if not groups and self._has_type_argument_suffix(tokens, index) else -1
             elif (token not in self._TYPE_ARGUMENT_TOKENS
                   and not (self._is_name(token) and token not in ('true', 'false', 'null'))
                   and not (token[0] == '<' and token[-1] == '>')):
                 break
+            previous = token
             index = _next_significant(tokens, index + 1)
         return -1
 

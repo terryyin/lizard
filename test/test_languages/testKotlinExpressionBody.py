@@ -541,6 +541,18 @@ fun classify(flag: Boolean) = Pair(fun(n: Int) = n < LIMIT, {next_argument})
                 ''')
                 self.assertEqual([("", 2, 2, 1), ("classify", 2, 2, 2)], rows(result))
 
+    def test_call_or_index_in_the_next_argument_is_not_a_type(self):
+        for operand in ("kotlin.math.abs(value)", "(listOf(value)[0])"):
+            with self.subTest(operand=operand):
+                result = get_kotlin_function_list(f'''\
+private const val LIMIT = 4
+fun classify(flag: Boolean, value: Int) = Pair(
+    fun(n: Int) = n < LIMIT,
+    {operand} > (if (flag) 1 else 0),
+)
+                ''')
+                self.assertEqual([("", 3, 3, 1), ("classify", 2, 5, 2)], rows(result))
+
     def test_expression_body_ends_after_nested_type_arguments_with_a_nullable_type(self):
         result = get_kotlin_function_list('''
 fun decode(value: Any) = value as? List<Pair<String, Int?>>
