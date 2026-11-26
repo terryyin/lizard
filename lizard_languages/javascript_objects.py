@@ -183,8 +183,8 @@ class JavaScriptObjectsMixin:
             # A value, `{ a: {`, but in a block, `finally { label: {`.
             return self.holds_members
         if previous == '/':
-            # A split regex has two slash tokens on its opening line.
-            # A lone slash can take an object operand across a line break.
+            # Division takes an object across a line break unless the
+            # slash can close a split regex literal on its own line.
             return not (self.context.newline and self._slash_can_close_literal)
         if self.context.newline and (
                 previous == '!' or previous[0].isalpha() or previous[0] in '_$'):

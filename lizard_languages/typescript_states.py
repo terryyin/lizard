@@ -2,7 +2,7 @@
 
 from .code_reader import CodeStateMachine
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
-from .javascript_expression import JSXChildBrace
+from .javascript_expression import JSXChildBrace, ends_expression
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
@@ -18,7 +18,7 @@ _TAIL_TOKENS = frozenset(('`', ':', ',', '!', '/'))
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        JavaScriptObjectsMixin, TypeScriptDeclarationsMixin,
                        CodeStateMachine):
-    _last_slash_line = None
+    _possible_regex_line = None
     _slash_can_close_literal = False
 
     def __init__(self, context):
@@ -241,8 +241,12 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 self._postfix_operand = self._assertion_operand()
             elif token == '/':
                 line = self.context.current_line
-                self._slash_can_close_literal = self._last_slash_line == line
-                self._last_slash_line = line
+                self._slash_can_close_literal = self._possible_regex_line == line
+                # A bare slash after an operand divides. A reader waiting
+                # for an operand or a statement may see a split regex.
+                if (not self._prev_token or self.last_token in ('}', 'return', 'throw')
+                        or not ends_expression(self.last_token or '')):
+                    self._possible_regex_line = line
             elif token == ',':
                 if self._declaration_binding is not None:
                     self._declaration_binding = True
