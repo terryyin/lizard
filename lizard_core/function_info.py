@@ -21,6 +21,22 @@ class Nesting(object):  # pylint: disable=R0903
 BARE_NESTING = Nesting()
 
 
+class FormalParameter(str):
+    """A complete formal slot with an explicit optional name."""
+
+    def __new__(cls, text, name=None):
+        parameter = super().__new__(cls, text)
+        parameter.name = name
+        return parameter
+
+
+def _name_of_parameter(parameter):
+    if isinstance(parameter, FormalParameter):
+        return parameter.name
+    match = _PARAMETER_NAME.search(parameter)
+    return match.group(1) if match else None
+
+
 class Namespace(Nesting):  # pylint: disable=R0903
 
     def __init__(self, name):
@@ -72,6 +88,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         return sum(
             bool(_PARAMETER_NAME.search(parameter))
             or parameter.strip() in ('{}', '[]', '()')
+            or isinstance(parameter, FormalParameter)
             for parameter in self.full_parameters)
 
     @property
@@ -82,8 +99,8 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         # Regex matches the parameter name, then optionally:
         # - a default value given after an '=' sign
         # - a type annotation given after a ':'
-        matches = map(_PARAMETER_NAME.search, self.full_parameters)
-        return [m.group(1) for m in matches if m]
+        names = map(_name_of_parameter, self.full_parameters)
+        return [name for name in names if name]
 
     @property
     def length(self):
@@ -102,6 +119,9 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
     def add_parameter(self, token):
         self.add_to_long_name(" " + token)
         self._append_parameter(self.full_parameters, token)
+
+    def mark_last_formal_parameter(self, name=None):
+        self.full_parameters[-1] = FormalParameter(self.full_parameters[-1], name)
 
     @staticmethod
     def _append_parameter(parameters, token):

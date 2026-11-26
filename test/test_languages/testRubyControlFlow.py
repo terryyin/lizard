@@ -31,6 +31,29 @@ class Test_parser_for_Ruby_if_while_for(unittest.TestCase):
                 ''')
         self.assertEqual(3, result[0].nloc)
 
+    def test_modifier_predicate_keeps_its_own_block(self):
+        result = get_ruby_function_list('''
+def dispatch(jobs, paused)
+  return if jobs.any? do |job|
+    job.pending?
+  end
+  dispatch_ready_jobs(jobs) if paused
+end
+
+def release(jobs)
+  return unless jobs.synchronize do
+    jobs.all?(&:finished?)
+  end
+  release_workers
+end
+''')
+
+        self.assertEqual(
+            [('dispatch', 2, 7), ('release', 9, 14)],
+            [(function.name, function.start_line, function.end_line)
+             for function in result])
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
     def test_basic_if_with_then_on_one_line(self):
         result = get_ruby_function_list('''
             def f

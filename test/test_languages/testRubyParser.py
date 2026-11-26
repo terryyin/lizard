@@ -28,6 +28,84 @@ class Test_parser_for_Ruby(unittest.TestCase):
         self.assertEqual(1, result[0].cyclomatic_complexity)
         self.assertEqual(2, result[0].length)
 
+    def test_anonymous_parameters_count_as_formal_slots(self):
+        code = '''
+def connect(adapter: nil, **)
+  adapter
+end
+
+def clear_entries(*)
+  @entries.clear
+end
+
+def visit_entries(&)
+  @entries.each(&)
+end
+
+def dispatch(action, ...)
+  public_send(action, ...)
+end
+
+def import_rows(rows, *, **, &)
+  @store.import(rows, *, **, &)
+end
+'''
+
+        functions = get_ruby_function_list(code)
+
+        self.assertEqual(
+            [('connect', 2), ('clear_entries', 1), ('visit_entries', 1),
+             ('dispatch', 2), ('import_rows', 4)],
+            [(fn.name, fn.parameter_count) for fn in functions])
+        self.assertEqual(['action'], functions[3].parameters)
+        self.assertEqual(['rows'], functions[4].parameters)
+
+    def test_nested_default_and_destructuring_keep_outer_slots(self):
+        source = '''
+def destructure(*, (key, value))
+  store(key, value)
+end
+
+def default_forward(*, source: build_default(0, *))
+  source
+end
+
+def register_event(event, format:, message: render(event, output: format))
+  record(event, message)
+end
+'''
+
+        functions = get_ruby_function_list(source)
+
+        self.assertEqual(
+            [('destructure', 2, []), ('default_forward', 2, ['source']),
+             ('register_event', 3, ['event', 'format', 'message'])],
+            [(fn.name, fn.parameter_count, fn.parameters) for fn in functions])
+
+    def test_template_text_does_not_hide_a_later_method(self):
+        source = '''
+def register(name)
+  class_eval <<-RUBY, __FILE__, __LINE__ + 1
+    def #{name}(...)
+      activate(Registry[:#{name}], ...)
+    end
+  RUBY
+end
+
+Registry.watch do |name|
+  register(name)
+end
+
+def fallback(value)
+  value
+end
+'''
+
+        functions = get_ruby_function_list(source)
+
+        self.assertIn(('fallback', 14, 16),
+                      [(fn.name, fn.start_line, fn.end_line) for fn in functions])
+
     def test_one_function_loc(self):
         result = get_ruby_function_list('''
             def f

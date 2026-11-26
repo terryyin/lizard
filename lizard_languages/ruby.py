@@ -4,7 +4,7 @@ Language parser for Ruby
 
 import re
 
-from .rubylike import RubylikeReader
+from .rubylike import RubylikeReader, RubylikeStateMachine
 from .js_style_regex_expression import js_style_regex_expression
 from .ruby_documentation import may_have_documentation, pattern_for_fragment
 from .source_documentation import tokens_ignoring_documentation
@@ -74,11 +74,92 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
                     r"[a-z]*)")
 
 
+class RubyStateMachine(RubylikeStateMachine):
+
+    def _if(self, token):
+        # A modifier predicate can open a block: `return if jobs.any? do`.
+        if token == 'do' and not self.br_count and not getattr(token, 'is_member_name', False):
+            self.next(self._modifier_do)
+        else:
+            super()._if(token)
+
+    def _modifier_do(self, token):
+        # A block with parameters or a body on the next line has a
+        # distinct opening. Keep reading the predicate on other tokens.
+        if self.is_newline() or token in ('|', '||', ';'):
+            self.next(self._state_global)
+            self.sub_state(self.statemachine_clone(), token=token)
+        else:
+            self.next(self._if, token)
+
+    _parameter_depth = 0
+    _parameter_start = None
+    _parameter_has_group = False
+    _parameter_allows_group = False
+
+    def _def_parameters(self, token):
+        if self.context.current_function.name == '(anonymous)':
+            super()._def_parameters(token)
+            return
+        if self._parameter_depth:
+            self._read_grouped_parameter(token)
+            return
+        if token in (',', ')'):
+            self._finish_parameter()
+        elif token == 'end' and not self._parameter_allows_group:
+            # An end outside a default can come from a generated method
+            # whose header was cut short by a comment.
+            self._finish_parameter()
+            self.next(super()._def_parameters, token)
+            return
+        else:
+            if self._parameter_start is None:
+                self._parameter_start = token
+                self._parameter_allows_group = (
+                    token == '(' or (token.endswith(':') and token[:-1].isidentifier()))
+            elif token == '=' and self.last_token is self._parameter_start:
+                self._parameter_allows_group = self._parameter_start.isidentifier()
+            if self._parameter_allows_group and token in ('(', '[', '{', '${'):
+                self._parameter_depth = 1
+                self._parameter_has_group = True
+        super()._def_parameters(token)
+
+    def _read_grouped_parameter(self, token):
+        if token in ('(', '[', '{', '${'):
+            self._parameter_depth += 1
+        elif token in (')', ']', '}'):
+            self._parameter_depth -= 1
+
+        if token == ',':
+            self.context.add_to_long_function_name(' ,')
+            self.context.current_function.full_parameters[-1] += ' ,'
+        else:
+            self.context.parameter(token)
+
+    def _finish_parameter(self):
+        function = self.context.current_function
+        parameters = function.full_parameters
+        if self._parameter_start is not None:
+            parameter = parameters[-1]
+            name = self._parameter_start.rstrip(':')
+            required_keyword = (self._parameter_start.endswith(':')
+                                and name.isidentifier()
+                                and parameter.strip() == self._parameter_start)
+            if self._parameter_has_group or required_keyword:
+                function.mark_last_formal_parameter(name if name.isidentifier() else None)
+            elif parameter.strip() in ('*', '**', '&', '...'):
+                function.mark_last_formal_parameter()
+        self._parameter_start = None
+        self._parameter_has_group = False
+        self._parameter_allows_group = False
+
+
 class RubyReader(RubylikeReader):
     # pylint: disable=R0903
 
     ext = ['rb']
     language_names = ['ruby']
+    STATE_MACHINE = RubyStateMachine
 
     def preprocess(self, tokens):
         """Drop spaces, and mark a keyword right after '.', '&.' or 'def'
