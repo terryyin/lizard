@@ -36,6 +36,7 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     @staticmethod
     def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
+        else_if_chain = 'ruby' not in getattr(reader, 'language_names', ())
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -52,7 +53,6 @@ class LizardExtension(object):  # pylint: disable=R0903
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
         context = reader.context
-        else_if_chain = 'ruby' not in getattr(reader, 'language_names', ())
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
