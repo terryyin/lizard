@@ -110,6 +110,12 @@ _NAMED_KEYWORDS = frozenset(('function',))
 # `<T>` as one token.
 _NAME_FOLLOWERS = frozenset((':', '='))
 _PARAMETER_STARTS = frozenset(('(', '<'))
+# Prefixes of named and namespace exports, including type-only exports.
+_EXPORT_FOLLOWERS = {
+    'export': ('{', '*', 'type'),
+    'type': ('{', '*'),
+    '*': ('as',),
+}
 
 
 def _ends_a_number(token):
@@ -252,6 +258,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                               | self.case_keywords)
         # `{ function: f }` also needs the mark: the state reads `function`.
         name_keywords = structure_keywords | _NAMED_KEYWORDS
+        export_prefix = ''
         member_access = False
         before_dot = ''
         keyword = None      # waits for the next token: `{ if: a }`
@@ -270,6 +277,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
                         end_before_line_token(state, arrows, token)
+                    if export_prefix and not token.startswith(_COMMENT_STARTS):
+                        if export_prefix in ('{', 'as') and token in structure_keywords:
+                            token = _MemberName(token)
+                        if export_prefix != '{' or token == '}':
+                            export_prefix = (
+                                token if token in _EXPORT_FOLLOWERS.get(export_prefix, ()) else '')
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
                     if member_access and token in structure_keywords:
@@ -303,7 +316,10 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
                             member_access = False
-                        if token in name_keywords:
+                        elif (not export_prefix and token == 'export'
+                              and not getattr(token, 'is_jsx_markup', False)):
+                            export_prefix = token
+                        if token in name_keywords and not isinstance(token, _MemberName):
                             keyword = token
                             continue
                     yield token
