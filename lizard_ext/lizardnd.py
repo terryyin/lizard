@@ -40,7 +40,8 @@ class LizardExtension(object):  # pylint: disable=R0903
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
-        if 'go' in getattr(reader, 'language_names', ()):
+        go_if = 'go' in getattr(reader, 'language_names', ())
+        if go_if:
             tokens = _go_nesting_tokens(tokens, reader)
         block_starts = getattr(reader, "block_starts", ('{',))
         indent_indicator = getattr(reader, 'indent_indicator', ';')
@@ -89,13 +90,13 @@ class LizardExtension(object):  # pylint: disable=R0903
                 elif token in loops and token not in ('&&', '||') \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
-                    l_depth = context.open_level()
+                    l_depth = _start_go_if(context) if go_if and token == 'if' else context.open_level()
 
                 if token in block_starts:
                     context.open_block()
                 if token == indent_indicator and \
                         context.get_condition_depth() == 0:
-                    l_depth = context.end_statement()
+                    l_depth = _end_go_statement(context) if go_if else context.end_statement()
             if l_depth < 0:
                 l_depth = 0
                 context.reset_nd_complexity()
@@ -123,10 +124,7 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def open_level(self):
         """A structure opens a level that its body will close."""
-        function = self.current_function
-        if function.go_starts_if:
-            _start_go_if(function, self)
-        function.levels_awaiting_body += 1
+        self.current_function.levels_awaiting_body += 1
         return self.add_nd_condition()
 
     def open_block(self):
@@ -156,13 +154,6 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def end_statement(self, keep_levels=0):
         """A statement ends the levels of a braceless body."""
-        function = self.current_function
-        function.go_statement_logical_levels = 0
-        function.go_initializer = False
-        # An explicit semicolon can separate a Go if initializer and test.
-        if function.go_if_levels:
-            keep_levels = function.go_if_levels
-            function.logical_operator_added = False
         levels = self.current_function.levels_awaiting_body
         self.current_function.levels_awaiting_body = keep_levels
         return self.add_nd_condition(keep_levels - levels)
@@ -257,14 +248,13 @@ def patch_append_method(frm, accept_class, method_name):
 
 def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
+    self.go_if_levels = None
+    self.go_initializer = False
+    self.go_composite_literal_brace = False
+    self.go_statement_logical_levels = 0
     self.max_nesting_depth = 0
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
-    self.go_if_levels = None
-    self.go_initializer = False
-    self.go_starts_if = False
-    self.go_composite_literal_brace = False
-    self.go_statement_logical_levels = 0
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
@@ -281,13 +271,12 @@ def _go_nesting_tokens(tokens, reader):
     block_ends = getattr(reader, 'block_ends', ('}',))
     for token in tokens:
         function = context.current_function
-        function.go_starts_if = token == 'if'
         if token in block_starts:
             function.go_composite_literal_brace = getattr(token, 'is_composite_literal_brace', False)
         elif token in block_ends:
             if function.go_if_levels is None and function.condition_depth == 0:
                 # A case or a statement can end at a brace without a semicolon.
-                context.end_statement()
+                _end_go_statement(context)
         elif token in ('=', ':='):
             if function.go_if_levels is not None and function.condition_depth == 0:
                 function.go_initializer = True
@@ -297,16 +286,31 @@ def _go_nesting_tokens(tokens, reader):
         yield token
 
 
-def _start_go_if(function, context):
+def _end_go_statement(context, keep_levels=0):
+    """Release a Go statement while preserving its if initializer level."""
+    function = context.current_function
+    function.go_statement_logical_levels = 0
+    function.go_initializer = False
+    # An explicit semicolon can separate a Go if initializer and test.
+    if function.go_if_levels:
+        keep_levels = function.go_if_levels
+        function.logical_operator_added = False
+    return context.end_statement(keep_levels)
+
+
+def _start_go_if(context):
+    function = context.current_function
     # A new if cannot be part of the preceding Go expression.
     logical_levels = function.go_statement_logical_levels
     if logical_levels:
         function.levels_awaiting_body -= logical_levels
         context.add_nd_condition(-logical_levels)
         function.go_statement_logical_levels = 0
+    depth = context.open_level()
     function.in_condition = True
-    function.go_if_levels = function.levels_awaiting_body + 1
+    function.go_if_levels = function.levels_awaiting_body
     function.logical_operator_added = False
+    return depth
 
 
 patch(NDFileInfoAddition, FileInfoBuilder)
