@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Sola-chan",
+  "email": "sola-chan@example.org",
+  "identity": "SEED-075#plsql-formal-parameter-boundaries",
+  "mode": "story-branch",
+  "branch": "cursor/preserve-quoted-pl-sql-formals-and-their-declara",
+  "host": "cursor",
+  "model": "auto"
+}
