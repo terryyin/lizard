@@ -135,6 +135,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             if self.started_function and not self.as_object:
                 self._pop_function_from_stack()
             self._signature = True
+            self._arrow_only_signature = False
             self._state = self._function
         elif (token in ('if', 'switch', 'for', 'while', 'catch')
               and not getattr(token, 'is_member_name', False)):
@@ -170,6 +171,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        and self._generic_prefix in ('=', 'async'))):
                 # Only "name = (" can open a group.
                 self._signature = self.last_token != '='
+                self._arrow_only_signature = True
                 if not self.started_function:
                     self._function(self.function_name)
                 self.next(self._function, token)
