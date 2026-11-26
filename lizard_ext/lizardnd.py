@@ -64,7 +64,6 @@ class LizardExtension(object):  # pylint: disable=R0903
                 context.clear_prev_was_else()
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
-                    previous_token = None
             if token in depth_tokens:
                 if (standalone_chains and token in _STATEMENT_EXPRESSION_SEPARATORS
                         and context.get_condition_depth() == 0):
@@ -82,7 +81,10 @@ class LizardExtension(object):  # pylint: disable=R0903
                 # Handle opening parenthesis - start of condition
                 elif token == '(':
                     context.open_condition(
-                        standalone_chains and previous_token in _GROUP_OPERAND_STARTS)
+                        standalone_chains and (
+                            previous_token in _GROUP_OPERAND_STARTS or
+                            (implied_semicolons and implied_semicolons.before_token and
+                             context.get_condition_depth() == 0)))
                 # Handle closing parenthesis - end of condition
                 elif token == ')':
                     context.close_condition()
@@ -114,8 +116,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             if l_depth < 0:
                 l_depth = 0
                 context.reset_nd_complexity()
-            if standalone_chains:
-                previous_token = token
+            previous_token = token
             yield token
 
 
