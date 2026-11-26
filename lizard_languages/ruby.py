@@ -22,22 +22,37 @@ class MyToken(str):
 
 
 class _HeredocCall(MyToken):
-    def __init__(self, match):
+    def __init__(self, match, executable):
         super().__init__(match)
         self.opener = MyToken(match['heredoc_opener'])
         self.opener.begin = match.start('heredoc_opener')
         start, end = match.span('heredoc_suffix')
         self.suffix_start = start - self.begin
         self.suffix_end = end - self.begin
+        self.body_start = match.start('heredoc_body') - self.begin - 1 if executable else None
+        self.command = match['heredoc_command']
 
 
 class _HeredocLines(str):
     """Line breaks in a literal whose opener was already emitted."""
 
 
+class _HeredocQueue(MyToken):
+    def __init__(self, match):
+        super().__init__(match)
+        self.openers = match['heredoc_queue']
+        self.command = match['heredoc_queue_command']
+
+
 def _heredoc_token(match):
-    if match['heredoc_suffix']:
-        return _HeredocCall(match)
+    if match['heredoc_queue']:
+        return _HeredocQueue(match)
+    body = match['heredoc_body']
+    executable = body and '#{' in body and match['heredoc_quote'] != "'" and any(
+        marker[0] == '#{' and not _HEREDOC_REFERENCE.match(body, marker.end())
+        for marker in _INTERPOLATION_MARKERS.finditer(body))
+    if match['heredoc_command'] or match['heredoc_suffix'] or executable:
+        return _HeredocCall(match, executable)
     return MyToken(match)
 
 
@@ -96,23 +111,38 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
                     r"[a-z]*)")
 
 
-# A heredoc can be one token when the opener ends the statement line
-# and its body contains only text or simple references. Keep a shift
-# such as pages <<~mask separate.
+# The opener can stand alone, follow an assignment, or appear in a call.
+# Keep a shift such as pages <<~mask separate.
+_HEREDOC_MEMBER = r"\.[A-Za-z_]\w*[!?]?(?:\([ \t]*(?:'[^'\r\n]*'|:\w+|\w+)?[ \t]*\))?"
+_HEREDOC_COMMAND_NAME = r"[a-z_]\w*[!?]?"
+_HEREDOC_COMMAND_PREFIX = r"^[ \t]*(?P<heredoc_command>" + _HEREDOC_COMMAND_NAME + r")[ \t]+"
+_MAYBE_HEREDOC_COMMAND = re.compile(_HEREDOC_COMMAND_PREFIX + r"<<", re.M)
 _SIMPLE_HEREDOC = (
-    r"(?:(?<!\\\n)(?<!\\\r\n)^[ \t]*|(?<==)[ \t]*|(?P<heredoc_call>(?<=[(,])[ \t]*))"
+    r"(?:(?<!\\\n)(?<!\\\r\n)^[ \t]*|(?<==)[ \t]*|(?P<heredoc_call>(?<=[(,])[ \t]*)|"
+    + _HEREDOC_COMMAND_PREFIX + r")"
     r"(?P<heredoc_opener><<(?P<heredoc_indent>[-~])?"
-    r"(?P<heredoc_quoted>')?(?P<heredoc_label>[A-Za-z_]\w*)(?(heredoc_quoted)'))"
-    r"(?(heredoc_call)(?P<heredoc_suffix>"
-    r"(?:[ \t]*,[ \t]*(?:\w+:[ \t]+)?[:@]?\w+)*[ \t]*[)\]]+))[ \t]*\r?\n"
-    r"(?:(?!^(?(heredoc_indent)[ \t]*)(?P=heredoc_label)\r?$)"
-    r"(?(heredoc_quoted)[^\n]*|(?:[^#\n]|#(?!\{)"
-    r"|#\{(?:[A-Z]\w*(?:::[A-Z]\w*)*|[@$]?[a-z_]\w*)\})*)\n)*"
+    r"(?P<heredoc_quote>['\"`])?(?P<heredoc_label>[A-Za-z_]\w*)"
+    r"(?(heredoc_quote)(?P=heredoc_quote)))"
+    r"(?P<heredoc_suffix>(?:" + _HEREDOC_MEMBER + r")*"
+    r"(?(heredoc_call)(?:[ \t]*,[ \t]*(?:\w+:[ \t]+)?[:@]?\w+)*[ \t]*[)\]]*)"
+    r"(?:[ \t]*\#[^\r\n]*)?)[ \t]*\r?\n"
+    r"(?P<heredoc_body>(?:(?!^(?(heredoc_indent)[ \t]*)(?P=heredoc_label)\r?$)[^\n]*\n)*)"
     r"^(?(heredoc_indent)[ \t]*)(?P=heredoc_label)\r?$"
 )
+_QUEUE_LABEL = r"""(?:'[A-Za-z_]\w*'|"[A-Za-z_]\w*"|`[A-Za-z_]\w*`|[A-Za-z_]\w*)"""
+_QUEUE_OPENER = r"<<[-~]?" + _QUEUE_LABEL
+_QUEUE_ARGUMENT = r"(?:\w+:[ \t]+)?" + _QUEUE_OPENER
+_QUEUE_LINE = (
+    r"(?:(?<=[(\[,])[ \t]*|^[ \t]*(?P<heredoc_queue_command>" + _HEREDOC_COMMAND_NAME
+    + r")[ \t]+)(?P<heredoc_queue>" + _QUEUE_ARGUMENT
+    + r"(?:[ \t]*,[ \t]*" + _QUEUE_ARGUMENT + r")+)"
+    r"[ \t]*[)\]]*(?:[ \t]+(?:if|unless)\b[^#\r\n]+)?[ \t]*(?:\#[^\r\n]*)?\r?\n"
+)
+_QUEUE_OPENER_RE = re.compile(r"<<([-~]?)(" + _QUEUE_LABEL + ")")
+_HEREDOC_REFERENCE = re.compile(r"(?:[A-Z]\w*(?:::[A-Z]\w*)*|[@$]?[a-z_]\w*)\}")
 
 
-_PERCENT_INTERPOLATION = re.compile(r"\\.|#\{", re.S)
+_INTERPOLATION_MARKERS = re.compile(r"\\.|#\{", re.S)
 
 
 class RubyStateMachine(RubylikeStateMachine):
@@ -337,18 +367,39 @@ class RubyReader(RubylikeReader):
     def generate_tokens(source_code, addition='', token_class=None):
         addition = (r"|\w+:|\$\w+|\.+|:?\@{0,2}\w+\??\!?"
                     r"|" + _PERCENT_LITERAL + addition)
+        plain_tokens = addition
         read_token = MyToken
         if "<<" in source_code:
-            addition += "|" + _SIMPLE_HEREDOC
+            addition += "|" + _QUEUE_LINE + "|" + _SIMPLE_HEREDOC
             read_token = _heredoc_token
         percent_strings = '%(' in source_code or '%Q(' in source_code
+        has_documentation = may_have_documentation(source_code)
+        has_heredoc_commands = _MAYBE_HEREDOC_COMMAND.search(source_code) is not None
         bracket_stack = []
         source = source_code
+        position = 0
+        known_locals = set()
         while source is not None:
             tokens = tokens_ignoring_documentation(
                 source, addition, read_token, pattern_for_fragment(source, source is source_code),
-                may_have_documentation(source))
+                has_documentation, start=position)
+            position = 0
+            if has_heredoc_commands:
+                tokens = _keep_local_shifts(tokens, source, plain_tokens, known_locals)
             for token in tokens:
+                if type(token) is _HeredocQueue:
+                    bodies = _queued_heredoc_bodies(token, source)
+                    header = compiled_token_pattern(r'|\#[^\n]*' + plain_tokens + '|' + _QUEUE_OPENER)
+                    end_of_opener = token.begin + len(token)
+                    yield from tokens_in_span(header, source, token.begin,
+                                              end_of_opener - bool(bodies), MyToken)
+                    if bodies:
+                        for start, position, quoted in bodies:
+                            body = ([] if quoted else
+                                    _interpolation_tokens(source, start, position, plain_tokens))
+                            yield from body or (_HeredocLines('\n' * source.count('\n', start, position)),)
+                        break
+                    continue
                 if token == "{":
                     bracket_stack.append("{")
                 elif token == "}":
@@ -366,17 +417,126 @@ class RubyReader(RubylikeReader):
                         source = source[token.begin + token.find(sep)+2:]
                         break
                 if type(token) is _HeredocCall:
+                    if token.command is not None:
+                        yield token.command
                     yield token.opener
                     yield from tokens_in_span(
-                        compiled_token_pattern(addition), token,
+                        compiled_token_pattern(r'|\#[^\n]*' + addition), token,
                         token.suffix_start, token.suffix_end, MyToken)
-                    yield _HeredocLines('\n' * token.count('\n'))
+                    body = (_interpolation_tokens(token, token.body_start, len(token), addition)
+                            if token.body_start is not None else [])
+                    yield from body or (_HeredocLines('\n' * token.count('\n')),)
                 else:
                     if percent_strings and token.startswith(('%(', '%Q(')) and '#{' in token:
                         token.percent_interpolation = addition
                     yield token
             else:
                 source = None
+
+
+def _queued_heredoc_bodies(token, source):
+    bodies = []
+    start = token.begin + len(token) - 1
+    for indentation, label in _QUEUE_OPENER_RE.findall(token.openers):
+        quoted = label.startswith("'")
+        prefix = r'[ \t]*' if indentation else ''
+        delimiter = re.compile(r'^' + prefix + re.escape(label.strip("'\"`")) + r'\r?$', re.M)
+        closing = delimiter.search(source, start + 1)
+        if closing is None:
+            return []
+        bodies.append((start, closing.end(), quoted))
+        start = closing.end()
+    return bodies
+
+
+def _keep_local_shifts(tokens, source, addition, known_locals):
+    """A receiver already declared as a local uses << as an operator."""
+    line_names = set()
+    header = None
+    previous = None
+    pattern_depth = 0
+    pattern_key = None
+    expression_depth = 0
+    statement_tokens = 0
+    pin_depth = 0
+    pin_scopes = []
+    pattern = compiled_token_pattern(r'|\#[^\n]*' + addition)
+    for candidate in tokens:
+        if type(candidate) in (_HeredocCall, _HeredocQueue) and candidate.command in known_locals:
+            parts = tokens_in_span(pattern, source, candidate.begin,
+                                   candidate.begin + len(candidate), MyToken)
+        else:
+            parts = (candidate,)
+        for token in parts:
+            opens_pin = header == 'pattern' and token == '(' and previous == '^'
+            if header == 'pattern' and not opens_pin and not token.startswith('#'):
+                ends_key = token in (',', '}', ']', ')', 'if', 'unless', 'then', ';') or (
+                    token == '\n' and not pattern_depth)
+                if ends_key and pattern_key is not None:
+                    known_locals.add(pattern_key)
+                if ends_key or not token.isspace():
+                    pattern_key = None
+                if token in ('{', '[', '('):
+                    pattern_depth += 1
+                elif token in ('}', ']', ')') and pattern_depth:
+                    pattern_depth -= 1
+                elif pin_depth and token == ')':
+                    header = None
+                elif token in ('if', 'unless', 'then'):
+                    header = None
+            if opens_pin:
+                # Treat the pin as an expression that can contain its own pattern.
+                pin_scopes.append((pin_depth, pattern_depth))
+                pin_depth = 1
+                pattern_depth = 0
+                header = None
+            elif pin_depth == 1 and token == ')':
+                pin_depth, pattern_depth = pin_scopes.pop()
+                header = 'pattern'
+            elif pin_depth and token == '(':
+                pin_depth += 1
+            elif pin_depth and token == ')':
+                pin_depth -= 1
+            if token in ('\n', ';'):
+                if header != 'pattern' or not pattern_depth:
+                    header = None
+                line_names.clear()
+                if token == ';' or (previous is not None and (
+                        _ends_value(previous) or previous in ('begin', 'do', 'else', 'ensure', 'then'))):
+                    statement_tokens = 0
+            elif token in ('=', '+=', '-=', '*=', '/=', '%=', '<<='):
+                known_locals.update(line_names)
+            elif token == 'def' and previous != '.':
+                known_locals.clear()
+                header = token
+            elif token == 'for':
+                header = token
+            elif token == 'in' and previous != '.':
+                header = None if header == 'for' else 'pattern'
+                pattern_depth = 0
+            elif (token == '=>' and header is None and not expression_depth and
+                  statement_tokens == 1 and previous.lstrip('@$').rstrip('?!').isidentifier()):
+                header = 'pattern'
+                pattern_depth = 0
+            elif token == '|' and header != 'pattern':
+                header = 'block' if previous in ('do', '{') else None
+            elif token.isidentifier():
+                line_names.add(token)
+                if header == 'def':
+                    header = 'parameters'
+                elif header:
+                    known_locals.add(token)
+            elif header == 'pattern' and token.endswith(':') and token[:-1].isidentifier():
+                pattern_key = token[:-1]
+            if token in ('{', '[', '('):
+                expression_depth += 1
+            elif token in ('}', ']', ')') and expression_depth:
+                expression_depth -= 1
+            if not token.isspace() and not token.startswith('#'):
+                previous = token
+                if token != ';':
+                    statement_tokens += 1
+            yield token
 
 
 def _expand_percent_interpolation(tokens):
@@ -390,30 +550,33 @@ def _expand_percent_interpolation(tokens):
 
 def _percent_interpolation_tokens(token, addition):
     start = token.index('(') + 1
-    end = len(token) - 1
+    return _interpolation_tokens(token, start, len(token) - 1, addition) or [token]
+
+
+def _interpolation_tokens(token, start, end, addition):
     fragments = []
     pattern = compiled_token_pattern(r'|\#[^\n]*' + addition)
 
     while start < end:
-        marker = next((match for match in _PERCENT_INTERPOLATION.finditer(token, start, end)
+        marker = next((match for match in _INTERPOLATION_MARKERS.finditer(token, start, end)
                        if match[0] == '#{'), None)
         if marker is None:
             break
-        expression, closing = _percent_expression(token, marker.end(), end, pattern)
+        expression, closing = _interpolation_expression(token, marker.end(), end, pattern)
         if closing is None:
-            return [token]
+            return []
         fragments.extend(('"'+token[start:marker.start()]+'"', '${'))
         fragments.extend(expression)
         fragments.append(closing)
         start = closing.begin + 1
 
     if not fragments:
-        return [token]
+        return []
     fragments.append('"'+token[start:end]+'"')
     return fragments
 
 
-def _percent_expression(token, start, end, pattern):
+def _interpolation_expression(token, start, end, pattern):
     parts = []
     braces = 0
     for current in tokens_in_span(pattern, token, start, end, MyToken):
