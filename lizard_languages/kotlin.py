@@ -155,14 +155,30 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         elif self._ends_declaration(token):
             # `abstract fun f(): Int` or `private set` has no body. Its first
             # line and token were already counted in the enclosing scope.
-            if self.context.forgive and self.context.forgive_line <= self._header_line:
-                self.context.forgive = False
+            self._finish_declaration_forgiveness(token)
             self.fold_into_enclosing_function()
             self.context.current_function.nloc -= 1
             self.context.current_function.token_count -= 1
             self.next(self._state_global, token)
         else:
             self._header_line = self.context.current_line
+
+    def _finish_declaration_forgiveness(self, token):
+        context = self.context
+        if not context.forgive or context.forgive_directive is None:
+            return
+        owner, line = context.forgive_directive
+        declaration = context.current_function
+        if owner is context.global_pseudo_function and not declaration.defined_in_function:
+            context.forgive = False
+        elif owner is declaration:
+            # A comment between two accessors can introduce the next one
+            # even when both accessors are on the same line.
+            next_accessor = token in self._ACCESSORS and line == context.current_line
+            if line <= self._header_line and not next_accessor:
+                context.forgive = False
+            else:
+                context.forgive_directive = (context.stacked_functions[-1], line)
 
     def _ends_declaration(self, token):
         # Kotlin semicolons are optional, so a declaration without a body

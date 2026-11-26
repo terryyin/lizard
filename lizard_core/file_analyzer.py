@@ -32,8 +32,9 @@ def comment_counter(tokens, reader):
                     metrics = {m.strip() for m in match.group(1).split(',') if m.strip()}
                     reader.context.current_function.forgiven_metrics.update(metrics)
             elif stripped.startswith("#lizard forgive"):
-                reader.context.forgive = True
-                reader.context.forgive_line = reader.context.current_line - len(line_breaks)
+                context = reader.context
+                context.forgive = True
+                context.forgive_directive = (context.current_function, context.current_line - len(line_breaks))
             if "GENERATED CODE" in comment:
                 return
         else:
