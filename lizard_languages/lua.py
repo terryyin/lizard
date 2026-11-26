@@ -47,13 +47,13 @@ class LuaReader(RubylikeReader):
 class LuaStateMachine(RubylikeStateMachine):
     FUNC_KEYWORD = 'function'
     PARAMETERS_ON_DEF_LINE = False
-    # Lua has no `case`, and its `until` ends a `repeat` loop.
     BLOCK_KEYWORDS = ("do", "{", "${")
     LOOP_KEYWORDS = ("while", "for")
 
     # Only tokens that can change scope need the shared Ruby state.
     _STATE_TOKENS = frozenset(BLOCK_KEYWORDS + LOOP_KEYWORDS + (
-        FUNC_KEYWORD, "end", "}", "if", "=begin"))
+        FUNC_KEYWORD, "end", "}", "if", "repeat", "until", "=begin"))
+    ends_at_until = False
 
     def __init__(self, context, nesting_metrics=()):
         super(LuaStateMachine, self).__init__(context)
@@ -79,6 +79,11 @@ class LuaStateMachine(RubylikeStateMachine):
                 self._open_control_body(counts_for_nd=False)
             elif token == "if":
                 self._open_control_body()
+            elif token == "repeat":
+                self._open_control_body(ends_at_until=True)
+            elif token == "until":
+                if self.ends_at_until:
+                    self.statemachine_return()
             elif token in self.LOOP_KEYWORDS:
                 self.next(self._for_while)
             else:
@@ -95,9 +100,10 @@ class LuaStateMachine(RubylikeStateMachine):
         elif token == "=":
             self.probable_function_name = self.last_token
 
-    def _open_control_body(self, counts_for_nd=True):
+    def _open_control_body(self, counts_for_nd=True, ends_at_until=False):
         # A standalone do scopes statements but adds only a structure.
         body = self.statemachine_clone()
+        body.ends_at_until = ends_at_until
         function = self.context.current_function
         if counts_for_nd and "max_nesting_depth" in self.nesting_metrics:
             body.nd_depth += 1
