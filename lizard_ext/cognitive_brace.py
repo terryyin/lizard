@@ -58,6 +58,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         elif token in (')', ']'):
             self._close_bracket()
             self._pop_expression_frames()
+        elif token == ':' and getattr(token, 'is_conditional_colon', False):
+            self._conditional_alternate()
         if state.lambda_scan is not None or token in self.lambda_triggers:
             if self._scan_lambda(token):
                 return
@@ -250,3 +252,17 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     def _semicolon(self):
         if not self.state.pdepth:
             self._statement_end()
+
+    def _conditional_alternate(self):
+        """Close complete conditionals in the current true arm."""
+        state = self.state
+        frames = state.frames
+        for index in range(len(frames) - 1, -1, -1):
+            frame = frames[index]
+            if (frame.kind != 'ternary' or frame.pdepth != state.pdepth
+                    or frame.depth != state.depth):
+                return
+            if not frame.conditional_alternate:
+                del frames[index + 1:]
+                frame.conditional_alternate = True
+                return

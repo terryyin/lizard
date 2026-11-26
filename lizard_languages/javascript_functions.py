@@ -3,13 +3,16 @@ and where an expression-bodied arrow ends."""
 
 from .javascript_bindings import JavaScriptBindings
 from .javascript_expression import (
-    JSXChildBrace, JSXMarkup, OPERAND_WORDS, active_js_state, ends_expression,
-    parameter_group, starts_statement)
+    ArrowEndingColon, ConditionalColon, JSXChildBrace, JSXMarkup, OPERAND_WORDS,
+    active_js_state, ends_expression, parameter_group, starts_statement)
 
 # Public API kept stable for external callers.
 __all__ = (
     'OPERAND_WORDS', 'JSXChildBrace', 'JSXMarkup', 'ends_expression',
     'starts_statement', 'parameter_group', 'JavaScriptFunctionsMixin')
+
+_CONDITIONAL_COLON = ConditionalColon(':')
+_ARROW_ENDING_COLON = ArrowEndingColon(':')
 
 
 class JavaScriptFunctionsMixin:
@@ -31,6 +34,17 @@ class JavaScriptFunctionsMixin:
             return (state._ternary_depth,
                     group._empty_parenthesis or getattr(group, '_typed_parameters', False))
         return None
+
+    def conditional_colon(self, token):
+        """Mark the runtime colon and whether it ends an expression arrow."""
+        state = active_js_state(self)
+        if (state._state == state._state_global
+                and state._ternary_depth and state.last_tokens != 'default'):
+            if (state._expression_body and
+                    state._ternary_depth == state._expression_ternary_depth):
+                return _ARROW_ENDING_COLON
+            return _CONDITIONAL_COLON
+        return token
 
     def _push_function_to_stack(self):
         if self._in_abstract_context:

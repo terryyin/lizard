@@ -283,9 +283,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             if (self.context.class_field_annotations
                                     and state.optional_member_context()):
                                 token = _OPTIONAL_MEMBER_QUESTION
-                        elif token == ':' and state.last_token == ')':
-                            annotation = state.return_annotation_context()
-                            if annotation is not None:
+                        elif token == ':':
+                            annotation = (state.return_annotation_context()
+                                          if state.last_token == ')' else None)
+                            if annotation is None:
+                                token = state.conditional_colon(token)
+                            else:
                                 depth, unambiguous_signature = annotation
                                 if unambiguous_signature:
                                     token = ReturnTypeColon(token)
@@ -293,6 +296,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     tokens, lookahead = tee(tokens)
                                     if return_type_colon(lookahead, depth):
                                         token = ReturnTypeColon(token)
+                                    else:
+                                        token = state.conditional_colon(token)
                                     del lookahead
                                     yield token
                                     # Resume with the buffered iterator.
