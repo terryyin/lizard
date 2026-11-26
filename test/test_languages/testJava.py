@@ -323,6 +323,21 @@ class A {
                          [(function.name, function.start_line, function.end_line)
                           for function in result])
 
+    def test_escaped_text_block_fallback_preserves_constructor(self):
+        for delimiter in (r'\u0022""', r'\u0022\u0022\u0022'):
+            with self.subTest(delimiter=delimiter):
+                result = get_java_function_list(f'''class CacheConfig {{
+    String value = Boolean.getBoolean("cache") ? load() : {delimiter}
+        {{"mode": "safe"}}
+        {delimiter};
+    CacheConfig() {{}}
+    String load() {{ return ""; }}
+}}
+''')
+                self.assertEqual(
+                    [('CacheConfig::CacheConfig', 5, 5), ('CacheConfig::load', 6, 6)],
+                    [(function.name, function.start_line, function.end_line) for function in result])
+
     def test_ternary_text_block_preserves_nested_members(self):
         for opener in ('"""\n', r'"""\u000a'):
             with self.subTest(opener=opener):
@@ -340,7 +355,7 @@ class A {
 }}
 ''')
                 self.assertEqual(['Nested::Nested', 'Nested::member', 'TokenConfig::outer'],
-                                 [function.name for function in result[-3:]])
+                                 [function.name for function in result])
 
     def test_record_with_explicit_constructor(self):
         result = get_java_function_list("""
