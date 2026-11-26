@@ -31,6 +31,80 @@ class Test_TypeScript_declaration_boundaries(unittest.TestCase):
         functions = get_ts_function_list(code)
         self.assertEqual(["local"], [f.name for f in functions])
 
+    def test_overloads_report_only_the_implementation(self):
+        code = """function last<T>(array: readonly T[]): T | undefined;
+function last<T>(array: readonly T[], fallback: T): T;
+function last<T>(array: readonly T[], fallback?: T): T | undefined {
+    return array.length ? array[array.length - 1] : fallback;
+}
+"""
+        for suffix in ('ts', 'tsx'):
+            with self.subTest(suffix=suffix):
+                functions = analyze_file.analyze_source_code('example.' + suffix, code).function_list
+                self.assertEqual([('last', 3, 5, 2, 2)], [
+                    (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                    for f in functions])
+
+    def test_semicolonless_method_overloads_keep_only_body_parameters(self):
+        code = """class Registry {
+  get(key: string): string | undefined
+  get(key: string, defaultValue: string): string
+  get(key: string, defaultValue?: string): string | undefined
+  {
+    return this.entries.get(key) ?? defaultValue
+  }
+
+  constructor(private readonly entries: Map<string, string>) {}
+}
+"""
+        method, constructor = get_ts_function_list(code)
+        self.assertEqual(('get', 4, 7, ['key', 'defaultValue']),
+                         (method.name, method.start_line, method.end_line, method.parameters))
+        self.assertEqual('constructor', constructor.name)
+
+    def test_bodyless_declaration_at_end_of_file_is_not_a_function(self):
+        code = """export function decode(input: string): Uint8Array
+"""
+        result = analyze_file.analyze_source_code('example.d.ts', code)
+        self.assertEqual([], result.function_list)
+
+    def test_overload_return_type_does_not_add_a_decision_to_the_parent(self):
+        code = """function converter(value: string | number) {
+  function read<T extends string | number>(input: T): T extends string ? string : number;
+  function read(input: string | number): string | number {
+    return input;
+  }
+  return read(value);
+}
+"""
+        functions = get_ts_function_list(code)
+        self.assertEqual([('read', 1), ('converter', 1)],
+                         [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_typed_arrow_returns_an_array_in_a_namespace(self):
+        code = """namespace Completion {
+  export const names = (plus: readonly string[], options?: { noLib?: boolean }): readonly string[] =>
+    [
+      ...plus,
+      ...options?.noLib ? [] : ['name'],
+    ].sort();
+}
+"""
+        functions = get_ts_function_list(code)
+        self.assertEqual([('names', 2, 6)], [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_computed_method_after_bodyless_signature(self):
+        code = """abstract class Cursor {
+  return?(): void;
+  [Symbol.iterator]() {
+    return this;
+  }
+}
+"""
+        functions = get_ts_function_list(code)
+        self.assertEqual([('symbol.iterator', 3, 5)], [
+            (f.name, f.start_line, f.end_line) for f in functions])
+
 
 class Test_TypeScript_type_alias_no_false_positives(unittest.TestCase):
     """Tests that type aliases with arrow signatures are NOT detected as functions (Fix 2)."""
