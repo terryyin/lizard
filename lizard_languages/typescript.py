@@ -232,6 +232,11 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         state.statemachine_before_return()
         self.eof()
 
+    def _type_member_name(self, state, keyword):
+        if self.context.class_field_annotations and state.type_literal_context():
+            return _MemberName(keyword)
+        return keyword
+
     def preprocess(self, tokens):
         """Drop spaces, and offer each line's first code token to the
         innermost open expression arrow (or optimistic signature) before
@@ -265,7 +270,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                 token[0] in _PARAMETER_STARTS
                                 and state.member_name_context()):
                             keyword = _MemberName(keyword)
-                        yield keyword
+                        yield self._type_member_name(state, keyword)
                         keyword = None
                     if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
@@ -309,7 +314,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     yield token
                 elif token == '\n':
                     if keyword is not None:
-                        yield keyword
+                        yield self._type_member_name(state, keyword)
                         keyword = None
                     if member_access and _ends_a_number(before_dot):
                         # `1.` before a line break ends a number. On one
@@ -320,7 +325,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     yield token
             else:
                 if keyword is not None:
-                    yield keyword
+                    yield self._type_member_name(state, keyword)
                 return
 
     @staticmethod

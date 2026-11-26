@@ -55,6 +55,13 @@ class JavaScriptBindings:
     def at_root(self):
         return len(self._frames) == 1 and not self._expression_brackets
 
+    @property
+    def in_type_literal(self):
+        """Check braces in a parameter annotation before its default value."""
+        return (self._in_parameter_type and not self._frames[0].initializing
+                and (any(frame.closing == '}' for frame in self._frames[1:])
+                     or '}' in self._expression_brackets))
+
     def read_token(self, token, report=True):
         if not self._frames:
             return (BindingEvent(True, False, False, False, False)

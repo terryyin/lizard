@@ -6,6 +6,8 @@ from .javascript_expression import (
     JSXChildBrace, JSXMarkup, OPERAND_WORDS, active_js_state, ends_expression,
     parameter_group, starts_statement)
 
+from .typescript_type_annotation import TypeScriptTypeAnnotationStates
+
 # Public API kept stable for external callers.
 __all__ = (
     'OPERAND_WORDS', 'JSXChildBrace', 'JSXMarkup', 'ends_expression',
@@ -21,6 +23,16 @@ class JavaScriptFunctionsMixin:
         group._call_group = True
         self.sub_state(group)
         return group
+
+    def type_literal_context(self):
+        """Whether this token is in the braces of an open annotation."""
+        active = active_js_state(self)
+        if active is not self:
+            return active.type_literal_context()
+        if isinstance(self._state, TypeScriptTypeAnnotationStates):
+            return self._state.in_type_literal
+        return (getattr(self._state, '__func__', None) is self._dec.__func__
+                and self._parameter_bindings.in_type_literal)
 
     def return_annotation_context(self):
         """Return ternary depth and whether the completed group proves a signature."""

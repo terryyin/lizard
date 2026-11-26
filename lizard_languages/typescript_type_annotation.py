@@ -8,6 +8,11 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
     NON_GENERIC_TYPES = frozenset((
         'any', 'unknown', 'never', 'number', 'bigint', 'boolean', 'string',
         'symbol', 'object', 'void', 'undefined', 'null', 'this', 'true', 'false'))
+
+    @property
+    def in_type_literal(self):
+        return '}' in self._brackets
+
     BRACKETS = {'(': ')', '[': ']', '{': '}', '<': '>', '${': '}'}
     END_TOKENS = frozenset(('=', ';', ')', ']', '}', ',', '=>',
                             '||', '&&', '??', '?', ':', '+', '-', '*', '/',
