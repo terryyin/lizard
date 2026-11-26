@@ -38,7 +38,8 @@ class Test_TypeScript_type_identifier(unittest.TestCase):
 
     def test_type_alias_with_a_non_ascii_or_prefixed_name(self):
         for name in ('$$Props', '_Props', 'Fa\u0301ctory', 'F\u200dactory',
-                     'Fa\u203fctory', r'\u0046actory', r'F\u{61}ctory'):
+                     'Fa\u203fctory', r'\u0046actory', r'F\u{61}ctory',
+                     '\u309bFactory', 'Fa\u309bctory', r'as\u0046actory'):
             with self.subTest(name=name):
                 code = f"""\
 type {name} = BaseProps & {{ onClose: () => void }};
@@ -83,3 +84,17 @@ const parse: $Parse = (value) => value
                 with self.subTest(filename=filename, expression=expression):
                     code = 'type Flag = ' + alias_type + '\n' + expression
                     self.assertEqual([(name, 2, 2, 1) for name in expected_names], summary(filename, code))
+
+
+    def test_type_value_with_an_escaped_type_keeps_its_arrow_boundary(self):
+        for assertion in (r'as \u0046oo', r'satisfies F\u{6f}o', r'as /* type */ \u0046oo'):
+            for filename in ('types.ts', 'types.tsx'):
+                with self.subTest(assertion=assertion, filename=filename):
+                    code = """type Foo = { ready: boolean };
+function build(type: Foo) {
+  const value = () => type %s;
+  if (type.ready) return value;
+  return value
+}
+""" % assertion
+                    self.assertEqual([('value', 3, 3, 1), ('build', 2, 6, 2)], summary(filename, code))
