@@ -596,6 +596,18 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """))
 
+    def test_sibling_if_after_a_braceless_function_declaration(self):
+        for separator in ('\n', ' ', ';\n'):
+            with self.subTest(separator=separator):
+                code = f"""
+                function siblingCall(a, b, jobs) {{
+                  if (a) function run() {{}}{separator}if (b) jobs.run()
+                }}
+                """
+                depth = self.nesting_depth(code, "a.cjs", function_index=-1)
+
+                self.assertEqual(1, depth)
+
     def test_function_expression_at_the_end_of_a_statement(self):
         self.assertEqual(1, self.nesting_depth("""
         function configure(options) {
