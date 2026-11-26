@@ -26,6 +26,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         language = reader.language_names[0]
         self.logical_statement_lines = language in ('kotlin', 'scala', 'swift')
         self.named_infix = language in ('kotlin', 'scala')
+        self.kotlin_quoted_infix = language == 'kotlin'
         if language == 'scala':
             reader.track_leading_infix = True
         self.comment_line_count = 0
@@ -43,6 +44,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             return
         state = self.state
         line = self.line
+        if self.kotlin_quoted_infix and token.startswith('`'):
+            self._remember_quoted_name(token == '`')
         if line != state.line:
             if self.logical_statement_lines:
                 if (state.logical and not state.pdepth
@@ -113,10 +116,30 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 or token in self._LINE_EXPRESSION_WORDS or getattr(token, 'is_leading_infix', False)):
             return
         previous = state.prev
-        if self.named_infix and _is_word(previous) and self._ends_line_operand(state.prev2):
-            return  # a named infix operator still needs its right operand
+        if self.named_infix and self._needs_infix_operand():
+            return
         if self._ends_line_operand(previous):
             state.logical.pop(0, None)
+
+    def _needs_infix_operand(self):
+        state = self.state
+        previous = state.prev
+        if self.kotlin_quoted_infix and previous and previous.startswith('`'):
+            return (getattr(state, 'quoted_infix', False)
+                    and state.open_quote_line is None)
+        return _is_word(previous) and self._ends_line_operand(state.prev2)
+
+    def _remember_quoted_name(self, split):
+        state = self.state
+        line = self.line
+        # The Kotlin reader may split a spaced name into several tokens.
+        if split and getattr(state, 'open_quote_line', None) == line:
+            state.open_quote_line = None
+        else:
+            state.quoted_infix = (line == state.line
+                                  and self._ends_line_operand(state.prev)
+                                  and not self._needs_infix_operand())
+            state.open_quote_line = line if split else None
 
     def _ends_line_operand(self, token):
         return (token in (')', ']', '}', '++', '--', '!!')
