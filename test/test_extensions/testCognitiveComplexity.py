@@ -1299,32 +1299,6 @@ class TestJavaScriptReaderFailure(unittest.TestCase):
               next = %s) {}""" % self.DEEP))
 
 
-class TestFlatLanguages(unittest.TestCase):
-    """Blocks are not brace-delimited: increments without nesting penalty."""
-
-    def test_ruby(self):
-        self.assertEqual([3], cogc("a.rb", """
-def f(a)
-  if a && b
-    x
-  elsif c
-    y
-  end
-end
-"""))
-
-    def test_lua_else_if_is_one_increment(self):
-        self.assertEqual([2], cogc("a.lua", """
-function f(a)
-  if a then
-    x()
-  elseif b then
-    y()
-  end
-end
-"""))
-
-
 class TestCognitiveOptionalRecursion(unittest.TestCase):
     def test_destructured_parameter_key_and_binding(self):
         source = """
@@ -1355,6 +1329,32 @@ class TestCognitiveOptionalRecursion(unittest.TestCase):
             function wrap(run) { return { run() { run?.(); } }; }
         """
         self.assertEqual([0, 0, 0, 0], cogc('retry.js', source))
+
+
+class TestFlatLanguages(unittest.TestCase):
+    """Blocks are not brace-delimited: increments without nesting penalty."""
+
+    def test_ruby(self):
+        self.assertEqual([3], cogc("a.rb", """
+def f(a)
+  if a && b
+    x
+  elsif c
+    y
+  end
+end
+"""))
+
+    def test_lua_else_if_is_one_increment(self):
+        self.assertEqual([2], cogc("a.lua", """
+function f(a)
+  if a then
+    x()
+  elseif b then
+    y()
+  end
+end
+"""))
 
 
 class TestProfilesBuiltFromTheReaders(unittest.TestCase):
