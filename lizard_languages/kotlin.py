@@ -4,10 +4,11 @@ Language parser for Apple Swift
 
 from itertools import compress
 
+from . import swift
 from .clike import CCppCommentsMixin
 from .code_reader import CodeReader, CodeStateMachine, _previous_code
 from .golike import GoLikeStates
-from .swift import SwiftReplaceLabel, _is_local_name, _next_significant
+from .swift import SwiftReplaceLabel
 
 
 class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
@@ -80,9 +81,9 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
             previous = _previous_code(tokens, index, line_breaks=True)
             if previous < 0 or tokens[previous] not in ('(', ','):
                 continue
-            colon = _next_significant(tokens, index + 1)
-            if colon is not None and _is_local_name(tokens[colon]):
-                colon = _next_significant(tokens, colon + 1)
+            colon = swift._next_significant(tokens, index + 1)
+            if colon is not None and swift._is_local_name(tokens[colon]):
+                colon = swift._next_significant(tokens, colon + 1)
             if colon is not None and tokens[colon] == ':':
                 tokens[index] = '_' + tokens[index]
         return tokens
@@ -112,6 +113,10 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     _ACCESSORS = {'get', 'set'}
     _BEFORE_ACCESSOR_IDENTIFIER = {'.', '::', '@', ':', '=', 'typealias'}
     _ACCESSOR_MODIFIERS = {'public', 'protected', 'internal', 'private', 'inline', 'external'}
+    # The tokens that `_state_global` acts on.
+    _GLOBAL_TOKENS = _ACCESSORS | {
+        'class', 'object', '->', 'val', 'var', ',', 'interface', 'when', 'fun', '[', '{', '}',
+    }
     _EXPRESSION_BODY_ENDERS = {
         'fun', 'class', 'interface', 'val', 'var',
     }
@@ -125,10 +130,6 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         'actual', 'context', 'import', 'package',
     } | _ACCESSORS | _ACCESSOR_MODIFIERS
     _HEADER_OPERATORS = {':', 'where', '.', '->', ',', '<', '(', '&', 'suspend'}
-    # The tokens that `_state_global` acts on.
-    _GLOBAL_TOKENS = _ACCESSORS | {
-        'class', 'object', '->', 'val', 'var', ',', 'interface', 'when', 'fun', '{', '}',
-    }
 
     def __init__(self, context, in_when_cases=False, accessor_declaration_scope=None,
                  expression_bodies=None):
@@ -531,7 +532,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
         depth = self._open_types
         groups = []
         previous = ','
-        index = _next_significant(tokens, index + 1)
+        index = swift._next_significant(tokens, index + 1)
         while index is not None:
             token = tokens[index]
             if token == '@':
@@ -548,7 +549,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
                     break
                 prefix = groups.pop()
                 if prefix in ('context', 'suspend'):
-                    index = _next_significant(tokens, index + 1)
+                    index = swift._next_significant(tokens, index + 1)
                     if index is None:
                         break
                     if prefix == 'suspend' and tokens[index] != '->':
@@ -568,13 +569,13 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
                   and not (token[0] == '<' and token[-1] == '>')):
                 break
             previous = token
-            index = _next_significant(tokens, index + 1)
+            index = swift._next_significant(tokens, index + 1)
         return -1
 
     def _has_type_argument_suffix(self, tokens, index):
         if self._type_operand:
             return True
-        suffix = _next_significant(tokens, index + 1)
+        suffix = swift._next_significant(tokens, index + 1)
         if suffix is None:
             return False
         return (tokens[suffix] in ('(', '{', '.', '?', '::', '@')
@@ -597,7 +598,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
             if (not (token[0].isalpha() or token[0] in '_`')
                     or index + 1 == len(tokens) or tokens[index + 1] != '@'):
                 return False
-            index = _next_significant(tokens, index + 2)
+            index = swift._next_significant(tokens, index + 2)
             if index is None or tokens[index] != '{':
                 return False
         # These tokens belong to the lambda prefix, even across line breaks.
@@ -608,16 +609,16 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
         # A trailing lambda may have annotations. A declaration after the
         # expression can also have annotations, so check what follows them.
         while index is not None and tokens[index] == '@':
-            index = _next_significant(tokens, index + 1)
+            index = swift._next_significant(tokens, index + 1)
             if index is None:
                 break
             if tokens[index] != '[':
-                index = _next_significant(tokens, index + 1)
+                index = swift._next_significant(tokens, index + 1)
                 while index is not None and tokens[index] == '.':
-                    name = _next_significant(tokens, index + 1)
+                    name = swift._next_significant(tokens, index + 1)
                     if name is None:
                         return None
-                    index = _next_significant(tokens, name + 1)
+                    index = swift._next_significant(tokens, name + 1)
             if index is not None and tokens[index] in ('(', '['):
                 index = self._after_annotation_group(tokens, index)
         return index
@@ -633,7 +634,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
             elif tokens[part] == closing:
                 depth -= 1
                 if depth == 0:
-                    return _next_significant(tokens, part + 1)
+                    return swift._next_significant(tokens, part + 1)
         return None
 
     def _track_types(self, token):
