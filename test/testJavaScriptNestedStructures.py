@@ -136,6 +136,35 @@ class TestJavaScriptNestedStructuresWithoutSemicolons(unittest.TestCase):
         }
         """))
 
+    def test_else_uses_the_depth_of_its_matching_if(self):
+        code = """
+        function nestedElse(ready, cached, job, queue) {
+          if (ready)
+            if (cached) job.run()
+            else job.options = null
+          else
+            for (const next of queue) next.run()
+        }
+        function deeperElse(retry, queue) {
+          if (retry)
+            for (const job of queue) job.options = null
+          else
+            for (const job of queue)
+              while (job.ready) job.run()
+        }
+        function configure(custom, handlers) {
+          if (custom) handlers.run = function () {};
+          else for (const handler of handlers) handler();
+        }
+        """
+        for filename in ('queue.js', 'queue.ts'):
+            with self.subTest(filename=filename):
+                functions = FileAnalyzer(get_extensions([NestedStructure()])).analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('nestedElse', 2), ('deeperElse', 3),
+                                  ('handlers.run', 0), ('configure', 2)],
+                                 [(f.name, f.max_nested_structures) for f in functions])
+
     def test_braceless_else_if_chain(self):
         self.assertEqual(1, self.nested_structures("""
         function role(user) {
