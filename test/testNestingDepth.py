@@ -10,6 +10,17 @@ def get_cpp_with_nestdepth(source):
 
 class TestCppNestingDepth(unittest.TestCase):
 
+    def test_standalone_logical_chain_has_one_level_with_or_without_parentheses(self):
+        functions = get_cpp_with_nestdepth("""
+        bool enabled(bool present, bool active, bool ready) {
+            return present && active && ready;
+        }
+        bool enabledGrouped(bool present, bool active, bool ready) {
+            return (present && active && ready);
+        }
+        """)
+        self.assertEqual([1, 1], [f.max_nesting_depth for f in functions])
+
     def test_one_function_with_no_nd_condition(self):
         result = get_cpp_with_nestdepth("int fun(){}")
         self.assertEqual(0, result[0].max_nesting_depth)
@@ -418,6 +429,15 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
           const locale = user.locale || team.locale
           const admin = user.admin && team.active
           return { theme, locale, admin }
+        }
+        """))
+
+    def test_standalone_logical_chain_ends_at_the_next_statement(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function check(user, team, config) {
+          const login = user.active && team.active && config.login
+          const admin = (login && user.admin && config.admin)
+          return { login, admin }
         }
         """))
 
