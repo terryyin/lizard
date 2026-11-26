@@ -8,6 +8,7 @@ from .js_style_regex_context import (
     _EXPRESSION_KEYWORDS,
     _LINE_ENDS,
     _is_js_dividend,
+    _opens_control_header,
     _skip_ws_and_comments_back,
     _yield_after_operator,
     _REGEX_DIVISOR,
@@ -28,6 +29,8 @@ def mark_forward(source, js_family, *, jsx=False, javascript_operators=False):
     expect_property = False
     paren_depth = 0
     for_headers = []
+    control_headers = []
+    operand_close = None
     async_nesting = 0
     pending_async = False
     pending_for = False
@@ -133,7 +136,7 @@ def mark_forward(source, js_family, *, jsx=False, javascript_operators=False):
 
     def advance():
         nonlocal i, can_regex, expect_property, pending_async, pending_for
-        nonlocal paren_depth, async_nesting
+        nonlocal paren_depth, async_nesting, operand_close
         ch = source[i]
 
         if ch in whitespace:
@@ -167,7 +170,7 @@ def mark_forward(source, js_family, *, jsx=False, javascript_operators=False):
             if divisor is not None:
                 prev = _skip_ws_and_comments_back(source, i - 1)
                 word, _ = _word_before(source, prev)
-                if _is_js_dividend(source, prev, word):
+                if prev == operand_close or _is_js_dividend(source, prev, word):
                     marks.append(divisor.start(1))
                     i = divisor.end()
                     after_operand()
@@ -202,6 +205,8 @@ def mark_forward(source, js_family, *, jsx=False, javascript_operators=False):
             after_operand()
             return
         if ch == '(':
+            if javascript_operators:
+                control_headers.append(pending_for or _opens_control_header(source, i))
             if pending_for:
                 for_headers.append(paren_depth + 1)
                 pending_for = False
@@ -214,6 +219,8 @@ def mark_forward(source, js_family, *, jsx=False, javascript_operators=False):
             expect_property = False
             return
         if ch == ')':
+            if control_headers and not control_headers.pop():
+                operand_close = i
             paren_depth = max(0, paren_depth - 1)
             while for_headers and for_headers[-1] > paren_depth:
                 for_headers.pop()

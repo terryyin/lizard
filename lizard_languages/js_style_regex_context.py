@@ -35,7 +35,6 @@ _REGEX_LITERAL_RE = re.compile(REGEX_LITERAL)
 _OPERAND_OPERATOR = re.compile(r'(?:[=!]=|(?<!<)<=|(?<!>)>=|(?<!=)>|\?\?|[<+*/%~!&|^-])\Z')
 
 
-_REGEX_DIVISOR = re.compile(r'/\s+(' + REGEX_LITERAL + ')')
 _EXPRESSION_KEYWORDS = frozenset({
     'return', 'typeof', 'instanceof', 'in', 'new', 'delete', 'void',
     'throw', 'case', 'do', 'else', 'yield',
@@ -46,7 +45,7 @@ _RUBY_EXPRESSION_KEYWORDS = _EXPRESSION_KEYWORDS | frozenset({
     'then', 'next', 'break',
 })
 _NEEDS_FORWARD = re.compile(r'\b(?:for|async)\b')
-_JS_OPERATOR_SLASH = re.compile(r'(?:[<>]\s*|/\s+)/(?![/*])')
+
 # Cheap gate from the same keyword set; longer names first so ``in`` loses to
 # ``instanceof``. Skip the shared scan when no keyword/=> can open a literal.
 _MAYBE_KEYWORD_OPEN = re.compile(
@@ -55,6 +54,10 @@ _MAYBE_KEYWORD_OPEN = re.compile(
     + r')\b|=>')
 _LINE_TERMINATORS = '\r\n\u2028\u2029'
 _LINE_ENDS = frozenset(_LINE_TERMINATORS)
+# Keep a divisor's trivia in the lexical span where it belongs.
+_DIVISOR_LEAD = rf'/(?:\s|/\*(?:[^*]|\*(?!/))*\*/|//[^{_LINE_TERMINATORS}]*[{_LINE_TERMINATORS}])+'
+_REGEX_DIVISOR = re.compile(_DIVISOR_LEAD + '(' + REGEX_LITERAL + ')')
+_JS_OPERATOR_SLASH = re.compile(r'(?:[<>]\s*|' + _DIVISOR_LEAD + r')/(?![/*])')
 _JS_SPACES = (' \t\v\f\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005'
               '\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff')
 _JS_WHITESPACE = _LINE_ENDS | frozenset(_JS_SPACES)
@@ -185,3 +188,12 @@ def _yield_after_operator(source, start):
         if word == 'yield':
             return False
     return True
+
+
+def _opens_control_header(source, start):
+    prev = _skip_ws_and_comments_back(source, start - 1)
+    word, before = _word_before(source, prev)
+    if word not in ('if', 'while', 'for', 'with'):
+        return False
+    prefix = _skip_ws_and_comments_back(source, before)
+    return prefix < 0 or source[prefix] not in '.#'
