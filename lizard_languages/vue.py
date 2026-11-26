@@ -17,6 +17,7 @@ _MARKUP_COMMENT = r'<!--.*?(?:-->|\Z)'
 _MARKUP_INTERPOLATION = r'\{\{.*?\}\}'
 _MARKUP_TAG = r"""<(/?)([A-Za-z][^\s/<>]*)(?:=\s*(?:"[^"]*"|'[^']*'|\{[^}]*\})|[^<>])*>?"""
 _MARKUP = re.compile('|'.join((_MARKUP_COMMENT, _MARKUP_INTERPOLATION, _MARKUP_TAG)), re.S)
+_MAYBE_V_PRE = re.compile(r'(?<=\s)v-pre(?=[\s/>=])')
 _CDATA = r'<!\[CDATA\[.*?(?:\]\]>|\Z)'
 _VUE_MARKUP = re.compile(
     '|'.join((_MARKUP_COMMENT, _CDATA, _MARKUP_INTERPOLATION, _MARKUP_TAG)), re.S)
@@ -87,7 +88,7 @@ def _find_script_blocks(source, template_v_pre=False):
     As in the Vue compiler, a top-level HTML <template> holds nested markup,
     and the other top-level blocks hold text up to their closing tag."""
     pos = 0
-    template_v_pre = template_v_pre and 'v-pre' in source
+    template_v_pre = template_v_pre and _MAYBE_V_PRE.search(source) is not None
     while True:
         match = _MARKUP.search(source, pos)
         if match is None:
@@ -214,8 +215,9 @@ def _vue_template_end(source, pos, root):
                 in_xml = False
             continue
         namespace = _namespace(name, stack[-1])
-        if not in_xml and name in _TEXT_ELEMENTS:
-            close = _TEXT_END[name].search(source, pos)
+        text_name = name.lower()
+        if not in_xml and name[0] in 'st' and text_name in _TEXT_ELEMENTS:
+            close = _TEXT_END[text_name].search(source, pos)
             if close is None:
                 return None
             pos = close.start()
