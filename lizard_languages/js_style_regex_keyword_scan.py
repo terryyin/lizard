@@ -22,25 +22,63 @@ _LINE_BREAK = re.compile(rf'[{_LINE_TERMINATORS}]')
 _OPERAND_OPERATOR = re.compile(r'(?:[=!]=|(?<!<)<=|(?<!>)>=|(?<!=)>|\?\?|[<+*/%~!&|^-])\Z')
 
 
+# A direct generator body reserves yield. Read an ordinary header without
+# consuming expressions or quoted text in parameters.
+_GENERATOR_HEADER = (
+    r"""(?<![\w$.])function\s*\*\s*(?:[$\w]+\s*)?\([^(){}'"/`]*\)\s*\{"""
+)
+_GENERATOR_EVENT = re.compile('(?P<generator>' + _GENERATOR_HEADER + r""")|[/`'"{}]""")
+_AMBIGUOUS_YIELD = re.compile(rf'(?:\byield\s*\*\s*|>\s*[{_LINE_TERMINATORS}]\s*)yield\b')
+
+
 def mark_keyword_slashes(source, *, jsx=False):
     """Find-jump scan: C-level seeks between quotes, templates and slashes."""
     marks = []
     # The JSX tokenizer identifies element text after this scan has run.
     comments = None if jsx else {}
     literal_ends = None if jsx else set()
+    generator_events = _GENERATOR_EVENT.search if (
+        not jsx and _AMBIGUOUS_YIELD.search(source) is not None) else None
+    braces = 0
+    generator_bodies = []
     n = len(source)
     i = 0
     find = source.find
     while i < n:
-        j_slash = find('/', i)
-        j_dq = find('"', i)
-        j_sq = find("'", i)
-        j_tmpl = find('`', i)
-        candidates = [j for j in (j_slash, j_dq, j_sq, j_tmpl) if j >= 0]
-        if not candidates:
-            break
-        i = min(candidates)
+        if generator_events:
+            event = generator_events(source, i)
+            if event is None:
+                break
+            i = event.start()
+            if event.lastgroup == 'generator':
+                prev, _ = _before_comments(source, _skip_ws_back(source, i - 1), comments)
+                if prev < 0 or source[prev] not in '.#':
+                    braces += 1
+                    generator_bodies.append(braces)
+                    i = event.end()
+                else:
+                    i += len('function')
+                continue
+        else:
+            j_slash = find('/', i)
+            j_dq = find('"', i)
+            j_sq = find("'", i)
+            j_tmpl = find('`', i)
+            candidates = [j for j in (j_slash, j_dq, j_sq, j_tmpl) if j >= 0]
+            if not candidates:
+                break
+            i = min(candidates)
         ch = source[i]
+        if ch == '{':
+            braces += 1
+            i += 1
+            continue
+        if ch == '}':
+            if generator_bodies and generator_bodies[-1] == braces:
+                generator_bodies.pop()
+            braces -= 1
+            i += 1
+            continue
         if ch == '"' or ch == "'":
             quote = ch
             i += 1
@@ -62,7 +100,8 @@ def mark_keyword_slashes(source, *, jsx=False):
         if i + 1 < n and source[i + 1] in '/*':
             i = _read_comment(source, i, comments)
             continue
-        i = _consider_slash(source, i, marks, comments, literal_ends)
+        direct_generator = bool(generator_bodies and generator_bodies[-1] == braces)
+        i = _consider_slash(source, i, marks, comments, literal_ends, direct_generator=direct_generator)
     return _apply_marks(source, marks)
 
 
@@ -82,7 +121,7 @@ def _before_comments(source, i, comments):
     return i, line_comment
 
 
-def _consider_slash(source, i, marks, comments, literal_ends):
+def _consider_slash(source, i, marks, comments, literal_ends, *, direct_generator=False):
     matched = _REGEX_LITERAL_RE.match(source, i)
     if matched is None:
         return i + 1
@@ -112,7 +151,7 @@ def _consider_slash(source, i, marks, comments, literal_ends):
         member = prefix >= 0 and (source[prefix] == '#'
                                   or source[prefix] == '.' and _is_property_before(source, prefix))
         if not member and (
-                word != 'yield' or
+                word != 'yield' or direct_generator or
                 _yield_starts_expression(source, prefix, before_word, line_comment, comments, literal_ends)):
             marks.append(i)
             literal_ends.add(matched.end() - 1)
