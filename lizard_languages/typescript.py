@@ -161,6 +161,13 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         state = active_js_state(self.parallel_states[0])._state
         return isinstance(state, TypeScriptTypeAnnotationStates) and state.owns_question_mark()
 
+    def in_template_literal_type(self):
+        if not self.context.class_field_annotations:
+            return False
+        state = active_js_state(self.parallel_states[0])._state
+        return (isinstance(state, TypeScriptTypeAnnotationStates)
+                or getattr(state, 'in_type_alias', False))
+
     def _count_interpolation_conditions(self, token, in_expression, measure=None):
         if getattr(token, 'interpolation_measured', False):
             return None

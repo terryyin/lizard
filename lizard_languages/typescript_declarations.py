@@ -70,6 +70,7 @@ class TypeScriptDeclarationsMixin:
                         phase[0] = 3
                     elif t == '=':
                         phase[0] = 2
+                        handle_type_alias.in_type_alias = True
                     elif t == ';':
                         self.next(self._state_global)
                         return True

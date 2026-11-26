@@ -36,13 +36,13 @@ enabling it leaves every other metric untouched.
 import sys
 from functools import partial
 
-from lizard import FunctionInfo
 from lizard_core.file_analyzer import line_counter, token_counter
 from lizard_core.file_info_builder import FileInfoBuilder
+from lizard_ext.cognitive_counter import _MeasuredInterpolation
 from lizard_languages.javascript import JavaScriptReader
 from lizard_languages.typescript import TypeScriptReader
+from lizard import FunctionInfo
 
-from .cognitive_counter import _MeasuredInterpolation
 from .cognitive_brace import _BraceCounter
 from .cognitive_indent import _counter_for
 
@@ -86,7 +86,8 @@ def _measure_templates(tokens, counter):
     for token in tokens:
         in_expression = counter.previous == '${'
         if (in_expression or (atomic and token[:1] == '`' and '${' in token)) and (
-                '?' in token or '&&' in token or '||' in token):
+                '?' in token or '&&' in token or '||' in token) and (
+                not counter.reader.in_template_literal_type()):
             score, structures = read_interpolation(token, in_expression, measure)
             token = _MeasuredInterpolation(token, score, structures)
         yield token
