@@ -272,6 +272,24 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     if line_start and not token.startswith(_COMMENT_STARTS):
                         line_start = False
                         end_before_line_token(state, arrows, token)
+                    if (constructor is not None or token == 'new') and not token.startswith(_COMMENT_STARTS):
+                        if (token == 'new' and self.context.class_field_annotations
+                                and state.last_token not in member_access_tokens):
+                            constructor = 'name'
+                        elif constructor == 'name' and (token[0].isalpha() or token[0] in '_$#'):
+                            constructor = 'arguments'
+                        elif constructor == 'arguments' and token == '.':
+                            constructor = 'name'
+                        else:
+                            check_arguments = constructor == 'arguments' and token == '<'
+                            constructor = None
+                            if check_arguments:
+                                tokens, lookahead = tee(tokens)
+                                if constructor_has_function_type(lookahead):
+                                    token = ConstructorTypeOpen(token)
+                                del lookahead
+                                yield token
+                                break
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
                     if member_access and token in structure_keywords:
@@ -308,24 +326,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         if token in name_keywords:
                             keyword = token
                             continue
-                    if (constructor is not None or token == 'new') and not token.startswith(_COMMENT_STARTS):
-                        if (token == 'new' and self.context.class_field_annotations
-                                and state.last_token not in member_access_tokens):
-                            constructor = 'name'
-                        elif constructor == 'name' and (token[0].isalpha() or token[0] in '_$#'):
-                            constructor = 'arguments'
-                        elif constructor == 'arguments' and token == '.':
-                            constructor = 'name'
-                        else:
-                            check_arguments = constructor == 'arguments' and token == '<'
-                            constructor = None
-                            if check_arguments:
-                                tokens, lookahead = tee(tokens)
-                                if constructor_has_function_type(lookahead):
-                                    token = ConstructorTypeOpen(token)
-                                del lookahead
-                                yield token
-                                break
                     yield token
                 elif token == '\n':
                     if keyword is not None:
