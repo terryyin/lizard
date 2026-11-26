@@ -17,6 +17,8 @@ _EXPRESSION_PREFIXES = (
 
 
 class TypeScriptDeclarationsMixin:
+    _pending_type_alias = False
+
     def _handle_type_declaration(self, token):
         if token in ('const', 'let', 'var'):
             self._declaration_binding = True
@@ -49,6 +51,7 @@ class TypeScriptDeclarationsMixin:
         # Skip type alias declarations: type Name = { ... }
         # These contain arrow signatures that are not runtime functions.
         if token == 'type' and not self.as_object:
+            self._pending_type_alias = self._expression_body
             phase = [0]        # 0=expect name, 1=expect =, 2=after =
             brace_count = [0]
             generic_depth = [0]
@@ -56,6 +59,7 @@ class TypeScriptDeclarationsMixin:
 
             def handle_type_alias(t):
                 if phase[0] == 0:
+                    self._pending_type_alias = False
                     if t and t[0].isalpha():
                         name[0] = t
                         phase[0] = 1
@@ -63,7 +67,8 @@ class TypeScriptDeclarationsMixin:
                         self.last_tokens = 'type'
                         self.next(self._state_global)
                         self._state_global(t)
-                        return True
+                        # Keep the state entered by the runtime token.
+                        return False
                 elif phase[0] == 1:
                     if t == '<':
                         generic_depth[0] = 1

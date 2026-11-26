@@ -57,9 +57,13 @@ class JavaScriptFunctionsMixin:
             self._discard_signature()
             if not self.started_function:
                 return
-        if (self._state == self._state_global
+        if ((self._state == self._state_global or self._pending_type_alias)
                 and ends_expression(self.last_token)
                 and starts_statement(token)):
+            if self._pending_type_alias:
+                # The type keyword at the end of this arrow was an identifier.
+                self._pending_type_alias = False
+                self.next(self._state_global)
             self._end_statement()
 
     def end_signature_before(self, token):
