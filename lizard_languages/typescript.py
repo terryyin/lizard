@@ -293,16 +293,16 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         member_access = False
         before_dot = ''
         keyword = None      # waits for the next token: `{ if: a }`
-        tokens = iter(self.code_tokens(tokens))
         track_templates = self.measure_template_types and self.context.class_field_annotations
         type_tokens = 0
+        tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
-                if track_templates:
-                    self._in_call_type_arguments = bool(type_tokens)
-                    if type_tokens:
-                        type_tokens -= 1
                 if not token.isspace():
+                    if track_templates:
+                        self._in_call_type_arguments = bool(type_tokens)
+                        if type_tokens:
+                            type_tokens -= 1
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
                         if token in _NAME_FOLLOWERS or (

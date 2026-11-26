@@ -31,10 +31,6 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
     def owns_question_mark(self):
         return bool(self._brackets or self._conditional_type)
 
-    def has_complete_type(self):
-        return not (self._expect_type or self._conditional_type
-                    or self._conditional_questions or self._qualified_type)
-
     def _state_global(self, token):
         if token.isspace():
             self._line_break |= '\n' in token
@@ -102,3 +98,7 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                 '|', '&', 'keyof', 'typeof', 'readonly', 'unique', 'infer',
                 'extends', 'is', 'in', 'as')
             self._function_arrow = False
+
+    def has_complete_type(self):
+        return not (self._expect_type or self._conditional_type
+                    or self._conditional_questions or self._qualified_type)
