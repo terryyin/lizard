@@ -263,6 +263,23 @@ end
         self.assertEqual(2, len(result))
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
+    def test_ruby_condition_words_are_lua_identifiers(self):
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        result = analyzer.analyze_source_code('deadline.lua', '''
+local function deadline(policy, when)
+  if when < policy.start then
+    return policy.rescue(when)
+  elseif when > policy.finish then
+    return policy.ensure(when)
+  end
+  return when
+end
+''')
+        self.assertEqual(
+            [(3, 2)],
+            [(f.cyclomatic_complexity, f.cognitive_complexity)
+             for f in result.function_list])
+
     def test_class_method(self):
         result = get_function_list('''
         function V.f(n)
