@@ -364,6 +364,53 @@ class PointFactory {
                     [('constructor', 1), ('new', 2), ('new', 1), ('get new', 1)],
                     [(f.name, f.cyclomatic_complexity) for f in functions])
 
+    def test_multiline_class_heritage_reads_nested_method(self):
+        code = '''
+class Registry {
+  entry = class extends
+    new Proxy(Base, {
+      construct(target, args) { return Reflect.construct(target, args); },
+    }) {};
+
+  new() { return new this.entry(); }
+}
+'''
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(filename, code).function_list
+                self.assertEqual(
+                    [('construct', 5, ['target', 'args']), ('new', 8, [])],
+                    [(f.name, f.start_line, f.parameters) for f in functions])
+
+    def test_nested_class_heritage_reads_methods_in_both_bodies(self):
+        code = '''
+class Registry {
+  entry = class extends class extends
+    new Proxy(Base, {}) {
+      new(id) { return id; }
+    } {
+      new(id, label) { return [id, label]; }
+    };
+}
+'''
+        functions = analyze_file.analyze_source_code('a.js', code).function_list
+        self.assertEqual(
+            [('new', 5, ['id']), ('new', 7, ['id', 'label'])],
+            [(f.name, f.start_line, f.parameters) for f in functions])
+
+    def test_arrow_field_keeps_grouped_constructor_inside_class_heritage(self):
+        code = '''
+class Registry {
+  entry = () => class extends
+    new (this.Proxy ?? Proxy)(Base, {}) {};
+  new() { return new (this.entry())(); }
+}
+'''
+        functions = analyze_file.analyze_source_code('a.js', code).function_list
+        self.assertEqual(
+            [('entry', 3, 4), ('new', 5, 5)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
     def test_constructor_calls_in_multiline_field_values(self):
         code = '''
 const async = 2;
