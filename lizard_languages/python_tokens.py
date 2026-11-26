@@ -1,5 +1,7 @@
 """Python tokens and f-string interpolation expressions."""
 
+from re import Match
+
 from .token_pattern import compiled_token_pattern, tokens_in_span
 
 
@@ -60,7 +62,7 @@ def _source_tokens(source, pattern, token_class):
     while True:
         for match in pattern.finditer(source, start):
             token = match.group()
-            value = token_class(match) if token_class else token
+            value = token if token_class is None else token_class(match)
             kind = match.lastgroup
             if kind == 'grouping':
                 depth = max(0, depth + (1 if token in _CLOSERS else -1))
@@ -102,6 +104,24 @@ def _mark_prefixed_strings(tokens):
             yield token
     if prefix is not None:
         yield prefix
+
+
+def _read_factory_string(source, start, prefix, scanner):
+    pattern, token_class = scanner
+    raw = _read_string(source, start, prefix, (pattern, None))
+    if raw is None:
+        return None
+    end, _ = raw
+    match = pattern.match(source, start)
+    if match.end() != end:
+        return _read_string(source, start, prefix, scanner)
+    # The original factory also transformed the complete quoted token.
+    text = token_class(match)
+    if isinstance(text, str) and text[:1] in ('"', "'"):
+        cooked = _read_string(text, 0, prefix, scanner)
+        if cooked is not None and cooked[0] == len(text):
+            return end, cooked[1]
+    return end, [text]
 
 
 def _read_string(source, start, prefix, scanner):
@@ -203,8 +223,8 @@ def _field_parts(parts, source, start, end, scanner):
         return parts
     # Factories receive matches against the replacement field, as before.
     field = source[start:end]
-    return [part if isinstance(part, str) else
-            token_class(pattern.match(field, part.start() - start)) for part in parts]
+    return [token_class(pattern.match(field, part.start() - start))
+            if isinstance(part, Match) else part for part in parts]
 
 
 def _read_format(source, pos, quote, raw, scanner):
