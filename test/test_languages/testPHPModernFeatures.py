@@ -19,6 +19,28 @@ class ReportController {
         self.assertEqual(['ReportController::show'],
                          [f.name for f in functions if f.start_line == 9])
 
+    def test_named_use_argument_keeps_property_hook_scope(self):
+        functions = get_php_function_list("""<?php
+function label(string $use): string { return $use; }
+
+class StatusLabel {
+    public string $text {
+        get => label(use: match ($this->status) {
+            200 => match ($this->format) {
+                'short' => 'OK',
+                default => 'Success',
+            },
+            default => 'Error',
+        });
+    }
+
+    public function __construct(private int $status, private string $format) {}
+    public function display(): string { return $this->text; }
+}
+""")
+        self.assertEqual(['label', 'StatusLabel::__construct', 'StatusLabel::display'],
+                         [f.name for f in functions])
+
     def test_foreach_not_function_and_detects_real_functions(self):
         php_code = '''<?php
 class Note {
