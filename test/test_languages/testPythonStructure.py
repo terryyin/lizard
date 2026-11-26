@@ -291,6 +291,47 @@ class Test_Python_function_structure(unittest.TestCase):
         self.assertEqual([('create.save', 0), ('create', 1)],
                          [(f.name, f.max_nesting_depth) for f in functions])
 
+    def test_nesting_depth_counts_one_word_operator_level_in_a_condition(self):
+        code = dedent(r"""
+            def eligible(account, policy, override):
+                if account.active \
+                        and (policy.permits(account) or override):
+                    if account.verified:
+                        return True
+                return False
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(3, function.max_nesting_depth)
+
+    def test_nesting_depth_counts_word_operators_in_separate_statements(self):
+        code = dedent("""
+            def choose(account, backup, default):
+                enabled = account and account.enabled
+                return (account or backup) and enabled or default
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(1, function.max_nesting_depth)
+
+    def test_nesting_depth_resets_word_operators_at_an_inline_suite(self):
+        code = dedent("""
+            def resolve(account, backup, default):
+                if account and account.enabled: return backup or default
+                return default
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(3, function.max_nesting_depth)
+
+    def test_nesting_depth_counts_default_logic_with_its_outer_scope(self):
+        code = dedent("""
+            def create(ready, value, enabled):
+                def save(item=(ready and value) if enabled else False):
+                    return item
+                return save
+            """)
+        functions = get_python_function_list(code)
+        self.assertEqual([('create.save', 0), ('create', 2)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_odd_line_with_comment(self):
         code = "class c:\n" + \
                 "    def f():\n" +\
