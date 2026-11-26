@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-078_multiline-token-long-names.json",
+      "identity": "SEED-078#multiline-token-long-names",
+      "completedAt": "2026-11-26T15:01:41.781Z",
+      "blob": "ed24fce80822ff7ab8171e5f672ecaaa2d96155c"
+    },
+    {
       "fileName": "SEED-075_plsql-nonstrict-case.json",
       "identity": "SEED-075#plsql-nonstrict-case",
       "completedAt": "2026-11-26T14:34:24.106Z",

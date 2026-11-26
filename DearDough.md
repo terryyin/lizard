@@ -227,8 +227,21 @@ Other. In slice 2 the implementer's tests, full suite and CLI proof all passed. 
   - Observed effect: two short correction rounds (about 2 slice-clock minutes) instead of a follow-up correction story
   - Inference: the implementer had flagged the long-name risk as an untested gap in its return. Reading a return's "unexpected" items against the plan's Current decisions is what turned that flag into a proved obligation
 
+## DD-496 — An evidence subheading blocked guarded delivery
+
+Other. The coordinator added an `Accepted proof` subheading within the ordered slices. The story-obligations check accepted the plan. Guarded delivery interpreted the level-three heading as another slice and refused before staging.
+
+### Occurrences
+- Execution: SEED-078#multiline-token-long-names
+  - Timestamp: 2026-11-26T22:58:00+08:00
+  - Tool: Codex
+  - Model: gpt-6.2-sol
+  - Open Dough release: 0.3.116
+  - Evidence: plan 046 and guarded delivery's `plan/status mutation` result. Delivery accepted `60a63ca6` after changing the evidence label to bold text.
+  - Observed effect: one refused preparation and a repeated source-freshness check.
+
 ## Retention
 
-- Highest allocated local number: 495
+- Highest allocated local number: 496
 - Shared-feedback adoption and compaction recovery (2026-11-07): `7129516bc5bd9ba57f370a6353ffe0e10eb1c861:DearDough.md`; its rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.
