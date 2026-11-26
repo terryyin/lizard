@@ -97,6 +97,21 @@ def test_arrow_ends_after_instantiation_expression(suffix, factory):
 
 
 @pytest.mark.parametrize('suffix', ['ts', 'tsx'])
+def test_arrow_ends_after_instantiation_with_type_named_type(suffix):
+    source = """type type = string;
+function build(cached: boolean) {
+  const empty = () => Array<
+    type
+  >
+  if (cached) return empty
+}
+"""
+    functions = analyze(suffix, source)
+    assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in functions] == [
+        ('empty', 3, 5, 1), ('build', 2, 7, 2)]
+
+
+@pytest.mark.parametrize('suffix', ['ts', 'tsx'])
 @pytest.mark.parametrize('factory', ['Array<string[]>', 'Array<typeof Math.PI>'])
 def test_arrow_ends_before_call_statement(suffix, factory):
     source = """function build() {
@@ -110,14 +125,17 @@ def test_arrow_ends_before_call_statement(suffix, factory):
 
 
 @pytest.mark.parametrize('suffix,params', [('ts', '<T>'), ('tsx', '<T,>')])
-@pytest.mark.parametrize('name', ['Factory', r'\u0046actory', r'F\u{61}ctory'])
+@pytest.mark.parametrize('name', [
+    'Factory', r'\u0046actory', r'F\u{61}ctory', 'Fa\u0301ctory', 'F\u200dactory',
+    'Fa\u203fctory',
+])
 def test_generic_function_type_alias_has_no_function_body(suffix, params, name):
     source = """type Result<T> = { value: T }
 type %s = %s(
   initializer: T,
 ) => Result<T>
-const factory: Factory = (value) => ({ value })
-""" % (name, params)
+const factory: %s = (value) => ({ value })
+""" % (name, params, name)
     functions = analyze(suffix, source)
     assert [(f.start_line, f.end_line) for f in functions] == [(5, 5)]
     if name == 'Factory':
