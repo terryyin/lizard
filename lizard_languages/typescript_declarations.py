@@ -195,6 +195,8 @@ class TypeScriptDeclarationsMixin:
                     self._read_class_new(token, after_field_type=True)
                     return
             if token:
+                if self._class_field_initializer and self.context.newline:
+                    self._end_class_field_initializer(token, after_type=True)
                 self._replay_token(token)
         self.sub_state(typeStates, callback)
 

@@ -19,6 +19,7 @@ class JavaScriptObjectsMixin:
     _default_value = False
     _class_async_modifier = False
     _class_generator_modifier = False
+    _class_field_initializer = False
 
     def _typed_class_member(self):
         return (self.as_class and not self._in_prop_value
@@ -52,16 +53,26 @@ class JavaScriptObjectsMixin:
         return (self.last_token in _CLASS_MEMBER_STARTS
                 or self.context.newline and ends_expression(self.last_token))
 
+    def _end_class_field_initializer(self, token, after_type=False):
+        # Unlike _in_prop_value, the field role survives a grouped value
+        # and a line break before an operator that can continue it.
+        if not self._open_groups and (token == ';' or (
+                (after_type or ends_expression(self.last_token or ''))
+                and token not in ('in', 'instanceof')
+                and (token[0].isalnum() or token[0] in "_$#'\"@"))):
+            self._class_field_initializer = False
+
     def _read_class_new(self, token, after_field_type=False):
         """Whether "new" names a class member outside a field value."""
         previous = self.last_token
         if self._class_body_pending and previous == 'extends':
             return False
+        generator = previous == '*' and self._class_generator_modifier
         after_field_value = self.context.newline and (
             previous == '!' and getattr(self, '_postfix_operand', False)
             or previous == 'new' and self._prev_token == '.')
         if self._in_prop_value:
-            if after_field_type or after_field_value:
+            if after_field_type or after_field_value or generator:
                 self._end_statement()
             else:
                 self._end_field_before_modifier()
@@ -70,7 +81,7 @@ class JavaScriptObjectsMixin:
         elif not (after_field_type or after_field_value or self._starts_class_member()):
             # A multiline initializer may already have cleared the field flag.
             if not (previous == '*' and (
-                    self._class_generator_modifier or self._static_seen
+                    generator or self._static_seen
                     or self._async_seen and self._class_async_modifier)):
                 return False
         if self.started_function:
@@ -94,11 +105,15 @@ class JavaScriptObjectsMixin:
         if token == '=':
             if self.as_class:
                 self._in_prop_value = True
+                self._class_field_initializer = True
             else:
                 self._default_value = True
         if token == '*' and self.as_class:
+            # A field name or type can end with a token also used as an
+            # operator. The enclosing field role determines what '*' means.
             self._class_generator_modifier = (
-                not self._in_prop_value and self.last_token in (None, ';', '}'))
+                not self._in_prop_value and self.last_token in (None, ';', '}')
+                or not self._class_field_initializer and not self._open_groups)
         if (self.as_class and token.endswith('?')
                 and self._typed_class_member()):
             self.last_tokens = token[:-1]

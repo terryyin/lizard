@@ -142,6 +142,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         return can_take_type_arguments(previous)
 
     def _state_global(self, token):
+        if self._class_field_initializer and (self.context.newline or token == ';'):
+            self._end_class_field_initializer(token)
         if self._pending_bindings:
             self._resolve_pending_bindings(token)
         if self._ts_declare or token in _SPECIAL_TOKENS:
