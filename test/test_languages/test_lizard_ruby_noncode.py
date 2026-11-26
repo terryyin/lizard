@@ -57,6 +57,27 @@ def test_documentation_marker_inside_percent_literal_is_still_text():
     assert result.nloc == 8
 
 
+def test_percent_string_counts_only_executable_interpolation():
+    source = r'''
+def lines(enabled, framework)
+  %(#{"# " if enabled}require "#{framework}" if configured)
+end
+
+def literal(enabled, framework)
+  %q(#{"# " if enabled}require "#{framework}" if configured)
+end
+
+def escaped
+  %Q(\#{legacy if active} report #{name if available})
+end
+'''
+
+    result = analyze_file.analyze_source_code('config.rb', source)
+
+    assert [(f.name, f.cyclomatic_complexity)
+            for f in result.function_list] == [('lines', 2), ('literal', 1), ('escaped', 2)]
+
+
 def test_interpolation_does_not_make_a_data_marker_start_a_line():
     source = 'def real\n  __END__ = 1\n  "#{__END__\n}"\nend\ndef following\n  1\nend\n'
     result = analyze_file.analyze_source_code('sample.rb', source)
