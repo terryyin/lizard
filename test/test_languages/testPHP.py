@@ -297,13 +297,33 @@ function ignored() {}
         self.assertEqual(3, len(functions))
 
     def test_interface(self):
-        functions = get_php_function_list("<?php function a(); ?>")
-        self.assertEqual(1, len(functions))
-        self.assertEqual('a', functions[0].name)
+        functions = get_php_function_list("""<?php
+interface Cache {
+    public function clear();
+    public function get(string $key): ?string;
+}
 
-    def test_interface2(self):
-        functions = get_php_function_list("<?php function a(); class C{}?>")
-        self.assertEqual(1, len(functions))
+function normalizeKey(string $key): string {
+    return strtolower($key);
+}
+""")
+        self.assertEqual([('normalizeKey', 7, 9)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_abstract_methods_with_return_types(self):
+        functions = get_php_function_list("""<?php
+abstract class Command {
+    abstract public static function create(): static;
+    abstract protected function getCode(): int|string;
+    abstract protected function fail(): never;
+
+    public function name(): string {
+        return 'cache:clear';
+    }
+}
+""")
+        self.assertEqual([('Command::name', 7, 9)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])
 
     def test_foreach_is_not_a_function(self):
         functions = get_php_function_list("<?php function test() { foreach($items as $item) { echo $item; } } ?>")
