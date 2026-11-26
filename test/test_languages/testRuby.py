@@ -20,6 +20,29 @@ class Test_parser_for_Ruby_ccn(unittest.TestCase):
                 ''')
         self.assertEqual(3, result[0].cyclomatic_complexity)
 
+    def test_unless_block_and_modifier_add_complexity(self):
+        code = '''
+def ship_order(order)
+  unless order.paid?
+    return :pending
+  end
+  order.ship
+end
+
+def retry_order(order)
+  return :skipped unless order.failed?
+  order.retry until order.shipped?
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+
+        result = analyzer.analyze_source_code('a.rb', code).function_list
+
+        self.assertEqual(
+            [('ship_order', 2, 1), ('retry_order', 3, 2)],
+            [(f.name, f.cyclomatic_complexity, f.cognitive_complexity)
+             for f in result])
+
 
 class Test_parser_for_Ruby_def(unittest.TestCase):
     def test_class_method(self):

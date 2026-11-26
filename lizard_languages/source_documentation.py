@@ -11,13 +11,13 @@ class _Documentation(str):
 
 
 def tokens_ignoring_documentation(source, addition, token_class, documentation,
-                                  may_have_documentation):
+                                  may_have_documentation, *, start=0):
     """Match complete documentation sections alongside normal tokens."""
     # Both paths use the same compiled lexer. Only sources with possible
     # documentation need the match conversion and newline substitution.
     addition = r'|(?P<documentation>' + documentation + ')' + addition
     if not may_have_documentation:
-        return ScriptLanguageMixIn.generate_common_tokens(source, addition, token_class)
+        return ScriptLanguageMixIn.generate_common_tokens(source, addition, token_class, start=start)
 
     code_token = token_class if token_class is not None else itemgetter(0)
 
@@ -26,7 +26,7 @@ def tokens_ignoring_documentation(source, addition, token_class, documentation,
             return _Documentation(match[0])
         return code_token(match)
 
-    tokens = ScriptLanguageMixIn.generate_common_tokens(source, addition, token_from_match)
+    tokens = ScriptLanguageMixIn.generate_common_tokens(source, addition, token_from_match, start=start)
     return _replace_documentation(tokens)
 
 

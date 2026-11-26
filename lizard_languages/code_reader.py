@@ -204,10 +204,10 @@ class CodeReader:
         return compile_file_extension_re(*cls.ext).match(filename)
 
     @staticmethod
-    def generate_tokens(source_code, addition='', token_class=None):
+    def generate_tokens(source_code, addition='', token_class=None, *, start=0):
         pattern = compiled_token_pattern(addition)
         return tokens_in_span(
-            pattern, source_code, 0, len(source_code), token_class)
+            pattern, source_code, start, len(source_code), token_class)
 
     def __call__(self, tokens, reader):
         self.context = reader.context
