@@ -247,10 +247,6 @@ def _init_nesting_depth_data(self, *_):
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
 
 
-patch(NDFileInfoAddition, FileInfoBuilder)
-patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")
-
-
 def _interpolation_depth(token, context, open_scopes):
     """A substitution preserves the depth of its containing expression."""
     function = context.current_function
@@ -306,3 +302,7 @@ def _scala_nd_tokens(tokens, context):
             # A guard uses the case's open level, as an else-if uses its if level.
             context.set_prev_was_else(True)
         yield token
+
+
+patch(NDFileInfoAddition, FileInfoBuilder)
+patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")
