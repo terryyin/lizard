@@ -122,6 +122,21 @@ val remaining: Int
             [(f.name, f.start_line, f.end_line) for f in result],
         )
 
+    def test_delegate_with_a_trailing_lambda_does_not_start_an_accessor(self):
+        result = get_kotlin_function_list('''\
+typealias get = Int
+fun <T> get(initializer: () -> T): Lazy<T> { return lazy(initializer) }
+class Memoized(private val enabled: Boolean) {
+    val count by get { if (enabled) 1 else 0 }
+    val doubled: get
+        get(): get { return count * 2 }
+}
+        ''')
+        self.assertEqual(
+            [("get", 2, 2, 1), ("get", 6, 6, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in result],
+        )
+
     def test_getter_setter(self):
         result = get_kotlin_function_list('''
             class Time
