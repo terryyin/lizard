@@ -10,6 +10,25 @@ def get_cpp_with_nestdepth(source):
 
 class TestCppNestingDepth(unittest.TestCase):
 
+    def test_grouped_cpp_comma_uses_the_owning_expression(self):
+        functions = get_cpp_with_nestdepth("""
+        #include <utility>
+        template<class Left, class Right> bool allow(bool value) { return value; }
+
+        bool accept(bool enabled, bool cached, bool ready, bool fresh) {
+            return (enabled && cached && allow<int, int>(ready && fresh));
+        }
+        bool acceptPair(bool enabled, bool cached, bool ready, bool fresh) {
+            return (enabled && cached && allow<std::pair<int, int>, bool>(ready && fresh));
+        }
+        bool checkLimits(bool enabled, bool cached, bool ready, bool fresh,
+                         int count, int threshold, int limit) {
+            return (enabled && cached && count < threshold, limit > (ready && fresh));
+        }
+        """)
+        self.assertEqual([('allow', 0), ('accept', 2), ('acceptPair', 2), ('checkLimits', 1)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_grouped_comma_separates_logical_expressions(self):
         functions = get_cpp_with_nestdepth("""
         void report(bool flag);
