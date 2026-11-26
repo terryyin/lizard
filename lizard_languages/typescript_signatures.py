@@ -12,6 +12,8 @@ class ReturnTypeColon(str):
 class CallTypeArgument(str):
     """An erased token in a confirmed call's type arguments."""
 
+    is_type_argument = True
+
 
 CALL_TYPE_ARGUMENTS_START = CallTypeArgument('<')
 

@@ -65,7 +65,8 @@ def token_counter(tokens, reader):
 def condition_counter(tokens, reader):
     conditions = reader.conditions
     for token in tokens:
-        if token in conditions and not getattr(token, 'is_member_name', False):
+        if (token in conditions and not getattr(token, 'is_member_name', False)
+                and not getattr(token, 'is_type_argument', False)):
             reader.context.add_condition()
         yield token
 

@@ -56,7 +56,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 context.clear_prev_was_else()
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
-            if token in depth_tokens:
+            if token in depth_tokens and not getattr(token, 'is_type_argument', False):
                 if token in block_ends:
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:

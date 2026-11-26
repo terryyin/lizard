@@ -3,8 +3,6 @@
 from itertools import chain
 from weakref import WeakKeyDictionary
 
-from lizard_languages.typescript_signatures import CallTypeArgument
-
 from .cognitive_profile import (
     _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
 
@@ -104,7 +102,7 @@ class _Counter(object):  # pylint: disable=R0902
     def process(self, token, line=None, function=None):
         """Count the token for its function.  The held tokens come back with
         the line and the function they were read in."""
-        if isinstance(token, CallTypeArgument):
+        if getattr(token, 'is_type_argument', False):
             return
         if function is None:
             context = self.context
