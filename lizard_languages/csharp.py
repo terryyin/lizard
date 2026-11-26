@@ -289,10 +289,6 @@ class _OptionalHoleQuestion(_InterpolationPart):
     is_optional = True
 
 
-_TYPE_WORDS = frozenset({
-    'bool', 'byte', 'char', 'class', 'decimal', 'double', 'float',
-    'int', 'long', 'object', 'sbyte', 'short', 'string', 'uint', 'ulong', 'ushort',
-})
 _DECLARATION_MODIFIERS = frozenset({
     'abstract', 'const', 'extern', 'internal', 'override', 'private', 'protected',
     'public', 'readonly', 'sealed', 'static', 'virtual', 'volatile',
@@ -309,8 +305,8 @@ def _mark_questions(tokens):
     buffered = []
     pending = 0
     question = None
-    previous = before_previous = None
-    reading_type = empty_rank = False
+    previous = None
+    reading_type = False
     type_brackets = constraint = 0
     for token in tokens:
         if buffered or token == '?':
@@ -329,7 +325,7 @@ def _mark_questions(tokens):
             question = None
             if token == '?':
                 index = len(buffered) - 1
-                if not reading_type and not empty_rank and previous not in _TYPE_WORDS:
+                if not reading_type:
                     question = index
                 mark = _OptionalHoleQuestion if isinstance(token, _InterpolationPart) else _OptionalQuestion
                 buffered[index] = mark(token)
@@ -343,7 +339,7 @@ def _mark_questions(tokens):
             elif token in _CLOSE_GROUP:
                 group = groups.pop() if len(groups) > 1 else groups[0]
                 pending -= _clear_questions(group)
-            elif token == ';':
+            elif token in (',', ';'):
                 pending -= _clear_questions(groups[-1])
             if token == 'where' and previous == ')':
                 constraint = 2
@@ -363,8 +359,7 @@ def _mark_questions(tokens):
                 type_brackets -= 1
             elif not type_brackets and token in _TYPE_END:
                 reading_type = False
-        empty_rank = token == ']' and previous in ('[', ',') and before_previous != 'is'
-        before_previous, previous = previous, token
+        previous = token
     yield from buffered
 
 
