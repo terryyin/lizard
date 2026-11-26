@@ -196,10 +196,10 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
             # Rejected candidates can share a long suffix. Limit their total reads.
             nonlocal budget
             for part in lookahead:
-                if not budget:
-                    return
                 budget -= 1
                 yield part
+                if not budget:
+                    return
 
         previous = ''
         while True:

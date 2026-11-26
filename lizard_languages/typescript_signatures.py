@@ -165,23 +165,27 @@ class _TemplateSubstitution(TypeScriptTypeAnnotationStates):
     def __init__(self):
         super().__init__(None)
         self._conditional_depths = set()
-        self._optional_question = False
+        self._expected = ()
 
     def complete(self):
-        return not self._optional_question and _complete_template_type(self)
+        return not self._expected and _complete_template_type(self)
 
     def _state_global(self, token):
         if token in ('&&', '||', '??') or (
-                self._optional_question and token not in (':', ',', ')', ']')):
+                self._expected and token not in self._expected):
             self.statemachine_return()
             return
-        self._optional_question = False
+        self._expected = ()
         depth = len(self._brackets)
-        if token == 'extends' and (self.last_token == '>'
-                                   or ends_expression(self.last_token or '')):
+        if token == 'class' and self.last_token not in ('.', '?.'):
+            # A class expression can have 'extends' at the same depth as '?'.
+            self._expected = (':', '?', '(', '<')
+        elif token == 'extends' and (self.last_token == '>'
+                                     or ends_expression(self.last_token or '')):
             self._conditional_depths.add(depth)
         elif token == '?':
-            self._optional_question = depth not in self._conditional_depths
+            if depth not in self._conditional_depths:
+                self._expected = (':', ',', ')', ']')
             self._conditional_depths.discard(depth)
         super()._state_global(token)
         if len(self._brackets) < depth:
