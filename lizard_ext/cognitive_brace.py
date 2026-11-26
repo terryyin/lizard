@@ -3,7 +3,7 @@
 from .cognitive_actions import _BraceActions
 from .cognitive_counter import (
     BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE)
-from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
+from .cognitive_profile import _LAMBDA_TRIGGERS, _is_word
 
 
 class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
@@ -21,10 +21,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         self.actions = self._keyword_actions(profile)
         if not profile.nesting:
             self._process = self._process_flat
-        self.expression_breakers = _EXPRESSION_BREAKERS
-        if reader.language_names[0] == 'scala':
-            # A question mark can be a Scala operator or a type wildcard.
-            self.expression_breakers = _EXPRESSION_BREAKERS - {'?'}
 
     def _process(self, token):  # pylint: disable=E0202
         if token == '?' and getattr(token, 'is_optional', False):
