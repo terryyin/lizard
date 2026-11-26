@@ -292,9 +292,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         name_keywords = structure_keywords | _NAMED_KEYWORDS
         member_access = False
         before_dot = ''
-        keyword = None      # waits for the next token: `{ if: a }`
         track_templates = self.measure_template_types and self.context.class_field_annotations
         type_tokens = 0
+        keyword = None      # waits for the next token: `{ if: a }`
         tokens = iter(self.code_tokens(tokens))
         while True:
             for token in tokens:
