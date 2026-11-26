@@ -2,6 +2,24 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-075_perl-word-operator-context.json",
+      "identity": "SEED-075#perl-word-operator-context",
+      "completedAt": "2026-11-26T00:17:17.712Z",
+      "blob": "4c673658bab79000b1d1167aed875974a1f69b36"
+    },
+    {
+      "fileName": "SEED-075_source-documentation-directives.json",
+      "identity": "SEED-075#source-documentation-directives",
+      "completedAt": "2026-11-26T00:04:41.026Z",
+      "blob": "c7b0ee269336ba531abcecbd0d1000e183f6c23b"
+    },
+    {
+      "fileName": "SEED-075_ruby-percent-literal-context.json",
+      "identity": "SEED-075#ruby-percent-literal-context",
+      "completedAt": "2026-11-25T23:33:27.770Z",
+      "blob": "eec2778385dbf47df58b2d33c87dd46ded328f69"
+    },
+    {
       "fileName": "SEED-074_process-prs-past-24h.json",
       "identity": "SEED-074#process-prs-past-24h",
       "completedAt": "2026-11-24T22:51:37.887Z",

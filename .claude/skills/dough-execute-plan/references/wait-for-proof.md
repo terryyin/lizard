@@ -72,9 +72,44 @@ node '<installed-execute-plan>/scripts/wait-for-publication.mjs' --remote '<auth
 ```
 
 Name the supplier's branch only when the remote holds one, and add
-`--duration-minutes` when the developer named how long to watch. The command
-prints nothing until it ends itself with one result, which carries its
-deadline:
+`--duration-minutes` when the developer named how long to watch.
+
+In Codex, submit this `functions.exec` call with the supplier command above
+filled in:
+
+```javascript
+// @exec: {"yield_time_ms": 300000}
+let result = await tools.exec_command({
+  cmd: "<supplier-watch-command>",
+  yield_time_ms: 1000,
+});
+let output = result.output;
+while (result.session_id != null) {
+  result = await tools.write_stdin({
+    session_id: result.session_id,
+    chars: "",
+    yield_time_ms: 300000,
+  });
+  output += result.output;
+}
+text({ output, exit_code: result.exit_code });
+```
+
+Every time the outer call returns a live cell, pass that ID to
+`functions.wait`:
+
+```json
+{"cell_id": "<live-cell-id>", "yield_time_ms": 300000}
+```
+
+Keep the 300,000 ms values from the first call onward. Shorten a wait only
+when less time remains before the known absolute deadline or the host refuses
+the requested duration. Resume the existing handle when a wait returns early.
+Wait on the cell without status checks or progress updates until the command
+exits and returns its receipt.
+
+The command prints nothing until it ends itself with one result, which carries
+its deadline:
 
 - `publication`: judge the supplier against the exact agreement, as at any
   hold. When the hold lifts, continue the execution. When it stays, keep the

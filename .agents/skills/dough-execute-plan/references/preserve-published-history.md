@@ -1,53 +1,47 @@
 # Preserve published history
 
-[Publish the candidate](publish-the-candidate.md#publish-the-candidate) rebases
-an unpublished suffix. A caller integrating an already-published tip supplies
-that tip instead of a suffix, merged onto the fetched authorized target in the
-owned workspace: a fast-forward when that tip already contains the fetched
-target, otherwise a merge commit so both published histories remain. Do not
-rebase those published commits. Where [agent commits](agent-commits.md) apply,
-the merge commit is one. A merge that touches the product backlog or its done
-records goes through the merge adapter of
-[reconcile product backlog Git operations](../../dough-product-backlog/references/merge-conflicts.md).
-Push, confirmation, and the receipt stay the candidate SHA and its target. A
-rejected push recomputes this merge once onto the newly fetched target and
-pushes once. A superseded candidate is not the receipt. Resume treats an
-ancestor of the fetched target as already accepted and does not merge or push.
+Apply the [shared publication preconditions](publish-the-candidate.md#preconditions)
+to the complete reviewed tip, including any owned suffix above its published
+prefix. In the owned workspace, fast-forward when that tip contains the fetched
+target. Otherwise merge to preserve both histories. Apply
+[agent commits](agent-commits.md) and the
+[backlog merge adapter](../../dough-product-backlog/references/merge-conflicts.md)
+when required. The shared [rejection recovery](publish-the-candidate.md#recover-a-rejected-push)
+recomputes the merge once on the new target.
 
 ## Run the integration
 
-Run this integration with the installed `history-preserving-publication.mjs`:
+Resolve `<installed>` to this project's installed skills directory and run
+the integration from the owned workspace.
 
 ```sh
-history-preserving-publication.mjs integrate \
+node <installed>/dough-execute-plan/scripts/history-preserving-publication.mjs integrate \
   --workspace <owned-workspace> --published-tip <published-tip> \
   --branch <owned-branch> --target-ref refs/heads/<target-branch>
 ```
 
-Add `--remote <remote>` for a remote other than `origin`. It performs the
-fetch, the merge and its credit or the adapter merge, the exact push and the one
-recomputed retry, then returns the workspace to its branch once accepted. Its
-printed result names `classification`: `published` with the `receipt`,
-`already-accepted` with nothing pushed, or `preserved` with its `reason` and the
-state Git left. With a supplied dashboard landing context, add
+Add `--remote <remote>` for a remote other than `origin`. Read `classification`.
+`published` gives the exact accepted receipt. `already-accepted` means the
+fetched target already contains the reviewed tip and the operation pushed
+nothing. Both return the workspace to its branch once accepted. `preserved`
+names its `reason` and leaves Git's remaining state in place. With a supplied
+Dashboard landing context for its first trunk publication, add
 `--landing-context <supplied absolute file>` under the shared
 [landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-launch-landing).
 
 For completed selected work, add `--supplier-identity <identity>` under the
-[visit rule](../../dough-product-backlog/references/supplier-dependencies.md#which-completed-work-takes-the-visit). Once
-the integration is `published` or `already-accepted`, the result also holds
-`visit`: the [current-consumer visit](../../dough-product-backlog/references/supplier-dependencies.md#visit-current-consumers-after-integration)
-from this workspace against the accepted SHA. Its receipt stands even when that
-visit stopped. Without the flag, integration carries no supplier meaning.
+[visit rule](../../dough-product-backlog/references/supplier-dependencies.md#which-completed-work-takes-the-visit).
+After acceptance, read `visit` for the
+[current-consumer visit](../../dough-product-backlog/references/supplier-dependencies.md#visit-current-consumers-after-integration)
+against the accepted SHA. A stopped visit leaves the acceptance intact.
 
 A caller with a fetched-target ownership guard uses the shared
 `publishHistoryPreservingCandidate` API in that installed module. Its
 `onFetchedTarget({ attempt, candidate, remoteTip })` runs before reconciliation
 on each fetched target, including the retry. Return `{ status, fields }` to
-preserve the state and report that reason and details without rewriting or
-pushing. Keep candidate proof in `affectedCheck(candidateSha)`, after the merge
-and before each push. Neither callback changes the caller's publication target
-or observer obligations.
+preserve the state and report that reason and details before rewriting or
+pushing. Supply `affectedCheck(candidateSha)` for proof after preparation and
+before each push, including after a recomputed merge.
 
 ## Resolve a conflicted integration
 

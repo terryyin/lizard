@@ -2,15 +2,16 @@
 // Installed CLI for authorized queued startup, admission of accepted work
 // that no backlog list holds yet, or preparation of one-shot work.
 import { isDirectCliEntry } from "./ci-direct-entry.mjs";
+import { draftAdmission } from "./execution-owned-admission.mjs";
 import { startExecution } from "./execution-start-operation.mjs";
 import { sessionPolicyToggles } from "./session-policy.mjs";
 
 export { startExecution } from "./execution-start-operation.mjs";
 
 function argumentsOf(argv) {
-  if (argv[0] !== "start")
+  if (argv[0] !== "start" && argv[0] !== "draft")
     throw new Error(
-      "usage: execution-start.mjs start [--integration PATH] [--repository PATH] --workspace PATH --branch NAME [--identity ID] [--publisher-id ID] --mode trunk|story-branch --remote NAME --target BRANCH [--push-authorized] --workspace-authorized [--admit --link HREF --title TEXT [--carry] | --one-shot [--default-main] [--auto-land]] [--plan PATH] [--host claude|codex|cursor] [--model TEXT] [--starting-revision SHA --candidate-sha SHA]",
+      "usage: execution-start.mjs start [--integration PATH] [--repository PATH] --workspace PATH --branch NAME [--identity ID] [--publisher-id ID] --mode trunk|story-branch --remote NAME --target BRANCH [--push-authorized] --workspace-authorized [--admit --link HREF --title TEXT [--carry | --owned-draft JSON [--retry-admission true]] | --one-shot [--default-main] [--auto-land]] [--plan PATH] [--host claude|codex|cursor] [--model TEXT] [--starting-revision SHA --candidate-sha SHA]\n       execution-start.mjs draft --repository PATH --remote NAME --target BRANCH --title TEXT --goal TEXT",
     );
   const result = {};
   for (let index = 1; index < argv.length; index += 1) {
@@ -38,7 +39,10 @@ function argumentsOf(argv) {
 
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {
   try {
-    const result = await startExecution(argumentsOf(process.argv.slice(2)));
+    const args = argumentsOf(process.argv.slice(2));
+    const result = await (process.argv[2] === "draft"
+      ? draftAdmission(args)
+      : startExecution(args));
     process.stdout.write(`${JSON.stringify(result)}\n`);
     if (!result.ok) process.exitCode = 1;
   } catch (error) {
