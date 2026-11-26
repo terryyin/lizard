@@ -637,6 +637,19 @@ unsigned after() { return Slot{}.get(); }
         self.assertEqual(1, len(result))
         self.assertEqual("foo", result[0].name)
 
+    def test_braced_expression_in_trailing_return_type(self):
+        result = get_cpp_function_list("""struct Box {};
+auto declare_box() -> decltype(Box{});
+auto make_box(bool ready) -> decltype(Box{}) {
+    if (ready) { return {}; }
+    return {};
+}
+""")
+
+        self.assertEqual(
+            [("make_box", 3, 6, 2)],
+            [(fn.name, fn.start_line, fn.end_line, fn.cyclomatic_complexity) for fn in result])
+
     def test_ref_qualifiers(self):
         """C++11 ref qualifiers for member functions."""
         result = get_cpp_function_list("struct A { void foo() & {} };")

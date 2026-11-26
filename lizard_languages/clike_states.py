@@ -123,10 +123,16 @@ class CLikeStates(CodeStateMachine):
             self._state = self._state_dec_to_imp
         self._state(token)
 
-    @CodeStateMachine.read_until_then(';{')
-    def _state_trailing_return(self, token, _):
-        self._state = self._state_dec_to_imp
-        self._state(token)
+    def _state_trailing_return(self, token):
+        if token == '(':
+            self.next(self._state_trailing_return_group, token)
+        elif token in (';', '{'):
+            self._state = self._state_dec_to_imp
+            self._state(token)
+
+    @CodeStateMachine.read_inside_brackets_then("()", "_state_trailing_return")
+    def _state_trailing_return_group(self, _):
+        """Skip nested expressions in a trailing return type."""
 
     def _state_old_c_params(self, token):
         self._saved_tokens.append(token)
