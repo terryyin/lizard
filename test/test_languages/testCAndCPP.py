@@ -349,6 +349,19 @@ int run_jobs() {
 
         self.assertEqual([("run_jobs", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
+    def test_lambda_reference_return_keeps_body_decisions(self):
+        result = get_cpp_function_list("""struct Job {};
+Job&& relay(Job& job, bool ready, bool enabled) {
+    auto forward = [](Job& pending, bool ready, bool enabled) -> Job&& {
+        if (ready && enabled) return static_cast<Job&&>(pending);
+        return static_cast<Job&&>(pending);
+    };
+    return forward(job, ready, enabled);
+}
+""")
+
+        self.assertEqual([("relay", 3)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
     def test_named_lambda_references_with_declarator_suffixes(self):
         result = get_cpp_function_list("""#include <vector>
 struct Job { int weight; };
