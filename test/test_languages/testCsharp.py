@@ -664,6 +664,30 @@ class Job
         self.assertEqual([('Job::Build', 4, 13), ('Job::Next', 14, 14)], [
             (f.name, f.start_line, f.end_line) for f in functions])
 
+    def test_alternate_expression_terminators_keep_the_enclosing_class(self):
+        source = '''using System;
+class Job
+{
+    static Func<int> Build()
+#if DEBUG
+        => () => { int count = 10;
+#else
+        => () => { int count = 20;
+#endif
+#if DEBUG
+            return count;
+        };
+#else
+            return count + 1;
+        };
+#endif
+    static int Next() => 1;
+    static void Main() => Console.WriteLine(Build()() + Next());
+}'''
+        functions = get_csharp_function_list(source)
+        self.assertEqual([('Job::Build', 4, 15), ('Job::Next', 17, 17), ('Job::Main', 18, 18)], [
+            (f.name, f.start_line, f.end_line) for f in functions])
+
     def test_expression_object_initializer_does_not_emit_global_function(self):
         source = """
 class Job
