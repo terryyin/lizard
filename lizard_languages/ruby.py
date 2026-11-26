@@ -5,6 +5,7 @@ Language parser for Ruby
 import re
 
 from .rubylike import RubylikeReader, RubylikeStateMachine, _ends_value
+from .js_style_regex_context import _REGEX_LITERAL_RE
 from .js_style_regex_expression import js_style_regex_expression
 from .ruby_documentation import may_have_documentation, pattern_for_fragment
 from .source_documentation import tokens_ignoring_documentation
@@ -56,6 +57,7 @@ _KEYWORDS = frozenset((
     'try', 'catch', 'finally', 'except', 'switch', 'with', 'return',
     'yield'))
 _NAME_BEFORE = frozenset(('.', 'def'))
+_RUBY_WORD_TOKENS = r"|\w+:|\$\w+|\.+|:?\@{0,2}\w+\??\!?"
 _BRANCH_BOUNDARIES = frozenset(('then', 'elsif', 'else', 'when', 'in', 'ensure'))
 
 
@@ -112,7 +114,7 @@ _SIMPLE_HEREDOC = (
 )
 
 
-_PERCENT_INTERPOLATION = re.compile(r"\\.|#\{", re.S)
+_INTERPOLATION_MARKERS = re.compile(r"\\.|#\{", re.S)
 
 
 class RubyStateMachine(RubylikeStateMachine):
@@ -281,7 +283,7 @@ class RubyReader(RubylikeReader):
         if getattr(context, 'ruby_tracks_depth', False):
             tokens = _mark_logical_assignments(tokens)
         name_follows = False
-        tokens = _expand_percent_interpolation(tokens)
+        tokens = _expand_regexp_interpolation(_expand_percent_interpolation(tokens))
         for token in tokens:
             if type(token) is _HeredocLines:
                 # The opener is the literal's token. Its disjoint body
@@ -335,8 +337,7 @@ class RubyReader(RubylikeReader):
     @staticmethod
     @js_style_regex_expression(language='ruby')
     def generate_tokens(source_code, addition='', token_class=None):
-        addition = (r"|\w+:|\$\w+|\.+|:?\@{0,2}\w+\??\!?"
-                    r"|" + _PERCENT_LITERAL + addition)
+        addition = _RUBY_WORD_TOKENS + r"|" + _PERCENT_LITERAL + addition
         read_token = MyToken
         if "<<" in source_code:
             addition += "|" + _SIMPLE_HEREDOC
@@ -390,30 +391,33 @@ def _expand_percent_interpolation(tokens):
 
 def _percent_interpolation_tokens(token, addition):
     start = token.index('(') + 1
-    end = len(token) - 1
+    return _interpolation_tokens(token, start, len(token) - 1, addition) or [token]
+
+
+def _interpolation_tokens(token, start, end, addition):
     fragments = []
     pattern = compiled_token_pattern(r'|\#[^\n]*' + addition)
 
     while start < end:
-        marker = next((match for match in _PERCENT_INTERPOLATION.finditer(token, start, end)
+        marker = next((match for match in _INTERPOLATION_MARKERS.finditer(token, start, end)
                        if match[0] == '#{'), None)
         if marker is None:
             break
-        expression, closing = _percent_expression(token, marker.end(), end, pattern)
+        expression, closing = _interpolation_expression(token, marker.end(), end, pattern)
         if closing is None:
-            return [token]
+            return []
         fragments.extend(('"'+token[start:marker.start()]+'"', '${'))
         fragments.extend(expression)
         fragments.append(closing)
         start = closing.begin + 1
 
     if not fragments:
-        return [token]
+        return []
     fragments.append('"'+token[start:end]+'"')
     return fragments
 
 
-def _percent_expression(token, start, end, pattern):
+def _interpolation_expression(token, start, end, pattern):
     parts = []
     braces = 0
     for current in tokens_in_span(pattern, token, start, end, MyToken):
@@ -425,6 +429,34 @@ def _percent_expression(token, start, end, pattern):
             braces -= 1
         parts.append(current)
     return parts, None
+
+
+_REGEXP_INTERPOLATION_MARKERS = re.compile(r"\\.|#\{[@$]?[A-Za-z_]\w*(?:::[A-Za-z_]\w*)*\}|#\{", re.S)
+
+
+def _has_regexp_expression(text):
+    return '#{' in text and any(marker[0] == '#{' for marker in _REGEXP_INTERPOLATION_MARKERS.finditer(text))
+
+
+def _plain_heredoc_at(source, opener):
+    start = opener
+    while start > 0 and source[start-1] in ' \t':
+        start -= 1
+    match = re.compile(_SIMPLE_HEREDOC, re.M).match(source, start)
+    if match is not None:
+        parts = match.groupdict()
+        if parts.get('heredoc_quote') == "'" or not _has_regexp_expression(parts.get('heredoc_body', '')):
+            return match
+
+
+def _expand_regexp_interpolation(tokens):
+    addition = _RUBY_WORD_TOKENS + r"|" + _PERCENT_LITERAL
+    for token in tokens:
+        if (token.startswith('/') and _has_regexp_expression(token)
+                and _REGEX_LITERAL_RE.fullmatch(token)):
+            yield from _interpolation_tokens(token, 1, token.rfind('/'), addition) or [token]
+        else:
+            yield token
 
 
 class _NestingSemicolons:

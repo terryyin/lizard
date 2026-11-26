@@ -7,10 +7,14 @@ from .js_style_regex_context import (
     _LINE_ENDS,
     _REGEX_LITERAL_RE,
     _RUBY_EXPRESSION_KEYWORDS,
+    _RUBY_REGEX_RE,
     _STRING_LINE_ENDS,
     _apply_marks,
 )
 from .ruby_documentation import match_opaque_span, may_have_documentation
+
+
+_RUBY_REGEXP_INTERPOLATION = re.compile(r"#\{[^{}\/]*\}")
 
 
 def mark_forward(source, js_family):
@@ -25,11 +29,12 @@ def mark_forward(source, js_family):
     pending_async = False
     pending_for = False
     marks = []
-    match_literal = _REGEX_LITERAL_RE.match
+    match_literal = (_REGEX_LITERAL_RE if js_family else _RUBY_REGEX_RE).match
     keywords = _EXPRESSION_KEYWORDS if js_family else _RUBY_EXPRESSION_KEYWORDS
     line_ends = _LINE_ENDS
     append_operator = None if js_family else re.compile(r"<<[^\S\r\n]*/")
     ruby_append = append_operator is not None and append_operator.search(source) is not None
+    ruby_line_has_code = False
 
     def after_operand(next_can_regex=False, next_expect_property=False):
         nonlocal can_regex, expect_property, pending_async
@@ -127,12 +132,23 @@ def mark_forward(source, js_family):
 
     def advance():
         nonlocal i, can_regex, expect_property, pending_async, pending_for
-        nonlocal paren_depth, async_nesting
+        nonlocal paren_depth, async_nesting, ruby_line_has_code
         ch = source[i]
 
         if ch in ' \t\v\f' or ch in line_ends:
+            if ch == '\n':
+                ruby_line_has_code = False
             i += 1
             return
+        if ch == '\\' and not js_family:
+            if source.startswith('\\\n', i):
+                i += 2
+                return
+            if source.startswith('\\\r\n', i):
+                i += 3
+                return
+        ruby_statement_start = not js_family and not ruby_line_has_code
+        ruby_line_has_code = True
         if js_family and ch == '/' and i + 1 < n and source[i + 1] == '/':
             i += 2
             while i < n and source[i] not in line_ends:
@@ -149,13 +165,22 @@ def mark_forward(source, js_family):
             while i < n and source[i] not in '\r\n':
                 i += 1
             return
-        if ch == '/' and can_regex:
+        if ch == '/' and (can_regex or ruby_statement_start):
             matched = match_literal(source, i)
+            if matched and not can_regex and '#{' in matched[0]:
+                # An inner slash may end the pattern before the interpolation.
+                if '#{' in _RUBY_REGEXP_INTERPOLATION.sub('', matched[0]):
+                    matched = None
             if matched:
                 marks.append(i)
                 i = matched.end()
                 after_operand()
                 return
+        if ch == '/' and not js_family and not can_regex and source.startswith('//', i):
+            # Division can touch the opening slash of its right operand.
+            i += 1
+            after_operand(next_can_regex=True)
+            return
         if ch in '"\'':
             skip_string(ch)
             after_operand()
@@ -254,12 +279,20 @@ def mark_forward(source, js_family):
         i += 1
         after_operand()
 
-    if not js_family and (ruby_append or may_have_documentation(source)):
-        from .ruby import _PERCENT_LITERAL
+    ruby_heredocs = not js_family and '<<' in source
+    ruby_documentation = not js_family and (ruby_append or may_have_documentation(source))
+    if ruby_heredocs or ruby_documentation:
+        from .ruby import _PERCENT_LITERAL, _plain_heredoc_at
         percent_literal = re.compile(_PERCENT_LITERAL, re.S)
         # A quote in documentation must not hide a later regex.
         while i < n:
-            if source[i] in '=%_':
+            if ruby_heredocs and source.startswith('<<', i):
+                heredoc = _plain_heredoc_at(source, i)
+                if heredoc:
+                    after_operand()
+                    i = heredoc.end()
+                    continue
+            if ruby_documentation and source[i] in '=%_':
                 span = match_opaque_span(source, i, percent_literal)
                 if span:
                     if source[i] == '%':

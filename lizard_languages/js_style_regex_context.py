@@ -29,6 +29,14 @@ REGEX_TOKEN_JSX = (
 )
 REGEX_TOKEN_PUNCT_JSX = _PUNCT_OPEN + r"\s*" + _JSX_LITERAL
 _REGEX_LITERAL_RE = re.compile(REGEX_LITERAL)
+RUBY_EMPTY_REGEX_SUFFIX = r"/[imxounes]*(?![\w/])"
+_RUBY_MULTILINE_REGEX_SUFFIX = (
+    r"(?![/*])(?=[^/\r\n]*\r?\n)"
+    r"(?:\\[\s\S]|[^/\\[#]|#(?!\{)|\[(?:\\[\s\S]|[^\\\]#]|#(?!\{))*\])+"
+    r"/[imounes]*x[imxounes]*(?!\w)"
+)
+RUBY_REGEX_SUFFIX = r"(?:" + RUBY_EMPTY_REGEX_SUFFIX + "|" + _RUBY_MULTILINE_REGEX_SUFFIX + ")"
+_RUBY_REGEX_RE = re.compile(REGEX_LITERAL + r"|/" + RUBY_REGEX_SUFFIX)
 _EXPRESSION_KEYWORDS = frozenset({
     'return', 'typeof', 'instanceof', 'in', 'new', 'delete', 'void',
     'throw', 'case', 'do', 'else', 'yield',
