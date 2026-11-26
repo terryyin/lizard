@@ -71,6 +71,168 @@ class TestRust(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_trait_declarations_leave_default_method(self):
+        result = get_rust_function_list('''
+        use std::path::Path;
+
+        pub trait Installable {
+            fn install_path(&self) -> &Path;
+            fn write_to<W>(&self, writer: W) -> std::io::Result<()>
+            where W: std::io::Write;
+
+            fn to_resolution(&self, cached: bool) -> u32 {
+                if cached { return 1; }
+                0
+            }
+        }
+        ''')
+        self.assertEqual(['to_resolution'], [function.name for function in result])
+        self.assertEqual((9, 12, 2), (result[0].start_line, result[0].end_line,
+                                      result[0].cyclomatic_complexity))
+
+    def test_extern_declaration_leaves_nested_wrapper(self):
+        result = get_rust_function_list('''
+        pub fn process_id() -> u32 {
+            unsafe extern "C" {
+                fn getpid() -> i32;
+            }
+            fn is_valid(pid: i32) -> bool {
+                pid > 0
+            }
+            let pid = unsafe { getpid() };
+            if is_valid(pid) { pid as u32 } else { 0 }
+        }
+        ''')
+        self.assertEqual(['is_valid', 'process_id'], [function.name for function in result])
+        self.assertEqual(2, result[1].cyclomatic_complexity)
+        self.assertEqual(8, result[1].nloc)
+
+    def test_default_method_with_array_return_type_has_a_body(self):
+        result = get_rust_function_list('''
+        pub trait Header {
+            fn checksum(&self) -> [u8; 4];
+            fn magic(&self) -> [u8; 4] {
+                *b"RIFF"
+            }
+        }
+        ''')
+        self.assertEqual(['magic'], [function.name for function in result])
+        self.assertEqual((4, 6), (result[0].start_line, result[0].end_line))
+
+    def test_return_type_macro_can_contain_semicolon(self):
+        result = get_rust_function_list('''
+        macro_rules! packet_type {
+            ($item:ty; $size:expr) => { [$item; $size] };
+        }
+
+        pub fn header() -> packet_type!(u8; 4) {
+            *b"RIFF"
+        }
+        ''')
+        self.assertEqual(['header'], [function.name for function in result])
+        self.assertEqual((6, 8), (result[0].start_line, result[0].end_line))
+
+    def test_type_macro_with_raw_byte_string_keeps_function_body(self):
+        result = get_rust_function_list('''
+        macro_rules! bytes_for {
+            ($literal:literal) => { [u8; $literal.len()] };
+        }
+
+        pub fn header() -> bytes_for!(br#"RIFF"#)
+        where
+            (): Sized,
+        {
+            *b"RIFF"
+        }
+
+        pub fn chunk_count() -> usize {
+            1
+        }
+        ''')
+        self.assertEqual(['header', 'chunk_count'], [function.name for function in result])
+        self.assertEqual((6, 11), (result[0].start_line, result[0].end_line))
+
+    def test_type_macro_with_hidden_opening_bracket_keeps_function(self):
+        result = get_rust_function_list('''
+        macro_rules! packet_type {
+            ($magic:literal, [$($flag:ident),* $(,)?]; $bytes:ty) => { $bytes };
+        }
+
+        pub fn header() -> packet_type!(
+            br#"RIFF"#, [
+                little_endian,
+            ]; [u8; 4]
+        ) {
+            *b"RIFF"
+        }
+
+        pub fn chunk_count() -> usize {
+            1
+        }
+        ''')
+        self.assertEqual(['header', 'chunk_count'], [function.name for function in result])
+        self.assertEqual((6, 12), (result[0].start_line, result[0].end_line))
+
+    def test_forgive_in_foreign_block_stays_with_the_declaration(self):
+        result = get_rust_function_list('''
+        unsafe extern "C" {
+            // #lizard forgives
+            fn getpid() -> i32;
+        }
+
+        pub struct Process {}
+
+        pub fn pid() -> i32 {
+            unsafe { getpid() }
+        }
+
+        pub fn parent_pid() -> i32 {
+            // #lizard forgives
+            unsafe extern "C" {
+                fn getppid() -> i32;
+            }
+            unsafe { getppid() }
+        }
+
+        pub fn pid_from_local_binding() -> i32 {
+            unsafe extern "C" {
+                // #lizard forgives
+                fn getpid() -> i32;
+            }
+            unsafe { getpid() }
+        }
+        ''')
+        self.assertEqual(['pid', 'pid_from_local_binding'], [function.name for function in result])
+
+    def test_type_macro_with_hashless_raw_path_keeps_function(self):
+        result = get_rust_function_list(r'''
+        macro_rules! path_buf_type {
+            ($root:literal, [$($dir:literal),+]; $cap:expr) => { [u8; $cap] };
+        }
+
+        pub fn default_path() -> path_buf_type!(r"C:\", ["Program Files"]; 32) {
+            [0; 32]
+        }
+
+        pub fn default_size() -> usize {
+            32
+        }
+        ''')
+        self.assertEqual(['default_path', 'default_size'], [function.name for function in result])
+        self.assertEqual((6, 8), (result[0].start_line, result[0].end_line))
+
+    def test_callback_fields_and_foreign_declaration_have_no_body(self):
+        result = get_rust_function_list('''
+        pub struct Signal {
+            pub first: Option<extern "C" fn(i32)>,
+            pub second: Option<extern "C" fn(i32)>,
+        }
+        unsafe extern "C" {
+            pub fn signal();
+        }
+        ''')
+        self.assertEqual([], result)
+
     def test_nested_functions(self):
         result = get_rust_function_list('''
         fn main() {
