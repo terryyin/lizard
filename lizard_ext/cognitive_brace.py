@@ -86,8 +86,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             if top.phase == BODY and not top.braced:
                 self._statement_end()
 
-    _TERNARY_KINDS = ('ternary', 'ternary_true')
-
     def _top_structure(self):
         for frame in reversed(self.state.frames):
             if frame.kind not in self._TERNARY_KINDS:
@@ -108,6 +106,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 frames.pop()
             else:
                 break
+
+    _TERNARY_KINDS = ('ternary', 'ternary_true')
 
     def _ternary_colon(self):
         # A peer colon ends complete conditionals before it starts the next
