@@ -50,6 +50,37 @@ class TestImpliedSemicolonsOfOneFile(unittest.TestCase):
         self.assertIsNot(first, extension.finder)
         self.assertEqual([('if', 6), ('else', 7), ('}', 8)], extension.ends)
 
+    def test_returned_sloppy_identifiers_end_the_braceless_body(self):
+        analyzer = FileAnalyzer(get_extensions(['nd', 'ns']))
+        for name, value in [('let', 'let'), ('let', 'let++'), ('yield', 'yield')]:
+            with self.subTest(value=value):
+                code = f"""\
+function select(ready, {name}) {{
+  if (ready) return {value}
+  if ({name}) return 0
+}}
+"""
+                functions = analyzer.analyze_source_code('select.cjs', code).function_list
+                self.assertEqual(
+                    [('select', 1, 1)],
+                    [(f.name, f.max_nesting_depth, f.max_nested_structures)
+                     for f in functions])
+
+    def test_let_declaration_after_a_bare_return(self):
+        code = """\
+function select(stop) {
+  if (stop) return
+  let
+  choice = 1
+  if (choice) return 0
+}
+"""
+        extension = StatementEnds()
+        analyzer = FileAnalyzer(get_extensions([extension]))
+
+        analyzer.analyze_source_code('select.cjs', code)
+
+        self.assertEqual([('let', 3), ('if', 5), ('}', 6)], extension.ends)
 
 class StatementEnds:
     """An extension that records where the reader finds a statement end
