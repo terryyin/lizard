@@ -18,9 +18,13 @@ class LuaReader(RubylikeReader):
         # a hash is the length operator.
         if source_code.startswith(("#", "\ufeff#")):
             addition = r"|(?:\A|(?<=\A\ufeff))#[^\n]*" + addition
+        lua_patterns = r"|--(?:\[\[.*?\]\]|[^\n]+)|\[\[.*?\]\]"
+        if addition or "[=" in source_code:
+            lua_patterns = (
+                r"|(?:--\[=|\[=)(?P<lua_level>=*)\[.*?\]=(?P=lua_level)\]" +
+                lua_patterns)
         pattern = compiled_token_pattern(
-            r"|\-\-\[\[.*?\]\]" +
-            r"|\[\=*\[.*?\]\=*\]" +
+            lua_patterns +
             r"|\-\-.*?$" +
             r"|//" +
             addition)
