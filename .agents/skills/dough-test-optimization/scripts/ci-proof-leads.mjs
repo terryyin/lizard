@@ -16,7 +16,7 @@ import * as attempts from "./ci-proof-attempts.mjs";
 import * as evidenceGaps from "./ci-proof-gaps.mjs";
 import { leadsTable } from "./ci-proof-leads-table.mjs";
 import { projectOf, selectionOf } from "./ci-proof-project.mjs";
-import { LEAD_LIMIT, RANKED_UNITS, rankedLeads } from "./ci-proof-ranking.mjs";
+import { LEAD_LIMIT, rankedLeads } from "./ci-proof-ranking.mjs";
 import { ancestryOf } from "./ci-proof-revisions.mjs";
 import { scopeOf } from "./ci-proof-scope.mjs";
 
@@ -25,8 +25,8 @@ const USAGE = `Usage: node <this skill>/scripts/ci-proof-leads.mjs [--revision <
 Run from this project's checkout. Prints a bounded table of test optimization
 leads from the CI proof this project retains: the attempt read and how its
 revision relates to the requested one (default HEAD), the recorded test
-selection, gaps with remedies, per-unit totals, and, within each of up to
-${RANKED_UNITS} units, leads ranked by summed CI time (up to ${LEAD_LIMIT} in all), the
+selection and gaps with remedies. Test cases and test files each have their
+own totals, leads ranked by summed CI time (up to ${LEAD_LIMIT} leads in all),
 folders holding most of the rest, and the remaining tail.
 The scope defaults to this project's Intent locations
 (.planning/open-dough.json). --summary reads a summary this project retains

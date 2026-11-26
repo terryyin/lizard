@@ -13,7 +13,10 @@ import {
   readSessionEvidence,
   sealSessionEvidence,
 } from "../../dough-execute-plan/scripts/execution-session-evidence.mjs";
-import { git } from "../../dough-execute-plan/scripts/publication-git.mjs";
+import {
+  git,
+  revParse,
+} from "../../dough-execute-plan/scripts/publication-git.mjs";
 import { resumeSessionClose } from "../../dough-execute-plan/scripts/session-record-publication.mjs";
 import { sessionRecordDirectoryBeside } from "../../dough-execute-plan/scripts/session-record.mjs";
 import { defaultBacklogPath } from "../../dough-product-backlog/scripts/product-backlog-store.mjs";
@@ -30,12 +33,12 @@ export function sealedCompletion(workspace, acceptedSha) {
   return sealed.closing;
 }
 
-// The closure's pair on its parent; sealing keeps a pair delivery recorded.
-async function closurePair(workspace, acceptedSha) {
-  const base = (
-    await git(workspace, "rev-parse", `${acceptedSha}^`)
-  ).stdout.trim();
-  return { base, candidate: acceptedSha };
+// The single-commit closure's pair begins at its first parent.
+export async function closurePair(workspace, acceptedSha) {
+  return {
+    base: await revParse(workspace, `${acceptedSha}^`),
+    candidate: acceptedSha,
+  };
 }
 
 // A record commit after `acceptedSha` on `tracking` whose ranges hold

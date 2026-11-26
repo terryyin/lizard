@@ -24,9 +24,8 @@ apart, never as six results. Never split a file's outcome into cases, make a
 file outcome from case results, or count matched paths as test files. Each
 unit keeps its own counts, summed test execution time (`durationMs`),
 untimed results and missing or ambiguous parts, and Intent compares counts
-only within one unit. Outcomes published without `--unit`, and earlier
-collectors' schema version 1 summaries, stay readable as **legacy test
-results**, never read as either unit or compared by count.
+only within one unit. Readers require schema version 2 and declared units
+throughout. A summary with undeclared evidence is invalid.
 
 ## Check the project first
 
@@ -102,12 +101,12 @@ reported in both units numbers each unit's parts separately.
 
 `fragment` reads one of two report formats:
 
-- `--outcomes FILE --unit case|file`: one `<status><TAB><check path>` line
-  per result, status `passed`, `failed` or anything else (counted as other):
-  `--unit file` when each line is one file's aggregate outcome, as from a
+- `--outcomes FILE --unit case|file` reads one `<status><TAB><check path>` line
+  per result, with status `passed`, `failed` or anything else (counted as other).
+  Use `--unit file` when each line is one file's aggregate outcome, as from a
   runner that runs each test file as one job, `--unit case` when each is one
-  test case; without `--unit`, legacy test results. Each line counts toward
-  the `--entry` whose path contains it (the longest), so one job may report
+  test case. The command requires a unit before writing fragments. Each line
+  counts toward the `--entry` whose path contains it (the longest), so one job may report
   several entries, and toward none outside them. Optional `--times FILE`, one
   `<seconds><TAB><check path>` line per check, gives each matching entry's
   fragment `durationMs`, its checks' summed seconds in milliseconds.
@@ -186,14 +185,12 @@ node <ci-scripts>/ci-proof-summary.mjs summarize \
 
 Upload that file as `ci-proof-summary-attempt-${{ github.run_attempt }}`
 (`if-no-files-found: error`, retention from step 5). `--expect` lists proved
-entries in `intent.locations` order, once per unit (`case` or `file`) their
-reports give, with that unit's part count; fragments present never add an
-entry, unit or part. A `tests` location whose Playwright specs run in one
+entries in `intent.locations` order. Each declaration requires the unit
+(`case` or `file`) and its part count. A `tests` location whose Playwright specs run in one
 job and whose Node test files run one job per file across a three-part
-matrix declares `--expect tests=1:case --expect tests=3:file`. A fragment of
-an undeclared unit is excluded with a note, and a declared unit no fragment
-reached is missing in every part. Declare the unit: a declaration without
-`:<unit>` takes whichever one unit its entry's fragments report.
+matrix declares `--expect tests=1:case --expect tests=3:file`. Fragments can
+fill only declared parts for their own unit. The collector reports excluded
+fragments and marks each declared part with no matching fragment missing.
 
 The tab reads only that artifact name holding `ci-proof-summary.json`, at
 most 1 MiB; a file breakdown of about 1,400 test files measured about

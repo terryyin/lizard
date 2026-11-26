@@ -2,7 +2,7 @@
 // (`./github-request-owner.mjs`) say to each other over its private endpoint
 // (`./github-request-owner-endpoint.mjs`): one JSON message a line. A
 // consumer greets with the protocol and caller token, then asks a fixed read
-// or, after an explicit capability welcome, one full-workflow repeat. The
+// or one full-workflow repeat. The
 // owner answers each numbered operation once. Each request names the API
 // host and login it is asked under as its endpoint directory is named. No
 // credential, command or path is ever said.
@@ -69,7 +69,7 @@ export function receive(socket, onMessage, limitBytes = Infinity) {
 const archiveTypes = /^application\/(?:zip|octet-stream)\s*(?:;|$)/i;
 
 /** @param {ReadonlyMap<string, string>} headers */
-export const labelledArchive = (headers) =>
+const labelledArchive = (headers) =>
   archiveTypes.test(headers.get("content-type") ?? "");
 
 /**
