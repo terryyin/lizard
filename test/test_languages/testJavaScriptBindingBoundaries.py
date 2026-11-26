@@ -129,6 +129,32 @@ def test_quoted_arrow_return_type_keeps_body_and_formals(suffix, return_type):
     ]
 
 
+@pytest.mark.parametrize('suffix', ('ts', 'tsx'))
+def test_quoted_arrows_keep_grouped_types_and_function_return_types(suffix):
+    source = '''type Entry = { id: string; count: number };
+const callbacks = {
+  'entry:list': (entry: Entry): (string[]) => {
+    if (entry.id) return [entry.id];
+    return [];
+  },
+  'entry:value': (entry: Entry): (Entry['id']) => entry.id,
+  'entry:key': (entry: Entry): (keyof Entry) => 'count',
+  'entry:render': (entry: Entry): (id: string | null) => string => {
+    return (id) => id || entry.id;
+  },
+  getId(entry: Entry) { return entry.id; },
+};
+'''
+    assert summaries(functions(source, suffix)) == [
+        ('(anonymous)', 2, 3, 6, ['entry']),
+        ('(anonymous)', 1, 7, 7, ['entry']),
+        ('(anonymous)', 1, 8, 8, ['entry']),
+        ('(anonymous)', 2, 10, 10, ['id']),
+        ('(anonymous)', 1, 9, 11, ['entry']),
+        ('getId', 1, 12, 12, ['entry']),
+    ]
+
+
 @pytest.mark.parametrize('suffix', ('js', 'ts'))
 def test_quoted_arrow_default_ccn_belongs_to_the_arrow(suffix):
     source = '''function configure(ready) {
