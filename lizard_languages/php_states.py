@@ -170,7 +170,7 @@ class PHPLanguageStates(CodeStateMachine):
         elif token == ')':
             self.bracket_level -= 1
             if self.bracket_level == 0:
-                self._state = self._function_return_type_or_body
+                self._state = self._function_body_or_return_type
         elif token.startswith('$'):
             # Found a parameter (PHP parameters start with $)
             if self.started_function:
@@ -178,22 +178,14 @@ class PHPLanguageStates(CodeStateMachine):
                 self.context.add_to_long_function_name(" " + token)
                 self.context.parameter(token)
 
-    def _function_return_type_or_body(self, token):
-        if token == ':':
-            # Skip return type declaration
-            self._state = self._function_body_or_return_type
-        elif token == '{':
-            self._enter_function_body()
-        elif token == ';':
-            # Handle forward declarations in interface
-            if self.started_function:
-                self.context.end_of_function()
-                self.started_function = False
-            self._state = self._state_global
-
     def _function_body_or_return_type(self, token):
         if token == '{':
             self._enter_function_body()
+        elif token == ';':
+            # Interface and abstract methods declare a signature without a body.
+            self.fold_into_enclosing_function()
+            self.started_function = False
+            self._state = self._state_global
 
     def _enter_function_body(self):
         self.function_brace_level = self.brace_level
