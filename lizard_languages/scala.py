@@ -47,6 +47,8 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
         after_line_break = (1, 2, 2, 1)
         line_start = 0
         for token in tokens:
+            if token == '?':
+                token = self._question_mark
             if not token.isspace():
                 if line_start:
                     if not token.startswith(('//', '/*')):
@@ -59,7 +61,7 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
                 elif token.startswith('/*') and '\n' in token:
                     # A block comment that ends on a later line.
                     line_start = 3
-                yield self._question_mark if token == '?' else token
+                yield token
             elif token == '\n':
                 line_start = after_line_break[line_start]
                 yield token
