@@ -56,6 +56,13 @@ def _name(token):
     return token
 
 
+class _CSharpNestingStackStates(CLikeNestingStackStates):
+    def _state_global(self, token):
+        # C# allows "template" as an ordinary identifier.
+        if token != 'template':
+            super()._state_global(token)
+
+
 class CSharpStates(CLikeStates):
     def __init__(self, context):
         super(CSharpStates, self).__init__(context)
@@ -121,10 +128,3 @@ class CSharpStates(CLikeStates):
     def _state_primary_constructor(self, _):
         """Skip primary constructor parameters without counting them as a function"""
         self.in_primary_constructor = False
-
-
-class _CSharpNestingStackStates(CLikeNestingStackStates):
-    def _state_global(self, token):
-        # C# allows "template" as an ordinary identifier.
-        if token != 'template':
-            super()._state_global(token)
