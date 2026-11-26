@@ -11,6 +11,7 @@ __all__ = (
     'OPERAND_WORDS', 'JSXChildBrace', 'JSXMarkup', 'ends_expression',
     'starts_statement', 'parameter_group', 'JavaScriptFunctionsMixin')
 
+
 class _ConditionalColon(str):
     """The separator between a conditional expression's two arms."""
 
