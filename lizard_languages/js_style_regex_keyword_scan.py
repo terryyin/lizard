@@ -3,13 +3,14 @@
 import re
 
 from .js_style_regex_context import (
-    _BASIC_WHITESPACE,
     _EXPRESSION_KEYWORDS,
     _EXPRESSION_PUNCTUATION,
     _LINE_TERMINATORS,
     _REGEX_LITERAL_RE,
     _STRING_LINE_ENDS,
     _apply_marks,
+    _is_property_before,
+    _skip_ws_and_comments_back,
     _skip_ws_back,
     _word_before,
 )
@@ -21,8 +22,18 @@ _LINE_BREAK = re.compile(rf'[{_LINE_TERMINATORS}]')
 _OPERAND_OPERATOR = re.compile(r'(?:[=!]=|(?<!<)<=|(?<!>)>=|(?<!=)>|\?\?|[<+*/%~!&|^-])\Z')
 
 
+# A direct generator body reserves yield. Read an ordinary header without
+# consuming expressions or quoted text in parameters.
+_GENERATOR_HEADER = (
+    r"""(?<![\w$.])function\s*\*\s*(?:[$\w]+\s*)?\([^(){}'"/`]*\)\s*\{"""
+)
+_GENERATOR_EVENT = re.compile('(?P<generator>' + _GENERATOR_HEADER + r""")|[/`'"{}]""")
+_AMBIGUOUS_YIELD = re.compile(rf'(?:\byield\s*\*\s*|>\s*[{_LINE_TERMINATORS}]\s*)yield\b')
+
+
 _AFTER_PAREN = re.compile(r'\)\s*(?:(?:' + _COMMENT.pattern + r')\s*)*/(?![/*])', re.S)
 _PAREN_EVENTS = re.compile(r"""[/()`"']""")
+_PAREN_AND_GENERATOR_EVENTS = re.compile(_GENERATOR_EVENT.pattern + r'|[()]')
 _CONTROL_HEADERS = frozenset(('if', 'while', 'for', 'with'))
 
 
@@ -32,18 +43,34 @@ def mark_keyword_slashes(source, *, jsx=False):
     # The JSX tokenizer identifies element text after this scan has run.
     comments = None if jsx else {}
     literal_ends = None if jsx else set()
+    scan_generators = not jsx and _AMBIGUOUS_YIELD.search(source) is not None
+    scan_parens = not jsx and _AFTER_PAREN.search(source) is not None
+    if scan_parens:
+        events = _PAREN_AND_GENERATOR_EVENTS if scan_generators else _PAREN_EVENTS
+    else:
+        events = _GENERATOR_EVENT if scan_generators else None
     roles = []
     closing = None
-    scan_parens = not jsx and _AFTER_PAREN.search(source) is not None
+    braces = 0
+    generator_bodies = []
     n = len(source)
     i = 0
     find = source.find
     while i < n:
-        if scan_parens:
-            event = _PAREN_EVENTS.search(source, i)
+        if events:
+            event = events.search(source, i)
             if event is None:
                 break
             i = event.start()
+            if event.lastgroup == 'generator':
+                prev, _ = _before_comments(source, _skip_ws_back(source, i - 1), comments)
+                if prev < 0 or source[prev] not in '.#':
+                    braces += 1
+                    generator_bodies.append(braces)
+                    i = event.end()
+                else:
+                    i += len('function')
+                continue
         else:
             j_slash = find('/', i)
             j_dq = find('"', i)
@@ -69,6 +96,16 @@ def mark_keyword_slashes(source, *, jsx=False):
                 closing = i, roles.pop()
             i += 1
             continue
+        if ch == '{':
+            braces += 1
+            i += 1
+            continue
+        if ch == '}':
+            if generator_bodies and generator_bodies[-1] == braces:
+                generator_bodies.pop()
+            braces -= 1
+            i += 1
+            continue
         if ch == '"' or ch == "'":
             quote = ch
             i += 1
@@ -90,7 +127,9 @@ def mark_keyword_slashes(source, *, jsx=False):
         if i + 1 < n and source[i + 1] in '/*':
             i = _read_comment(source, i, comments)
             continue
-        i = _consider_slash(source, i, marks, comments, literal_ends, closing)
+        direct_generator = bool(generator_bodies and generator_bodies[-1] == braces)
+        i = _consider_slash(
+            source, i, marks, comments, literal_ends, closing, direct_generator=direct_generator)
     return _apply_marks(source, marks)
 
 
@@ -110,7 +149,7 @@ def _before_comments(source, i, comments):
     return i, line_comment
 
 
-def _consider_slash(source, i, marks, comments, literal_ends, closing=None):
+def _consider_slash(source, i, marks, comments, literal_ends, closing=None, *, direct_generator=False):
     matched = _REGEX_LITERAL_RE.match(source, i)
     if matched is None:
         return i + 1
@@ -144,8 +183,10 @@ def _consider_slash(source, i, marks, comments, literal_ends, closing=None):
     word, before_word = _word_before(source, prev)
     if word in _EXPRESSION_KEYWORDS:
         prefix, _ = _before_comments(source, _skip_ws_back(source, before_word), comments)
-        if (prefix < 0 or source[prefix] not in '.#') and (
-                word != 'yield' or
+        member = prefix >= 0 and (source[prefix] == '#'
+                                  or source[prefix] == '.' and _is_property_before(source, prefix))
+        if not member and (
+                word != 'yield' or direct_generator or
                 _yield_starts_expression(source, prefix, before_word, line_comment, comments, literal_ends)):
             marks.append(i)
             literal_ends.add(matched.end() - 1)
@@ -180,32 +221,14 @@ def _yield_starts_expression(source, prefix, before_word, line_comment, comments
 
 def _mark_jsx_slash(source, i, marks):
     """Use the keyword and arrow rules for the JSX source pre-scan."""
-    prev = _skip_jsx_trivia(source, i - 1)
+    prev = _skip_ws_and_comments_back(source, i - 1)
     if prev >= 1 and source[prev - 1:prev + 1] == '=>':
         marks.append(i)
         return
     word, before_word = _word_before(source, prev, unicode_names=False)
     if word in _EXPRESSION_KEYWORDS:
-        prefix = _skip_jsx_trivia(source, before_word)
-        if prefix < 0 or source[prefix] != '.':
+        if not _is_property_before(source, before_word):
             marks.append(i)
-
-
-def _skip_jsx_trivia(source, i):
-    while i >= 0:
-        ch = source[i]
-        if ch in _BASIC_WHITESPACE:
-            i -= 1
-        elif ch == '/' and i >= 1 and source[i - 1] == '*':
-            i -= 2
-            while i >= 1:
-                if source[i - 1] == '/' and source[i] == '*':
-                    i -= 2
-                    break
-                i -= 1
-        else:
-            break
-    return i
 
 
 def _skip_template(source, i, n, marks, comments, literal_ends):
