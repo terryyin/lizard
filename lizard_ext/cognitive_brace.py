@@ -6,6 +6,16 @@ from .cognitive_counter import (
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 
 
+# These readers allow newlines between statements as well as within an
+# expression. A word can start a new statement unless it joins expressions.
+_LOGICAL_STATEMENT_LANGUAGES = frozenset(('kotlin', 'scala', 'swift'))
+_LINE_EXPRESSION_WORDS = frozenset((
+    'as', 'as?', 'as!', 'in', 'is', 'match', 'with', 'yield'))
+_OPERAND_PREFIX_WORDS = _LINE_EXPRESSION_WORDS | {
+    'await', 'case', 'do', 'else', 'new', 'return', 'then', 'throw',
+    'try', 'try?', 'try!'}
+
+
 class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     """Nesting from braces, parentheses and semicolons (C-like languages).
 
@@ -21,6 +31,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         self.actions = self._keyword_actions(profile)
         if not profile.nesting:
             self._process = self._process_flat
+        self.logical_statement_lines = reader.language_names[0] in _LOGICAL_STATEMENT_LANGUAGES
 
     def _process(self, token):  # pylint: disable=E0202
         if token == '?' and getattr(token, 'is_optional', False):
@@ -28,6 +39,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         state = self.state
         line = self.line
         if line != state.line:
+            if self.logical_statement_lines and state.logical and not state.pdepth:
+                self._reset_logical_at_line_start(token)
             self._new_line(line)
         if state.pending:
             self._resolve_pending(token)
@@ -85,6 +98,18 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             top = state.frames[-1]
             if top.phase == BODY and not top.braced:
                 self._statement_end()
+
+    def _reset_logical_at_line_start(self, token):
+        state = self.state
+        previous = state.prev
+        # Scala also permits a leading infix operator in backticks or
+        # with an alphanumeric prefix ending in an underscore.
+        if not _is_word(token) or token.endswith('_') or token in _LINE_EXPRESSION_WORDS:
+            return
+        if (previous in (')', ']', '}', '++', '--', '!!')
+                or (previous and (previous[0].isalnum() or previous[0] in "_\"'`")
+                    and previous not in _OPERAND_PREFIX_WORDS)):
+            state.logical.pop(0, None)
 
     def _top_structure(self):
         for frame in reversed(self.state.frames):
