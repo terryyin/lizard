@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-075_perl-word-operator-context.json",
+      "identity": "SEED-075#perl-word-operator-context",
+      "completedAt": "2026-11-26T00:17:17.712Z",
+      "blob": "4c673658bab79000b1d1167aed875974a1f69b36"
+    },
+    {
       "fileName": "SEED-075_ruby-percent-literal-context.json",
       "identity": "SEED-075#ruby-percent-literal-context",
       "completedAt": "2026-11-25T23:33:27.770Z",

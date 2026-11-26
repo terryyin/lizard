@@ -132,6 +132,14 @@ When slice planning names an already-oversized suite as the only proof home and 
   - Evidence: the plan's proof names `test/test_languages/testRuby.py` (796 lines before the slice, 822 after) and supplies no seam or exception; the refactor pass returned `REFACTOR JIDOKA STOP`; the developer chose defer; the follow-up is queued as `SEED-076#ruby-reader-test-topics`; increment `8efebf80`
   - Observed effect: delivery paused for a developer question after proof was accepted; the slice published with the split deferred
   - Inference: same as before. Planning could have settled the decision for a 26-line addition to a suite already oversized
+- Execution: SEED-075#perl-word-operator-context
+  - Timestamp: unknown
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.114
+  - Evidence: plan 038 Current decisions allowed extending shared `mark_member_names` or a Perl-local wrap and settled only "no reader-file split"; implementation edited `lizard_languages/code_reader.py` (269 lines); conversation `89a21532-f79f-4cc8-900e-cda83a0a689d` refactor subagent `4b02ce7d-0671-4a00-9681-6e7785f4398d` returned `## REFACTOR JIDOKA STOP`; 2026-11-26 07:21-07:58 +08:00
+  - Observed effect: Production helper over 250 lines had no size decision; the refactor pass stopped, the coordinator settled keep-without-split from the plan's own helper-extension decision, and the pass resumed
+  - Inference: Same gap as above on a shared production file rather than a proof home; naming each alternative's target file size and keep-or-extract decision in the plan would have avoided one stop and resume round trip
 
 ## DD-491 — Black assumed as selective formatter, then `git checkout` wiped the slice
 

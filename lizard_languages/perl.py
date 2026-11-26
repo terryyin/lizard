@@ -23,9 +23,11 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
     # Separated condition categories
     _control_flow_keywords = {'if', 'elsif', 'unless', 'while', 'until', 'for',
                               'foreach', 'when', 'given', 'default', 'do'}
-    _logical_operators = {'&&', '||'}  # Perl also has 'and', 'or' with different precedence
+    _logical_operators = {'&&', '||', 'and', 'or'}
     _case_keywords = set()
     _ternary_operators = {'?', ':'}  # Both parts of ternary operator
+    # `$obj->and()` / `Package::and()` name a member, not a decision.
+    _BEFORE_MEMBER_NAME = frozenset(('->', '::'))
 
     def __init__(self, context):
         super(PerlReader, self).__init__(context)
@@ -33,20 +35,22 @@ class PerlReader(CodeReader, ScriptLanguageMixIn):
 
     def preprocess(self, tokens):
         comment = None
+        merged = []
         for token in tokens:
             if comment is not None:
                 if token == '\n':
-                    yield comment
+                    merged.append(comment)
                     comment = None
-                    yield token
+                    merged.append(token)
                 else:
                     comment += token
             elif token == '#':
                 comment = token
             else:
-                yield token
+                merged.append(token)
         if comment is not None:
-            yield comment
+            merged.append(comment)
+        return self.mark_member_names(merged, self._BEFORE_MEMBER_NAME)
 
     def _state(self, token):
         current_state = self.parallel_states[-1]

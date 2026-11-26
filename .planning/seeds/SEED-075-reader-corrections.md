@@ -42,33 +42,6 @@ frozen master `6ff51711d14d7aebca1d72690130fab6e1889fe8`.
 **Plan:** [Keep Perl and Ruby documentation from acting as Lizard directives](../slice-plans/037-source-documentation-directives/PLAN.md)
 
 
-<a id="perl-word-operator-context"></a>
-
-### Count Perl word operators only in operator positions
-
-**Identity:** SEED-075#perl-word-operator-context
-```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/038-perl-word-operator-context/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"42baa1ed1b0963bbcff9173a951848ec533940e9ce92f78e814dcc6f448f600f","plan":"3c52c772ab4cfdb3c9972625e28764aeb652249aaabad113942bd89b0854162a"}}
-```
-
-**Goal:** Perl users get the extra CCN for short-circuit `and` / `or` while calls named `and` or `or` keep their original CCN.
-
-**Scope:** Correct the specific language reader behavior reproduced during review of [#634](https://github.com/terryyin/lizard/pull/634) at `3ab95dca71d145de86dd79ba264644c096a926cf`. Count word-form short-circuit `and` and `or` as decisions when they are operators. Do not count those words when they name a method after `->` or a package-qualified call after `::`. Preserve symbol-form `&&` / `||`, quoted text that contains the words, nonstrict removal of logical-operator decisions, and unrelated reader behavior. Follow #634's direction for which word forms to add. Out of scope: other SEED-075 reader corrections, non-Perl languages, and Perl's `not` / `xor`.
-
-**Finding:** The valid subroutine `sub f { return $obj->and(); }` changes from CCN 1 to 2 on #634. Both real word operators and an actual method name reach the same condition set. Master leaves both the method call and real `$a and $b` at CCN 1.
-
-**Key examples:**
-
-- Method call: `sub f { return $obj->and(); }` → CCN 1 (master keeps 1; #634 reports 2).
-- Word-form operators: `sub check { return $a and $b; }` → CCN 2; the same shape with `or` → CCN 2; `$a and $b or $c` → CCN 3.
-- Package-qualified call: `sub f { return Package::and(); }` → CCN 1.
-- Quoted words: `sub check { return "and or"; }` → CCN 1.
-- Symbol forms unchanged: `sub check { return $a && $b; }` and `$a || $b` → CCN 2.
-- Nonstrict mode: a real `$a and $b` loses the extra logical-operator decision; a method named `and` stays CCN 1.
-
-**Plan:** [Count Perl word operators only in operator positions](../slice-plans/038-perl-word-operator-context/PLAN.md)
-
-
 <a id="kotlin-adjacent-nested-comments"></a>
 
 ### Resume Kotlin tokenization after each complete block comment
