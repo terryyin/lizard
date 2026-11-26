@@ -285,3 +285,26 @@ class TestCsharp(unittest.TestCase):
             }
         ''').function_list
         self.assertEqual(1, result[0].cognitive_complexity)
+
+
+    def test_template_identifier_does_not_change_method_boundaries(self):
+        source = """
+class Renderer
+{
+    static string[] Formats(string template)
+    {
+        return new[] { template };
+    }
+    static bool NeedsPadding(int template, int width)
+    {
+        return template < width;
+    }
+    static int Count() { return 1; }
+}
+"""
+        functions = get_csharp_function_list(source)
+        self.assertEqual([
+            ('Renderer::Formats', 4, 7),
+            ('Renderer::NeedsPadding', 8, 11),
+            ('Renderer::Count', 12, 12),
+        ], [(f.name, f.start_line, f.end_line) for f in functions])
