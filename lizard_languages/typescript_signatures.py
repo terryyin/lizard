@@ -11,7 +11,7 @@ class ReturnTypeColon(str):
 
 def return_type_colon(tokens, depth):
     """Use the existing type reader; a conditional must keep its separator."""
-    annotation = TypeScriptTypeAnnotationStates(None)
+    annotation = TypeScriptTypeAnnotationStates(None, return_type=True)
     for token in tokens:
         if token.isspace() or token.startswith(('//', '/*')):
             continue

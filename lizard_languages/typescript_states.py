@@ -84,15 +84,16 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             else:
                 self._pop_function_from_stack()
 
-    def _consume_type_annotation(self):
+    def _consume_type_annotation(self, return_type=False):
         # A signature stays tentative while its return type is read.
+        return_type = return_type or (
+            self.started_function and not self._expression_body and self.last_token == ')')
         declaration = self._signature == 'function' or (
             self.as_class and self._signature and not self._in_prop_value)
-        return_type = (declaration and self.started_function
-                       and not self._expression_body and self.last_token == ')')
-        if return_type:
+        body_candidate = return_type and declaration
+        if body_candidate:
             self.next(self._expecting_body_after_return_type)
-        super()._consume_type_annotation(return_type=return_type, class_member=return_type and self.as_class)
+        super()._consume_type_annotation(return_type=return_type, class_member=body_candidate and self.as_class)
 
     def _expecting_body_after_return_type(self, token):
         # Later child states resume ordinary parsing.
@@ -117,7 +118,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
             if token in _MARKER_TOKENS:
                 if isinstance(token, ReturnTypeColon):
-                    self._consume_type_annotation()
+                    self._consume_type_annotation(return_type=True)
                     return
                 if token == 'static':
                     # Hot path: most `static`/`async` tokens are not inside an
