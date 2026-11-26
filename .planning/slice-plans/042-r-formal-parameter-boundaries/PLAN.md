@@ -71,4 +71,4 @@ Plan refinement was unnecessary after separating the behavior-preserving declara
 
 ## Execution complete
 
-Product advice: No product change; implementation and semantic tests satisfy all story promises. Hold merge to `master` until a quiet-machine paired performance rerun (`api-parameters` and `cli`) passes the `<3%` 95% upper bound (noisy host runs under load averages 8.25–25.55 showed near-zero point estimates `-0.18%`, `-0.91%`, and `+0.61%` with widened CIs).
+Product advice: No product change. The implementation meets the story's goal, scope, and key examples, with no follow-up correction needed. The paired performance gate was waived by the developer after inconclusive runs on a loaded host (`api-parameters` `[-4.46%, +4.10%]` and `[-6.43%, +4.61%]`; `cli` `[-3.73%, +4.96%]`; point estimates `-0.18%`, `-0.91%`, `+0.61%`). Hosted CI was green on `551eca83`.
