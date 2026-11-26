@@ -6,7 +6,7 @@ from weakref import WeakKeyDictionary
 from .cognitive_profile import (
     _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
 
-HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY = range(5)
+HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY, TERNARY_ELSE = range(6)
 
 _IF_LIKE = ('if', 'else if')
 _CLOSER_OF = {'(': ')', '[': ']', '{': '}', '${': '}'}

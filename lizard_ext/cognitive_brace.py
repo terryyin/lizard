@@ -2,7 +2,7 @@
 
 from .cognitive_actions import _BraceActions
 from .cognitive_counter import (
-    BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE)
+    BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, TERNARY_ELSE, _Counter, _Frame, _IF_LIKE)
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 
 
@@ -21,6 +21,9 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         self.actions = self._keyword_actions(profile)
         if not profile.nesting:
             self._process = self._process_flat
+        self.track_ternary_arms = reader.language_names[0] in ('cpp', 'objectivec')
+        if self.track_ternary_arms:
+            self.actions[':'] = self._ternary_colon
 
     def _process(self, token):  # pylint: disable=E0202
         if token == '?' and getattr(token, 'is_optional', False):
@@ -101,11 +104,29 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         frames = self.state.frames
         pdepth = self.state.pdepth
         while frames and frames[-1].kind == 'ternary':
-            open_depth = frames[-1].pdepth
-            if open_depth > pdepth or (peer_comma and open_depth == pdepth):
+            frame = frames[-1]
+            open_depth = frame.pdepth
+            comma_ends_frame = peer_comma and open_depth == pdepth and (
+                not self.track_ternary_arms or
+                (frame.phase == TERNARY_ELSE and frame.depth == self.state.depth))
+            if open_depth > pdepth or comma_ends_frame:
                 frames.pop()
             else:
                 break
+
+    def _ternary_colon(self):
+        # Close any complete ternaries in the true arm before switching
+        # the nearest unfinished ternary to its false arm.
+        state = self.state
+        frames = state.frames
+        for index in range(len(frames) - 1, -1, -1):
+            frame = frames[index]
+            if frame.kind != 'ternary' or frame.pdepth != state.pdepth or frame.depth != state.depth:
+                return
+            if frame.phase == BODY:
+                del frames[index + 1:]
+                frame.phase = TERNARY_ELSE
+                return
 
     def _statement_end(self):
         """A ';' at bracket depth 0 finishes the braceless bodies around it."""
