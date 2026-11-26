@@ -3,8 +3,11 @@ This is an extension of lizard, that counts the 'Nesting Depth'
 in every function.
 """
 from lizard import FileInfoBuilder, FunctionInfo
+from lizard_languages.python_tokens import FStringExpressionToken
 
 DEFAULT_ND_THRESHOLD = 7
+_PYTHON_SUITES = frozenset(('if', 'elif', 'else', 'for', 'while', 'try',
+                            'except', 'finally', 'with', 'def'))
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -27,6 +30,8 @@ class LizardExtension(object):  # pylint: disable=R0903
             default=DEFAULT_ND_THRESHOLD)
 
     def __call__(self, tokens, reader, l_depth=0):
+        if 'python' in getattr(reader, 'language_names', ()):
+            return _python_depth(tokens, reader)
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
@@ -101,6 +106,46 @@ class LizardExtension(object):  # pylint: disable=R0903
                 l_depth = 0
                 context.reset_nd_complexity()
             yield token
+
+
+def _python_depth(tokens, reader):
+    """Close suites at the indentation of the next logical statement."""
+    context = reader.context
+    last_line = None
+    brackets = 0
+    statement_start = True
+    for token in tokens:
+        line = context.current_line
+        function = context.current_function
+        suites = function.block_levels
+        in_interpolation = isinstance(token, FStringExpressionToken)
+        if (line != last_line and brackets == 0 and not in_interpolation and
+                line - token.count('\n') != last_line):
+            indent = context.current_nesting_level
+            while suites and suites[-1] >= indent:
+                suites.pop()
+            function.nesting_depth = len(suites)
+            statement_start = True
+        last_line = line
+        if token == '\\\n' or (statement_start and token == 'async'):
+            yield token
+            continue
+        if statement_start and (token in _PYTHON_SUITES or
+                                (token == 'case' and reader._keyword_case)):
+            suites.append(context.current_nesting_level)
+            context.add_nd_condition()
+        elif token in ('if', 'for'):
+            # A ternary or comprehension ends with its expression.
+            context.add_nd_condition()
+        if not in_interpolation:
+            if token in ('(', '[', '{'):
+                brackets += 1
+            elif token in (')', ']', '}'):
+                brackets = max(brackets - 1, 0)
+            elif token == ';' and brackets == 0:
+                function.nesting_depth = len(suites)
+        statement_start = False
+        yield token
 
 
 class NDFileInfoAddition(FileInfoBuilder):
