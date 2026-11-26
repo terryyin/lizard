@@ -53,6 +53,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
                       'do', 'try', 'catch', 'switch', 'finally',
                       'except', 'with'])
     matching_structures = set(['else', 'elif', 'catch', 'finally'])
+    _use_function_scope = False
 
     @staticmethod
     def set_args(parser):
@@ -68,13 +69,14 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def __init__(self):
         super(LizardExtension, self).__init__(None)
         self.structure_piles = [0]  # Invariant: must always have at least one element
-        self._use_function_scope = False
         # The tokens that _state_global reads; it skips the others.
         self._global_tokens = frozenset(self.structures) | frozenset((
             '{', ';', '}', 'else', '.', '?.'))
 
     def __call__(self, tokens, reader=None):
-        if 'python' in getattr(reader, 'language_names', ()):
+        languages = getattr(reader, 'language_names', ())
+        self._use_function_scope = 'java' in languages
+        if 'python' in languages:
             return self._indented_structures(tokens, reader)
         if hasattr(reader, 'implied_semicolons'):
             return self._unterminated_statements(tokens, reader)
@@ -83,7 +85,6 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def _start_file(self, reader):
         super(LizardExtension, self)._start_file(reader)
         self.structure_piles = [0]
-        self._use_function_scope = 'java' in getattr(reader, 'language_names', ())
 
     def _unterminated_statements(self, tokens, reader):
         """JavaScript ends a statement without a ';' too: read a ';'
