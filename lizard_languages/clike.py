@@ -175,7 +175,7 @@ class CppRValueRefStates(CodeStateMachine):
         # Keep the reference scan active in captures and parameter types.
         header = self._lambda
         adjustment = None
-        if not header.in_group or token in self._LAMBDA_GROUP_TOKENS:
+        if header.in_capture_prefix or not header.in_group or token in self._LAMBDA_GROUP_TOKENS:
             adjustment = header.advance(token, self.last_token)
         self._state, self._events = header.resume
         if token == "&&" and header.in_return_type and self._counts_and(token):
@@ -194,7 +194,7 @@ class CppRValueRefStates(CodeStateMachine):
     def _track_lambda(self, header):
         header.resume = self._state, self._events
         events = None
-        if header.in_group:
+        if header.in_group and not header.in_capture_prefix:
             if self._events is self._IDLE_TOKENS:
                 events = self._LAMBDA_IDLE_TOKENS
             elif self._events is self._REFERENCE_SCAN_TOKENS:
@@ -225,6 +225,7 @@ class _LambdaHeader:
         self.resume = None
         self.references = 0
         self.return_reference_pending = False
+        self._capture_has_initializer = False
         self._section = "["
         self._groups = ["]"]
 
@@ -235,6 +236,10 @@ class _LambdaHeader:
     @property
     def in_return_type(self):
         return self._section == "->" and not self._groups
+
+    @property
+    def in_capture_prefix(self):
+        return self._section == "[" and len(self._groups) == 1 and not self._capture_has_initializer
 
     @property
     def in_group(self):
@@ -252,6 +257,12 @@ class _LambdaHeader:
                 self._section = ")"
             return None
         at_outer_group = len(groups) == 1
+        if self.in_capture_prefix:
+            if token == "=":
+                self._capture_has_initializer = True
+            elif token.isidentifier() and (previous.isidentifier() or previous in (")", "}")):
+                # An Objective-C receiver and selector can appear next to each other.
+                return 0
         if token in (")", "]", "}") or (section == "(" and token == "="):
             return 0
         if at_outer_group and token == ";" and groups[-1] != "}":
