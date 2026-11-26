@@ -196,6 +196,18 @@ class TestJavaScriptRegex(unittest.TestCase):
         )
         self.assert_functions(source, [('a', 1, 1, 2)])
 
+    def test_non_null_assertion_keeps_division_after_a_comment(self):
+        for filename in ('average.ts', 'average.tsx'):
+            for space in (' ', '\u00a0'):
+                with self.subTest(filename=filename, space=space):
+                    source = f'''\
+async function average(total: number | undefined, count: number, fallback: number) {{
+  return total!{space}/* loaded above */ / (count || fallback) / 100;
+}}
+'''
+                    function, = analyze_file.analyze_source_code(filename, source).function_list
+                    self.assertEqual((2, 29), (function.cyclomatic_complexity, function.token_count))
+
     def test_regex_with_quote_brace_flag_preserves_following_function(self):
         patterns = ('/"/', '/{/', '/}/', '/`/', r'/\\//', '/[/]/', '/x/g', '/[?#]/')
         for pattern in patterns:
