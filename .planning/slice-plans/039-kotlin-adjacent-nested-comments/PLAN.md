@@ -45,7 +45,7 @@ No North Star topic bears on this reader correction beyond that ADR.
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 Proof: `analyze_file.analyze_source_code` on the key-example sources reports the promised CCN, NLOC and start lines. #647's tests and the existing Kotlin reader tests stay green. Before merge, run full `nix develop -c python -m pytest` and `nix develop -c make`. Pair affected API and broad CLI timing on the exact corrected production bytes. Require green hosted checks on the published revision.
 
@@ -60,6 +60,7 @@ Bring in #647's reader change and tests, correct the scan position, and add the 
 - `KotlinStates` matches the original class body byte for byte and both import paths resolve to the same class. After the move, 82 focused Kotlin tests and 201 affected consumer tests passed. Full pytest passed with 3,766 tests and seven skips, and `nix develop -c make` passed.
 - The paired Kotlin API timing used eight fixed sources and 20 alternating pairs against `bdafc0a1`. The change was 16.4% faster on that corpus (95% interval 12.1% to 20.5% faster).
 - The paired broad CLI timing used 153 fixed UTF-8 sources and 20 alternating pairs against the same baseline. Four-second calibration produced a valid estimate of 0.8% faster (95% interval 5.7% faster to 4.4% slower). The interval includes no change. The plan sets no numerical acceptance threshold. The earlier CLI attempts stopped on an unsupported binary asset and yielded sub-second samples, respectively.
+- Hosted GitHub Actions passed on the implementation commit `09437ff0fa6e820b8f2dd886018d433c63ff6f58` in [run 45777652305, attempt 2](https://github.com/terryyin/lizard/actions/runs/45777652305/attempts/2). Attempt 1 was cancelled before any job ran. Merging `789623e3` brought in the narrower hosted matrix and left the production source bytes from `09437ff0` intact.
 
 ## Preparation review
 
