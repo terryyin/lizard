@@ -252,7 +252,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                               | self.case_keywords)
         # `{ function: f }` also needs the mark: the state reads `function`.
         name_keywords = structure_keywords | _NAMED_KEYWORDS
-        member_keywords = structure_keywords | {'return'}
         member_access = False
         before_dot = ''
         keyword = None      # waits for the next token: `{ if: a }`
@@ -273,7 +272,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
-                    if member_access and token in member_keywords:
+                    if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False
                     elif token in marked_punctuation:
@@ -303,6 +302,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     else:
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
+                            if token == 'return':
+                                token = _MemberName(token)
                             member_access = False
                         if token in name_keywords:
                             keyword = token
