@@ -108,6 +108,20 @@ class CounterWithAnnotation(@get:set val value: Int) {
             [(f.name, f.start_line, f.end_line) for f in result],
         )
 
+    def test_calls_in_property_initializers_do_not_start_accessors(self):
+        result = get_kotlin_function_list('''\
+fun get(load: () -> Int): Int { return load() }
+val size = checkNotNull(get { 1 })
+val index = listOf(0)[get { 0 }]
+val capacity = System.getProperty("capacity")?.toInt() ?: get { 2 }
+val remaining: Int
+    get() { return capacity - size }
+        ''')
+        self.assertEqual(
+            [("get", 1, 1), ("get", 6, 6)],
+            [(f.name, f.start_line, f.end_line) for f in result],
+        )
+
     def test_getter_setter(self):
         result = get_kotlin_function_list('''
             class Time
