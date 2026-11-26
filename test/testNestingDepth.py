@@ -1,4 +1,5 @@
 import unittest
+from itertools import permutations
 from lizard import FileAnalyzer, get_extensions
 from .testHelpers import get_cpp_function_list_with_extension
 from lizard_ext.lizardnd import LizardExtension as NestDepth
@@ -672,6 +673,61 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
                         [(f.name, f.max_nesting_depth, f.cognitive_complexity,
                           f.cyclomatic_complexity) for f in functions],
                     )
+
+    def test_template_type_arguments_preserve_following_functions(self):
+        source = """
+        function pass<A, B>(_first: A, second: B) {
+            return second;
+        }
+
+        function render(a: string, b: string) {
+            return {value: a || pass<`x${number extends string ? boolean : number}`, string>('x1', b || 'b')};
+        }
+
+        function after(flag: boolean) {
+            if (flag) return 1;
+            return 0;
+        }
+
+        if (render('', '').value !== 'b' || after(true) !== 1) throw Error('Unexpected result');
+        """
+        for filename in ("a.ts", "a.tsx"):
+            with self.subTest(filename=filename):
+                analyzer = FileAnalyzer(get_extensions([]))
+                functions = analyzer.analyze_source_code(filename, source).function_list
+
+                self.assertEqual(
+                    [('pass', 1), ('render', 3), ('after', 2)],
+                    [(f.name, f.cyclomatic_complexity) for f in functions],
+                )
+                self.assertLess(functions[1].end_line, functions[2].start_line)
+
+    def test_type_member_keywords_do_not_open_nested_structures(self):
+        source = """
+        function pass<A, B>(_first: A, second: B) {
+            return second;
+        }
+
+        function render(a: string, b: string) {
+            return {value: a || pass<{if: number; for: boolean}, string>({if: 0, for: true}, b || 'b')};
+        }
+
+        if (render('', '').value !== 'b') throw Error('Unexpected result');
+        """
+        extensions = ('nd', 'ns', 'cognitive')
+        for filename in ("a.ts", "a.tsx"):
+            for size in range(1, len(extensions) + 1):
+                for order in permutations(extensions, size):
+                    if 'ns' not in order:
+                        continue
+                    with self.subTest(filename=filename, order=order):
+                        analyzer = FileAnalyzer(get_extensions(list(order)))
+                        functions = analyzer.analyze_source_code(filename, source).function_list
+
+                        self.assertEqual(
+                            [('pass', 0), ('render', 0)],
+                            [(f.name, f.max_nested_structures) for f in functions],
+                        )
 
     def test_comparison_before_a_sibling_property_with_greater_than(self):
         source = """
