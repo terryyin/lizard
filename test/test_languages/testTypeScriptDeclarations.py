@@ -188,6 +188,24 @@ class Validator {
                     (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
                     for f in functions])
 
+    def test_return_predicates_in_runtime_arrows_and_object_methods(self):
+        code = """const matches = (%(key)s: unknown): %(key)s is { value: string } => {
+  return %(key)s !== null && typeof %(key)s === "object" && "value" in %(key)s;
+};
+const validator = {
+  check(%(key)s: unknown): %(key)s is { value: string } {
+    return %(key)s !== null && typeof %(key)s === "object" && "value" in %(key)s;
+  }
+};
+"""
+        for key in ('asserts', 'keyof', 'infer', 'readonly', 'unique'):
+            for filename in ('guards.ts', 'guards.tsx'):
+                with self.subTest(key=key, filename=filename):
+                    functions = analyze_file.analyze_source_code(filename, code % {'key': key}).function_list
+                    self.assertEqual([('matches', 1, 3, 1, 3), ('check', 5, 7, 1, 3)], [
+                        (f.name, f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                        for f in functions])
+
     def test_bodyless_declaration_at_end_of_file_is_not_a_function(self):
         code = """export function decode(input: string): Uint8Array
 """
