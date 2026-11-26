@@ -8,6 +8,7 @@ from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
+from .typescript_type_annotation import TypeScriptTypeAnnotationStates, can_take_type_arguments
 
 # Ordinary tokens skip declaration and marker dispatch together.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
@@ -77,6 +78,36 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
     def statemachine_before_return(self):
         if self.started_function:
             self._pop_function_from_stack()
+
+    def end_expression_before(self, token):
+        annotation = self._state
+        if (self._expression_body
+                and isinstance(annotation, TypeScriptTypeAnnotationStates)
+                and annotation.runtime_assertion
+                and annotation.ends_before_line_token(token)):
+            # Return to the runtime owner before the counters see the next
+            # statement. There is no token for the annotation to replay yet.
+            self.next(self.saved_state)
+            self.callback = None
+            self._end_statement()
+            return
+        super().end_expression_before(token)
+
+    def type_argument_context(self):
+        if isinstance(self._state, TypeScriptStates):
+            return self._state.type_argument_context()
+        previous = self.last_token
+        if self._class_body_pending or self.started_function and not self._expression_body:
+            return False
+        if self.as_object and not self.holds_members:
+            return False
+        if self._state != self._state_global and not (
+                isinstance(self._state, TypeScriptTypeAnnotationStates)
+                and self._state.runtime_assertion):
+            return False
+        if previous == '!':
+            return getattr(self, '_postfix_operand', False)
+        return can_take_type_arguments(previous)
 
     def _state_global(self, token):
         if self._pending_bindings:

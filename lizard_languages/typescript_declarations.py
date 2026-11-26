@@ -32,7 +32,7 @@ class TypeScriptDeclarationsMixin:
         elif (token in ('as', 'satisfies')
               and (not self.as_object or self._in_prop_value)
               and self._assertion_operand()):
-            self._consume_type_annotation()
+            self._consume_type_annotation(runtime_assertion=True)
             return True
         if token == 'declare':
             self._ts_declare = True
@@ -166,8 +166,8 @@ class TypeScriptDeclarationsMixin:
                     self.next(resume or self._state_global)
         self.next(consume)
 
-    def _consume_type_annotation(self):
-        typeStates = TypeScriptTypeAnnotationStates(self.context)
+    def _consume_type_annotation(self, runtime_assertion=False):
+        typeStates = TypeScriptTypeAnnotationStates(self.context, runtime_assertion)
 
         def callback():
             if typeStates.saved_token:

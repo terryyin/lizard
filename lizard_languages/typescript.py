@@ -8,12 +8,15 @@ from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
-from .typescript_type_annotation import TypeScriptTypeAnnotationStates
+from .typescript_type_annotation import (
+    TypeAliasContext, TypeArguments, TypeScriptTypeAnnotationStates, followed_by_new_statement,
+    packed_type_arguments)
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .typescript_declarations import SplitTypeAliasName, has_split_alias_name
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
-from .javascript_expression import awaiting_function_body, end_before_line_token
+from .javascript_expression import (
+    TypeArgumentEnd, awaiting_function_body, end_before_line_token)
 from .javascript_statements import ImpliedSemicolons
 
 # One token, so each ? in ?? is not its own ternary decision.
@@ -117,6 +120,23 @@ def _ends_a_number(token):
     """Whether a '.' after this token is a decimal point, `1_000.`."""
     return bool(token) and token[0].isdigit() and token.replace(
         '_', '').isdigit()
+
+
+def _read_type_arguments(arguments, token, state):
+    if arguments is not None:
+        remaining, closed = arguments(token)
+        return remaining, closed, arguments.simple
+    if token == '<':
+        return (TypeArguments() if state.type_argument_context() else None), False, False
+    return None, packed_type_arguments(token) and state.type_argument_context(), True
+
+
+def _read_type_alias(alias, token):
+    if token.startswith(_COMMENT_STARTS):
+        if '\n' not in token:
+            return alias
+        token = '\n'
+    return None if alias(token) else alias
 
 
 class TypeScriptReader(CodeReader, CCppCommentsMixin):
@@ -257,8 +277,17 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         before_dot = ''
         keyword = None      # waits for the next token: `{ if: a }`
         tokens = iter(self.code_tokens(tokens))
+        filename = self.context.fileinfo.filename.lower()
+        track_angles = filename.endswith(('.ts', '.tsx'))
+        packed_angles = filename.endswith('.tsx')
+        type_alias = None
+        type_arguments = None
         while True:
             for token in tokens:
+                if type_alias is not None:
+                    # Keep type-only angles out of statement detection even
+                    # when the runtime reader has left a multiline alias.
+                    type_alias = _read_type_alias(type_alias, token)
                 if not token.isspace():
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
@@ -273,6 +302,21 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
+                    if type_alias is not None and type_alias.in_body:
+                        type_arguments = None
+                    elif track_angles:
+                        if token == 'type' and type_alias is None:
+                            type_alias = TypeAliasContext()
+                        if type_arguments is not None or token == '<' or packed_angles and token[0] == '<':
+                            type_arguments, closes_arguments, simple_arguments = _read_type_arguments(
+                                type_arguments, token, state)
+                            if closes_arguments:
+                                tokens, lookahead = tee(tokens)
+                                line_start = followed_by_new_statement(lookahead, simple_arguments)
+                                del lookahead
+                                member_access = False
+                                yield TypeArgumentEnd(token) if line_start else token
+                                break
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False
