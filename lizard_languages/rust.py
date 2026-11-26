@@ -8,7 +8,7 @@ from collections import deque
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
-from .token_pattern import compiled_token_pattern, tokens_from_matches
+from .token_pattern import compiled_token_pattern, tokens_from_matches, tokens_in_span
 
 
 # Rust punctuation is ASCII. U+200E and U+200F are whitespace in Rust.
@@ -21,6 +21,11 @@ _RAW_STRING_TOKEN = (
     r'(?:(?:[A-Za-z_]|' + _NON_ASCII_IDENTIFIER_CHAR +
     r')(?:[A-Za-z_0-9]|' + _NON_ASCII_IDENTIFIER_CHAR + r')*)?'
 )
+
+
+# A hash followed by a name or repetition can be a standalone macro token.
+# Keep the tokenizer's fallback around raw identifiers and raw strings.
+_MACRO_HASH = re.compile(r"""(?<![r"#])#[^\S\n]*(?!(?:b|c)?r#*")(?=\(|[^\W\d])""")
 
 
 class RustReader(CodeReader, CCppCommentsMixin):
@@ -56,7 +61,10 @@ class RustReader(CodeReader, CCppCommentsMixin):
                 token_class = _rust_token_text
         source_code = _flatten_nested_comments(source_code)
         if 'quote' not in source_code:
-            return CodeReader.generate_tokens(source_code, addition, token_class)
+            if _MACRO_HASH.search(source_code) is None:
+                return CodeReader.generate_tokens(source_code, addition, token_class)
+            return tokens_in_span(compiled_token_pattern(addition), source_code,
+                                  0, len(source_code), token_class, macros=_group_rust_hash)
         return _quote_tokens(source_code, addition, token_class)
 
     def preprocess(self, tokens):
@@ -74,6 +82,10 @@ class RustReader(CodeReader, CCppCommentsMixin):
                 yield token
             if token[0] != '/':  # comments do not end an expression
                 last = token
+
+
+def _group_rust_hash(match):
+    return _MACRO_HASH.match(match.string, match.start()) is None
 
 
 def _rust_token_text(match):
@@ -264,7 +276,7 @@ def _quote_tokens(source, addition, token_class):
         pending_path = observe_macro(token)
         return text
 
-    return tokens_from_matches(matches if lookahead is None else lookahead, read_token)
+    return tokens_from_matches(matches if lookahead is None else lookahead, read_token, macros=_group_rust_hash)
 
 
 def _quote_macro_tracker(bindings):
