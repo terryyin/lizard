@@ -24,7 +24,6 @@ _KEYWORDS = (
     'ushort', 'using', 'virtual', 'void', 'volatile', 'while')
 _VERBATIM_KEYWORD = r"|@(?:" + "|".join(_KEYWORDS) + r")\b"
 _NON_LF_LINE_BREAK = re.compile(r'\r(?!\n)|[\x85\u2028\u2029]')
-_CONDITIONAL_DIRECTIVE = re.compile(r'#\s*(if|elif|else|endif)\b')
 
 
 class CSharpReader(CLikeReader):
@@ -459,6 +458,9 @@ def _resolve_ternary(group, buffered):
         buffered[index] = _InterpolationPart(mark) if isinstance(mark, _InterpolationPart) else '?'
         return 1
     return 0
+
+
+_CONDITIONAL_DIRECTIVE = re.compile(r'#\s*(if|elif|else|endif)\b')
 
 
 class _ConditionalCode(str):
