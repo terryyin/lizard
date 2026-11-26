@@ -24,6 +24,7 @@ _KEYWORDS = (
     'ushort', 'using', 'virtual', 'void', 'volatile', 'while')
 _VERBATIM_KEYWORD = r"|@(?:" + "|".join(_KEYWORDS) + r")\b"
 _NON_LF_LINE_BREAK = re.compile(r'\r(?!\n)|[\x85\u2028\u2029]')
+_CONDITIONAL_DIRECTIVE = re.compile(r'#\s*(if|elif|else|endif)\b')
 
 
 class CSharpReader(CLikeReader):
@@ -40,7 +41,10 @@ class CSharpReader(CLikeReader):
 
     def __init__(self, context):
         super(CSharpReader, self).__init__(context)
-        self.parallel_states = [CSharpStates(context)]
+        self.parallel_states = [
+            CSharpStates(context),
+            CLikeNestingStackStates(context)
+        ]
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
@@ -56,17 +60,19 @@ class CSharpReader(CLikeReader):
             tokens = clike_tokens(source_code, patterns, token_class)
         if token_class is None and '?' in source_code:
             tokens = _mark_questions(tokens)
+        if token_class is None and '#' in source_code and _CONDITIONAL_DIRECTIVE.search(source_code):
+            tokens = _mark_conditional_code(tokens)
         return tokens
 
     def __call__(self, tokens, reader):
         # Interpolation code belongs to metrics, but cannot start or end
         # a function or class in the surrounding source.
+        declarations, nesting = self.parallel_states
         for token in tokens:
             if token == '?' and getattr(token, 'is_optional', False):
                 self.context.add_condition(-1)
             if not isinstance(token, _InterpolationPart):
-                for state in self.parallel_states:
-                    state.read_scope_token(token)
+                declarations.read_scope_token(token, nesting)
             yield token
         for state in self.parallel_states:
             state.statemachine_before_return()
@@ -89,16 +95,19 @@ class CSharpStates(CLikeStates):
         # type's own "{" is not counted; "{" seen in the global state is.
         self._enclosing_classes = []
         self._open_braces = 0
-        self._nesting = CLikeNestingStackStates(context)
         self._expression_depth = None
         self._expression_method = False
+        self._expression_branches = []
 
-    def read_scope_token(self, token):
+    def read_scope_token(self, token, nesting):
         in_expression = self._expression_depth is not None
+        if in_expression and isinstance(token, _ConditionalCode):
+            for directive in token.directives:
+                self._read_expression_directive(directive)
         self(token)
         if not in_expression and not (
                 token in ('class', 'struct') and self._state == self._state_constraints):
-            self._nesting(token)
+            nesting(token)
 
     def try_new_function(self, name):
         if not self.in_primary_constructor:
@@ -138,7 +147,31 @@ class CSharpStates(CLikeStates):
             if self._expression_method:
                 self.context.pop_nesting()
             self._expression_depth = None
+            self._expression_branches.clear()
             self._state = self._state_global
+
+    def _read_expression_directive(self, directive):
+        depth = self._expression_depth
+        branches = self._expression_branches
+        if directive == 'if':
+            branches.append((depth, None))
+        elif branches:
+            entry, first_exit = branches[-1]
+            if directive == 'endif':
+                branches.pop()
+                # Alternate branches may each leave the same brace open.
+                self._set_expression_depth(depth if first_exit is None else first_exit)
+            else:
+                if first_exit is None:
+                    branches[-1] = entry, depth
+                self._set_expression_depth(entry)
+
+    def _set_expression_depth(self, depth):
+        for _ in range(depth - self._expression_depth):
+            self.context.add_bare_nesting()
+        for _ in range(self._expression_depth - depth):
+            self.context.pop_nesting()
+        self._expression_depth = depth
 
     def _state_global(self, token):
         if token == '=>':
@@ -411,3 +444,28 @@ def _resolve_ternary(group, buffered):
         buffered[index] = _InterpolationPart(mark) if isinstance(mark, _InterpolationPart) else '?'
         return 1
     return 0
+
+
+class _ConditionalCode(str):
+    """An ordinary code token with the preceding conditional directives."""
+
+    def __new__(cls, token, directives):
+        code = super().__new__(cls, token)
+        code.directives = directives
+        code.is_optional = getattr(token, 'is_optional', False)
+        return code
+
+
+def _mark_conditional_code(tokens):
+    """Carry directives past preprocessing without counting them as code."""
+    directives = []
+    for token in tokens:
+        if token.startswith('#'):
+            match = _CONDITIONAL_DIRECTIVE.match(token)
+            if match and not isinstance(token, _InterpolationPart):
+                directives.append(match.group(1))
+        elif directives and not (token.isspace() or token.startswith(('//', '/*')) or
+                                 isinstance(token, _InterpolationPart)):
+            token = _ConditionalCode(token, directives)
+            directives = []
+        yield token
