@@ -149,6 +149,10 @@ class _Counter(object):  # pylint: disable=R0902
             if not self._in_body(function):
                 return
             state.body_started = True
+        if (self.profile.nested_functions and line != state.line and state.logical
+                and not state.pdepth and state.prev and state.prev.endswith('`')
+                and self.reader.starts_statement(token)):
+            state.logical.pop(0, None)
         if self.profile.case_insensitive:
             token = token.lower()
         self._process(token)

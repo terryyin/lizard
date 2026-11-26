@@ -36,14 +36,14 @@ enabling it leaves every other metric untouched.
 import sys
 from functools import partial
 
-from lizard import FunctionInfo
 from lizard_core.file_analyzer import line_counter, token_counter
 from lizard_core.file_info_builder import FileInfoBuilder
+from lizard_ext import cognitive_brace
+from lizard_ext.cognitive_counter import _MeasuredInterpolation
 from lizard_languages.javascript import JavaScriptReader
 from lizard_languages.typescript import TypeScriptReader
+from lizard import FunctionInfo
 
-from .cognitive_brace import _BraceCounter
-from .cognitive_counter import _MeasuredInterpolation
 from .cognitive_indent import _counter_for
 
 DEFAULT_COGNITIVE_THRESHOLD = 15
@@ -80,13 +80,15 @@ class LizardExtension(object):  # pylint: disable=R0903
 
 
 def _measure_templates(tokens, counter):
+    counter.reader.measure_template_types = True
     atomic = type(counter.reader)._scan_atomic_templates  # pylint: disable=protected-access
     read_interpolation = counter.reader._count_interpolation_conditions  # pylint: disable=protected-access
     measure = partial(_measure_interpolation, counter)
     for token in tokens:
         in_expression = counter.previous == '${'
         if (in_expression or (atomic and token[:1] == '`' and '${' in token)) and (
-                '?' in token or '&&' in token or '||' in token):
+                '?' in token or '&&' in token or '||' in token) and (
+                not counter.reader.in_template_literal_type()):
             score, structures = read_interpolation(token, in_expression, measure)
             token = _MeasuredInterpolation(token, score, structures)
         yield token
@@ -106,7 +108,7 @@ def _measure_interpolation(counter, tokens):
     return context.global_pseudo_function.cognitive_complexity, expression.structures
 
 
-class _InterpolationCounter(_BraceCounter):
+class _InterpolationCounter(cognitive_brace._BraceCounter):  # pylint: disable=protected-access
     """Measure an expression without adding its nested functions to the file."""
 
     structures = 0
