@@ -209,7 +209,7 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
     {% for column in extension_columns %}
       {% if column.value not in thresholds %}
         <td class="value">{{ func[column.value] }}</td>
-      {% elif func[column.value] > thresholds[column.value] %}
+      {% elif func[column.value] is not none and func[column.value] > thresholds[column.value] %}
         <td class="greater-value">{{ func[column.value] }}</td>
       {% else %}
         <td class="lesser-value">{{ func[column.value] }}</td>

@@ -77,3 +77,26 @@ class TestHTMLExtensionMetrics(unittest.TestCase):
         self.assertEqual(0, status)
         self.assertEqual(6, len(rows[0]))
         self.assertEqual(6, len(rows[1]))
+
+
+class TestHTMLExtensionMissingValue(unittest.TestCase):
+    def test_missing_extension_value_with_threshold_is_rendered(self):
+        import contextlib
+        import io
+        import lizard
+        from lizard_ext.htmloutput import html_output
+        options = lizard.parse_args(
+            ['lizard', '-ENS', '-T', 'max_nested_structures=1', 'x.c'])
+        source = "int f(int a){ if(a){ if(a){} } return 0; }\nint g(){return 1;}\n"
+        info = lizard.FileAnalyzer(
+            lizard.get_extensions(options.extensions)).analyze_source_code('x.c', source)
+        info.function_list[1].max_nested_structures = None
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            html_output([info], options)
+        rows = MetricTable(output.getvalue()).rows
+        headers = [text for text, _ in rows[0]]
+        column = headers.index('NS (1)')
+        self.assertEqual(('2', 'greater-value'), rows[1][column])
+        self.assertEqual(('None', 'lesser-value'), rows[2][column])
+        self.assertEqual(len(headers), len(rows[2]))
