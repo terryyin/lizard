@@ -308,6 +308,21 @@ class A {
                          [(function.name, function.start_line, function.end_line)
                           for function in result])
 
+    def test_ternary_field_before_closing_brace_preserves_outer_member(self):
+        result = get_java_function_list("""class CacheConfig {
+    class Entry {
+        int limit = Boolean.getBoolean("cache") ? capacity() : 1;
+    }
+
+    int capacity() {
+        return 4;
+    }
+}
+""")
+        self.assertEqual([('CacheConfig::capacity', 6, 8)],
+                         [(function.name, function.start_line, function.end_line)
+                          for function in result])
+
     def test_ternary_text_block_preserves_nested_members(self):
         for opener in ('"""\n', r'"""\u000a'):
             with self.subTest(opener=opener):
