@@ -146,6 +146,7 @@ class _GoCounter(_BraceCounter):
         return (first.isalnum() or first in "_'\"`"
                 or token in cls._STATEMENT_ENDS)
 
+
 def _counter_for(reader):
     if isinstance(reader, PythonReader):
         return _IndentCounter(reader, _PYTHON.for_reader(reader), gated=True)
