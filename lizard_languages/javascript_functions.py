@@ -3,16 +3,28 @@ and where an expression-bodied arrow ends."""
 
 from .javascript_bindings import JavaScriptBindings
 from .javascript_expression import (
-    ArrowEndingColon, ConditionalColon, JSXChildBrace, JSXMarkup, OPERAND_WORDS,
-    active_js_state, ends_expression, parameter_group, starts_statement)
+    JSXChildBrace, JSXMarkup, OPERAND_WORDS, active_js_state, ends_expression,
+    parameter_group, starts_statement)
 
 # Public API kept stable for external callers.
 __all__ = (
     'OPERAND_WORDS', 'JSXChildBrace', 'JSXMarkup', 'ends_expression',
     'starts_statement', 'parameter_group', 'JavaScriptFunctionsMixin')
 
-_CONDITIONAL_COLON = ConditionalColon(':')
-_ARROW_ENDING_COLON = ArrowEndingColon(':')
+class _ConditionalColon(str):
+    """The separator between a conditional expression's two arms."""
+
+    is_conditional_colon = True
+
+
+class _ArrowEndingColon(_ConditionalColon):
+    """A conditional separator that also ends the preceding arrow body."""
+
+    ends_arrow_body = True
+
+
+_CONDITIONAL_COLON = _ConditionalColon(':')
+_ARROW_ENDING_COLON = _ArrowEndingColon(':')
 
 
 class JavaScriptFunctionsMixin:

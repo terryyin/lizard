@@ -18,18 +18,6 @@ class JSXMarkup(str):
     is_jsx_markup = True
 
 
-class ConditionalColon(str):
-    """The separator between a conditional expression's two arms."""
-
-    is_conditional_colon = True
-
-
-class ArrowEndingColon(ConditionalColon):
-    """A conditional separator that also ends the preceding arrow body."""
-
-    ends_arrow_body = True
-
-
 _OPERAND_STARTS = frozenset(('_', '$', '#', "'", '"', '`'))
 _STATEMENT_STARTS = frozenset(('_', '$', '#', "'", '"'))
 _EXPRESSION_ENDS = frozenset((')', ']', '}', '++', '--'))
