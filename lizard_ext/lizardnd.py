@@ -32,11 +32,10 @@ class LizardExtension(object):  # pylint: disable=R0903
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
-        headers = ConditionHeaders.for_reader(reader)
-        return self._nesting_depth(tokens, reader, l_depth, implied_semicolons, headers)
+        return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
 
     @staticmethod
-    def _nesting_depth(tokens, reader, l_depth, implied_semicolons, headers):  # pylint: disable=R0912,R0915
+    def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -49,20 +48,18 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             indent_indicator = ';'
         # Most tokens cannot change the depth: one lookup skips them.
+        headers = ConditionHeaders.for_reader(reader)
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
         context = reader.context
         for token in tokens:
-            if headers is not None and headers.advance(token):
-                yield token
-                continue
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
                 context.clear_prev_was_else()
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
-            if token in depth_tokens:
+            if (headers is None or not headers.advance(token)) and token in depth_tokens:
                 if token in block_ends:
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:
