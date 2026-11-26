@@ -16,7 +16,7 @@ class ErlangReader(CodeReader):
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'catch', 'when'}  # when is used in guards
-    _logical_operators = {'and', 'or', 'not'}
+    _logical_operators = {'and', 'or', 'not', 'andalso', 'orelse'}
     _case_keywords = {'case'}
     # Note: '?' in Erlang is a macro expansion operator (e.g., ?MODULE, ?EMPTY_NODE)
     # Unlike C-style ternary, it's for compile-time macro substitution
