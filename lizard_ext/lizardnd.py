@@ -47,10 +47,9 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             indent_indicator = ';'
         # Most tokens cannot change the depth: one lookup skips them.
-        js_do_bodies = isinstance(implied_semicolons, ImpliedSemicolons)
-        do_tokens = ('do',) if js_do_bodies else ()
         depth_tokens = frozenset(
-            (indent_indicator, 'else', 'if', '(', ')', '&&', '||') + do_tokens
+            (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
+            + (('do',) if isinstance(implied_semicolons, ImpliedSemicolons) else ())
         ).union(block_ends, block_starts, loops)
         context = reader.context
         for token in tokens:
@@ -89,7 +88,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                         # Not in a condition, treat as regular nesting
                         l_depth = context.open_level()
 
-                elif js_do_bodies and token == 'do':
+                elif token == 'do' and isinstance(implied_semicolons, ImpliedSemicolons):
                     if not getattr(token, 'is_member_name', False):
                         context.start_do_body()
 
@@ -97,7 +96,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 elif token in loops and token not in ('&&', '||') \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
-                    if (js_do_bodies and token == 'while'
+                    if (token == 'while' and isinstance(implied_semicolons, ImpliedSemicolons)
                             and implied_semicolons.while_closes_do_body):
                         context.end_do_body()
                     l_depth = context.open_level()
