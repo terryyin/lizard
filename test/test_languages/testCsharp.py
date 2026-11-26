@@ -499,6 +499,31 @@ class Job
             ('Job::Render', 5, 8), ('Job::Read', 9, 9), ('Job::Count', 10, 10),
         ], [(f.name, f.start_line, f.end_line) for f in functions])
 
+    def test_expression_lambda_branches_share_a_closing_brace(self):
+        source = '''using System;
+class Job
+{
+    Func<int> Build() =>
+        () =>
+#if DEBUG
+#if VERBOSE
+        { int count = 3;
+#else
+        { int count = 2;
+#endif
+#elif TRACE
+        { int count = 1;
+#else
+        { int count = 0;
+#endif
+            return count;
+        };
+    int Next() => 1;
+}'''
+        functions = get_csharp_function_list(source)
+        self.assertEqual([('Job::Build', 4, 18), ('Job::Next', 19, 19)], [
+            (f.name, f.start_line, f.end_line) for f in functions])
+
     def test_expression_object_initializer_does_not_emit_global_function(self):
         source = """
 class Job
