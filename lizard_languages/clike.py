@@ -7,10 +7,10 @@ import itertools
 from .code_reader import CodeStateMachine, CodeReader
 from .clike_states import CLikeStates
 
-# Tokenizer fragment for C++ empty-delimiter raw strings R"(...)" (optional u8/u/U/L
-# prefix). Stops at the first ')"'. Custom delimiters use the normal string rule.
-# See #451, #478; subgroup-free per CodeReader.generate_tokens.
-_CPP_RAW_STRING_TOKEN = r"|(?:u8|u|U|L)?R\"\((?:[^)]|\)(?!\"))*\)\""
+# Raw strings end only at the opening delimiter, which has at most 16 d-chars.
+_CPP_RAW_STRING_TOKEN = (
+    r'|(?:u8|u|U|L)?R"(?P<cpp_raw_delimiter>[^\s()\\]{0,16})'
+    r'\(.*?\)(?P=cpp_raw_delimiter)"')
 # In C and C++, a backslash at the end of a line continues a // comment on the next line.
 _C_LINE_COMMENT = r"|\/\/(?:\\\n|[^\n])*"
 
