@@ -158,6 +158,23 @@ def f(x):
         # Modified CCN: 1 base + 1 for the whole match block (like switch/case)
         self.assertEqual(2, modified[0].cyclomatic_complexity)
 
+    def test_case_capture_uses_the_same_metrics_as_other_capture_names(self):
+        code = """\
+def find_open_case(search):
+    match search:
+        case ("open", item) if item.is_open:
+            if item.is_ready:
+                return item
+        case _:
+            return None
+"""
+        for extensions, expected_ccn in ((("ND",), 5), (("ND", "modified"), 4)):
+            with self.subTest(extensions=extensions):
+                control = self._get_funcs(code, *extensions)[0]
+                capture = self._get_funcs(code.replace("item", "case"), *extensions)[0]
+                self.assertEqual(expected_ccn, capture.cyclomatic_complexity)
+                self.assertEqual(control.max_nesting_depth, capture.max_nesting_depth)
+
     def test_match_subject_name_does_not_add_a_modified_branch(self):
         from lizard_ext.lizardmodified import LizardExtension as Modified
         code = '''
