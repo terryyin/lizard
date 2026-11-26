@@ -233,6 +233,41 @@ class TestCppNestingDepth(unittest.TestCase):
 
 class TestGoNestingDepth(unittest.TestCase):
 
+    def test_if_initializer_keeps_only_its_own_levels(self):
+        code = """
+        package work
+
+        func notify(events chan<- bool, active, verified, cached bool) bool {
+            select {
+            case events <- true:
+            default:
+            }
+            if ready := active; ready && verified {
+                if cached { return true }
+            }
+            return false
+        }
+
+        func choose(active, verified, cached bool) bool {
+            earlier := active && verified
+            if ready := cached; ready {
+                if active { return true }
+            }
+            return earlier
+        }
+
+        func chooseSlice(active, checked, verified, cached bool) bool {
+            if cfg := []bool{active}; cfg[0] && (checked || verified) && cached {
+                if checked { return true }
+            }
+            return false
+        }
+        """
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'work.go', code).function_list
+        self.assertEqual([('notify', 3), ('choose', 2), ('chooseSlice', 3)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_if_condition_keeps_one_logical_level(self):
         code = """
         package work
