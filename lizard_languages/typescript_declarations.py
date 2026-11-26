@@ -120,15 +120,6 @@ class TypeScriptDeclarationsMixin:
             return True
         return False
 
-    def _consume_type_alias_body(self):
-        annotation = TypeScriptTypeAliasStates(self.context)
-
-        def resume():
-            if annotation.saved_token:
-                self._replay_token(annotation.saved_token)
-
-        self.sub_state(annotation, resume)
-
     def _assertion_operand(self):
         """Assertions follow consumed operands, not expression/statement starts."""
         if (self.context.newline or not self._prev_token
@@ -139,6 +130,15 @@ class TypeScriptDeclarationsMixin:
             return getattr(self, '_postfix_operand', False)
         return ((self._prev_token == '.' or token not in _EXPRESSION_PREFIXES)
                 and (ends_expression(token) or token.isidentifier()))
+
+    def _consume_type_alias_body(self):
+        annotation = TypeScriptTypeAliasStates(self.context)
+
+        def resume():
+            if annotation.saved_token:
+                self._replay_token(annotation.saved_token)
+
+        self.sub_state(annotation, resume)
 
     def _consume_generic_type_params(self, resume=None):
         """Consume <...> generic type parameters (e.g., method<T>(...))
