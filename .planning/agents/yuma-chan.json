@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Yuma-chan",
+  "email": "yuma-chan@example.org",
+  "identity": "SEED-075#plsql-nonstrict-case",
+  "mode": "story-branch",
+  "branch": "claude/keep-pl-sql-boolean-operator-casing-equivalent-i",
+  "host": "claude"
+}
