@@ -31,6 +31,13 @@ class _Candidate(object):  # pylint: disable=R0903
         self.quoted_formals = quoted_formals
 
 
+class _ParameterEnd:
+    """Expression boundary that belongs to one function during replay."""
+
+    def __init__(self, owner):
+        self.owner = owner
+
+
 class _Frame(object):  # pylint: disable=R0903
     """An open control structure (or lambda / ternary) nesting its body."""
 
@@ -101,6 +108,7 @@ class _Counter(object):  # pylint: disable=R0902
         self.order = 0          # number of tokens held so far
         if profile.nested_functions:
             self.context.quoted_formals = None
+            self.context.cognitive_formals_end = None
 
     def process(self, token, line=None, function=None):
         """Count the token for its function.  The held tokens come back with
@@ -112,6 +120,11 @@ class _Counter(object):  # pylint: disable=R0902
                 candidates = self.candidates
                 if candidates or self.previous == '(':
                     self._settle()
+                if self.previous == ')' and context.cognitive_formals_end is not None:
+                    owner = context.cognitive_formals_end
+                    context.cognitive_formals_end = None
+                    if owner is context.current_function:
+                        self._end_parameters(owner)
                 if candidates:
                     function = self._quoted_owner(function)
                 in_brackets = (candidates and
@@ -194,6 +207,8 @@ class _Counter(object):  # pylint: disable=R0902
                 candidates.pop()
                 owner = function.function or candidate.parent
                 self._merge(candidate, owner)
+                if function.function is not None:
+                    self._end_parameters(owner)
                 self._release(owner, candidate.parent)
             else:
                 if not self._ended(function):
@@ -258,6 +273,19 @@ class _Counter(object):  # pylint: disable=R0902
         self.held[function][0].append(
             (self.order, token, self.context.current_line))
 
+    def _end_parameters(self, function):
+        if function in self.held or self._involved(function):
+            self._hold(function, _ParameterEnd(function))
+        else:
+            self._clear_parameter_expressions(function)
+
+    def _clear_parameter_expressions(self, function):
+        state = self.states.get(function)
+        if state is not None:
+            state.frames.clear()
+            state.logical.clear()
+            state.pending_ternary = 0
+
     def _merge(self, candidate, parent):
         function = candidate.function
         lists = self.held.pop(function, None)
@@ -279,7 +307,11 @@ class _Counter(object):  # pylint: disable=R0902
                 tokens = lists[0] if len(lists) == 1 else \
                     sorted(chain.from_iterable(lists))
                 for _, token, line in tokens:
-                    self.process(token, line, function)
+                    if isinstance(token, _ParameterEnd):
+                        if token.owner is function:
+                            self._clear_parameter_expressions(function)
+                    else:
+                        self.process(token, line, function)
 
     def _switch_function(self, function):
         self.function = function
