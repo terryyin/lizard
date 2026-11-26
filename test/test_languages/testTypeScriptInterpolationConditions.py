@@ -68,6 +68,16 @@ class Test_conditions_in_template_interpolations(unittest.TestCase):
                         expected,
                         [(f.name, f.cyclomatic_complexity) for f in functions])
 
+    def test_keyword_member_inside_interpolation_is_not_a_condition(self):
+        code = "function a(p) { return `${p.catch(x)}`; }\n"
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual([('a', 1)],
+                                 [(f.name, f.cyclomatic_complexity)
+                                  for f in functions])
+
     def test_interpolation_comment_does_not_stop_either_metric(self):
         code = """
             function label(ready) {
@@ -82,13 +92,3 @@ class Test_conditions_in_template_interpolations(unittest.TestCase):
         self.assertEqual([("label", 2, 1)], [
             (f.name, f.cyclomatic_complexity, f.cognitive_complexity) for f in measured
         ])
-
-    def test_keyword_member_inside_interpolation_is_not_a_condition(self):
-        code = "function a(p) { return `${p.catch(x)}`; }\n"
-        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
-            with self.subTest(filename=filename):
-                functions = analyze_file.analyze_source_code(
-                    filename, code).function_list
-                self.assertEqual([('a', 1)],
-                                 [(f.name, f.cyclomatic_complexity)
-                                  for f in functions])

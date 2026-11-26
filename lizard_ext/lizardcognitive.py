@@ -42,8 +42,8 @@ from lizard_core.file_info_builder import FileInfoBuilder
 from lizard_languages.javascript import JavaScriptReader
 from lizard_languages.typescript import TypeScriptReader
 
-from .cognitive_brace import _BraceCounter
 from .cognitive_counter import _MeasuredInterpolation
+from .cognitive_brace import _BraceCounter
 from .cognitive_indent import _counter_for
 
 DEFAULT_COGNITIVE_THRESHOLD = 15

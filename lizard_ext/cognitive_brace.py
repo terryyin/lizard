@@ -3,8 +3,8 @@
 from .cognitive_actions import _BraceActions
 from .cognitive_counter import (
     BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE)
-from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 from lizard_languages.javascript_expression import starts_statement
+from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 
 
 class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
