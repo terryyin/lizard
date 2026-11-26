@@ -195,6 +195,8 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                 return not self._conditional_type
             if token == 'is':
                 return not self._assertion_predicate
+            if not token[0].isascii() and is_identifier(token):
+                return True
         return token not in ('extends', 'is', 'in', 'as') and starts_statement(token)
 
     def has_complete_type(self):

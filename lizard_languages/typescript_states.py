@@ -86,8 +86,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
     def _consume_type_annotation(self, return_type=False, runtime_assertion=False):
         # A signature stays tentative while its return type is read.
-        return_type = return_type or (not runtime_assertion and
-                        self.started_function and not self._expression_body and self.last_token == ')')
+        return_type = return_type or (
+            not runtime_assertion and self.started_function
+            and not self._expression_body and self.last_token == ')')
         declaration = self._signature == 'function' or (
             self.as_class and self._signature and not self._in_prop_value)
         body_candidate = return_type and declaration
