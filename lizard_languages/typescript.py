@@ -276,6 +276,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         token = _MemberName(token)
                         member_access = False
                     elif token in marked_punctuation:
+                        if token == ':':
+                            token = state.conditional_colon(token)
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens
                         if token == '?':
@@ -283,12 +285,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             if (self.context.class_field_annotations
                                     and state.optional_member_context()):
                                 token = _OPTIONAL_MEMBER_QUESTION
-                        elif token == ':':
-                            annotation = (state.return_annotation_context()
-                                          if state.last_token == ')' else None)
-                            if annotation is None:
-                                token = state.conditional_colon(token)
-                            else:
+                        elif token == ':' and state.last_token == ')':
+                            annotation = state.return_annotation_context()
+                            if annotation is not None:
                                 depth, unambiguous_signature = annotation
                                 if unambiguous_signature:
                                     token = ReturnTypeColon(token)
@@ -296,8 +295,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                                     tokens, lookahead = tee(tokens)
                                     if return_type_colon(lookahead, depth):
                                         token = ReturnTypeColon(token)
-                                    else:
-                                        token = state.conditional_colon(token)
                                     del lookahead
                                     yield token
                                     # Resume with the buffered iterator.

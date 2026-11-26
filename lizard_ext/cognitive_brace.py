@@ -42,6 +42,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if frames and frames[-1].closing:
             if self._resolve_closing(token):
                 return
+        if token == ':' and getattr(token, 'is_conditional_colon', False):
+            self._conditional_alternate()
         if token in self.logical_ops:
             if token == '&&' and self.profile.rvalue_refs:
                 if state.lambda_scan != 'params':   # ``[](T&& t)``: a type
@@ -50,8 +52,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 return
             self._logical_operator(token)
         elif token in _EXPRESSION_BREAKERS:
-            if token == ':' and getattr(token, 'is_conditional_colon', False):
-                self._conditional_alternate()
             state.logical.pop(state.pdepth, None)
             if token == ',':
                 self._pop_expression_frames(peer_comma=True)
