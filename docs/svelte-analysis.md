@@ -98,10 +98,8 @@ statement that it stands for, and an expression adds its own tokens and a
   whose brackets do not match is skipped. A `{` that does not close holds
   the rest of the markup up to the next script block, as in the Svelte
   compiler.
-- A `<script>` tag outside every element is read as a script block, as at
-  the top level. This applies inside a block tag such as `{#if}`, and in a
-  string, a template or a comment of a markup expression. The Svelte
-  compiler reads such a tag as an element or as text.
+- A `<script>` tag inside a block such as `{#if}` can be read as a script
+  block. The Svelte compiler treats it as an element.
 - The end of a script block ends a function as a line break does. So a
   TypeScript arrow function whose body ends with a type argument, as in
   `() => Array<string>`, holds the markup after `</script>`, as it holds
