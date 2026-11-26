@@ -139,13 +139,6 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         else:
             self.next(self._state_global, token)
 
-    @CodeStateMachine.read_inside_brackets_then("()", "_expect_function_impl")
-    def _function_dec(self, token):
-        if token == ')':
-            self._header_line = self.context.current_line
-        elif token != '(':
-            self.context.parameter(token)
-
     def _expect_function_impl(self, token):
         if token == '=':
             self._expr_nesting = 0
@@ -160,14 +153,12 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             self.context.current_function.nloc -= 1
             self.context.current_function.token_count -= 1
             self.next(self._state_global, token)
-        else:
-            self._header_line = self.context.current_line
 
     def _finish_declaration_forgiveness(self, token):
         context = self.context
         if not context.forgive or context.forgive_directive is None:
             return
-        owner, line = context.forgive_directive
+        owner, line, token_count, follows_code = context.forgive_directive
         declaration = context.current_function
         if owner is context.global_pseudo_function and not declaration.defined_in_function:
             context.forgive = False
@@ -175,10 +166,13 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             # A comment between two accessors can introduce the next one
             # even when both accessors are on the same line.
             next_accessor = token in self._ACCESSORS and line == context.current_line
-            if line <= self._header_line and not next_accessor:
+            # The boundary token already counts. Any earlier token after
+            # the comment still belonged to this declaration.
+            more_header_tokens = context.fileinfo.token_count > token_count + 1
+            if (follows_code or more_header_tokens) and not next_accessor:
                 context.forgive = False
             else:
-                context.forgive_directive = (context.stacked_functions[-1], line)
+                context.forgive_directive = (context.stacked_functions[-1], line, token_count, follows_code)
 
     def _ends_declaration(self, token):
         # Kotlin semicolons are optional, so a declaration without a body
@@ -193,7 +187,6 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         return ends
 
     def _start_header(self):
-        self._header_line = self.context.current_line
         self._type_depth = 0
         self._type_annotated = False
 
