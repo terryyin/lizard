@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "sessionId": "460799c3-5b3e-4632-85a4-2391c9f250e5",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-26T00:02:22.175Z",
+  "story": "SEED-075#ruby-percent-literal-context",
+  "ranges": [
+    {
+      "base": "98908ecd710f89f54f399e152631f57161c4f787",
+      "candidate": "8efebf8029548d8d244b1af1543655f90ece8db1"
+    },
+    {
+      "base": "8efebf8029548d8d244b1af1543655f90ece8db1",
+      "candidate": "fa0d2441a80550d09f8f8c0d8418b52b18a35e92"
+    },
+    {
+      "base": "96318378d930d6589171381db39bf8334a9c956d",
+      "candidate": "ec6f3ba7d6b1a551ca157f52ce0a5648710dfa47"
+    }
+  ]
+}

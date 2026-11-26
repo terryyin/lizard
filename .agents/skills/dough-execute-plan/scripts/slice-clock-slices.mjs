@@ -14,7 +14,6 @@ import {
   roundEndSeen,
   roundFields,
   roundOf,
-  roundsOf,
 } from "./slice-clock-diagnosis.mjs";
 
 // Whether the slice or diagnosis is the one running in the checkout.
@@ -63,22 +62,13 @@ export function dropOverrunSlice(record, identity, from) {
   if (slices[from]?.overrunDetectedAt !== undefined) delete slices[from];
 }
 
-// Ends the previous session at its last clock command, without observing a
-// new overrun. Legacy records have only period and command timestamps.
+// Ends the previous session at its last clock command without observing a
+// new overrun.
 export function settleEndedSession(record) {
   if (!record.running) return;
-  const timestamps = Object.values(record.stories).flatMap((story) =>
-    [...Object.values(story.slices), ...roundsOf(story)].flatMap(
-      ({ periods, commands }) =>
-        [...periods, ...commands].flatMap(({ startedAt, endedAt }) =>
-          endedAt === null ? [startedAt] : [startedAt, endedAt],
-        ),
-    ),
-  );
-  const endedAt = record.lastClockCommandAt ?? Math.max(...timestamps);
   const entry = sliceOf(record, record.running);
   for (const interval of [...entry.periods, ...entry.commands])
-    interval.endedAt ??= endedAt;
+    interval.endedAt ??= record.lastClockCommandAt;
   Object.assign(record, { running: null });
 }
 

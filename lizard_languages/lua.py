@@ -40,8 +40,12 @@ class LuaStateMachine(RubylikeStateMachine):
     FUNC_KEYWORD = 'function'
     PARAMETERS_ON_DEF_LINE = False
     # Lua has no `case`, and its `until` ends a `repeat` loop.
-    BLOCK_KEYWORDS = ("begin", "do", "class", "module", "{", "${")
+    BLOCK_KEYWORDS = ("do", "{", "${")
     LOOP_KEYWORDS = ("while", "for")
+
+    # Only tokens that can change scope need the shared Ruby state.
+    _STATE_TOKENS = frozenset(BLOCK_KEYWORDS + LOOP_KEYWORDS + (
+        FUNC_KEYWORD, "end", "}", "if", "=begin"))
 
     def __init__(self, context):
         super(LuaStateMachine, self).__init__(context)
@@ -52,11 +56,8 @@ class LuaStateMachine(RubylikeStateMachine):
             self.next(self._assigning)
             return
         self.probable_function_name = token
-        super(LuaStateMachine, self)._state_global(token)
-
-    def _it(self, token):
-        # Lua treats `it` as a name.
-        self.next(self._state_global, token)
+        if token in self._STATE_TOKENS:
+            RubylikeStateMachine._state_global(self, token)
 
     def _for_while(self, token):
         if token == "do":
@@ -72,7 +73,9 @@ class LuaStateMachine(RubylikeStateMachine):
         if token == self.FUNC_KEYWORD:
             self._state = self._anonymous_def
             return
-        self.next(self._state_global, token)
+        # The caller records this token after the state runs.
+        self._state = self._state_global
+        self._state(token)
 
     def _anonymous_def(self, token):
         if token != '(':

@@ -46,7 +46,9 @@ Edit only after its scope and subsystem gates permit the candidates.
   to check whether those operations belong together.
 - **Action:** collapse unnecessary mapping layers, parallel handwritten payload
   shapes, and domain rules trapped inside untyped transport or command adapters
-  behind the typed boundary that owns the concept.
+  behind the typed boundary that owns the concept. Apply
+  [runtime failure handling](../../dough-slice-planning/references/architectural-thinking.md#runtime-failure-handling)
+  when refactoring a failure path touched by the change.
 
 ## Design production code for testability
 

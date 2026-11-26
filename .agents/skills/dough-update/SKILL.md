@@ -35,14 +35,14 @@ Ordinary Open Dough release updates remain available from the recorded source.
    | Cursor | `cursor` | `.agents/skills/` (shared with Codex) |
    | Claude Code | `claude` | `.claude/skills/` |
 
-   The release payload includes skill entrypoints and supporting files declared by the
-   pinned release's installer and baseline-comparison helper. Treat that
+   The release payload includes skill entrypoints and supporting files that the
+   pinned release delivers. Treat that
    release as authoritative: payload skills may be added between releases, so
    a path absent from the installed release is not by itself a reason to stop.
    The numeric `VERSION` record and the
    recorded `SOURCE` live beside each `dough-update/SKILL.md`. Installation
    writes the same `SOURCE` from the supplied repository URL or local path,
-   then `VERSION`, in both physical roots. Ordinary no-URL updates reuse the
+   then `VERSION`, in both skill roots. Ordinary no-URL updates reuse the
    invoking root's recorded `SOURCE`.
 
 4. Resolve the Open Dough source from the invoking root. If that updater
@@ -68,12 +68,16 @@ Ordinary Open Dough release updates remain available from the recorded source.
    b. `git init` the work directory, `git fetch --depth 1 <source-url>
       <commit>`, and check out that commit detached. Confirm
       `git rev-parse HEAD` equals the peeled commit.
-   c. Read the pinned snapshot's root `install.sh` to locate its source tree
-      (`Distribution/src/` in current releases, `src/` in older ones). Inspect
-      `install/open-dough-release.sh`, `install/open-dough-release-apply.sh`,
-      `install/open-dough-install-payload.sh`, and every helper they source or
-      run, including payload-byte and hook-registration helpers when present.
-      Inspect every payload file the snapshot declares under `skills/`.
+   c. Read the pinned snapshot's root `install.sh`. Under its
+      `Distribution/src/` tree, inspect `install/open-dough-release.sh`,
+      `install/open-dough-release-apply.sh`,
+      `install/open-dough-install-payload.sh`,
+      `install/open-dough-payload-inventory.sh`, and every helper the installer
+      or these files source or run, including payload-byte and hook-registration
+      helpers when present. A release whose `install.sh` holds the line
+      `open_dough_payload_format=directory` delivers every file under its
+      `skills/` directory; an older release delivers the files its `install.sh`
+      lists. Inspect every one of those payload files.
    d. Run the inspected helper, quoting paths. Codex may omit `--platform`.
       For an ordinary update of a recorded installation, run
       `bash <source-tree>/install/open-dough-release.sh apply --target
@@ -82,11 +86,12 @@ Ordinary Open Dough release updates remain available from the recorded source.
       pass `--url <source-url>`. Pass `--force` only when the user explicitly
       authorized a forced reinstall. When the invoking root has a usable
       SOURCE, omit `--url`; otherwise include `--url <source-url>`.
-      If apply reports that HEAD is not the pinned latest, stop. Do not fetch
+      If apply reports that HEAD is not the pinned latest, or that files under
+      the snapshot's `skills/` directory differ from its tag, stop. Do not fetch
       or check out replacement files after inspection. Proceed only if the
-      inspected files write solely to the release-declared payload paths
+      inspected files write solely to the release's payload paths
       under both native skill roots, removal there of files at paths an
-      earlier release declared and this release does not, each updater's
+      earlier release delivered and this release does not, each updater's
       `SOURCE` and `VERSION`
       records, and the managed host-hook settings they register
       (`.codex/hooks.json`, `.cursor/hooks.json`, and `.claude/settings.json`) in the captured
@@ -94,18 +99,22 @@ Ordinary Open Dough release updates remain available from the recorded source.
       files, unrelated settings entries, and home guidance. Registration is an
       install/update concern; after apply, observation readiness and observer
       start/stop belong to execute-plan and must not rewrite those settings.
-6. Trust the helper's comparison. An ordinary update without a supplied URL
-   fetches the recorded VERSION tag as data and compares the installation with
-   the payload declared by that recorded release before any skip or
-   replacement. Payload paths newly added by the release must be absent before the helper
+6. Trust the helper's comparison. Ordinary update supports installations at
+   latest or the immediately previous numeric release. The helper checks every
+   installed root before fetching any recorded baseline. If a root is older
+   than the previous release, or older than latest when there is only one tag,
+   report the refusal and the explicit `--force` reinstall option. For a
+   supported recorded version, the helper compares the installation with the
+   payload its tagged release delivered before any skip or replacement.
+   Payload paths newly added by the release must be absent before the helper
    may add them; a pre-existing collision refuses without writes. Equal
    recorded versions that still match that baseline must not invoke
    `install.sh` or write the selected files;
    untagged source changes alone do not require writes. Changed or missing
    managed files, or an unavailable recorded tag, refuse without writing even
-   when the recorded version equals latest. An older recorded installation is
-   replaced with latest only when those files are unchanged. Edited files at
-   paths an earlier release declared and latest does not also refuse without
+   when the recorded version equals latest. An installation at the previous
+   release advances to latest when those files are unchanged. Edited files at
+   paths an earlier release delivered and latest does not also refuse without
    writes; unedited ones are removed. If ordinary
    update cannot establish that baseline — missing or unusable SOURCE or
    VERSION, an unavailable recorded tag or source, baseline metadata mismatch,
@@ -113,10 +122,9 @@ Ordinary Open Dough release updates remain available from the recorded source.
    treating the destination as a first install. Explicit `--force` skips that
    comparison and replaces the selected installation with latest, including
    edited, incomplete, equal, or newer files, writing the payload then SOURCE
-   then VERSION, and removes files at paths latest no longer declares, edited
+   then VERSION, and removes files at paths latest no longer delivers, edited
    or not. A supplied-URL missing selected record advances directly to
-   latest. A verified newer selected record is preserved with no downgrade; an
-   unverifiable newer record is unsupported without writes. A malformed
+   latest. A newer recorded version refuses without a downgrade. A malformed
    selected `VERSION` is an error, not unknown. Fetch, tag, and invalid-highest
    release failures must not write the target or fall back to a lower release
    or branch. If replacement starts and then fails, report that installed files
