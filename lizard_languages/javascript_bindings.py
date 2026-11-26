@@ -26,7 +26,7 @@ class JavaScriptBindings:
 
     BRACKETS = {'(': ')', '[': ']', '{': '}', '${': '}'}
 
-    def __init__(self, closing, function=None, parameters=None):
+    def __init__(self, closing, function=None, parameters=None, recursive_name=''):
         self._frames = [BindingFrame(closing)]
         self._expression_brackets = []
         self.previous = ''
@@ -41,6 +41,8 @@ class JavaScriptBindings:
                 if parameters is not None else None)
         self._in_parameter_type = False
         self._generic_depth = 0
+        self.recursive_name = recursive_name
+        self._possible_shadow = False
 
     @property
     def in_expression(self):
@@ -60,6 +62,10 @@ class JavaScriptBindings:
             return (BindingEvent(True, False, False, False, False)
                     if report else None)
         frame = self._frames[-1]
+        if self._possible_shadow:
+            if token != ':':
+                self.recursive_name = ''
+            self._possible_shadow = False
         expression_brackets = self._expression_brackets
         initializing = frame.initializing or bool(expression_brackets)
         if token == 'this' and self.at_start:
@@ -127,6 +133,12 @@ class JavaScriptBindings:
             if name.isidentifier() or (
                     '$' in name and name.replace('$', '_').isidentifier()):
                 self._add_parameter(name)
+                if name == self.recursive_name:
+                    if self._frames[-1].closing == '}':
+                        # A colon makes this token a property key.
+                        self._possible_shadow = True
+                    else:
+                        self.recursive_name = ''
 
 
 class JavaScriptBindingsMixin:
@@ -191,7 +203,10 @@ class JavaScriptBindingsMixin:
             self.context.add_condition(pending.defaults + pending.expression_complexity)
 
     def _read_parameter_binding(self, token):
-        event = self._parameter_bindings.read_token(token)
+        bindings = self._parameter_bindings
+        event = bindings.read_token(token)
+        if event.ended and bindings.recursive_name:
+            self.context.bare_recursive_functions.add(self.context.current_function)
         if event.initializer_started:
             self.context.add_condition()
             self._initializer_reader = self.__class__(self.context)

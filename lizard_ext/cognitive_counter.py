@@ -323,6 +323,9 @@ class _Counter(object):  # pylint: disable=R0902
 
     def _resolve_pending(self, token):
         state = self.state
+        if (state.pending_call and token == '?.' and state.prev2 not in ('.', '?.')
+                and self.function in getattr(self.context, 'bare_recursive_functions', ())):
+            return   # A following '(' confirms an optional call.
         if state.pending_call:
             state.pending_call = False
             state.pending -= 1

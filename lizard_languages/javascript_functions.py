@@ -13,6 +13,8 @@ __all__ = (
 
 
 class JavaScriptFunctionsMixin:
+    _explicit_function = False
+
     def _read_parenthesis_group(self):
         """Only possible signatures need provisional binding frames."""
         if parameter_group(self._prev_token):
@@ -175,8 +177,10 @@ class JavaScriptFunctionsMixin:
                 if self.started_function and not self._signature:
                     # For the extensions: this "(" can open a group.
                     self.context.current_function.optimistic = True
+            recursive_name = self.function_name if self._explicit_function else ''
+            self._explicit_function = False
             self._parameter_bindings = JavaScriptBindings(
-                ')', self.context.current_function)
+                ')', self.context.current_function, recursive_name=recursive_name)
             self._decorated_parameters = False
             self._state = self._dec
             self.context.add_to_long_function_name(" " + token)
