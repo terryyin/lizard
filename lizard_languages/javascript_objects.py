@@ -125,7 +125,8 @@ class JavaScriptObjectsMixin:
             if self._in_prop_value and self.last_tokens != '=' and (
                     not self.function_name
                     or self.last_tokens != self.function_name):
-                if self._prev_token == ':' and self.last_tokens.startswith(('"', "'")):
+                if (self._prev_token in (':', 'async')
+                        and self.last_tokens.startswith(('"', "'"))):
                     self._read_quoted_property_group()
                 else:
                     self._read_parenthesis_group()
