@@ -38,6 +38,8 @@ class LizardExtension(object):  # pylint: disable=R0903
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
+        if 'cpp' in getattr(reader, 'language_names', ()):
+            tokens = _cpp_grouped_commas(tokens, reader.context)
         return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
 
     @staticmethod
@@ -66,7 +68,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
             if token in depth_tokens:
-                if standalone_chains and token in _STANDALONE_BOUNDARIES:
+                if (standalone_chains and token in _STANDALONE_BOUNDARIES
+                        and not isinstance(token, _DeferredCppComma)):
                     l_depth = context.read_standalone_boundary(token, l_depth)
                 if token in block_ends:
                     l_depth = context.close_block()
@@ -212,9 +215,9 @@ class NDFileInfoAddition(FileInfoBuilder):
             function.standalone_square_depth = max(function.standalone_square_depth - 1, 0)
         elif function.condition_depth == 0:
             function.standalone_logical_added = False
-        elif token == ',' and function.condition_depth == len(function.standalone_groups):
-            group = function.standalone_groups[-1]
-            if group.at_surface_of(function):
+        elif token == ',':
+            group = _standalone_group(function)
+            if group is not None:
                 levels = max(function.levels_awaiting_body - group.levels, 0)
                 function.levels_awaiting_body -= levels
                 function.standalone_logical_added = group.logical_added
@@ -261,6 +264,70 @@ class _StandaloneGroup:  # pylint: disable=R0903
     def at_surface_of(self, function):
         return (function.standalone_square_depth == self.square_depth
                 and len(function.block_levels) == self.block_depth)
+
+
+def _standalone_group(function):
+    groups = function.standalone_groups
+    if groups and function.condition_depth == len(groups) and groups[-1].at_surface_of(function):
+        return groups[-1]
+    return None
+
+
+def _cpp_grouped_commas(tokens, context):
+    """Defer a possible type separator until the surrounding syntax is clear."""
+    group = None
+    previous = before_previous = ''
+    for token in tokens:
+        if group is not None and not group.read(token):
+            if group.has_comma and not group.is_call(token):
+                context.read_standalone_boundary(',', context.current_function.nesting_depth)
+            group = None
+        if (group is None and token == '<' and previous.isidentifier()
+                and _standalone_group(context.current_function) is not None):
+            group = _CppTemplateArguments(before_previous == 'template')
+        before_previous, previous = previous, token
+        yield _DeferredCppComma(token) if group is not None and token == ',' else token
+
+
+class _DeferredCppComma(str):
+    """A comma whose operand boundary is decided by the C++ token stream."""
+
+
+class _CppTemplateArguments:
+    _TYPE_WORDS = frozenset((
+        'bool', 'char', 'char8_t', 'char16_t', 'char32_t', 'double', 'float',
+        'int', 'long', 'short', 'signed', 'unsigned', 'void', 'wchar_t',
+        'const', 'volatile', 'typename', 'class', 'struct', 'union', 'enum',
+    ))
+    _TYPE_PUNCTUATION = frozenset(('::', '*', '&', '...'))
+    _EXPRESSION_KEYWORDS = frozenset((
+        'if', 'else', 'foreach', 'for', 'while', 'catch', 'case', 'try', 'def',
+    ))
+
+    def __init__(self, explicit):
+        self.depth = 1
+        self.has_comma = False
+        self.has_type = explicit
+
+    def read(self, token):
+        if not self.depth:
+            return False
+        if token == '<':
+            self.depth += 1
+        elif token == '>':
+            self.depth -= 1
+        elif token == ',':
+            self.has_comma = True
+        elif token in self._TYPE_WORDS:
+            # A type in a nested template can still be part of a comparison operand.
+            self.has_type |= self.depth == 1
+        else:
+            return (token in self._TYPE_PUNCTUATION or token.isdecimal() or
+                    token.isidentifier() and token not in self._EXPRESSION_KEYWORDS)
+        return True
+
+    def is_call(self, token):
+        return self.depth == 0 and self.has_type and token == '('
 
 
 def get_method(cls, name):
