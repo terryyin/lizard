@@ -128,6 +128,21 @@ end
             for f in result.function_list] == [('prepare', 2, 9, 8, 2)]
 
 
+def test_heredoc_keeps_the_named_arguments_after_the_opener():
+    source = '''
+def prepare(checker, keyword)
+  checker.verify(<<~RUBY, keyword: keyword)
+    Use the new settings if the trial ends.
+  RUBY
+  use_fallback if enabled?
+end
+'''
+
+    function, = analyze_file.analyze_source_code('verify.rb', source).function_list
+
+    assert (function.end_line, function.cyclomatic_complexity) == (7, 2)
+
+
 def test_documentation_quote_does_not_hide_following_regex():
     source = "=begin\nWhat's this?\n=end\ndef real\n if /if/ =~ x\n  1\n end\nend\n"
     result = analyze_file.analyze_source_code('sample.rb', source)

@@ -8,6 +8,7 @@ from .rubylike import RubylikeReader
 from .js_style_regex_expression import js_style_regex_expression
 from .ruby_documentation import may_have_documentation, pattern_for_fragment
 from .source_documentation import tokens_ignoring_documentation
+from .token_pattern import compiled_token_pattern, tokens_in_span
 
 
 class MyToken(str):
@@ -25,7 +26,9 @@ class _HeredocCall(MyToken):
         super().__init__(match)
         self.opener = MyToken(match['heredoc_opener'])
         self.opener.begin = match.start('heredoc_opener')
-        self.closers = match['heredoc_closers']
+        start, end = match.span('heredoc_suffix')
+        self.suffix_start = start - self.begin
+        self.suffix_end = end - self.begin
 
 
 class _HeredocLines(str):
@@ -33,7 +36,7 @@ class _HeredocLines(str):
 
 
 def _heredoc_token(match):
-    if match['heredoc_closers']:
+    if match['heredoc_suffix']:
         return _HeredocCall(match)
     return MyToken(match)
 
@@ -99,7 +102,8 @@ _SIMPLE_HEREDOC = (
     r"(?:(?<!\\\n)(?<!\\\r\n)^[ \t]*|(?<==)[ \t]*|(?P<heredoc_call>(?<=[(,])[ \t]*))"
     r"(?P<heredoc_opener><<(?P<heredoc_indent>[-~])?"
     r"(?P<heredoc_quoted>')?(?P<heredoc_label>[A-Za-z_]\w*)(?(heredoc_quoted)'))"
-    r"(?(heredoc_call)[ \t]*(?P<heredoc_closers>[)\]]+))[ \t]*\r?\n"
+    r"(?(heredoc_call)(?P<heredoc_suffix>"
+    r"(?:[ \t]*,[ \t]*(?:\w+:[ \t]+)?[:@]?\w+)*[ \t]*[)\]]+))[ \t]*\r?\n"
     r"(?:(?!^(?(heredoc_indent)[ \t]*)(?P=heredoc_label)\r?$)"
     r"(?(heredoc_quoted)[^\n]*|(?:[^#\n]|#(?!\{)|#\{[A-Z]\w*(?:::[A-Z]\w*)*\})*)\n)*"
     r"^(?(heredoc_indent)[ \t]*)(?P=heredoc_label)\r?$"
@@ -204,7 +208,9 @@ class RubyReader(RubylikeReader):
                         break
                 if type(token) is _HeredocCall:
                     yield token.opener
-                    yield from token.closers
+                    yield from tokens_in_span(
+                        compiled_token_pattern(addition), token,
+                        token.suffix_start, token.suffix_end, MyToken)
                     yield _HeredocLines('\n' * token.count('\n'))
                 else:
                     yield token
