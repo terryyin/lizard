@@ -40,7 +40,8 @@ class ErlangReader(CodeReader):
 class ErlangStates(CodeStateMachine):
     # pylint: disable=R0903
 
-    func_name_pattern = re.compile("[a-zA-Z]+[a-zA-Z0-9_]*")
+    func_name_pattern = re.compile(
+        r"[a-zA-Z]+[a-zA-Z0-9_]*|'(?:\\.|[^'\\])*'")
 
     def __init__(self, context):
         super(ErlangStates, self).__init__(context)
