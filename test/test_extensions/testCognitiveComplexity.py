@@ -1330,6 +1330,41 @@ class TestCognitiveOptionalRecursion(unittest.TestCase):
         """
         self.assertEqual([0, 0, 0, 0], cogc('retry.js', source))
 
+    def test_local_callable_shadows_the_function_name(self):
+        for filename, parameter, callback in (
+                ('retry.js', '{retry: count}', 'value'),
+                ('retry.ts', '{retry: count}: {retry: number}', 'value: number')):
+            with self.subTest(filename=filename):
+                source = """
+                    function retry(%s) {
+                      const retry = (%s) => value + 1;
+                      return retry?.(count);
+                    }
+                """ % (parameter, callback)
+                self.assertEqual([0, 0], cogc(filename, source))
+
+    def test_block_local_binding_does_not_shadow_another_block(self):
+        source = """
+            function retry({retry: count}) {
+              if (count < 0) {
+                const retry = (value) => value + 1;
+                return retry?.(count);
+              }
+              if (count) return retry?.({retry: count - 1});
+            }
+        """
+        self.assertEqual([0, 3], cogc('retry.js', source))
+
+    def test_var_binding_applies_before_its_declaration(self):
+        source = """
+            function retry({retry: count}) {
+              if (count) return retry?.(count);
+              var retry = (value) => value + 1;
+              return retry?.(count);
+            }
+        """
+        self.assertEqual([0, 1], cogc('retry.js', source))
+
 
 class TestFlatLanguages(unittest.TestCase):
     """Blocks are not brace-delimited: increments without nesting penalty."""
