@@ -148,13 +148,6 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
 
     def _state_after_ternary_value(self, token):
         if token == ';':
-            self._state = self._state_after_ternary_field
-        else:
-            self.next(self._state_one_initialization, token)
-
-    def _state_after_ternary_field(self, token):
-        # Resume member discovery when another declaration starts.
-        if token[0].isalpha() or token[0] in '_$@':
             self.next(self._state_global, token)
         else:
             self.next(self._state_one_initialization, token)
