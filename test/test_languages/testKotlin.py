@@ -45,6 +45,20 @@ class Test_parser_for_Kotlin(unittest.TestCase):
         self.assertEqual("sayGoodbye", result[0].name)
         self.assertEqual(2, result[0].parameter_count)
 
+    def test_parameters_ignore_commas_inside_parentheses(self):
+        functions = get_kotlin_function_list('''\
+fun applyOffset(
+    calculate: (left: Int, right: Int) -> Int,
+    offset: Int = maxOf(1, 2),
+): Int {
+    return calculate(1, 2) + offset
+}
+''')
+        self.assertEqual(
+            [("applyOffset", ["calculate", "offset"], 2)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_one_function_with_return_value(self):
         result = get_kotlin_function_list('''
             fun sayGoodbye(): String {return "bye"}
