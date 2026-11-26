@@ -12,9 +12,9 @@ from .golike import GoLikeStates
 # Rust punctuation is ASCII. U+200E and U+200F are whitespace in Rust.
 _NON_ASCII_IDENTIFIER_CHAR = r'[^\x00-\x7f\s\u200e\u200f]'
 _RAW_STRING_TOKEN = (
-    # Reject prefixes within names and suffixes, including raw C suffixes.
-    r'''|(?=[br])(?<![A-Za-z0-9_'"#])(?<!''' + _NON_ASCII_IDENTIFIER_CHAR + r')'
-    r'b?r(?P<rust_raw_hashes>#{0,255})"[^"]*'
+    # Raw text, byte and C strings. Reject prefixes within names and suffixes.
+    r'''|(?=[bcr])(?<![A-Za-z0-9_'"#])(?<!''' + _NON_ASCII_IDENTIFIER_CHAR + r')'
+    r'[bc]?r(?P<rust_raw_hashes>#{0,255})"[^"]*'
     r'(?:"(?!(?P=rust_raw_hashes))[^"]*)*"(?P=rust_raw_hashes)'
     r'(?:(?:[A-Za-z_]|' + _NON_ASCII_IDENTIFIER_CHAR +
     r')(?:[A-Za-z_0-9]|' + _NON_ASCII_IDENTIFIER_CHAR + r')*)?'

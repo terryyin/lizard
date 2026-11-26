@@ -35,25 +35,19 @@ class TestRustTokens(unittest.TestCase):
             [(f.name, f.start_line, f.end_line, f.token_count,
               f.cyclomatic_complexity) for f in result])
 
-    def test_raw_c_prefix_does_not_hide_later_functions(self):
-        for source in (
-                r'''macro_rules! save { (cr # $text:literal #) => {}; }
-                fn first() {
-                    save!(cr#"a\"#b"#);
-                }
-                fn next() { let _ = "ok"; }
-                ''',
-                r'''macro_rules! save { ($raw:literal $text:literal) => {}; }
-                fn first() {
-                    save!(cr#"text"#r"a\"b");
-                }
-                fn next() { let _ = "ok"; }
-                '''):
-            with self.subTest(source=source):
-                result = get_rust_function_list(source)
-                self.assertEqual(
-                    [('first', 2, 4), ('next', 5, 5)],
-                    [(f.name, f.start_line, f.end_line) for f in result])
+    def test_raw_c_string_counts_as_one_token(self):
+        # Since Rust 2021, `cr` is a reserved prefix that starts a raw C string.
+        result = get_rust_function_list(r'''fn first() {
+            let text = cr##"a "# b
+            if x { fn fake() {}
+            "##;
+        }
+        fn next() { let _ = "ok"; }
+        ''')
+        self.assertEqual(
+            [('first', 1, 5, 1), ('next', 6, 6, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
 
     def test_closure_without_parameters_is_one_token(self):
         # `||` of a closure without parameters is one token of the source,
