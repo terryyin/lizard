@@ -145,38 +145,6 @@ class TypeScriptDeclarationsMixin:
             return True
         return False
 
-    def _maybe_read_namespace(self):
-        if (not self.context.class_field_annotations
-                or self.context.fileinfo.filename.lower().endswith('.d.ts')):
-            return
-        if (self.as_object or self._binding_candidate) and not self.as_namespace:
-            return
-        if self._call_group or self._in_condition or self._open_groups:
-            return
-        previous = self.last_token
-        if previous in (None, ';', '}', 'export') or (
-                self.context.newline and ends_expression(previous)):
-            self.next(self._read_namespace_name)
-
-    def _read_namespace_name(self, token):
-        first = token[0]
-        if (token in ('in', 'instanceof')
-                or self.context.newline and self.last_token != '.'
-                or first.isascii() and not (first.isalpha() or first in '_$\\')):
-            self.next(self._state_global, token)
-        else:
-            self.next(lambda follower: self._read_namespace_body(token, follower))
-
-    def _read_namespace_body(self, name, token):
-        if token == '{':
-            self.read_object().as_namespace = True
-            self.last_tokens = self._prev_token = token
-        elif token == '.':
-            self.next(self._read_namespace_name)
-        else:
-            self.next(self._state_global, name)
-            self._replay_token(token)
-
     def _assertion_operand(self):
         """Assertions follow consumed operands, not expression/statement starts."""
         if (self.context.newline or not self._prev_token
@@ -221,6 +189,38 @@ class TypeScriptDeclarationsMixin:
             if typeStates.saved_token:
                 self._replay_token(typeStates.saved_token)
         self.sub_state(typeStates, callback)
+
+    def _maybe_read_namespace(self):
+        if (not self.context.class_field_annotations
+                or self.context.fileinfo.filename.lower().endswith('.d.ts')):
+            return
+        if (self.as_object or self._binding_candidate) and not self.as_namespace:
+            return
+        if self._call_group or self._in_condition or self._open_groups:
+            return
+        previous = self.last_token
+        if previous in (None, ';', '}', 'export') or (
+                self.context.newline and ends_expression(previous)):
+            self.next(self._read_namespace_name)
+
+    def _read_namespace_name(self, token):
+        first = token[0]
+        if (token in ('in', 'instanceof')
+                or self.context.newline and self.last_token != '.'
+                or first.isascii() and not (first.isalpha() or first in '_$\\')):
+            self.next(self._state_global, token)
+        else:
+            self.next(lambda follower: self._read_namespace_body(token, follower))
+
+    def _read_namespace_body(self, name, token):
+        if token == '{':
+            self.read_object().as_namespace = True
+            self.last_tokens = self._prev_token = token
+        elif token == '.':
+            self.next(self._read_namespace_name)
+        else:
+            self.next(self._state_global, name)
+            self._replay_token(token)
 
     def _read_runtime_colon(self):
         binding = self._binding_candidate
