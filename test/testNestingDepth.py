@@ -600,6 +600,17 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
                         [('(anonymous)', expected), ('pack', 0)],
                         [(f.name, f.max_nesting_depth) for f in functions])
 
+    def test_object_properties_keep_existing_ternary_depth(self):
+        source = """
+        function pack(x, y) {
+          return invoke(() => ({ a: x ? "yes" : "no", b: y ? "yes" : "no" }));
+        }
+        """
+        analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+        functions = analyzer.analyze_source_code("a.js", source).function_list
+
+        self.assertEqual(2, functions[0].max_nesting_depth)
+
     def test_type_argument_comma_stays_inside_an_object_property(self):
         source = """
         function pack(x, y, z) {
