@@ -302,6 +302,21 @@ fun applyOffset(
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
+    def test_generic_arguments_keep_their_commas_and_comparisons_end_the_default(self):
+        functions = get_kotlin_function_list('''\
+fun format(
+    pair: Pair<Int, String> = Pair<Int, String>(1, "active"),
+    retry: Boolean = 1 < 2,
+    count: Int = maxOf(1, 2),
+): String {
+    return pair.second.repeat(if (retry) count else 1)
+}
+''')
+        self.assertEqual(
+            [("format", ["pair", "retry", "count"], 3)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_one_function_with_return_value(self):
         result = get_kotlin_function_list('''
             fun sayGoodbye(): String {return "bye"}
