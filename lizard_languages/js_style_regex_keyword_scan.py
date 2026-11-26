@@ -6,10 +6,12 @@ from .js_style_regex_context import (
     _EXPRESSION_KEYWORDS,
     _EXPRESSION_PUNCTUATION,
     _LINE_TERMINATORS,
-    REGEX_LITERAL,
+    _OPERAND_OPERATOR,
+    _REGEX_DIVISOR,
     _REGEX_LITERAL_RE,
     _STRING_LINE_ENDS,
     _apply_marks,
+    _is_js_dividend,
     _is_property_before,
     _skip_ws_and_comments_back,
     _skip_ws_back,
@@ -18,12 +20,6 @@ from .js_style_regex_context import (
 
 _COMMENT = re.compile(rf'//[^{_LINE_TERMINATORS}]*|/\*.*?(?:\*/|\Z)', re.S)
 _LINE_BREAK = re.compile(rf'[{_LINE_TERMINATORS}]')
-# Match an operator before an operand. Compound assignments and arrows can
-# precede yield, as can a single question mark in a conditional expression.
-_OPERAND_OPERATOR = re.compile(r'(?:[=!]=|(?<!<)<=|(?<!>)>=|(?<!=)>|\?\?|[<+*/%~!&|^-])\Z')
-
-
-_REGEX_DIVISOR = re.compile(r'/\s+(' + REGEX_LITERAL + ')')
 
 
 def mark_keyword_slashes(source, *, jsx=False, javascript_operators=False):
@@ -129,8 +125,7 @@ def _consider_slash(source, i, marks, comments, literal_ends, javascript_operato
     if prev < 0:
         return i + 1
     operand = source[prev]
-    if (divisor is not None and word not in ('await', 'default', 'extends')
-            and (operand.isalnum() or operand in '_$]"`\'')):
+    if divisor is not None and _is_js_dividend(source, prev, word):
         marks.append(divisor.start(1))
         literal_ends.add(divisor.end() - 1)
         return divisor.end()

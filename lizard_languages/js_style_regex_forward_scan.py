@@ -7,10 +7,15 @@ from .js_style_regex_context import (
     _JS_WHITESPACE,
     _EXPRESSION_KEYWORDS,
     _LINE_ENDS,
+    _OPERAND_OPERATOR,
+    _REGEX_DIVISOR,
     _REGEX_LITERAL_RE,
     _RUBY_EXPRESSION_KEYWORDS,
     _STRING_LINE_ENDS,
     _apply_marks,
+    _is_js_dividend,
+    _skip_ws_and_comments_back,
+    _word_before,
 )
 from .ruby_documentation import match_opaque_span, may_have_documentation
 
@@ -119,6 +124,8 @@ def mark_forward(source, js_family, *, jsx=False, javascript_operators=False):
             after_operand(next_can_regex=True)
         elif word == 'await' and js_family and async_nesting > 0:
             after_operand(next_can_regex=True)
+        elif word == 'yield' and javascript_operators and _yield_after_operator(source, i - len(word)):
+            after_operand()
         elif word in keywords:
             after_operand(next_can_regex=True)
         else:
@@ -155,6 +162,16 @@ def mark_forward(source, js_family, *, jsx=False, javascript_operators=False):
                 i = matched.end()
                 after_operand()
                 return
+        if javascript_operators and ch == '/' and not can_regex:
+            divisor = _REGEX_DIVISOR.match(source, i)
+            if divisor is not None:
+                prev = _skip_ws_and_comments_back(source, i - 1)
+                word, _ = _word_before(source, prev)
+                if _is_js_dividend(source, prev, word):
+                    marks.append(divisor.start(1))
+                    i = divisor.end()
+                    after_operand()
+                    return
         if ch in '"\'':
             skip_string(ch)
             after_operand()
@@ -227,7 +244,7 @@ def mark_forward(source, js_family, *, jsx=False, javascript_operators=False):
             i += 1
             after_operand(next_can_regex=(ch == ';'))
             return
-        if ch in '+-*%~^@' or (javascript_operators and ch in '<>/'):
+        if ch in '+-*%~^@' or (javascript_operators and ch in '<>'):
             i += 1
             after_operand(next_can_regex=True)
             return
@@ -251,3 +268,15 @@ def mark_forward(source, js_family, *, jsx=False, javascript_operators=False):
         while i < n:
             advance()
     return _apply_marks(source, marks)
+
+
+def _yield_after_operator(source, start):
+    prev = _skip_ws_and_comments_back(source, start - 1)
+    if prev < 0 or _OPERAND_OPERATOR.search(source, max(0, prev - 1), prev + 1) is None:
+        return False
+    # A second yield can be the expression delegated by yield*.
+    if source[prev] == '*':
+        word, _ = _word_before(source, _skip_ws_and_comments_back(source, prev - 1))
+        if word == 'yield':
+            return False
+    return True

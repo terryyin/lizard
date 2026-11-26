@@ -30,6 +30,12 @@ REGEX_TOKEN_JSX = (
 )
 REGEX_TOKEN_PUNCT_JSX = _PUNCT_OPEN + r"\s*" + _JSX_LITERAL
 _REGEX_LITERAL_RE = re.compile(REGEX_LITERAL)
+# Match an operator before an operand. Compound assignments and arrows can
+# precede yield, as can a single question mark in a conditional expression.
+_OPERAND_OPERATOR = re.compile(r'(?:[=!]=|(?<!<)<=|(?<!>)>=|(?<!=)>|\?\?|[<+*/%~!&|^-])\Z')
+
+
+_REGEX_DIVISOR = re.compile(r'/\s+(' + REGEX_LITERAL + ')')
 _EXPRESSION_KEYWORDS = frozenset({
     'return', 'typeof', 'instanceof', 'in', 'new', 'delete', 'void',
     'throw', 'case', 'do', 'else', 'yield',
@@ -160,3 +166,10 @@ def _skip_ws_and_comments_back(source, i):
 def _is_property_before(source, i):
     j = _skip_ws_and_comments_back(source, i)
     return j >= 0 and source[j] == '.'
+
+
+def _is_js_dividend(source, prev, word):
+    if prev < 0 or word in ('await', 'default', 'extends'):
+        return False
+    operand = source[prev]
+    return operand.isalnum() or operand in '_$]"`\''
