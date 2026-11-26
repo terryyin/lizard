@@ -87,6 +87,26 @@ export function after() { return schema; }
                       [(f.start_line, f.parameters, f.cyclomatic_complexity) for f in functions])
         self.assertEqual('after', functions[-1].name)
 
+    def test_schema_factory_arrows_in_an_array_stay_separate(self):
+        code = """function type<T>(value: T): T { return value; }
+
+export const factories = [
+  () =>
+    (
+      type([1])
+        .map(value => value) as number[]
+    ).slice(0),
+  () => type('text').trim(),
+  () => type({ key: 'number' }),
+  () => type({ key: 'string' }),
+];
+"""
+        functions = analyze_file.analyze_source_code('a.ts', code).function_list
+        self.assertEqual([(9, 9, []), (10, 10, []), (11, 11, [])], [
+            (f.start_line, f.end_line, f.parameters)
+            for f in functions if f.start_line >= 9
+        ])
+
     def test_type_cast_at_the_end_of_an_arrow_body(self):
         for ext in ('ts', 'tsx'):
             for alias in ('', 'type Tag = { run: (type: string) => string }\n'):
