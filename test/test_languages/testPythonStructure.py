@@ -322,3 +322,45 @@ def reader_factory():
                     (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
                     for f in functions
                 ])
+
+    def test_unindented_continuation_does_not_end_function(self):
+        functions = get_python_function_list("""
+def build_message(title):
+    message = (
+"Your account is ready. "
+"Open your dashboard to get started."
+    )
+    return title + message
+
+def send_notice(message):
+    return message
+""")
+        self.assertEqual(
+            [('build_message', 2, 7), ('send_notice', 9, 10)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_closing_parenthesis_does_not_start_function_body(self):
+        functions = get_python_function_list("""
+class CookieSettings:
+    def __init__(self,
+                 secure_protocols=("https", "wss")
+                 ):
+        self.secure_protocols = secure_protocols
+
+    def accepts(self, protocol):
+        return protocol in self.secure_protocols
+""")
+        self.assertEqual(
+            [('__init__', 3, 6), ('accepts', 8, 9)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_interpolation_lines_do_not_end_function_body(self):
+        source = (
+            'def render(label):\n'
+            '    return f"""{\n'
+            'label.upper() if label else ""\n'
+            '}"""\n')
+        functions = get_python_function_list(source)
+        self.assertEqual([('render', 4, 2)], [
+            (f.name, f.end_line, f.cyclomatic_complexity) for f in functions
+        ])
