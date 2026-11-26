@@ -270,6 +270,32 @@ class TestCppNesting(unittest.TestCase):
             }
         """))
 
+    def test_case_label_ternaries_do_not_nest_the_case_body(self):
+        self.assertEqual([8], cogc("cache.cpp", """
+            int select_value(int value, bool ready) {
+                switch (value) {
+                    case true ? (void)0, true ? 1 : 2 : 3:
+                        return ready ? 4 : 5;
+                    default:
+                        return 0;
+                }
+            }
+        """))
+
+    def test_ternaries_in_different_objective_c_arguments_are_siblings(self):
+        self.assertEqual([4], cogc("cache.m", """
+            void record_access(void);
+
+            @interface Cache
+            - (int)choose:(int)value fallback:(int)fallback;
+            @end
+
+            int select_value(Cache *cache, int allowed, int cached, int fallback) {
+                return [cache choose:allowed ? record_access(), cached ? 1 : 2 : 0
+                             fallback:fallback ? 3 : 4];
+            }
+        """))
+
     def test_lambda_nests_without_an_increment(self):
         self.assertEqual([2], cpp("""
             void f() {
