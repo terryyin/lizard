@@ -49,9 +49,9 @@ class LizardExtension(object):  # pylint: disable=R0903
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
-        context = reader.context
         php = 'php' in getattr(reader, 'language_names', ())
         previous_token = None
+        context = reader.context
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
