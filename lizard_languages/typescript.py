@@ -271,7 +271,19 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         line_start = False
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
-                        signatures.pop().end_signature_before(token)
+                        signature = signatures.pop()
+                        if (token == '?' and self.context.class_field_annotations
+                                and signature._state == signature._after_possible_async_parameter):
+                            tokens, lookahead = tee(tokens)
+                            follower = next((item for item in lookahead if not (
+                                item.isspace() or item.startswith(_COMMENT_STARTS))), None)
+                            del lookahead
+                            if follower in (':', ',', ')'):
+                                token = _OPTIONAL_MEMBER_QUESTION
+                            signature.end_signature_before(token)
+                            yield token
+                            break
+                        signature.end_signature_before(token)
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False

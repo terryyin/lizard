@@ -67,6 +67,10 @@ class JavaScriptFunctionsMixin:
         before it is counted.  A token that cannot start the body shows that
         the signature was an expression, `x = (a)` + `if (b)`: the function
         is discarded now, so the token counts for the function around it."""
+        if self._state == self._after_possible_async_parameter:
+            if not self._follows_async_parameter(token):
+                self._begin_grouped_async_expression()
+            return
         if token in ('{', '=>', ':') or (
                 token == ';' and self.as_object and self._in_abstract_context):
             return      # for _expecting_func_opening_bracket
@@ -192,6 +196,7 @@ class JavaScriptFunctionsMixin:
                 and self._parameter_bindings.at_start
                 and self.last_token == '('):
             self.next(self._after_possible_async_parameter)
+            self.context.ended_signatures.append(self)
             return
         if token == '@':
             self._decorated_parameters = True  # constructor(@Inject(T) x)
@@ -225,14 +230,21 @@ class JavaScriptFunctionsMixin:
         self.context.add_to_long_function_name(" " + token)
 
     def _after_possible_async_parameter(self, token):
-        if token in (')', ',', ':', '=', '?'):
+        if self._follows_async_parameter(token):
             self._read_parameter_binding('async')
             self.next(self._dec, token)
-            return
+        else:
+            self._begin_grouped_async_expression()
+            self._replay_token(token)
+
+    @staticmethod
+    def _follows_async_parameter(token):
+        return token in (')', ',', ':', '=') or getattr(token, 'is_optional', False)
+
+    def _begin_grouped_async_expression(self):
         # An expression such as `(async () => f())` uses the outer group.
         self._abandon_optimistic_parameter_group()
         self.next(self._state_global, 'async')
-        self._replay_token(token)
 
     def _expression_operand(self, token):
         bindings = self._parameter_bindings
