@@ -128,11 +128,6 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
             self.br_count += 1
         elif token in (']', ')') and self.br_count:
             self.br_count -= 1
-        elif token[0] == '#' or (token[0] == '"' and self.last_token in ('r', 'br', 'cr')):
-            # The tokenizer can hide delimiters around raw strings. With
-            # an incomplete signature, keep looking for the body.
-            self.br_count = 0
-            self.next(super()._expect_function_impl)
         elif token == ';' and not self.br_count:
             self._fold_signature()
             if not self._forgive_enclosing:
