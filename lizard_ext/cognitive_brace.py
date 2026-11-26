@@ -63,7 +63,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 return
         if frames:
             top = frames[-1]
-            if top.kind == 'ternary':
+            if top.kind in self._TERNARY_KINDS:
                 top = self._top_structure()
             if top is not None and top.phase != BODY and \
                     self._in_head(top, token):
@@ -88,7 +88,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
 
     def _top_structure(self):
         for frame in reversed(self.state.frames):
-            if frame.kind != 'ternary':
+            if frame.kind not in self._TERNARY_KINDS:
                 return frame
         return None
 
@@ -107,11 +107,30 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             else:
                 break
 
+    _TERNARY_KINDS = ('ternary', 'ternary_true')
+
+    def _ternary_colon(self):
+        # A peer colon ends complete conditionals before it starts the next
+        # false arm, case body, or Objective-C message argument.
+        state = self.state
+        frames = state.frames
+        keep = len(frames)
+        while keep:
+            frame = frames[keep - 1]
+            if (frame.kind not in self._TERNARY_KINDS or frame.pdepth != state.pdepth
+                    or frame.depth != state.depth):
+                break
+            if frame.kind == 'ternary_true':
+                frame.kind = 'ternary'
+                break
+            keep -= 1
+        del frames[keep:]
+
     def _statement_end(self):
         """A ';' at bracket depth 0 finishes the braceless bodies around it."""
         state = self.state
         frames = state.frames
-        while frames and frames[-1].kind == 'ternary':
+        while frames and frames[-1].kind in self._TERNARY_KINDS:
             frames.pop()
         for frame in reversed(frames):
             if frame.braced or frame.depth != state.depth or \
@@ -236,6 +255,9 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
 
     def _push(self, kind, phase):
         state = self.state
+        if kind == 'ternary' and self.track_ternary_arms:
+            # A comma may end the frame only after its colon.
+            kind = 'ternary_true'
         frame = _Frame(kind, phase, depth=state.depth, pdepth=state.pdepth)
         state.frames.append(frame)
         return frame

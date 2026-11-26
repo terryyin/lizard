@@ -10,6 +10,7 @@ class _BraceActions(object):
     """Keyword increments, lookaheads, and languages without brace blocks."""
 
     def _keyword_actions(self, profile):
+        self.track_ternary_arms = self.reader.language_names[0] in ('cpp', 'objectivec')
         actions = {'{': self._open_block, '}': self._close_block,
                    ';': self._semicolon, 'else': self._else}
         for tokens, action in ((profile.ifs, self._if),
@@ -23,6 +24,8 @@ class _BraceActions(object):
                 actions[token] = action
         if profile.ternary:
             actions['?'] = self._question
+            if self.track_ternary_arms:
+                actions[':'] = self._ternary_colon
         return actions
 
     def _if(self):
