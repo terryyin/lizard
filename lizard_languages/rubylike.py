@@ -59,7 +59,7 @@ class RubylikeStateMachine(CodeStateMachine):
                     self.is_newline() or self.last_token is None):
                 self._state = self._it
         elif token in self.BLOCK_KEYWORDS and self.last_token != ".":
-            self.sub_state(self.statemachine_clone())
+            self._start_block(token)
         elif token in self.LOOP_KEYWORDS:
             if not getattr(token, 'is_member_name', False) and \
                     not self.follows_value():
@@ -70,9 +70,12 @@ class RubylikeStateMachine(CodeStateMachine):
             elif self.follows_value():
                 self.next(self._if)
             else:
-                self.sub_state(self.statemachine_clone())
+                self._start_block(token)
         elif token == "=begin":
             self.sub_state(state_embedded_doc)
+
+    def _start_block(self, opener, callback=None):
+        self.sub_state(self.statemachine_clone(), callback)
 
     def is_newline(self):
         return self.context.newline or self.last_token == ";"
@@ -160,7 +163,7 @@ class RubylikeStateMachine(CodeStateMachine):
                 token in ("if", "unless") and not self.follows_value() and
                 not getattr(token, 'is_member_name', False)):
             self.context.at_line_end = None
-            self.sub_state(self.statemachine_clone(), self._endless_value)
+            self._start_block(token, self._endless_value)
             return
         elif token in self.LOOP_KEYWORDS and not self.follows_value() and \
                 not getattr(token, 'is_member_name', False):

@@ -4,7 +4,7 @@ Language parser for Ruby
 
 import re
 
-from .rubylike import RubylikeReader, RubylikeStateMachine
+from .rubylike import RubylikeReader, RubylikeStateMachine, _ends_value
 from .js_style_regex_expression import js_style_regex_expression
 from .ruby_documentation import may_have_documentation, pattern_for_fragment
 from .source_documentation import tokens_ignoring_documentation
@@ -76,6 +76,23 @@ _PERCENT_LITERAL = (r"(?<![\w)\]}])\%(?:[qQwWiIsx]" +
 
 class RubyStateMachine(RubylikeStateMachine):
 
+    def _start_block(self, opener, callback=None):
+        if opener not in ('if', 'case') or not getattr(self.context, 'ruby_tracks_depth', False):
+            super()._start_block(opener, callback)
+            return
+
+        # Claim the pending level before a brace in the predicate can
+        # take it. Its matching keyword end closes it.
+        function = self.context.current_function
+        function.levels_awaiting_body -= 1
+
+        def close_depth():
+            self.context.add_nd_condition(-1)
+            if callback is not None:
+                callback()
+
+        super()._start_block(opener, close_depth)
+
     def _if(self, token):
         # A modifier predicate can open a block: `return if jobs.any? do`.
         if token == 'do' and not self.br_count and not getattr(token, 'is_member_name', False):
@@ -100,6 +117,12 @@ class RubyReader(RubylikeReader):
     language_names = ['ruby']
     STATE_MACHINE = RubyStateMachine
 
+    def nesting_semicolons(self, tokens):
+        self.context.ruby_tracks_depth = True
+        self.block_starts = ('{', '${')
+        boundaries = _NestingSemicolons(self.context)
+        return boundaries.read(tokens), boundaries
+
     def preprocess(self, tokens):
         """Drop spaces, and mark a keyword right after '.', '&.' or 'def'
         on the same line as the name of a method.  At the end of a line,
@@ -107,6 +130,8 @@ class RubyReader(RubylikeReader):
         keywords, name_before = _KEYWORDS, _NAME_BEFORE
         context = self.context
         context.at_line_end = None
+        if getattr(context, 'ruby_tracks_depth', False):
+            tokens = _mark_logical_assignments(tokens)
         name_follows = False
         for token in tokens:
             if token.isspace():
@@ -182,3 +207,33 @@ class RubyReader(RubylikeReader):
                 yield token
             else:
                 source = None
+
+
+class _NestingSemicolons:
+    """A Ruby statement normally ends at its line break."""
+
+    def __init__(self, context):
+        self.context = context
+        self.before_token = False
+
+    def read(self, tokens):
+        previous = None
+        for token in tokens:
+            self.before_token = (self.context.newline and previous is not None
+                                 and token not in ('.', '&')
+                                 and (previous in ('do', 'then') or _ends_value(previous)))
+            previous = token
+            yield token
+
+
+def _mark_logical_assignments(tokens):
+    for token in tokens:
+        if token in ('&&', '||'):
+            following = next(tokens, None)
+            if following == '=' and token.begin + len(token) == following.begin:
+                token.is_logical_assignment = True
+            yield token
+            if following is not None:
+                yield following
+        else:
+            yield token

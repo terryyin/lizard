@@ -28,7 +28,9 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     def __call__(self, tokens, reader, l_depth=0):
         implied_semicolons = None
-        if hasattr(reader, "implied_semicolons"):
+        if hasattr(reader, "nesting_semicolons"):
+            tokens, implied_semicolons = reader.nesting_semicolons(tokens)
+        elif hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
         return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
 
@@ -50,6 +52,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
         context = reader.context
+        else_if_chain = 'ruby' not in getattr(reader, 'language_names', ())
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
@@ -64,7 +67,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 # Don't add nesting for "if" when it immediately follows "else" (else if)
                 # Syntactically else if is equivalent to else {if} but should not increase depth
                 if token == 'else' and not getattr(token, 'is_member_name', False):
-                    context.set_prev_was_else(True)
+                    context.set_prev_was_else(else_if_chain)
                 elif token == 'if' and token in loops and context.get_prev_was_else():
                     context.clear_prev_was_else()
                 # Handle opening parenthesis - start of condition
@@ -75,7 +78,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     context.close_condition()
 
                 # Handle logical operators && and || within conditions
-                elif token in ('&&', '||'):
+                elif token in ('&&', '||') and not getattr(token, 'is_logical_assignment', False):
                     if context.get_in_condition():
                         # Only add nesting depth for the first logical operator in a condition
                         # Subsequent && or || operators in the same condition don't add depth
