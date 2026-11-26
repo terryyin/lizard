@@ -10,6 +10,17 @@ def get_cpp_with_nestdepth(source):
 
 class TestCppNestingDepth(unittest.TestCase):
 
+    def test_cpp_expression_block_keeps_condition_levels(self):
+        functions = get_cpp_with_nestdepth("""
+        bool allowed(bool enabled, bool cached, bool verified) {
+            if (enabled && [](bool ready) { return ready; }(cached)) {
+                if (verified) return true;
+            }
+            return false;
+        }
+        """)
+        self.assertEqual(3, functions[0].max_nesting_depth)
+
     def test_one_function_with_no_nd_condition(self):
         result = get_cpp_with_nestdepth("int fun(){}")
         self.assertEqual(0, result[0].max_nesting_depth)
@@ -229,6 +240,26 @@ class TestCppNestingDepth(unittest.TestCase):
         }
         """)
         self.assertEqual(2, result[0].max_nesting_depth)
+
+
+class TestJavaNestingDepth(unittest.TestCase):
+
+    def test_java_expression_block_keeps_condition_levels(self):
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'Permissions.java', """
+        class Permissions {
+            static boolean allowed(boolean enabled, boolean verified,
+                                   java.util.function.Predicate<String> check) {
+                if (enabled && java.util.stream.Stream.of("admin").anyMatch(role -> {
+                    return check.test(role);
+                })) {
+                    if (verified) return true;
+                }
+                return false;
+            }
+        }
+        """).function_list
+        self.assertEqual(3, functions[0].max_nesting_depth)
 
 
 class TestJavaScriptNestingDepth(unittest.TestCase):
