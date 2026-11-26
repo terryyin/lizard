@@ -46,7 +46,7 @@ Delivered: the sibling's `plsql_declarations.py` (230 lines) was already on trun
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 Normalize whole condition keyword tokens before condition counting, and drop the uppercase condition copies. The seed's procedures then report the same CCN in every casing, with Boolean operators removed by nonstrict.
 
@@ -57,6 +57,20 @@ Normalize whole condition keyword tokens before condition counting, and drop the
 | CLI | Run `nix develop -c python lizard.py -Enonstrict --csv` on a real SQL file holding the three casings. Each function reports CCN 5. |
 
 The casing proof fails on trunk for the uppercase nonstrict and capitalized cases, and on #645 for the uppercase nonstrict case. Compare the proof on trunk, the exact proposal and the corrected revision. Run the affected PL/SQL and nonstrict tests, then full pytest and `nix develop -c make` under [AGENTS.md](../../../AGENTS.md). Retain the PR qualification on the exact corrected production bytes: use the [paired runner](../../../.agents/skills/lizard-process-pr/references/performance.md) for an affected PL/SQL API workload and a broad frozen `cli` corpus. Require green hosted checks on the final head before any merge.
+
+Delivered: `merge_compound_keywords` now wraps each whole condition keyword token in a `_Keyword` `str` subclass. The token keeps its source spelling but hashes and compares by its lowercase form. The keyword set is built once per reader from the static category sets, and the uppercase condition copies are gone. The first version lowercased the token text, which rewrote declaration text such as `DEFAULT TRUE OR FALSE` in long names (G1). A separate generator pass cost about 6% on the PL/SQL API workload, so marking moved into the existing pass. `test/test_languages/test_lizard_plsql_mixed_case.py` passes 6 tests on the corrected revision. On trunk `aec8a87d` 5 fail, and on #645 `a86cc287` 3 fail: uppercase nonstrict, long-name spelling, and parameters from #645's older base. The probe reports `If_And_Ready` 8/5 and `For_Case` 4/4 in every casing. `lizard.py -Enonstrict --csv` reports 5, 5, 5. Focused PL/SQL, NonStrict, ComplexityTags and CognitiveComplexity pass 217 tests, the full suite passes 4000 with 7 skipped, and `make` is clean (pycodestyle silent, pylint 9.16 unchanged). Paired runner against trunk `15f07437`, under the 3% bound: the API PL/SQL corpus of 63 sources gives a 95% interval of [-3.7, 2.6]%. With `-E ns` it gives [-4.9, 2.6]%. The `cli` corpus of 449 files gave [-2.2, 6.3]% at 20 pairs under host load. A 40-pair retry, chosen before its launch, gave [-6.0, -0.2]%. Evidence stays local in the session job directory.
+
+## Story obligations
+
+### G1. Keyword lowercasing rewrote long-name text (discovered at slice 2 acceptance)
+Reported: slice 2 — "Calc(p_Flag BOOLEAN DEFAULT TRUE or FALSE, p_For NUMBER) was reported for source written TRUE OR FALSE."
+Story clause: "Function names, parameters, labels and other identifiers keep their source spelling"
+Disposition: proved by slice 2: `test_long_name_keeps_the_source_spelling_of_keywords` in `test/test_languages/test_lizard_plsql_mixed_case.py` checks uppercase and capitalized source
+
+### G2. COBOL keeps uppercase condition copies (reported by the slice 2 refactor pass)
+Reported: slice 2 — "COBOL (lizard_languages/cobol.py) keeps uppercase condition copies and probably has the same nonstrict casing gap."
+Story clause: "COBOL keeps the same uppercase and lowercase condition copies"
+Disposition: excluded "COBOL, other language readers, and counting `NOT` in nonstrict mode are outside this story"
 
 ## Readiness review
 

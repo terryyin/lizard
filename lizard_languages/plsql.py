@@ -33,7 +33,7 @@ Design Decisions:
 from .code_reader import CodeReader, CodeStateMachine
 from .clike import CCppCommentsMixin
 from .plsql_declarations import PLSQLDeclarationStates
-from .plsql_keywords import case_insensitive_conditions, merge_compound_keywords
+from .plsql_keywords import merge_compound_keywords
 
 
 class PLSQLReader(CodeReader, CCppCommentsMixin):
@@ -57,12 +57,16 @@ class PLSQLReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super(PLSQLReader, self).__init__(context)
         self.parallel_states = [PLSQLStates(context)]
-        # PL/SQL is case-insensitive; keyword casing lives in plsql_keywords
-        self.conditions = case_insensitive_conditions(self.conditions)
+        self._keyword_tokens = {
+            keyword.upper() for keyword in self._build_conditions()}
 
     def preprocess(self, tokens):
-        """Apply PL/SQL keyword preprocessing (see plsql_keywords)."""
-        return merge_compound_keywords(tokens)
+        """
+        Apply PL/SQL keyword preprocessing (see plsql_keywords). Keywords
+        come from the reader's condition categories, not from the current
+        conditions that extensions such as nonstrict change.
+        """
+        return merge_compound_keywords(tokens, self._keyword_tokens)
 
     @staticmethod
     def generate_tokens(source_code, addition="", token_class=None):
