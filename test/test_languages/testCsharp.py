@@ -499,6 +499,16 @@ class Labels
         self.assertEqual(4, build.cyclomatic_complexity)
         self.assertEqual([['?', 6], ['?', 7], ['??', 7]], build.complex_tags)
 
+    def test_nullable_array_return_type_cannot_take_a_ternary_colon(self):
+        source = '''class Labels
+{
+    public int[]? Read(bool ready) => ready ? [1] : null;
+}'''
+        analyzer = FileAnalyzer(get_extensions(['nd', 'complextags']))
+        read, = analyzer.analyze_source_code('labels.cs', source).function_list
+        self.assertEqual((2, 1, [['?', 3]]), (
+            read.cyclomatic_complexity, read.max_nesting_depth, read.complex_tags))
+
     def test_type_patterns_can_end_a_ternary_condition(self):
         source = '''class Labels
 {

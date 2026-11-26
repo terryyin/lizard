@@ -350,11 +350,16 @@ class _OptionalHoleQuestion(_InterpolationPart):
     is_optional = True
 
 
+_TYPE_WORDS = frozenset({
+    'bool', 'byte', 'char', 'class', 'decimal', 'double', 'float',
+    'int', 'long', 'object', 'sbyte', 'short', 'string', 'uint', 'ulong', 'ushort',
+})
 _DECLARATION_MODIFIERS = frozenset({
     'abstract', 'const', 'extern', 'internal', 'override', 'private', 'protected',
     'public', 'readonly', 'sealed', 'static', 'virtual', 'volatile',
 })
 _TYPE_END = frozenset(('(', '[', '{', ')', ']', '}', ';', '=', '=>'))
+_TYPE_PATTERN_END = frozenset(('?', '??', '&&', '||', '=', '=>', ':', ';', ')', '{', '}'))
 _NOT_A_TERNARY_ARM = frozenset(('.', ',', ':', ';', ')', ']', '}', '>', '='))
 _OPEN_GROUP = frozenset(('(', '[', '{'))
 _CLOSE_GROUP = frozenset((')', ']', '}'))
@@ -367,7 +372,7 @@ def _mark_questions(tokens):
     pending = 0
     question = None
     previous = before_previous = None
-    reading_type = False
+    reading_type = type_pattern = False
     type_brackets = constraint = 0
     for token in tokens:
         if buffered or token == '?':
@@ -386,7 +391,8 @@ def _mark_questions(tokens):
             question = None
             if token == '?':
                 index = len(buffered) - 1
-                if not reading_type:
+                empty_rank = previous == ']' and before_previous in ('[', ',')
+                if not reading_type and (type_pattern or not (empty_rank or previous in _TYPE_WORDS)):
                     question = index
                 mark = _OptionalHoleQuestion if isinstance(token, _InterpolationPart) else _OptionalQuestion
                 buffered[index] = mark(token)
@@ -422,6 +428,10 @@ def _mark_questions(tokens):
                 type_brackets -= 1
             elif not type_brackets and token in _TYPE_END:
                 reading_type = False
+        if token == 'is':
+            type_pattern = True
+        elif type_pattern and token in _TYPE_PATTERN_END:
+            type_pattern = False
         if token != '@':
             before_previous, previous = previous, token
     yield from buffered
