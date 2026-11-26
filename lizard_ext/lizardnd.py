@@ -40,11 +40,10 @@ class LizardExtension(object):  # pylint: disable=R0903
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
+        if 'go' in getattr(reader, 'language_names', ()):
+            tokens = _go_nesting_tokens(tokens, reader)
         block_starts = getattr(reader, "block_starts", ('{',))
         indent_indicator = getattr(reader, 'indent_indicator', ';')
-        go_if = 'go' in getattr(reader, 'language_names', ())
-        if go_if:
-            tokens = _go_nesting_tokens(tokens, reader.context, block_starts, block_ends)
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
@@ -90,7 +89,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 elif token in loops and token not in ('&&', '||') \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
-                    l_depth = _start_go_if(context) if go_if and token == 'if' else context.open_level()
+                    l_depth = context.open_level()
 
                 if token in block_starts:
                     context.open_block()
@@ -124,7 +123,10 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def open_level(self):
         """A structure opens a level that its body will close."""
-        self.current_function.levels_awaiting_body += 1
+        function = self.current_function
+        if function.go_starts_if:
+            _start_go_if(function, self)
+        function.levels_awaiting_body += 1
         return self.add_nd_condition()
 
     def open_block(self):
@@ -238,43 +240,6 @@ def get_method(cls, name):
     return method
 
 
-_GO_COMPOSITE_LITERAL = object()
-
-
-def _go_nesting_tokens(tokens, context, block_starts, block_ends):
-    """Track Go statement and composite literal roles before ND reads a token."""
-    for token in tokens:
-        function = context.current_function
-        if token in block_starts:
-            function.go_composite_literal_brace = getattr(token, 'is_composite_literal_brace', False)
-        elif token in block_ends:
-            if function.go_if_levels is None and function.condition_depth == 0:
-                # A case or a statement can end at a brace without a semicolon.
-                context.end_statement()
-        elif token in ('=', ':='):
-            if function.go_if_levels is not None and function.condition_depth == 0:
-                function.go_initializer = True
-        elif (token in ('&&', '||') and function.go_if_levels is None
-              and (not function.in_condition or not function.logical_operator_added)):
-            function.go_statement_logical_levels += 1
-        yield token
-
-
-def _start_go_if(context):
-    function = context.current_function
-    # A new if cannot be part of the preceding Go expression.
-    logical_levels = function.go_statement_logical_levels
-    if logical_levels:
-        function.levels_awaiting_body -= logical_levels
-        context.add_nd_condition(-logical_levels)
-        function.go_statement_logical_levels = 0
-    depth = context.open_level()
-    function.in_condition = True
-    function.go_if_levels = function.levels_awaiting_body
-    function.logical_operator_added = False
-    return depth
-
-
 def patch(frm, accept_class):
     for method in [k for k in frm.__dict__ if not k.startswith("_")]:
         setattr(accept_class, method, get_method(frm, method))
@@ -297,6 +262,7 @@ def _init_nesting_depth_data(self, *_):
     self.block_levels = []  # structure levels each open block will close
     self.go_if_levels = None
     self.go_initializer = False
+    self.go_starts_if = False
     self.go_composite_literal_brace = False
     self.go_statement_logical_levels = 0
     self.in_condition = False  # Track if we're inside a condition
@@ -307,3 +273,41 @@ def _init_nesting_depth_data(self, *_):
 
 patch(NDFileInfoAddition, FileInfoBuilder)
 patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")
+
+
+_GO_COMPOSITE_LITERAL = object()
+
+
+def _go_nesting_tokens(tokens, reader):
+    """Track Go statement and composite literal roles before ND reads a token."""
+    context = reader.context
+    block_starts = getattr(reader, 'block_starts', ('{',))
+    block_ends = getattr(reader, 'block_ends', ('}',))
+    for token in tokens:
+        function = context.current_function
+        function.go_starts_if = token == 'if'
+        if token in block_starts:
+            function.go_composite_literal_brace = getattr(token, 'is_composite_literal_brace', False)
+        elif token in block_ends:
+            if function.go_if_levels is None and function.condition_depth == 0:
+                # A case or a statement can end at a brace without a semicolon.
+                context.end_statement()
+        elif token in ('=', ':='):
+            if function.go_if_levels is not None and function.condition_depth == 0:
+                function.go_initializer = True
+        elif (token in ('&&', '||') and function.go_if_levels is None
+              and (not function.in_condition or not function.logical_operator_added)):
+            function.go_statement_logical_levels += 1
+        yield token
+
+
+def _start_go_if(function, context):
+    # A new if cannot be part of the preceding Go expression.
+    logical_levels = function.go_statement_logical_levels
+    if logical_levels:
+        function.levels_awaiting_body -= logical_levels
+        context.add_nd_condition(-logical_levels)
+        function.go_statement_logical_levels = 0
+    function.in_condition = True
+    function.go_if_levels = function.levels_awaiting_body + 1
+    function.logical_operator_added = False
