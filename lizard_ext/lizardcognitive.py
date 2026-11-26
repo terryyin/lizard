@@ -47,7 +47,8 @@ class LizardExtension(object):  # pylint: disable=R0903
     FUNCTION_INFO = {
         "cognitive_complexity": {
             "caption": " CogC ",
-            "average_caption": " Avg.CogC "}}
+            "average_caption": " Avg.CogC ",
+            "default": 0}}
 
     @staticmethod
     def set_args(parser):
@@ -68,10 +69,6 @@ class LizardExtension(object):  # pylint: disable=R0903
             counter.process(token)
             yield token
         counter.finish()
-        # Declarations can start and finish between tokens seen by the counter.
-        # Materialize their inherited zero so serializers retain the metric.
-        for function in reader.context.fileinfo.function_list:
-            function.__dict__.setdefault('cognitive_complexity', 0)
 
 
 def _add_default_field(function_info_class):

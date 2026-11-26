@@ -120,8 +120,9 @@ def _add_default_values(functions, defaults):
     """An extension sets its value on the function that is current when
     a token passes. A reader can start and end a function between two
     tokens, such as a last arrow function argument before a line break,
-    and the extension never sees that function."""
+    and the extension never sees that function.  A class-level fallback,
+    such as the cognitive complexity one, is not a value of the function."""
     for name, value in defaults:
         for function in functions:
-            if not hasattr(function, name):
+            if name not in vars(function):
                 setattr(function, name, value)

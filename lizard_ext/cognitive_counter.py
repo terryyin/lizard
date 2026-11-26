@@ -248,9 +248,6 @@ class _Counter(object):  # pylint: disable=R0902
         self.function = function
         if function not in self.states:
             self.states[function] = _FunctionState()
-            # Non-zero scores land in __dict__ via +=; materialize 0 the same way.
-            if 'cognitive_complexity' not in function.__dict__:
-                function.cognitive_complexity = 0
         self.state = self.states[function]
 
     def _in_body(self, function):
