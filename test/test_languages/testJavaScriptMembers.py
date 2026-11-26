@@ -41,13 +41,23 @@ function newlineDivision() {
     return 4 /
         { valueOf() { return 2; }, catch() {} };
 }
+function portion(total, scale, enabled) {
+    return total / scale /
+        { valueOf() { return enabled ? 2 : 1; }, catch() {} };
+}
 function afterRegex(ready) {
     "" + /1/
     { if (ready) run(); }
 }
+function afterHead(ready) {
+    if (ready) /1/
+    { if (ready) run(); }
+}
 """)
         self.assertEqual(
-            [('valueOf', 1), ('catch', 1), ('newlineDivision', 1), ('afterRegex', 2)],
+            [('valueOf', 1), ('catch', 1), ('newlineDivision', 1),
+             ('valueOf', 2), ('catch', 1), ('portion', 1),
+             ('afterRegex', 2), ('afterHead', 3)],
             [(f.name, f.cyclomatic_complexity) for f in functions])
 
     def test_class_method_decorators(self):
