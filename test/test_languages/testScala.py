@@ -88,6 +88,29 @@ class TestScala(unittest.TestCase):
         self.assertEqual(2, result[0].cyclomatic_complexity)
         self.assertEqual(1, result[0].parameter_count)
 
+    def test_join_hint_doc_keeps_following_methods(self):
+        source = '''object ResolveHints {
+  /**
+   * Query examples adapted from Apache Spark's ResolveHints.scala.
+   * In a query `SELECT /*+ BROADCAST(t) */ * FROM db1.t JOIN t`,
+   * In a query `SELECT /*+ BROADCAST(default.t) */ * FROM default.t JOIN t`,
+   * def exampleOnly(): Int = 0
+   */
+  def matchedIdentifier(identInHint: String, identInQuery: String): Boolean = {
+    identInQuery.endsWith(identInHint)
+  }
+  def commentText(): String = "/*"
+}
+'''
+
+        functions = get_scala_function_list(source)
+
+        self.assertEqual(
+            [('matchedIdentifier', 8, 10, 2, ['identInHint', 'identInQuery']),
+             ('commentText', 11, 11, 0, [])],
+            [(f.name, f.start_line, f.end_line, f.parameter_count, f.parameters)
+             for f in functions])
+
     def test_field(self):
         result = get_scala_function_list('''
             class A {
