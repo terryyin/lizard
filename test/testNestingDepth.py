@@ -112,6 +112,16 @@ class TestCppNestingDepth(unittest.TestCase):
         """)
         self.assertEqual([2, 2], [f.max_nesting_depth for f in functions])
 
+    def test_call_continues_the_logical_condition(self):
+        functions = get_cpp_with_nestdepth("""
+        bool checkConnection();
+        bool allowed(bool online, bool cached, bool expired) {
+            if (online && checkConnection() || cached && !expired) return true;
+            return false;
+        }
+        """)
+        self.assertEqual(2, functions[0].max_nesting_depth)
+
     def test_cpp_expression_block_keeps_condition_levels(self):
         functions = get_cpp_with_nestdepth("""
         bool allowed(bool enabled, bool cached, bool verified) {
