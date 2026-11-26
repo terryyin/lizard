@@ -5,7 +5,7 @@ from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
 from .javascript_expression import JSXChildBrace
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
-from .typescript_signatures import CALL_TYPE_ARGUMENTS_START, ReturnTypeColon
+from .typescript_signatures import CallTypeArgument, ReturnTypeColon
 from .typescript_declarations import (
     DECLARATION_WORDS, TypeScriptDeclarationsMixin)
 
@@ -79,6 +79,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._pop_function_from_stack()
 
     def _state_global(self, token):
+        if isinstance(token, CallTypeArgument):
+            return
         if self._pending_bindings:
             self._resolve_pending_bindings(token)
         if self._ts_declare or token in _SPECIAL_TOKENS:
@@ -124,9 +126,6 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self.last_tokens = token
                     self._prev_token = token
                     return
-        if token is CALL_TYPE_ARGUMENTS_START:
-            self._consume_generic_type_params()
-            return
         if self.as_object and self._handle_object_member(token):
             return
         if token in ('.', '?.'):

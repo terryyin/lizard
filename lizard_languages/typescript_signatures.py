@@ -15,9 +15,6 @@ class CallTypeArgument(str):
     is_type_argument = True
 
 
-CALL_TYPE_ARGUMENTS_START = CallTypeArgument('<')
-
-
 def call_type_argument_token_count(tokens):
     """Count confirmed type arguments up to their closing angle."""
     annotation = TypeScriptTypeAnnotationStates(None)

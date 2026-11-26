@@ -11,7 +11,7 @@ from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import (
-    CALL_TYPE_ARGUMENTS_START, CallTypeArgument, ReturnTypeColon,
+    CallTypeArgument, ReturnTypeColon,
     call_type_argument_token_count, return_type_colon)
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
@@ -159,6 +159,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         return self.generate_tokens(code)
 
     def _count_interpolation_conditions(self, token, in_expression):
+        if isinstance(token, CallTypeArgument):
+            return
         # Re-tokenize opaque interpolation spans; keyword members stay non-
         # conditions the same way as on the outer token stream (#546).
         conditions = self.conditions
@@ -287,7 +289,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         tokens, lookahead = tee(tokens)
                         type_argument_tokens = call_type_argument_token_count(lookahead)
                         if type_argument_tokens:
-                            token = CALL_TYPE_ARGUMENTS_START
+                            token = CallTypeArgument(token)
                         del lookahead
                         member_access = False
                         yield token
