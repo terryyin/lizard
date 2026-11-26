@@ -1,121 +1,81 @@
 # Admit accepted work that no backlog list holds
 
-When the current instruction accepts a mission for tracked work and no backlog
-list holds it, admit it through the startup command in
-[Take or admit work](../SKILL.md#take-or-admit-work) before its substantive work.
-Work already queued starts as queued work; work already Taken continues under
-its existing claim. A mission explicitly selected as
-[one-shot work](one-shot.md) is not admitted unless it
-[grows](one-shot.md#escalate-when-the-work-grows): `--carry` then admits it
-with its edits, a queued story included. In an
-[established session](established-session.md), that command is given the
-workspace and branch that reference decides.
+Use the shared [startup command](../SKILL.md#take-or-admit-work) with `--admit`
+for accepted independent work before diagnosis, review, observation, or edits.
+Start queued work through Take and continue work you already hold under its
+claim. Report another agent's claim. In an [established session](established-session.md),
+use its workspace and branch rules. [One-shot work](one-shot.md) is admitted
+only if it [grows](one-shot.md#escalate-when-the-work-grows), using `--carry`
+to include its edits and move a queued entry when applicable.
 
 ## Decide whether a mission was accepted
 
-A mission is an independently requested outcome you are undertaking: a bug
-diagnosis or repair, test profiling or optimization, exploratory or manual
-testing, a standalone review, a direct maintenance or contextual
-instruction, or a retrospective's follow-up correction accepted for execution.
-Admit it once the developer or parent instruction accepts it, before
-diagnosis, exploration, review, or edits. The label of the request does not
-decide this; the acceptance does.
+A mission is an independently requested outcome the developer or parent
+instruction has accepted for work, such as a bug diagnosis, exploratory test,
+standalone review, maintenance task, or retrospective correction. Clarification,
+reporting, refinement, and recommendations await their own applicable workflow.
+Tests, refactoring, CI repair, and retrospective for an active story use its
+claim. Queued preparation keeps its Preparing assignment. Caller-selected
+current-branch work has no remote claim.
 
-Test profiling and optimization are admitted at their first edit instead.
-Their discovery publishes no admission: reading retained evidence and related
-test code, timing unmodified tests of a chosen lead, and a fresh test
-profiling run the developer explicitly requested. A stop at discovery leaves
-no story, Taken entry, or wrap-up. A request to optimize tests is explicit
-planless authority for each independent bounded experiment it reaches: on
-reaching an experiment's first edit, admit it `planless` before making the
-edit. When the evidence calls for a plan instead, admit it `unselected` before
-planning.
-
-These are not new missions and publish no admission:
-
-- clarifying a request to identify its outcome, a reporting-only or
-  refinement-only request, and recommendations nobody accepted for work;
-- a supporting step of an active story, such as its tests, refactoring, CI
-  repair, retrospective, or a nested repair: it continues under that story's
-  owner. A separately authorized outcome still needs its own admission;
-- preparing an already queued story, which keeps its Preparing assignment; and
-- caller-selected current-branch work, which has no remote claim to publish.
-
-Another agent's claim on the same work stops this path; report it rather than
-admitting a duplicate.
+For test optimization, [discovery](../../dough-test-optimization/SKILL.md) leaves
+no claim. Reading evidence, timing unchanged tests, and explicitly requested
+profiling can happen in discovery. Admit each authorized bounded experiment as
+`planless` before its first edit. If the evidence calls for a plan, admit it
+`unselected` before planning.
 
 ## Prepare the story
 
-First reuse or draft its story in a suitable seed in the originating checkout:
-`**Identity:**`, `**Goal:**`, bounded scope, and known expectations. Allocate a
-drafted story's identity, and any new seed's ID, under
-[allocate a new identity](../../dough-product-backlog/references/identity.md#allocate-a-new-identity).
-A new retrospective correction already has its minimal story linked to its
-plan; reuse that story and never list the plan separately. Record its
-actual preparation with the product backlog
-[record-state](../../dough-product-backlog/references/record-preparation.md)
-operation: approach `unselected` while the approach is undecided, `planless`
-only under explicit planless authority, or `planned` with its plan. Record no
-assessment you have not made. Then add
-`--admit --link <seed path>#<anchor> --title <entry title>` to the start
-command's flags, with the link relative to the backlog directory, and supply
-the checkout holding those drafts as its `--integration`. Drafts are read only
-from that supplied checkout; without it, the command admits the story as
-published on remote trunk.
+Supply `--link <seed path>#<anchor> --title <entry title>` with the link relative
+to the backlog directory. Choose the source of the story:
+
+- **Draft in a checkout.** Reuse the canonical story, including the story of an
+  accepted retrospective correction. For a new story,
+  [allocate its identity](../../dough-product-backlog/references/identity.md#allocate-a-new-identity)
+  and write its Identity, Goal, scope, and known expectations. Use
+  [record-state](../../dough-product-backlog/references/record-preparation.md)
+  for the actual approach: `unselected`, explicitly authorized `planless`,
+  or `planned` with its plan. Pass the checkout holding the draft as
+  `--integration`. Without it, startup reads the published story.
+- **Draft owned by a launch.** Run `execution-start.mjs draft` with
+  `--repository`, `--remote`, `--target`, and a one-line `--title` and
+  `--goal`. Retain the returned identity, link, title, and `ownedDraft` with
+  the attempt. Pass them to the same start command, using `--owned-draft`
+  for the JSON object and the launch's stable publisher ID. The claim writes
+  the new seed with `unselected` preparation. A default-checkout launch
+  passes that checkout as `--repository` and claims in a separate clean
+  Trunk Mode worktree, preserving the session checkout.
 
 ## Act on the result
 
-The command carries only that story's section (a new seed whole) and its
-declared plan into the isolated claim; other local edits stay local and
-unpublished. It publishes them, the Taken entry, and your agent profile in one
-remote-trunk commit, and lists the carried paths as `admitted`. Admission
-requires no ready assessment and grants no execution authority; later
-implementation still needs its normal source, approach, and authority. After
-confirmed acceptance, the command withdraws only the unchanged published
-contribution from the originating checkout and attempts its ordinary refresh.
-Unrelated files and sibling story edits, staged content, and subsequent draft
-edits remain untouched; those edits may defer refresh without undoing admission.
-An interrupted publication resumes that same reconciliation only after remote
-ownership is confirmed. `status: "existing"` means
-you already hold this claim; continue under it. A refusal starts no dependent
-work: `source-refused` names missing identity, preparation, or Goal, already
-queued work, a home listed under another identity, or an identity a trunk done
-record names, which needs a newly allocated identity in the draft;
-`source-conflict` names the `path` that fetched trunk changed differently, with
-both versions kept for a human decision; `conflict` means another claim holds
-the work. If publication is interrupted, resume it as the startup command
-describes, keeping the same admission flags: the resumed start publishes or
-confirms the preserved candidate, reconciled onto current trunk, never later
-edits to your drafts. An accepted admission continues with the same
-checkout-bound setup as any accepted start. Its owned workspace is the story's
-checkout: investigation, observation, and any later implementation use it
-rather than a nested one.
+Admission publishes the story section (or whole new seed), its declared plan,
+the Taken entry, and agent assignment together. It reports carried paths as
+`admitted`. After confirmation, startup withdraws the published draft from
+its originating checkout where unchanged, preserving sibling edits, subsequent
+edits and staged content. Refresh is reported separately.
+
+Follow the shared [start result and recovery](execution-location.md#read-and-recover-the-start-result)
+with the original admission flags. An existing claim you own continues.
+A source refusal identifies the missing or conflicting story input. A done
+identity needs a fresh allocation. A source conflict reports the path and
+preserves both versions for a human decision. Resume an uncertain launch with
+the retained draft, starting revision, and candidate SHA. Allocate a new
+identity only when the previous attempt is confirmed unpublished. For a losing
+retained launch candidate in Trunk Mode, `--retry-admission true` reports
+`retry-admission` once the candidate is preserved and the checkout can retry.
 
 ## Continue into implementation
 
-Permission to investigate, observe, or review is not permission to implement,
-and Taken membership never implies readiness. An admission recorded `planless`
-under the instruction's explicit planless authority proceeds under that
-instruction. Otherwise, when implementation is authorized, attach it to the
-same story: plan it with ordinary slice planning (or record `planless` only
-under explicit planless authority), assess readiness through
-[record-state](../../dough-product-backlog/references/record-preparation.md#assess-readiness-at-preparation-completion),
-and publish that preparation through its ordinary keep. Recording the planned
-approach also links your Taken entry to its plan; keep and publish that
-backlog change with the plan and story. Then run the start command without
-`--admit`. It continues your claim as `status: "existing"` with the resolved
-`plan`, without publishing a second claim, profile, story, or backlog link. Local
-checkout maintenance remains a separate result. It
-refuses, starting nothing, while the published approach is unselected, the
-published preparation is not ready, the published Taken entry lacks the plan
-link its preparation declares (record the planned approach again with
-`record-state` and publish it), or another agent holds the claim.
+Admission grants no implementation authority or readiness. Proceed under the
+explicit planless instruction when applicable. Otherwise, once authorized,
+record the approach and [assess readiness](../../dough-product-backlog/references/record-preparation.md#assess-readiness-at-preparation-completion)
+on the same story. Publish its preparation through ordinary keep, including
+the plan and its Taken link for planned work. Run the usual start without
+`--admit` to resume the existing claim. Use ordinary checkout-bound setup
+before implementation.
 
 ## Finish the mission
 
-A supported no-change conclusion, such as behavior that already matches its
-intent, an optimization experiment with no worthwhile change, or observation
-with no findings, completes the mission; close it through ordinary
-[story wrap-up](../../dough-story-wrap-up/SKILL.md). Uncertainty alone is not
-completion: unfinished or inconclusive work stays Taken until it completes or
-an explicit disposition returns or abandons it.
+An evidenced no-change conclusion completes the mission through ordinary
+[story wrap-up](../../dough-story-wrap-up/SKILL.md). Inconclusive work stays
+Taken until it completes or receives an explicit disposition.

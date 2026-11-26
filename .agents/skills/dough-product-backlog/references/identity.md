@@ -1,23 +1,22 @@
 # Work item identity
 
-One contract for what identifies a work item. Every backlog operation, every
-reference to a story or correction, and every reconciliation uses it. Do not
-restate a competing allocation rule elsewhere.
+One contract for what identifies a queued or taken work item. Every backlog
+operation, every reference to a story or correction, and every reconciliation
+uses it. Do not restate a competing allocation rule elsewhere.
 
 ## The contract
 
 1. **A work item has exactly one identity, allocated once.** Take it from the
    work item's canonical home: a story's seed ID with the story's anchor,
    including a new correction's story. A correction whose plan was already its
-   home keeps the plan-path identity it recorded. A completed ad hoc story
-   takes its identity from its [originating session](#completed-ad-hoc-work).
-   Never give new work a plan-path identity to replace later, invent a number,
-   keep a registry, or renumber. A story's plan records that story's identity
-   and is never listed as work of its own.
+   home keeps the plan-path identity it recorded. Never give new work a
+   plan-path identity to replace later, invent a number, keep a registry, or
+   renumber. A story's plan records that story's identity and is never listed
+   as work of its own.
 2. **The identity is recorded, not derived.** Record it in the canonical home
-   and, when listed in the backlog, in the entry beside the link. An entry
-   that records nothing is still identified by the link it carries, until
-   its identity is recorded.
+   and write it in the backlog entry in full, beside the link. An entry that
+   records nothing is still identified by the link it carries, until its
+   identity is recorded.
 3. **The link is navigation, not identity.** It says where the canonical home
    is now. Renaming the file, moving it to another directory, or changing the
    story anchor is a reference change: the recorded identity carries across
@@ -32,16 +31,6 @@ restate a competing allocation rule elsewhere.
    that claims work another entry already claims, and an identity that cannot
    be read back from the entry it would be written into are refusals, not
    guesses. Report them and change nothing.
-
-## Completed ad hoc work
-
-A completed ad hoc session with no story has identity `ad-hoc#<session UUID>`.
-Record it in the local Done attachment or in the published close and done
-record. The done record beside the backlog is the published story's home.
-Reuse the recorded identity on repeated close and give follow-ups separate
-session UUIDs under the same story. Preserve a session's existing association
-and older standalone records. Allocate seed-based identities for planned work
-through the usual backlog rules.
 
 ## In the backlog entry
 
@@ -58,9 +47,13 @@ written; keep that work item's identity when you write the entry out in full.
 
 ## When the canonical home moves
 
-The moved document's own recorded identity is what establishes that it is the
-same work item. Record the identity in the moved document first, then update
-the entry's link. Leave no second document recording the same identity.
+Finish the rename or move first. Keep the recorded identity in the moved
+canonical home and confirm the former home no longer claims it. Run
+`refresh --identity <id>` with one or more of `--title <title>`, `--link <home>`,
+and `--plan <link>` for an existing plan link. Give links relative to the
+backlog directory. The check preserves the entry's identity, list, and
+position and refuses a move whose old home still claims the identity. Update
+other incoming links separately.
 
 ## Allocate a new identity
 
@@ -77,14 +70,11 @@ Read that evidence with the
 reading filenames. It reserves nothing; the canonical home records what you
 choose.
 
-The reader preserves numeric reservations from seed metadata and filenames and
-recovers explicit identities from readable legacy homes, including old heading
-layouts and nonnumeric identities. It examines later versions of unnumbered
-historical paths so an earlier context-only version cannot hide an allocation.
-Readable context documents allocate nothing; they are not missing identities.
-Malformed identity records and unreadable evidence remain gaps. A declared
-historical story is reported under `history.story` and is already used, even
-without a done record.
+The active seed directory contributes numeric reservations from seed metadata
+and filenames and explicit identities from readable homes. Context documents
+allocate nothing. Malformed identity records and unreadable evidence appear as
+gaps. Git history contributes the adding commit for numbered seed files and
+done records, including files cleanup has removed.
 
 - Run it from a checkout current with trunk: history covers only what that
   checkout reaches, at the `revision` the history source names.

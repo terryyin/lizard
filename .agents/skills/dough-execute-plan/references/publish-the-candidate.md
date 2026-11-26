@@ -1,220 +1,109 @@
 # Publish the candidate
 
-Reusable remote-publication mechanics for one owned unpublished suffix onto a
-shared authorized target: fetch, reconcile in the owned workspace, rebase only
-that suffix, validate, push that exact candidate, and recover a rejected push.
-Local default-checkout preservation and refresh are owned by
-[maintain the default checkout](maintain-default-checkout.md). Remote
-acceptance does not require that checkout to move, and a later maintenance
-result does not erase an accepted publication.
-
-A calling procedure supplies the owned workspace, the owned unpublished
-suffix, the authorized remote target as the fully qualified branch ref
-`refs/heads/<target-branch>`, and how it registers or validates the pushed
-result. Nothing below requires execution's mode selection, Taken-claim
-semantics, or CI-observer policy. [Trunk publication](trunk-publication.md) is
-`dough-execute-plan`'s caller for claims, increments, and owned repairs: it
-names the suffix, workspace, and authorized remote target, then uses the
-sequence below.
-
-A caller integrating an already-published tip keeps both published histories
-through [Preserve published history](preserve-published-history.md) instead of
-rebasing that tip.
+Use the installed publisher named by the calling workflow. It owns the Git
+sequence below. Follow the same sequence in the owned workspace when the
+caller directs publication by hand. An unpublished suffix can be replayed.
+A published prefix uses [history-preserving integration](preserve-published-history.md).
 
 ## Preconditions
 
-Resolve the owned workspace, the authorized remote target, and the owned
-unpublished suffix. The suffix is that workspace's commits not yet on the
-authorized remote target. For a claim, that suffix is the Taken commit
-in the execution workspace. For an increment, it is the caller's consecutive
-unpublished commits in the workspace that already holds them. Its parent is the
-previously published base when this caller has recorded one. Rewrite only that
-suffix.
-Never rewrite published revisions or another writer's commits, force-push, or
-publish a branch other than the authorized target.
+Resolve the owned workspace, the authorized remote and its
+`refs/heads/<target-branch>`, and the unique owned suffix or reviewed tip.
+Resolve the caller's proof and registration duties before publication. Stop
+if any required input is missing or contradictory.
 
-The owned workspace is where the suffix is reconciled and from where it is
-pushed. A preparation keep uses the preparation workspace. An execution
-increment uses the execution worktree. A claim is committed and pushed
-from the execution workspace selected before that claim.
+The suffix is the caller's consecutive unpublished commits on the owned
+branch, above the previously published base. Reconcile and push from the
+workspace that owns it. Preserve published history and other writers' commits.
+Use an ordinary push to the authorized ref.
 
-A pending human edit on the default checkout does not block publication from
-a different owned workspace. Do not stage, unstage, reset, stash, or otherwise
-change that edit in order to publish. Before mutating the default checkout —
-only when the owned workspace is that checkout, or when a maintenance step
-actually refreshes it — apply
-[preserve pending local work](maintain-default-checkout.md#preserve-pending-local-work).
-Those checks do not gate a remote push from a separate owned workspace. A
-maintenance stop does not register a publication the remote has not accepted,
-and does not undo one it has.
+Leave a separate default checkout alone even when it has pending work. Apply
+[default-checkout preservation](maintain-default-checkout.md#preserve-pending-local-work)
+before a publication or maintenance step mutates that checkout. Remote
+acceptance stands independently of local refresh.
 
 ## Publish the candidate
 
-Apply [Preconditions](#preconditions) before this sequence. When it first lands
-a launch's work on trunk and that launch supplied a dashboard landing context,
-wire that context into the installed publisher before step 5 under the shared
-[landing handoff](../../dough-land/references/dashboard-completion.md#retain-the-launch-landing).
-It retains each final pair before push and captures accepted evidence at step 6;
-a later explicit landing uses the original launch's context.
+For the first trunk publication of a Dashboard launch, supply its original
+[landing context](../../dough-land/references/dashboard-completion.md#retain-the-launch-landing).
+That handoff retains the pair before each push and records the accepted pair
+before retirement. Follow its reporting-only retry for failed capture.
 
-1. Fetch the authorized remote for the target branch from the owned workspace.
-2. Reconcile in that workspace from the fetched remote target, not from the
-   default checkout's tip. Push the caller's candidate SHA later, never the
-   default checkout's branch tip, so unrelated commits and a pending human
-   edit there stay unpublished. Leave that checkout's commits, index, and
-   working tree untouched when the owned workspace is separate. When the
-   caller cannot name a unique suffix, stop under
-   [preserve pending local work](maintain-default-checkout.md#preserve-pending-local-work)
-   instead of guessing which commit to publish.
-3. An unpublished suffix follows this step. An already-published tip follows
-   [Preserve published history](preserve-published-history.md) instead of this
-   rebase. When the fetched authorized remote target is still the previously published
-   base, or that target ref does not exist yet, leave the suffix unchanged.
-   When that target advanced, rebase only that suffix onto the fetched target
-   in the owned workspace. The range is commits after the previously published
-   base on the owned branch:
-   `git -C <owned-workspace> rebase --onto <fetched-remote-target> <previously-published-base> <owned-branch>`.
-   When that replay touches the product backlog or the done records beside
-   it, run the same range through
-   the installed rebase adapter instead of that raw `git rebase`:
-   `product-backlog-git-rebase.mjs rebase --onto <fetched-remote-target> --ref <previously-published-base> --branch <owned-branch> --cwd <owned-workspace>`,
-   following
-   [publication rebase conflicts](publication-rebase-conflict.md). After a
-   rewrite, the pre-rebase SHA is not the candidate. Every adapter result
-   that exits non-zero, including `catalog-uncommitted`, stops before the
-   push and preserves the state Git left; resume it as
-   [publication rebase conflicts](publication-rebase-conflict.md) describes.
-   Do not rebase the default checkout's branch unless it is the owned branch.
-4. Validate the candidate using the check the caller supplied for this
-   suffix. An unchanged base does not invalidate accepted proof. A rebase
-   onto a newer target invalidates only proof the combined changes affect;
-   reverify that behavior and reuse the rest. Do not treat rebase success
-   as behavioral proof, rerun unrelated checks, or wait for CI.
-5. Immediately before pushing, retain the full candidate SHA and the base
-   the owned suffix extends. When this candidate has not been rewritten,
-   that base is the previously published base. When step 3 replayed the
-   suffix, that base is the fetched target it was replayed onto, not the
-   older revision and not the candidate tip. The execution publisher's
-   `beforePush` callback exposes `candidate` and `suffixBase` for each
-   attempted push, including after a retry rewrites the candidate and its base.
-   Retain the pair together
-   before allowing that push. The accepted result carries the same base and
-   its receipt's SHA; a multi-commit suffix is not based at the tip's parent.
-   Push that exact candidate from the owned workspace:
-   `git -C <owned-workspace> push <remote> <candidate>:refs/heads/<target-branch>`.
-   Do not fast-forward the default checkout, force-push, or move that
-   checkout's branch with `merge`, `update-ref`, or `branch -f`.
-6. After the push, confirm from a fresh observation that the authorized
-   remote contains that exact candidate. A live read that shows the candidate
-   at the authorized target establishes acceptance directly. Fetch again when
-   the caller needs the target's history to establish containment. Do
-   not require the default checkout's `HEAD`, index, or working tree to
-   match. When this caller keeps published revisions, append that SHA; do
-   not add a pre-rebase SHA or treat a later moving `HEAD` as the
-   publication. The receipt is that accepted SHA and the target it was
-   accepted on. When an observer is already bound to that target, register
-   that SHA. Do not register a pre-rebase SHA, and do not register the SHA
-   with an observer bound to a different target.
-   Registration failure is lost coverage: report it and do not claim the
-   revision was observed. Do not wait for CI. Then record the separate
-   [maintenance outcome](maintain-default-checkout.md#independent-maintenance-outcome)
-   by inspecting the default checkout and not refreshing it in this
-   sequence. A caller attempts refresh only after this sequence, under
-   [Refresh eligibility](maintain-default-checkout.md#refresh-eligibility).
-   Acceptance here is independent of that attempt.
+1. Fetch the authorized remote from the owned workspace.
+2. Apply the caller's fetched-target checks before preparing a candidate.
+   Use the fetched target, including when the default checkout is elsewhere.
+3. If the target is unchanged from the published base or does not exist,
+   keep the suffix. If it advanced, replay only the owned suffix with
+   `git -C <owned-workspace> rebase --onto <fetched-target> <previously-published-base> <owned-branch>`.
+   For the backlog or its done records, use the installed
+   `product-backlog-git-rebase.mjs rebase --onto <fetched-target> --ref <previously-published-base> --branch <owned-branch> --cwd <owned-workspace>`.
+   A nonzero adapter result, including `catalog-uncommitted`, stops with Git
+   state preserved. Follow [publication rebase conflict](publication-rebase-conflict.md)
+   to resolve it. A reviewed published prefix instead follows
+   [Preserve published history](preserve-published-history.md).
+4. Apply the caller's proof to the candidate. Reuse proof that still applies
+   and recheck what the combined changes affect before any push. A failed
+   recheck holds the candidate. Successful reconciliation alone supplies no
+   behavioral proof.
+5. Retain the full candidate SHA and its actual `suffixBase` immediately
+   before each push. Use the previously published base for an unchanged
+   suffix or the fetched target it was replayed onto after a rewrite. Keep
+   both values from `beforePush` and the accepted receipt. This comparison
+   covers the whole suffix, including multiple commits. Push the exact SHA
+   with `git -C <owned-workspace> push <remote> <candidate>:refs/heads/<target-branch>`.
+6. Confirm the accepted SHA on the authorized target. After an answered
+   push, fresh increments and reviewed integration require exact equality
+   with the live target tip.
+   When the caller accepts containment, fetch and check ancestry. Record
+   the exact accepted SHA and target. When observation applies, register
+   that SHA on the caller's bound observer for that target or report a
+   coverage gap. Leave any wait to the caller. Record
+   [maintenance separately](maintain-default-checkout.md#independent-maintenance-outcome)
+   and apply [refresh eligibility](maintain-default-checkout.md#refresh-eligibility)
+   only after acceptance when the caller requires refresh.
 
 ## Recover a rejected push
 
-A non-fast-forward rejection leaves the owned suffix unpublished. Retain the
-rejected candidate SHA and the base that suffix extends, the base retained
-in step 5. After a rewrite, that base is the fetched target the suffix was
-replayed onto. Do not use the rejected tip as the cutoff: that range is
-empty and drops the suffix. Do not use an older published revision the
-rewritten suffix no longer extends directly: that range includes another
-writer's commits. Recheck
-[Preconditions](#preconditions). If the owned workspace is the default
-checkout, recheck
-[default-checkout preservation](maintain-default-checkout.md#preserve-pending-local-work)
-before rebasing that checkout. A separate owned workspace does not wait on
-that checkout. When the applicable checks hold, reconcile only the suffix and
-retry one ordinary push:
+For a non-fast-forward rejection, use the retained candidate and base from
+step 5. Recheck [preconditions](#preconditions), including default-checkout
+preservation when that checkout owns the suffix. Fetch the new target. Apply
+steps 2–6 once more using the retained `suffixBase` as the replay cutoff,
+including when the first attempt already rewrote the suffix. This keeps
+another writer's commits outside the replay. A history-preserving integration
+recomputes its merge on the new target. Keep the renewed proof and comparison
+with the rewritten candidate.
 
-1. Fetch the authorized remote. The current target is that fetched remote target.
-2. In the owned workspace, replay the same owned-suffix range as
-   [candidate step 3](#publish-the-candidate), using the base retained in
-   step 5 as the cutoff: only commits after that base, onto that fetched target.
-   A history-preserving merge recomputes that merge onto the fetched target
-   instead of rebasing, through the merge adapter when the backlog or its done
-   records are touched. When an unpublished suffix touches the product backlog
-   or its done records, that replay is the rebase adapter, not a raw
-   `git rebase`. Do not rebase from the rejected
-   candidate, and do not rebase the default checkout unless it is the owned
-   branch. Either mistake can drop the suffix or rewrite another writer's
-   commits. Every adapter result that exits non-zero, including
-   `catalog-uncommitted`, stops here. Preserve the refs, worktree, and index
-   Git left, report that result, and do not push; resume it as
-   [publication rebase conflicts](publication-rebase-conflict.md) describes.
-3. The rewritten owned-branch tip is the candidate. The rejected SHA is not.
-   Do not move the default checkout onto it.
-4. Revalidate as in candidate step 4. The rebase invalidates only proof the
-   combined changes affect. A failed recheck stops before the retry push and
-   preserves the rewritten candidate.
-5. Push the rewritten candidate once, as in candidate step 5. After confirmed
-   remote acceptance, record that SHA and the separate maintenance outcome as
-   in candidate step 6.
-
-A second rejection or other persistent failure stops. Preserve the rewritten
-candidate and the remote as they are. Report the persistent contention. Do
-not rebase or push again.
+On a second rejection or persistent failure, stop with the remaining Git
+state and report the contention. An unanswered push is uncertain acceptance.
+Use [interrupted publication recovery](#resume-an-interrupted-publication)
+to settle it.
 
 ## Resume an interrupted publication
 
-After an interruption, classify the owned suffix from fetched remote history
-and the candidate SHA retained immediately before the push. A rewrite updates
-that retained SHA before the push, so a lost response does not put a
-pre-rebase SHA back in its place. Fetch the authorized remote, then test
-ancestry — not tip equality:
+Use the workspace, remote and target of the interrupted attempt. Recover the
+full candidate SHA and its retained `suffixBase` together before running
+resume. The base must be an ancestor of the candidate, including equality for
+an empty comparison. Validate both commit IDs before transport. Keep the
+original pair even if the target advanced. Use the latest retained rewrite
+when one was prepared. Keep superseded SHAs out of publication.
 
-`git merge-base --is-ancestor <candidate> <fetched-remote-target>`
+Fetch the authorized target. For direct inspection use
+`git merge-base --is-ancestor <candidate> <fetched-remote-target>`.
+Then follow the caller's recovery entry point and the observed state.
 
-The candidate is published when that command succeeds, including when another
-writer has since added commits on top of it. Do not rebase that candidate,
-push it again, or push a superseded pre-rebase SHA. A lost or unknown push
-response is this published case whenever the retained candidate is an
-ancestor. It is not a rejected push.
+| State | Action |
+| --- | --- |
+| Target contains the candidate | Keep the accepted SHA and original comparison. Continue the caller's outstanding duties without another push. |
+| Target lacks the retained candidate | Apply the caller's fetched-target holds before a push. Managed resume tries that exact SHA at most once and leaves it unchanged. If it is rejected, retain the state. Use the fresh publisher's reconciliation and proof path when authorized to prepare a replacement. For a direct caller, use the retained SHA when it still fast-forwards or follow the applicable [rejected-push recovery](#recover-a-rejected-push) to prepare a new candidate. |
+| Candidate is local only in the default checkout | If it is the authorized owned checkout, the same exact-SHA rule applies. Preserve pending edits. |
+| Acceptance lacks registration | Reuse the caller's receipt or register the accepted SHA on its live observer for the same target. Report any unresolved coverage gap. |
 
-When the caller retained the delivery comparison before push, supply its
-`suffixBase` with that candidate. Resume validates both full commit IDs and
-base ancestry before any fetch, push, or registration, and returns that base
-unchanged even after the target advances. Equal ends are a valid empty
-comparison. Without an explicitly retained base, ordinary publication recovery
-still applies, but the result has no historical comparison. Do not substitute
-the candidate's parent, today's target, or an earlier starting revision after
-a rewrite.
-
-Continue from the observed boundary below. Preserve the caller's commit,
-workspace, and any pending human edit on the default checkout. Inspect
-checkout maintenance and leave any changes or cleanup to their owners.
-
-| Boundary | Actual state | Continue with |
-| --- | --- | --- |
-| Not on the remote | The retained candidate is not an ancestor of fetched remote history. The owned workspace still has that commit. | [Publish the candidate](#publish-the-candidate) from step 1. When that SHA still fast-forwards onto the fetched target, push it and preserve the original commit. When it does not fast-forward, use [rejected-push recovery](#recover-a-rejected-push). The caller handles registration after confirmed acceptance. |
-| Candidate only on the default checkout | That checkout's target tip is the owned candidate, and the remote does not contain it. The owned workspace for this suffix is that checkout. | Push that exact SHA ([Publish the candidate](#publish-the-candidate) step 5). Do not rebase or commit again unless a newer remote requires [rejected-push recovery](#recover-a-rejected-push). Preserve any pending human edit; the SHA push does not include it. |
-| Already published | The exact retained SHA is an ancestor of fetched remote history. The remote tip may be a later writer's commit. | Use the accepted SHA and its retained comparison. Preserve the remote and continue with the caller's remaining work. |
-| Missing registration | Publication is accepted and the caller's selected live observer for that target has no receipt for the accepted SHA. | The caller registers the accepted SHA on that observer. Reuse an existing receipt or report a coverage gap when the caller cannot recover its observer. |
-
-If the owned workspace, target, or candidate SHA is missing, contradictory, or
-matches no unique owned suffix, preserve every existing worktree, branch, and
-index under
-[preserve pending local work](maintain-default-checkout.md#preserve-pending-local-work).
-Report the gap. Do not create a replacement worktree, switch branches, or
-guess which commit to publish.
+Missing or contradictory recovery inputs stop the path. Keep the existing
+checkout and Git state until the caller can recover its exact coordinates.
 
 ## Preserve remaining state
 
-Setup or publication failure preserves remaining state exactly as found:
-existing worktrees, branches, commits, and index content stay untouched under
-[preserve pending local work](maintain-default-checkout.md#preserve-pending-local-work).
-An accepted remote candidate stays accepted. Preserved state is not permission
-to start unauthorized work, continue from an unpublished result, or substitute
-a different destination than the one already recorded for this caller.
+On setup or publication failure, keep the refs, worktree, commits and index
+as Git left them. Apply
+[default-checkout preservation](maintain-default-checkout.md#preserve-pending-local-work)
+if that checkout is involved. Accepted remote work stays accepted.

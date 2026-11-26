@@ -3,9 +3,7 @@
 // ranked unit its leads, the folders beyond them and its tail. Results,
 // time, shares and means never cross units: each ranked unit's section names
 // its unit and its results.
-import { RANKED_UNITS } from "./ci-proof-ranking.mjs";
 import {
-  capped,
   columns,
   count,
   elide,
@@ -16,10 +14,8 @@ import {
   unitText,
 } from "./ci-proof-table-text.mjs";
 
-const UNIT_LINES = 6;
-
 // What a ranked unit's results column is headed.
-const RESULTS = { case: "cases", file: "files", legacy: "results" };
+const RESULTS = { case: "cases", file: "files" };
 
 // An item's path as a lead shows it: a block of an entry says what it is,
 // and results without a duration are counted beside it.
@@ -50,20 +46,16 @@ function totalsLines({ units, rankings }) {
       "Scope totals",
       "per unit; results, time, shares and means never cross units",
     ),
-    ...capped(
-      columns(
-        ["unit", "entries", "paths", "results", "time s", "untimed"],
-        rows,
-        [1, 2, 3, 4, 5],
-      ),
-      UNIT_LINES + 1,
-      "units",
+    ...columns(
+      ["unit", "entries", "paths", "results", "time s", "untimed"],
+      rows,
+      [1, 2, 3, 4, 5],
     ),
     ...(unranked > 0
       ? [
           label(
             "Unranked",
-            `${count(unranked)} units without timed items or beyond the first ${RANKED_UNITS}; narrow --scope to rank them`,
+            `${count(unranked)} ${unranked === 1 ? "unit" : "units"} without timed items`,
           ),
         ]
       : []),

@@ -41,7 +41,6 @@ function sealClose(target, close, accepted, publication) {
       sessionId: target.sessionId,
       ...close,
       story: target.story,
-      title: target.title,
       sharedCheckout: target.sharedCheckout,
     },
     accepted,
@@ -83,7 +82,6 @@ export async function publishSessionClose({
       saveCloseState(request.workspace, target.sessionId, {
         candidate,
         suffixBase,
-        title: target.title,
       });
       await request.beforePush?.(comparison);
     },
@@ -110,7 +108,7 @@ export async function publishSessionClose({
  * the `session` identity or the landing context's reference. A record
  * commit rebased onto an advanced target stops as `needs-validation` like any
  * publication; rerun with `validatedCandidate` set to its candidate.
- * @param {{ record?: ReturnType<typeof sessionRecord>, session?: { sessionId?: string, workflow: string, story?: unknown, title?: string }, candidateSha?: string, suffixBase?: string, now?: () => Date, workspace: string, branch: string, targetRef: string, remote?: string, backlogPath?: string, validatedCandidate?: string, landingContext?: string }} request
+ * @param {{ record?: ReturnType<typeof sessionRecord>, session?: { sessionId?: string, workflow: string, story?: unknown }, candidateSha?: string, suffixBase?: string, now?: () => Date, workspace: string, branch: string, targetRef: string, remote?: string, backlogPath?: string, validatedCandidate?: string, landingContext?: string }} request
  */
 export async function resumeSessionClose({
   record,
@@ -155,7 +153,7 @@ export async function resumeSessionClose({
   return {
     work,
     record: await sealClose(
-      { ...target, title: saved.title ?? target.title },
+      target,
       { workflow: session.workflow, closedAt: now().toISOString() },
       { suffixBase: work.suffixBase, sha: work.acceptedSha },
       { ...request, remote, backlogPath, landingContext, now },

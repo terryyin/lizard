@@ -610,6 +610,58 @@ sub test_function {
         self.assertEqual(3, function.cyclomatic_complexity)  # 1 base + 2 conditions (else doesn't count)
 
 
+class TestPerlWordOperators(unittest.TestCase):
+    """Word-form and/or count as decisions only in operator position."""
+
+    def test_word_form_operators_add_ccn(self):
+        for expression, complexity in (
+                ('$a and $b', 2),
+                ('$a or $b', 2),
+                ('$a and $b or $c', 3)):
+            with self.subTest(expression=expression):
+                code = 'sub check { return ' + expression + '; }\n'
+                function, = analyze_file.analyze_source_code(
+                    'sample.pl', code).function_list
+                self.assertEqual(
+                    ('check', complexity),
+                    (function.name, function.cyclomatic_complexity))
+
+    def test_method_named_and_does_not_add_ccn(self):
+        code = 'sub f { return $obj->and(); }\n'
+        function, = analyze_file.analyze_source_code(
+            'sample.pl', code).function_list
+        self.assertEqual(1, function.cyclomatic_complexity)
+
+    def test_package_qualified_and_does_not_add_ccn(self):
+        code = 'sub f { return Package::and(); }\n'
+        function, = analyze_file.analyze_source_code(
+            'sample.pl', code).function_list
+        self.assertEqual(1, function.cyclomatic_complexity)
+
+    def test_quoted_words_do_not_add_decisions(self):
+        code = 'sub check { return "and or"; }\n'
+        function, = analyze_file.analyze_source_code(
+            'sample.pl', code).function_list
+        self.assertEqual(1, function.cyclomatic_complexity)
+
+    def test_symbol_form_operators_still_add_ccn(self):
+        for expression, complexity in (('$a && $b', 2), ('$a || $b', 2)):
+            with self.subTest(expression=expression):
+                code = 'sub check { return ' + expression + '; }\n'
+                function, = analyze_file.analyze_source_code(
+                    'sample.pl', code).function_list
+                self.assertEqual(complexity, function.cyclomatic_complexity)
+
+    def test_nonstrict_drops_word_operator_keeps_member_name(self):
+        analyzer = FileAnalyzer(get_extensions(['nonstrict']))
+        word_ops = analyzer.analyze_source_code(
+            'sample.pl', 'sub check { return $a and $b; }\n')
+        self.assertEqual(1, word_ops.function_list[0].cyclomatic_complexity)
+        method = analyzer.analyze_source_code(
+            'sample.pl', 'sub f { return $obj->and(); }\n')
+        self.assertEqual(1, method.function_list[0].cyclomatic_complexity)
+
+
 class TestPerlCoverageGaps(unittest.TestCase):
     """Tests targeting previously-uncovered branches in lizard_languages/perl.py."""
 

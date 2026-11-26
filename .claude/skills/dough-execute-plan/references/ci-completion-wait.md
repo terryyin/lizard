@@ -18,8 +18,8 @@ and pending state. After review — or with `--skip-retro` or another explicit
 review omission — publish the plan's [execution-complete record](finish-or-stop.md#record-execution-completion),
 then invoke exactly one completion action. Wrap-up uses it after registering the
 final accepted SHA: the closure or integrated SHA, or the last consumer
-publication. Follow [completion mechanics](#completion-command-and-receipt-mechanics),
-including its live-Claude Story Branch background handoff; handle delivered failures at safe boundaries.
+publication. Follow [completion mechanics](#completion-command-and-receipt-mechanics);
+handle delivered failures at safe boundaries.
 
 Success with confirmed shutdown ends observation; report `integrated_state` under
 completion mechanics.
@@ -39,11 +39,6 @@ no repair, commit, push, backlog or observer authority.
 
 ## Completion command and receipt mechanics
 
-At a final managed Story Branch execution/review handoff, the same live
-interactive Claude coordinator may choose the bounded
-[background handoff](ci-background-handoff.md). All other completion paths
-below retain this operation.
-
 Invoke the completion action with the exact retained mailbox and accepted
 revision:
 
@@ -52,7 +47,7 @@ node '/ABSOLUTE/RESOLVED/SKILL/scripts/ci-mailbox.mjs' complete-revision '/EXACT
 ```
 
 When the observer ended before a receipt, follow
-[managed completion recovery](ci-completion-recovery.md).
+[managed completion recovery](#managed-completion-recovery).
 
 On Codex, await the original command through the
 [foreground wait](wait-for-proof.md#codex-foreground-waits).
@@ -139,3 +134,18 @@ human-judgment stops still use the host adapter's stop command.
 
 Return that complete receipt to the owning procedure. Do not interpret a
 successful local command exit as a successful CI verdict.
+
+## Managed completion recovery
+
+When this coordinator's observer for the target has ended before the accepted
+SHA has a completion receipt, run `execution-completion-recovery.mjs complete`
+once. This also applies when a budget-expiry notice names that command.
+Supply the same owner inputs as `resume` (`--workspace`, `--accepted-sha`,
+`--target-ref`, `--repo`, `--host`, and the host session or Codex stream flags).
+The command re-establishes this coordinator's observation of that SHA on its
+authorized target and returns the ordinary `CI_OBSERVER` completion receipt
+under [completion mechanics](#completion-command-and-receipt-mechanics).
+
+On Codex, arm a fresh yielded stream for the same target and coordinator first
+using the [Codex adapter](ci-notify-codex.md). Pass its `--coordinator` and
+`--observer-directory` to the recovery command.
