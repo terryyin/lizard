@@ -1,5 +1,6 @@
 """Shared JavaScript and TypeScript runtime state dispatch."""
 
+from .typescript_signatures import GenericArrowTypeOpen
 from .code_reader import CodeStateMachine
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
 from .javascript_expression import JSXChildBrace
@@ -125,6 +126,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._prev_token = token
                     return
         if self.as_object and self._handle_object_member(token):
+            return
+        if token == '<' and isinstance(token, GenericArrowTypeOpen):
+            self._generic_prefix = self._prev_token
+            self._consume_generic_type_params(self._after_generic_arrow_types)
             return
         if token in ('.', '?.'):
             self._state = self._field
@@ -291,6 +296,16 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         else:
             self._prev_token = ''
             self.next(self._state_global, token)
+
+    def generic_arrow_type_context(self):
+        if isinstance(self._state, TypeScriptStates):
+            return self._state.generic_arrow_type_context()
+        return (self._state == self._state_global and self._call_group
+                and self.last_token in (None, ','))
+
+    def _after_generic_arrow_types(self, token):
+        self.last_tokens = self._prev_token = '>'
+        self.next(self._state_global, token)
 
     def _state_template_literal(self, token):
         if token == '`':

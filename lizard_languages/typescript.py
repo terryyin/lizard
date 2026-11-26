@@ -2,6 +2,7 @@
 Language parser for TypeScript
 '''
 
+from .typescript_signatures import GenericArrowTypeOpen, generic_arrow_has_function_constraint
 from itertools import tee
 
 from .code_reader import CodeReader, CodeStateMachine, MemberName
@@ -96,7 +97,7 @@ class _MemberName(str):
 _MEMBER_ACCESS = ('.', '?.')
 _COMMENT_STARTS = ('//', '/*')
 # The tokens that preprocess looks at, in one set for the hot loop.
-_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset(_MEMBER_ACCESS)
+_MARKED_PUNCTUATION = _ANNOTATION_PUNCTUATION | frozenset((*_MEMBER_ACCESS, '<'))
 # With the reader's conditions: the keywords that a metric counts as a
 # structure or a jump.
 _STRUCTURE_KEYWORDS = frozenset((
@@ -278,7 +279,17 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     elif token in marked_punctuation:
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens
-                        if token == '?':
+                        if (token == '<' and self.context.class_field_annotations
+                                and not getattr(token, 'is_jsx_markup', False)
+                                and state.generic_arrow_type_context()):
+                            tokens, lookahead = tee(tokens)
+                            if generic_arrow_has_function_constraint(lookahead):
+                                token = GenericArrowTypeOpen(token)
+                            del lookahead
+                            member_access = False
+                            yield token
+                            break
+                        elif token == '?':
 
                             if (self.context.class_field_annotations
                                     and state.optional_member_context()):
