@@ -1,5 +1,5 @@
 import unittest
-from lizard import analyze_file
+from lizard import FileAnalyzer, analyze_file, get_extensions
 
 
 def get_ruby_function_list(source_code):
@@ -53,6 +53,59 @@ end
             [(function.name, function.start_line, function.end_line)
              for function in result])
         self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_nested_structures_close_at_ruby_block_boundaries(self):
+        source = '''
+def render(ready, cached)
+  if ready
+    show_current
+  end
+  if cached
+    show_saved
+  end
+end
+
+def dispatch(jobs, paused)
+  return if jobs.any? do |job|
+    job.pending?
+  end
+  if paused
+    notify_workers
+  end
+end
+
+def release(ready, active)
+  if ready
+    if active
+      release_workers
+    end
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['ns']))
+
+        functions = analyzer.analyze_source_code('dispatch.rb', source).function_list
+
+        self.assertEqual(
+            [('render', 1), ('dispatch', 2), ('release', 2)],
+            [(function.name, function.max_nested_structures)
+             for function in functions])
+
+    def test_modifier_wraps_the_block_before_it(self):
+        source = '''
+def release(pool)
+  pool.synchronize do
+    if pool.idle?
+      pool.release
+    end
+  end if pool.ready?
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['ns']))
+
+        function, = analyzer.analyze_source_code('pool.rb', source).function_list
+
+        self.assertEqual(3, function.max_nested_structures)
 
     def test_basic_if_with_then_on_one_line(self):
         result = get_ruby_function_list('''
