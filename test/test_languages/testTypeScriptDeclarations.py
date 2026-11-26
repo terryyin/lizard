@@ -368,6 +368,22 @@ function getPredicate(): typeof predicates.%(key)s {
         self.assertEqual([(3, 5, 2, 3)], [
             (f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity) for f in functions])
 
+    def test_overload_before_a_unicode_method_name(self):
+        code = """class Registry {
+  ゛get(value: unknown): boolean
+  ゛get(value: unknown, message?: string): boolean {
+    return message ? Boolean(value) : false;
+  }
+}
+const keep = () => true;
+"""
+        for suffix in ('ts', 'tsx'):
+            with self.subTest(suffix=suffix):
+                functions = analyze_file.analyze_source_code('example.' + suffix, code).function_list
+                self.assertEqual([(3, 5, 2, 2), (7, 7, 0, 1)], [
+                    (f.start_line, f.end_line, f.parameter_count, f.cyclomatic_complexity)
+                    for f in functions])
+
     def test_predicate_can_return_a_type_named_is(self):
         code = """type is = string;
 function check(value: unknown): value is is {
