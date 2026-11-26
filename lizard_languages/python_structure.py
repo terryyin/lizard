@@ -32,7 +32,7 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _state_global(self, token):
         if token == 'def':
-            self._state = self._python_function_name
+            self._state = self._function
 
     def _function(self, token):
         if token == '[':
@@ -45,18 +45,6 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
         else:
             self.context.add_to_long_function_name("(")
             self._state = self._dec
-
-    def _python_function_name(self, token):
-        context = self.context
-        previous = context.current_function
-        # Keep the Python state through an explicit line join after def.
-        self._function(token)
-        function = context.current_function
-        if function is not previous and function.name.count('.') > 1:
-            # The enclosing function's name already includes its parents.
-            enclosing = context.last_function
-            if enclosing is not None:
-                function.name = function.long_name = enclosing.name_in_space + token
 
     def _state_type_parameters(self, token):
         # Consume a type param list, tracking nesting so bounds like
