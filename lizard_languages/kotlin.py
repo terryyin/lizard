@@ -279,7 +279,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                     self._parameter_names.append(name.strip('`'))
                     self._can_read_parameter_name = False
                     self._reading_parameter_default = False
-            elif token == '=' and not self._can_read_parameter_name:
+            elif token == '=' and self._parameter_names:
                 self._reading_parameter_default = True
         if self._reading_parameter_default and '\n' in token:
             self._multiline_parameter_default = True
