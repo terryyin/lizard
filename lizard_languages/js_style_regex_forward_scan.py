@@ -14,10 +14,10 @@ from .js_style_regex_context import (
 from .ruby_documentation import match_opaque_span, may_have_documentation
 
 
-_ASCII_SPACES = ' \t\v\f'
-_JS_SPACES = frozenset(
-    _ASCII_SPACES + '\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005'
+_JS_NON_ASCII_SPACES = frozenset(
+    '\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005'
     '\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff')
+_ASSERTION_SPACES = _JS_NON_ASCII_SPACES | frozenset(' \t\v\f')
 
 
 def mark_forward(source, js_family):
@@ -34,7 +34,6 @@ def mark_forward(source, js_family):
     marks = []
     match_literal = _REGEX_LITERAL_RE.match
     keywords = _EXPRESSION_KEYWORDS if js_family else _RUBY_EXPRESSION_KEYWORDS
-    whitespace = _JS_SPACES if js_family else _ASCII_SPACES
     line_ends = _LINE_ENDS
 
     def after_operand(next_can_regex=False, next_expect_property=False):
@@ -134,7 +133,7 @@ def mark_forward(source, js_family):
         nonlocal paren_depth, async_nesting
         ch = source[i]
 
-        if ch in whitespace or ch in line_ends:
+        if ch in ' \t\v\f' or ch in line_ends:
             i += 1
             return
         if js_family and ch == '/' and i + 1 < n and source[i + 1] == '/':
@@ -241,7 +240,8 @@ def mark_forward(source, js_family):
             after_operand(next_can_regex=True)
             return
         i += 1
-        after_operand()
+        if not js_family or ch not in _JS_NON_ASCII_SPACES:
+            after_operand()
 
     if not js_family and may_have_documentation(source):
         from .ruby import _PERCENT_LITERAL
@@ -265,7 +265,7 @@ def mark_forward(source, js_family):
 def _after_assertion_operand(source, pos):
     """A same-line identifier, index or assertion can take a postfix '!'."""
     operand = pos - 1
-    while operand >= 0 and source[operand] in _JS_SPACES:
+    while operand >= 0 and source[operand] in _ASSERTION_SPACES:
         operand -= 1
     if operand < 0:
         return False
