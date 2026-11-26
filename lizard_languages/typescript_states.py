@@ -196,12 +196,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             # Expression arrows read object operands; block bodies and typed
             # signatures awaiting a real body still open a nested function.
             if self.started_function and not self._expression_body:
-                signature_paren = getattr(self, '_signature_paren', None)
-                if signature_paren is not None:
-                    signature_paren.starts_function = True
-                    self._signature_paren = None
                 self.sub_state(
-                    self.__class__(self.context),
+                    self._confirmed_function_body(),
                     self._pop_function_from_stack)
             elif self._statement_block_start():
                 # A block statement, `{ const r = f(() => 1); }`, holds
@@ -251,6 +247,13 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         # Don't overwrite _prev_token if it's 'new' (preserve for next token)
         if self._prev_token != 'new':
             self._prev_token = token
+
+    def _confirmed_function_body(self):
+        signature_paren = getattr(self, '_signature_paren', None)
+        if signature_paren is not None:
+            signature_paren.starts_function = True
+            self._signature_paren = None
+        return self.__class__(self.context)
 
     def _statement_block_start(self):
         """Whether a '{' here starts a statement: right after a ';' or at
