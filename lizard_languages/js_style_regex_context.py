@@ -2,6 +2,10 @@
 
 import re
 
+# A dot touches the digits of a decimal integer. A dot after a fraction,
+# an exponent or an identifier names a member instead.
+_DECIMAL_DOT = re.compile(r'(?<![\w$.])(?<![eE][+-])(?:0|[1-9](?:_?[0-9])*)\.')
+
 # One literal grammar shared with balanced template scanning; context decides
 # whether a slash opens that literal or remains division.
 REGEX_LITERAL = (r"/(?![/*])(?:\\[^\r\n]|\[(?:\\[^\r\n]|[^\\\]\r\n])*\]"
@@ -49,9 +53,6 @@ _LINE_ENDS = frozenset('\r\n\u2028\u2029')
 # A string can hold U+2028 and U+2029, so only these end one that does not close.
 _STRING_LINE_ENDS = frozenset('\r\n')
 _WS = frozenset(' \t\v\f\r\n\u2028\u2029')
-# A dot touches the digits of a decimal integer. A dot after a fraction,
-# an exponent or an identifier names a member instead.
-_DECIMAL_DOT = re.compile(r'(?<![\w$.])(?<![eE][+-])(?:0|[1-9](?:_?[0-9])*)\.')
 _WORD_CONT = frozenset(
     'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_$')
 # Pure-function memo for reused source objects (warmed analyzer batches).
