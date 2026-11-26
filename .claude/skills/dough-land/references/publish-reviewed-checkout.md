@@ -6,7 +6,7 @@ Choose the publisher by the first row that fits the checkout:
 | --- | --- |
 | Completed selected work | Its [visit forms](#land-completed-selected-work) |
 | Published prefix | [Preserve published history](../../dough-execute-plan/references/preserve-published-history.md) |
-| Ordinary reviewed work with the launch's Dashboard landing context, or a story preparation | [Session close](#publish-a-session-close) |
+| A story-linked Dashboard launch or a story preparation | [Session close](#publish-a-session-close) |
 | Any other wholly unpublished suffix | [Publish the candidate](../../dough-execute-plan/references/publish-the-candidate.md) for that suffix and target |
 
 For a published prefix, establish that the recorded published tip is an
@@ -61,8 +61,10 @@ Call the installed `publishSessionClose` API from
 `publishExecutionIncrement` request, the project's backlog path as
 `backlogPath`, and `session: { workflow, story }`. `workflow` is
 `dough-story-refinement` for a story preparation's landing and `ad-hoc`
-otherwise. `story` is the story identity this session's context names, such as
-a follow-up's done story; omit it when the context names none. The API
+otherwise. `story` is the story identity bound to the session, such as a follow-up's
+Done story. Use the verified Dashboard launch context or retained preparation
+session to recover that identity when needed. If neither supplies its story,
+hold the close and preserve the work and context. The API
 publishes the work, then the session's record as its own commit along the same
 route. Report `work` as the publication result and `record.status`; accepted
 work stays in place whatever the record's status. Other publishers write no

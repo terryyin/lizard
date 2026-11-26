@@ -16,6 +16,7 @@ import {
 import { expiredSessionRecordPaths } from "./session-record-pruning.mjs";
 import { rangeUncertainty } from "./shared-checkout-note.mjs";
 import {
+  hasSessionStory,
   isSessionId,
   sessionRecordPathBeside,
   sessionRecordVersion,
@@ -157,6 +158,15 @@ async function sendRecord(publication, path, record, now) {
       publication: { ok: identical, pushCount: 0 },
     };
   }
+  // A Dashboard ad hoc close may resume a published historical record, but
+  // cannot publish a new record without the story that owns its session.
+  if (record.workflow === "ad-hoc" && !hasSessionStory(record.story))
+    return {
+      status: "stopped",
+      path,
+      record,
+      error: "no story identity is bound to this session",
+    };
   await commitRecord({ ...publication, now }, path, record);
   // The record commit's parent is the accepted tip it was committed or
   // last rebased onto: the session's last range, or the integrated trunk.

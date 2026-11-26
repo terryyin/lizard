@@ -31,6 +31,9 @@ continuation or notification needed by the workflow.
 ## Establish execution context
 
 Resolve source and authority before changing project state or delegating.
+When there is no Established start, check for an [established session](references/established-session.md).
+If the blank-Start handoff names the published story this invocation continues,
+use [Continue the published Dashboard admission](references/established-session.md#continue-the-published-dashboard-admission).
 
 - **Planned** work requires an executable plan and the selected story's seed
   section or the [complete correction input](../dough-story-refinement/references/planning.md#choose-the-planning-level).
@@ -45,9 +48,10 @@ Resolve source and authority before changing project state or delegating.
   Create no plan, completion note or substitute record. Resolve any remaining
   expectations that a behavior change requires, or return an evidenced no-change result.
 
-Story Branch Mode is the default. `--trunk` or a clear equivalent selects
-Trunk Mode. Explicit caller selection uses the current branch. Resolve
-contradictions before changing state. Mode never grants execution authority.
+Without an established mode, Story Branch Mode is the default. `--trunk` or a
+clear equivalent selects Trunk Mode. Explicit caller selection uses the current
+branch. Resolve contradictions before changing state. Mode never grants
+execution authority.
 [Resolve replanning permission](references/execution-decisions.md#choose-replanning-permission)
 from `--replan`, `--no-replan` or existing authority. `--skip-retro` skips the
 automatic planned-execution retrospective. `--one-shot` keeps selected trivial
@@ -58,6 +62,7 @@ work for review, and `--auto-land` selects its automatic landing.
 When the instruction carries an [established start](references/established-start.md),
 retain its identity and accepted publication. Use the named checkout and skip
 the start command. Continue at [checkout setup](#choose-the-execution-location).
+The matched Dashboard admission also skips startup and proceeds to that setup.
 
 Otherwise inspect the backlog before changing plan status, starting
 observation or delegating. For queued work, resolve its selected entry and
@@ -72,8 +77,8 @@ the configured integration branch (`main` when none is supplied). Resolve
 [execution location](references/execution-location.md) for the owned workspace.
 If this session holds the story's unlanded Preparing workspace, follow
 [the same-session handoff](../dough-story-refinement/references/preparation-journey.md#hand-off-to-execution-in-the-same-session).
-If the first message carried an [established session](references/established-session.md),
-use the workspace and branch it decides.
+Apply the established session's workspace for this invocation as its
+[workspace guidance](references/established-session.md#work-in-the-established-workspace) describes.
 
 To take or admit work in Story Branch or Trunk Mode, invoke the installed
 `scripts/execution-start.mjs start` once. Supply `--integration` with the
