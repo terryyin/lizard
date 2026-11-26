@@ -83,6 +83,7 @@ class CppRValueRefStates(CodeStateMachine):
     _REFERENCE_END = {">", ")", ",", ";"}
     _IDLE_TOKENS = {"&&", "typedef", "(", "["}
     _REFERENCE_SCAN_TOKENS = {"=", ";", "{", "}", ")", "&&", "[", "(", "!", "not", ".", "->"}
+    _CALL_ASSIGNMENT_TOKENS = {"(", ")", "[", "{", "}", ";", "&&", "typedef"}
     _LAMBDA_BEFORE = {"=", "(", "return", "co_return", "?", "&&", "||", "!", "+", "{", ",", ":"}
     _LAMBDA_GROUP_TOKENS = set("[](){}<>;=")
     _LAMBDA_IDLE_TOKENS = _LAMBDA_GROUP_TOKENS | _IDLE_TOKENS
@@ -100,6 +101,7 @@ class CppRValueRefStates(CodeStateMachine):
         # Track whether a counted && can still be deducted at an initializer.
         self._initializer_deduction = None
         self._type_before_paren = False
+        self._call_depth = 0
         self._lambda = None
         self._events = self._IDLE_TOKENS
 
@@ -207,8 +209,35 @@ class CppRValueRefStates(CodeStateMachine):
     def _read_call_start(self, token):
         if token[0].isdigit():
             self._end_reference_scan()
+        elif token.isidentifier() and token not in self._PARAMETER_TYPE_KEYWORDS:
+            self._set_state(self._read_call_argument)
         else:
             self._continue_reference(token)
+
+    def _read_call_argument(self, token):
+        if token == "=":
+            self._call_depth = 1
+            self._set_state(self._read_call_assignment, self._CALL_ASSIGNMENT_TOKENS)
+        else:
+            self._continue_reference(token)
+
+    def _read_call_assignment(self, token):
+        if token == "(":
+            self._call_depth += 1
+            self._state_global(token)
+        elif token == ")":
+            self._call_depth -= 1
+            if not self._call_depth:
+                self._set_state(self._read_call_boundary)
+        else:
+            self._read_call_boundary(token)
+
+    def _read_call_boundary(self, token):
+        # A second closing parenthesis can end the enclosing condition.
+        if token != ")":
+            self.context.add_condition(-1)
+        self._end_reference_scan()
+        self._state_global(token)
 
     def _read_grouped_argument(self, token):
         if self.last_token == "(" and token[0].isdigit():
