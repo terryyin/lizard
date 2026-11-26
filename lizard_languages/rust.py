@@ -4,6 +4,7 @@ Language parser for Rust lang
 
 import re
 
+from .token_pattern import BracketDirective, compiled_token_pattern, rust_tokens_from_matches
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
@@ -11,14 +12,18 @@ from .golike import GoLikeStates
 
 # Rust punctuation is ASCII. U+200E and U+200F are whitespace in Rust.
 _NON_ASCII_IDENTIFIER_CHAR = r'[^\x00-\x7f\s\u200e\u200f]'
-_RAW_STRING_TOKEN = (
-    # Reject prefixes within names and suffixes, including raw C suffixes.
-    r'''|(?=[br])(?<![A-Za-z0-9_'"#])(?<!''' + _NON_ASCII_IDENTIFIER_CHAR + r')'
-    r'b?r(?P<rust_raw_hashes>#{0,255})"[^"]*'
+_RAW_LITERAL_BODY = (
+    r'(?P<rust_raw_hashes>#{0,255})"[^"]*'
     r'(?:"(?!(?P=rust_raw_hashes))[^"]*)*"(?P=rust_raw_hashes)'
     r'(?:(?:[A-Za-z_]|' + _NON_ASCII_IDENTIFIER_CHAR +
     r')(?:[A-Za-z_0-9]|' + _NON_ASCII_IDENTIFIER_CHAR + r')*)?'
 )
+_RAW_STRING_TOKEN = (
+    # Reject prefixes within names and suffixes, including raw C suffixes.
+    r'''|(?=[br])(?<![A-Za-z0-9_'"#])(?<!''' + _NON_ASCII_IDENTIFIER_CHAR + r')b?r' +
+    _RAW_LITERAL_BODY
+)
+_RAW_DOC_LITERAL = re.compile(r'(?:cr|(?<=#)b?r)' + _RAW_LITERAL_BODY)
 
 
 class RustReader(CodeReader, CCppCommentsMixin):
@@ -44,6 +49,8 @@ class RustReader(CodeReader, CCppCommentsMixin):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        if token_class is None and '#' in source_code:
+            token_class = _rust_token_text
         addition = (
             (_MACRO_HASH_TOKEN if '#' in source_code else '') +
             # char literals, before lifetimes, which also start with `'`
@@ -53,8 +60,11 @@ class RustReader(CodeReader, CCppCommentsMixin):
             addition += _RAW_STRING_TOKEN
             if token_class is None:
                 token_class = _rust_token_text
-        return CodeReader.generate_tokens(
-            _flatten_nested_comments(source_code), addition, token_class)
+        source_code = _flatten_nested_comments(source_code)
+        if token_class is _rust_token_text and '#' in source_code:
+            pattern = compiled_token_pattern(addition)
+            return rust_tokens_from_matches(pattern.finditer(source_code), token_class, _raw_doc_match)
+        return CodeReader.generate_tokens(source_code, addition, token_class)
 
     def preprocess(self, tokens):
         """Normalize an empty closure's `||` to one non-logical pipe token."""
@@ -78,15 +88,20 @@ def _rust_token_text(match):
     if match.lastgroup == 'rust_raw_hashes':
         # Extensions identify string tokens by the first quote.
         return '"' + token
+    if token == '#' and match.lastgroup != 'standalone_hash':
+        return RustAttributeHash(token)
     return token
+
+
+def _raw_doc_match(match):
+    if match.group() in ('cr', 'br', 'r'):
+        return _RAW_DOC_LITERAL.match(match.string, match.start(), match.endpos)
+    return None
 
 
 class RustStates(GoLikeStates):  # pylint: disable=R0903
     FUNC_KEYWORD = 'fn'
     _SIGNATURE_CLOSERS = {'(': ')', '[': ']', '{': '}', '<': '>'}
-    # A cooked string can contain delimiters without closing the attribute.
-    _COMPLETE_ATTRIBUTE = re.compile(
-        r"""#\s*!?\s*\[(?:[^\[\]{}'"#/\\\n]|(?<!r)"(?:[^"\\\n]|\\.)*")*\]\s*(?://[^\n]*)?""")
 
     def __init__(self, context, in_match_arms=False):
         super().__init__(context)
@@ -164,14 +179,18 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
             elif token in ('[', '(', '{') or (token == '<' and expected == '>'):
                 # Angle tokens can be operators inside a const block or macro.
                 ends.append(self._SIGNATURE_CLOSERS[token])
-            elif not in_type_parameters:
+            elif not in_type_parameters or isinstance(token, BracketDirective):
                 self._fall_back_on_hidden_delimiters(token)
 
         self.next(read_group)
 
     def _fall_back_on_hidden_delimiters(self, token):
+        if isinstance(token, BracketDirective):
+            if token.bracket_depth:
+                self._skip_split_attribute(token.bracket_depth)
+            return
         if token[0] == '#':
-            hidden_delimiters = self._COMPLETE_ATTRIBUTE.fullmatch(token) is None
+            hidden_delimiters = True
         else:
             # In an un-hashed raw string the first quote ends the literal.
             hidden_delimiters = (token[0] == '"' and self.last_token in ('r', 'br', 'cr')
@@ -179,6 +198,22 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
         if hidden_delimiters:
             # Keep looking for the body if the tokenizer hid part of the signature.
             self.next(super()._expect_function_impl)
+
+    def _skip_split_attribute(self, depth):
+        after_attribute = self._state
+
+        def read_attribute(token):
+            nonlocal depth
+            if isinstance(token, BracketDirective):
+                depth += token.bracket_depth
+            elif token == '[':
+                depth += 1
+            elif token == ']':
+                depth -= 1
+            if depth == 0:
+                self.next(after_attribute)
+
+        self.next(read_attribute)
 
     def _fold_signature(self):
         self.fold_into_enclosing_function()
@@ -307,3 +342,152 @@ _MACRO_HASH_TOKEN = (
     r"""|(?<![r"#])(?P<standalone_hash>#)"""
     r"""(?=[^\S\n]*(?!(?:b|c)?r#*")(?:\(|[^\W\d]))"""
 )
+
+
+_GROUP_END = {'(': ')', '[': ']', '{': '}'}
+_CLOSERS = frozenset(_GROUP_END.values())
+_RUST_SPACE = '\u200e\u200f'
+
+
+class RustAttributeHash(str):
+    """A hash that can introduce an attribute."""
+
+    @staticmethod
+    def inspect_attribute(tokens, pending):
+        seen = []
+
+        def remember():
+            for entry in tokens:
+                seen.append(entry)
+                yield entry
+
+        recorded = remember()
+        significant = _significant(recorded)
+        opaque = _inspect(significant, recorded, seen, tokens)
+        pending.extendleft(reversed(seen))
+        return opaque
+
+
+def _inspect(significant, recorded, seen, tokens):
+    opener = _next_text(significant)
+    if opener == '!':
+        opener = _next_text(significant)
+    if opener != '[':
+        return None
+    # Keep earlier grouping for ordinary attributes. A doc can span trivia
+    # before its opening bracket because the lexer confirms the whole prefix.
+    group_brackets = all(
+        match.group() == '!' or (token.isspace() and '\n' not in token)
+        for match, token in seen[:-1])
+
+    name = _name(significant)
+    if name == 'doc' and _next_text(significant) == '=':
+        return True
+    if name == 'cfg_attr' and _next_text(significant) == '(':
+        try:
+            spans = _configured_docs(recorded, seen, tokens)
+        finally:
+            tokens.opaque = False
+        if spans and _next_text(significant) == ']':
+            seen[:] = _hide_doc_values(seen, spans)
+    return False if group_brackets else None
+
+
+def _configured_docs(recorded, seen, tokens):
+    """Find doc values after each cfg predicate, matching literal boundaries."""
+    groups = [')']
+    cfg_fields = {1: None}
+    doc_depth = None
+    value_start = None
+    spans = []
+    for index, (match, _) in enumerate(recorded, len(seen)):
+        token = match.group()
+        depth = len(groups)
+        field = cfg_fields.get(depth)
+        if depth in cfg_fields and token in (',', ')'):
+            if doc_depth == depth:
+                spans.append((value_start, index))
+                value_start = doc_depth = None
+                tokens.opaque = False
+            if token == ')':
+                del cfg_fields[depth]
+                if depth == 1:
+                    return spans
+            else:
+                cfg_fields[depth] = index + 1
+        elif field is not None and doc_depth is None and token in ('=', '('):
+            prefix = _significant(seen[field:index])
+            name = _name(prefix)
+            if name == 'doc' and token == '=' and _next_text(prefix) is None:
+                value_start = index + 1
+                doc_depth = depth
+                tokens.opaque = True
+            elif name == 'cfg_attr' and token == '(' and _next_text(prefix) is None:
+                cfg_fields[depth + 1] = None
+        if token in _GROUP_END:
+            groups.append(_GROUP_END[token])
+        elif token in _CLOSERS:
+            if token != groups.pop():
+                return None
+    return None
+
+
+def _hide_doc_values(tokens, spans):
+    cursor = 0
+    for start, end in spans:
+        yield from tokens[cursor:start]
+        yield from _opaque_lines(tokens[start:end])
+        cursor = end
+    yield from tokens[cursor:]
+
+
+def _opaque_lines(tokens):
+    """Hide a doc value while retaining its physical line boundaries."""
+    line = []
+    for entry in tokens:
+        if entry[0].group() == '\n':
+            yield from _opaque_line(line)
+            line = []
+            yield entry
+        else:
+            line.append(entry)
+    yield from _opaque_line(line)
+
+
+def _opaque_line(line):
+    if any(not token.isspace() for _, token in line):
+        yield line[0][0], '"' + ''.join(token for _, token in line)
+    else:
+        yield from line
+
+
+def _significant(tokens):
+    for match, token in tokens:
+        text = match.group()
+        if not (text.isspace() or text in _RUST_SPACE or text.startswith(('//', '/*'))):
+            yield match, token
+
+
+def _name(tokens):
+    entry = next(tokens, None)
+    if entry is None:
+        return None
+    match = entry[0]
+    text = match.group()
+    if text.startswith('r#') and text[2:].isidentifier():
+        return text[2:]
+    if text != 'r' or not match.string.startswith('#', match.end()):
+        return text
+
+    marker = next(tokens, None)
+    identifier = next(tokens, None)
+    if (marker is not None and identifier is not None and
+            marker[0].group() == '#' and match.end() == marker[0].start() and
+            marker[0].end() == identifier[0].start()):
+        return identifier[0].group()
+    return None
+
+
+def _next_text(tokens):
+    entry = next(tokens, None)
+    return entry[0].group() if entry is not None else None
