@@ -161,3 +161,11 @@ class TestGeneralFanOut(unittest.TestCase):
                 void ns::foo(){ foo();}
                 """)
         self.assertEqual(1, result)
+
+    def test_unrelated_files_do_not_add_to_general_fan_out(self):
+        result = fanio(
+            "void flush(void); void close_file(void) { flush(); }",
+            "int is_ready(void) { return 1; }",
+            "int is_empty(void) { return 0; }",
+        )
+        self.assertEqual(1, result.general_fan_out)
