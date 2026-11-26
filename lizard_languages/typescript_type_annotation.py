@@ -159,7 +159,58 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                 and token != self._brackets[-1])
 
 
-class TypeAliasContext(TypeScriptTypeAnnotationStates):
+class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
+    """An alias consumes function types and stops before runtime calls."""
+
+    def __init__(self, context):
+        super().__init__(context)
+        self._after_type_parameters = False
+        self._import_type = False
+        self._after_function_arrow = False
+        self._assertion_type = False
+
+    def _state_global(self, token):
+        if not self._brackets and not token.isspace():
+            if not (self._expect_type or self._qualified_type) and self._starts_runtime_expression(token):
+                self.saved_token = token
+                self.statemachine_return()
+                return
+            self._after_type_parameters = self._expect_type and token[0] == '<'
+            self._import_type = token == 'import' and not self._qualified_type
+            if token in ('as', 'is') and (self._expect_type or self._qualified_type):
+                self._expect_type = self._qualified_type = self._closed_type = False
+                self._line_break = False
+                return
+            if self._after_function_arrow:
+                self._assertion_type = token == 'asserts'
+            self._after_function_arrow = token == '=>' and self._function_arrow
+            if (token == 'new' and not self._qualified_type
+                    and (self._expect_type or self.last_token == 'abstract')):
+                # A constructor type has its own parameters and return arrow.
+                self._expect_type = True
+                return
+            if self._qualified_type:
+                self._expect_type = True
+        super()._state_global(token)
+        if token == 'is':
+            self._assertion_type = False
+
+    def ends_before_line_token(self, token):
+        if (token == 'as' or token == 'is' and not self._assertion_type):
+            return not self._brackets and self.has_complete_type()
+        return super().ends_before_line_token(token)
+
+    def _starts_runtime_expression(self, token):
+        if token == '(':
+            return not (self._after_type_parameters or self._import_type)
+        # A line break ends a type before postfix brackets or type arguments.
+        newline = self._line_break or self.context is not None and self.context.newline
+        return newline and (
+            token[0] in '[<\\'
+            or token not in ('in', 'instanceof') and not starts_statement(token) and is_identifier(token))
+
+
+class TypeAliasContext(TypeScriptTypeAliasStates):
     """Recognize an alias in the stream without changing function parsing."""
 
     def __init__(self):

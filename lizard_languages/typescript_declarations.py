@@ -1,8 +1,8 @@
 """TypeScript declarations and type syntax excluded from runtime functions."""
 
-from .typescript_type_annotation import TypeScriptTypeAnnotationStates
+from .typescript_type_annotation import TypeScriptTypeAliasStates, TypeScriptTypeAnnotationStates
 from .javascript_expression import (
-    OPERAND_WORDS, ends_expression, is_identifier, is_identifier_part, starts_statement)
+    OPERAND_WORDS, ends_expression, is_identifier, is_identifier_part)
 from .js_style_regex_context import _EXPRESSION_KEYWORDS
 
 
@@ -214,48 +214,3 @@ def _continues_alias_name(name, token):
     """The tokenizer emits identifier escapes and some Unicode parts separately."""
     return (token == '\\' or is_identifier_part(token)
             or token in ('{', '}') and '\\' in name)
-
-
-class TypeScriptTypeAliasStates(TypeScriptTypeAnnotationStates):
-    """An alias consumes function types and stops before runtime calls."""
-
-    def __init__(self, context):
-        super().__init__(context)
-        self._after_type_parameters = False
-        self._import_type = False
-        self._assertion_predicate = False
-
-    def _state_global(self, token):
-        if not self._brackets and not token.isspace():
-            if not (self._expect_type or self._qualified_type) and self._starts_runtime_expression(token):
-                self.saved_token = token
-                self.statemachine_return()
-                return
-            self._after_type_parameters = self._expect_type and token[0] == '<'
-            self._import_type = token == 'import' and not self._qualified_type
-            if token == 'asserts' and self._expect_type and self.last_token == '=>':
-                self._assertion_predicate = True
-                return
-            if token in ('as', 'is') and (self._expect_type or self._qualified_type):
-                self._expect_type = self._qualified_type = self._closed_type = False
-                self._line_break = False
-                return
-            if token == 'is':
-                self._assertion_predicate = False
-            if (token == 'new' and not self._qualified_type
-                    and (self._expect_type or self.last_token == 'abstract')):
-                # A constructor type has its own parameters and return arrow.
-                self._expect_type = True
-                return
-            if self._qualified_type:
-                self._expect_type = True
-        super()._state_global(token)
-
-    def _starts_runtime_expression(self, token):
-        if token == '(':
-            return not (self._after_type_parameters or self._import_type)
-        # A line break ends a type before postfix brackets or type arguments.
-        return self.context.newline and (
-            token[0] in '[<\\'
-            or token == 'as' or token == 'is' and not self._assertion_predicate
-            or token not in ('in', 'instanceof') and not starts_statement(token) and is_identifier(token))

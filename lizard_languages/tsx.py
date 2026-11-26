@@ -12,6 +12,7 @@ from .typescript import (
 from .typescript import JSTokenizer, Tokenizer
 from .javascript_templates import LINE_COMMENT, template_tokens
 from .javascript_expression import JSXChildBrace, JSXMarkup
+from .typescript_type_annotation import TypeAliasContext
 
 
 class TSXReader(TypeScriptReader):
@@ -83,6 +84,7 @@ class TSXTokenizer(JSTokenizer):
     def __init__(self):
         super().__init__()
         self._previous = None
+        self._type_alias = None
 
     def _sub_tokens(self, token):
         tag = self.sub_tokenizer
@@ -108,6 +110,11 @@ class TSXTokenizer(JSTokenizer):
         previous = self._previous
         if not token.isspace():
             self._previous = token
+        if ((self._type_alias is not None or token == 'type')
+                and self._read_alias_token(token)
+                and (token == '<' or _is_opening_tag(token))):
+            yield token
+            return
         if token == "<":
             if previous in _BEFORE_EXPRESSION:
                 self.sub_tokenizer = XMLTagWithAttrTokenizer(True)
@@ -129,6 +136,19 @@ class TSXTokenizer(JSTokenizer):
 
         for tok in super().process_token(token):
             yield tok
+
+    def _read_alias_token(self, token):
+        alias = self._type_alias
+        if alias is None:
+            self._type_alias = TypeAliasContext()
+            return False
+        if token.startswith(('//', '/*')):
+            token = '\n' if '\n' in token else ' '
+        if (alias.last_token is None and not token.isspace()) or alias(token):
+            # 'type' may be the start of an escaped value identifier.
+            self._type_alias = None
+            return False
+        return alias.in_body
 
 
 class XMLTagWithAttrTokenizer(Tokenizer):
