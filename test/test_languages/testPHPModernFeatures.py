@@ -4,6 +4,21 @@ from .php_helpers import get_php_function_list
 
 class TestPHPModernFeatures(unittest.TestCase):
 
+    def test_attribute_closures_keep_method_scope(self):
+        functions = get_php_function_list("""<?php
+#[Check(static function () {
+    return true;
+})]
+class ReportController {
+    #[Check(static function () {
+        return true;
+    })]
+    public function show(): void {}
+}
+""")
+        self.assertEqual(['ReportController::show'],
+                         [f.name for f in functions if f.start_line == 9])
+
     def test_foreach_not_function_and_detects_real_functions(self):
         php_code = '''<?php
 class Note {
