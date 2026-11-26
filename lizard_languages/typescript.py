@@ -7,12 +7,11 @@ from itertools import tee
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
+from .typescript_signatures import CallTypeArgument, call_type_argument_token_count
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
-from .typescript_signatures import (
-    CallTypeArgument, ReturnTypeColon,
-    call_type_argument_token_count, return_type_colon)
+from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
@@ -159,10 +158,10 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         return self.generate_tokens(code)
 
     def _count_interpolation_conditions(self, token, in_expression):
-        if isinstance(token, CallTypeArgument):
-            return
         # Re-tokenize opaque interpolation spans; keyword members stay non-
         # conditions the same way as on the outer token stream (#546).
+        if isinstance(token, CallTypeArgument):
+            return
         conditions = self.conditions
         earlier = previous = None
         for start, end in interpolation_code(token, in_expression):
@@ -249,7 +248,6 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         arrows = self.context.expression_arrows = []
         signatures = self.context.ended_signatures = []
         line_start = False
-        type_argument_tokens = 0
         state = self.parallel_states[0]
         marked_punctuation = _MARKED_PUNCTUATION
         member_access_tokens = _MEMBER_ACCESS
@@ -262,12 +260,9 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         keyword = None      # waits for the next token: `{ if: a }`
         tokens = iter(self.code_tokens(tokens))
         while True:
+            restart = False
             for token in tokens:
                 if not token.isspace():
-                    if type_argument_tokens:
-                        type_argument_tokens -= 1
-                        yield CallTypeArgument(token)
-                        continue
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
                         if token in _NAME_FOLLOWERS or (
@@ -281,19 +276,32 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
                         signatures.pop().end_signature_before(token)
+                    if (token == '<' and self._class_field_annotations
+                            and not getattr(self, '_in_call_type_arguments', False)
+                            and state.object_call_context()):
+                        tokens, lookahead = tee(tokens)
+                        type_tokens_to_mark = call_type_argument_token_count(lookahead)
+                        del lookahead
+                        restart = True
+                        if type_tokens_to_mark:
+                            self._in_call_type_arguments = True
+                            member_access = False
+                            yield CallTypeArgument(token)
+                            for part in tokens:
+                                if part == '\n':
+                                    if arrows or awaiting_function_body(state):
+                                        line_start = True
+                                    yield part
+                                elif not part.isspace():
+                                    yield CallTypeArgument(part)
+                                    type_tokens_to_mark -= 1
+                                    if not type_tokens_to_mark:
+                                        break
+                            self._in_call_type_arguments = False
+                            break
                     if member_access and token in structure_keywords:
                         token = _MemberName(token)
                         member_access = False
-                    elif (token == '<' and self._class_field_annotations
-                          and state.object_call_context()):
-                        tokens, lookahead = tee(tokens)
-                        type_argument_tokens = call_type_argument_token_count(lookahead)
-                        if type_argument_tokens:
-                            token = CallTypeArgument(token)
-                        del lookahead
-                        member_access = False
-                        yield token
-                        break
                     elif token in marked_punctuation:
                         # `1..catch`: the number and each dot are tokens.
                         member_access = token in member_access_tokens
@@ -326,6 +334,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             keyword = token
                             continue
                     yield token
+                    if restart:
+                        break
                 elif token == '\n':
                     if keyword is not None:
                         yield keyword

@@ -5,10 +5,6 @@ from .javascript_expression import ends_expression, starts_statement
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 
 
-class ReturnTypeColon(str):
-    """A colon confirmed to belong to an arrow's return annotation."""
-
-
 class CallTypeArgument(str):
     """An erased token in a confirmed call's type arguments."""
 
@@ -42,6 +38,10 @@ def call_type_argument_token_count(tokens):
         annotation = TypeScriptTypeAnnotationStates(None)
         consumed_type = False
     return 0
+
+
+class ReturnTypeColon(str):
+    """A colon confirmed to belong to an arrow's return annotation."""
 
 
 def return_type_colon(tokens, depth):
