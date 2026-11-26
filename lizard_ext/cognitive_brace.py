@@ -15,9 +15,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     ``finally`` and the ``while`` of a ``do`` bind to the right structure.
     """
 
-    # A bare '>' can also end TypeScript type arguments.
-    _JS_INFIX_CONTINUATIONS = frozenset(('&&', '||', '??', '==', '!=', '===', '!==', '<=', '>='))
-
     def __init__(self, reader, profile, gated):
         super(_BraceCounter, self).__init__(reader, profile, gated)
         self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
@@ -92,14 +89,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             if top.phase == BODY and not top.braced:
                 self._statement_end()
 
-    def _conditional_continues(self, token):
-        state = self.state
-        if token in ('?', ':') or state.prev in ('?', ':'):
-            return True
-        return (bool(state.frames) and state.frames[-1].kind == 'ternary'
-                and (token in self._JS_INFIX_CONTINUATIONS
-                     or state.prev in self._JS_INFIX_CONTINUATIONS))
-
     def _top_structure(self):
         for frame in reversed(self.state.frames):
             if frame.kind != 'ternary':
@@ -133,6 +122,17 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 break
             frame.phase = BODY
             frame.closing = True
+
+    # A bare '>' can also end TypeScript type arguments.
+    _JS_INFIX_CONTINUATIONS = frozenset(('&&', '||', '??', '==', '!=', '===', '!==', '<=', '>='))
+
+    def _conditional_continues(self, token):
+        state = self.state
+        if token in ('?', ':') or state.prev in ('?', ':'):
+            return True
+        return (bool(state.frames) and state.frames[-1].kind == 'ternary'
+                and (token in self._JS_INFIX_CONTINUATIONS
+                     or state.prev in self._JS_INFIX_CONTINUATIONS))
 
     def _block_closed(self):
         """A '}' has just brought the brace depth down to state.depth."""
