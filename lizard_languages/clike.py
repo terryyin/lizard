@@ -4,9 +4,9 @@ Language parser for C, C++ -like languages.
 
 import re
 import itertools
+from .token_pattern import compiled_token_pattern, tokens_in_span
 from .code_reader import CodeStateMachine, CodeReader
 from .clike_states import CLikeStates
-from .token_pattern import compiled_token_pattern, tokens_in_span
 
 # Tokenizer fragment for C++ empty-delimiter raw strings R"(...)" (optional u8/u/U/L
 # prefix). Stops at the first ')"'. Custom delimiters use the normal string rule.
