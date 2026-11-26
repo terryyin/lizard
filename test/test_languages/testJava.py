@@ -20,6 +20,64 @@ public String funcB() {
         self.assertEqual('funcA()', result[0].long_name)
         self.assertEqual('funcB()', result[1].long_name)
 
+    def test_json_text_block_counts_as_one_token(self):
+        code = '''
+class DiscountSchema {
+    String schema() {
+        return """
+            {
+                "if": {"required": ["discount"]},
+                "then": {"required": ["price"]}
+            }
+            """;
+    }
+
+    boolean enabled(int n) {
+        return n > 0;
+    }
+}
+'''
+        schema, enabled = get_java_function_list(code)
+        self.assertEqual(1, schema.cyclomatic_complexity)
+        self.assertEqual(8, schema.token_count)
+        self.assertEqual(8, schema.nloc)
+        self.assertEqual(10, schema.end_line)
+        self.assertEqual(12, enabled.start_line)
+
+    def test_text_block_with_escaped_quote_keeps_the_full_literal(self):
+        code = r'''
+class Help {
+    String example() {
+        return """
+            Use \""" to quote a text block.
+            if (ready) run();
+            """ + "\n";
+    }
+}
+'''
+        result, = get_java_function_list(code)
+        self.assertEqual(1, result.cyclomatic_complexity)
+        self.assertEqual(10, result.token_count)
+        self.assertEqual(6, result.nloc)
+
+    def test_unicode_escapes_in_text_block_delimiters(self):
+        for opening, closing in (
+                (r'\u0022\u0022\u0022' + '\n', r'\u0022\u0022\u0022'),
+                (r'"""\u0020\u000a\u005c\u0022"" ', '"""')):
+            with self.subTest(opening=opening, closing=closing):
+                result = get_java_function_list(f'''class JavaExample {{
+    String render() {{
+        return {opening}" if (ready) run(); "
+            {closing};
+    }}
+    void later() {{}}
+}}
+''')
+                self.assertEqual(
+                    [('JavaExample::render', 1, 8), ('JavaExample::later', 1, 5)],
+                    [(function.name, function.cyclomatic_complexity, function.token_count)
+                     for function in result])
+
     def test_function_with_throws(self):
         result = get_java_function_list("void fun() throws e1, e2{}")
         self.assertEqual(1, len(result))

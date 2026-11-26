@@ -2,8 +2,34 @@
 Language parser for Java
 '''
 
+import re
+
 from lizard_languages.code_reader import CodeStateMachine
 from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
+
+# A backslash escapes the next character. An unescaped triple quote ends the block.
+_JAVA_TEXT_BLOCK = r'|"""[ \t\f]*(?:\r\n?|\n)[^"\\]*(?:(?:\\.|"(?!""))[^"\\]*)*"""'
+
+
+def _unicode_text_block_pattern():
+    """Match escaped delimiters in the raw source to keep physical line counts."""
+    hex_digit = '[0-9a-fA-F]'
+    unicode_escape = rf'\\u+{hex_digit}{{4}}'
+    quote = r'(?:"|\\u+0022)'
+    delimiter = rf'{quote}{{3}}'
+    whitespace = r'(?:[ \t\f]|\\u+(?:000[9cC]|0020))*'
+    line_break = r'(?:\r\n?|\n|\\u+000[aAdD])'
+    backslash = rf'(?:\\u+005[cC]|\\(?!u+{hex_digit}{{4}}))'
+    escaped_char = rf'{backslash}(?:{unicode_escape}|(?!{unicode_escape}).)'
+    other_unicode = rf'\\u+(?!(?:0022|005[cC])){hex_digit}{{4}}'
+    body_char = rf'(?:{escaped_char}|{other_unicode}|{quote}(?!{quote}{{2}}))'
+    plain_text = r'[^"\\]*'
+    return rf'|{delimiter}{whitespace}{line_break}{plain_text}(?:{body_char}{plain_text})*{delimiter}'
+
+
+_JAVA_UNICODE_TEXT_BLOCK = _unicode_text_block_pattern()
+_JAVA_UNICODE_QUOTE = re.compile(r'\\u+0022')
+
 
 # "record" is a keyword for type declarations, but a valid method/field name.
 # Treat as keyword only when it cannot be the name in "Type name" (field/method/parameter).
@@ -59,6 +85,11 @@ class JavaReader(CLikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        has_raw_delimiter = '"""' in source_code
+        if r'\u' in source_code and (has_raw_delimiter or _JAVA_UNICODE_QUOTE.search(source_code)):
+            addition = _JAVA_UNICODE_TEXT_BLOCK + addition
+        elif has_raw_delimiter:
+            addition = _JAVA_TEXT_BLOCK + addition
         return clike_tokens(source_code, addition, token_class)
 
 
