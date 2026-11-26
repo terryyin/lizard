@@ -74,15 +74,14 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             '{', ';', '}', 'else', '.', '?.'))
 
     def __call__(self, tokens, reader=None):
-        languages = getattr(reader, 'language_names', ())
-        self._use_function_scope = 'java' in languages
-        if 'python' in languages:
+        if 'python' in getattr(reader, 'language_names', ()):
             return self._indented_structures(tokens, reader)
         if hasattr(reader, 'implied_semicolons'):
             return self._unterminated_statements(tokens, reader)
         return super(LizardExtension, self).__call__(tokens, reader)
 
     def _start_file(self, reader):
+        self._use_function_scope = 'java' in getattr(reader, 'language_names', ())
         super(LizardExtension, self)._start_file(reader)
         self.structure_piles = [0]
 
