@@ -7,13 +7,13 @@ from itertools import tee
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
+from .typescript_declarations import SplitTypeAliasName, has_split_alias_name
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import (
     TypeAliasContext, TypeArguments, TypeScriptTypeAnnotationStates, followed_by_new_statement,
     packed_type_arguments)
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
-from .typescript_declarations import SplitTypeAliasName, has_split_alias_name
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import (
     TypeArgumentEnd, awaiting_function_body, end_before_line_token)
