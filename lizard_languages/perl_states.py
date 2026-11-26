@@ -16,9 +16,7 @@ class PerlStates(CodeStateMachine):
         self._state = self._state_global
 
     def _start_function(self, name):
-        if name.startswith('::'):
-            name = 'main' + name
-        elif self.package_name and '::' not in name:
+        if self.package_name:
             name = f"{self.package_name}::{name}"
         self.context.try_new_function(name)
         self.context.confirm_new_function()
@@ -90,6 +88,7 @@ class PerlStates(CodeStateMachine):
             if self.function_name:
                 self._start_function(self.function_name)
             self.next(self._state_function_body)
+            self._apply_explicit_name()
         elif token == ':':
             self.in_attribute = True
         elif token == ';':
@@ -97,6 +96,7 @@ class PerlStates(CodeStateMachine):
             if self.function_name:
                 self._start_function(self.function_name)
                 # Empty function body
+                self._apply_explicit_name()
                 self.context.end_of_function()
             self.next(self._state_global)
         elif token == '(':
@@ -117,6 +117,14 @@ class PerlStates(CodeStateMachine):
                 self.function_name += token
             else:
                 self.function_name = token
+
+    def _apply_explicit_name(self):
+        name = self.function_name
+        if '::' in name:
+            if name.startswith('::'):
+                name = 'main' + name
+            function = self.context.current_function
+            function.name = function.long_name = self.context.with_namespace(name)
 
     def _state_function_prototype(self, token):
         # Handle parameter prototypes after function name: sub fetch($) { ... }
