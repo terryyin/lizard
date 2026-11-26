@@ -283,13 +283,11 @@ def _quote_macro_tracker():
             macro_use = True
         elif token == '{':
             bindings.open_scope(previous if before_previous == 'mod' else None, macro_use)
-            macro_use = False
         elif token == '}':
             bindings.close_scope()
-        elif token == ';':
-            if macro_use and previous == 'quote' and before_previous == 'crate':
-                bindings.import_quote_crate()
-            macro_use = False
+        elif token == ';' and macro_use and previous == 'quote' and before_previous == 'crate':
+            bindings.import_quote_crate()
+        macro_use = macro_use and token not in ('{', ';')
 
         if token == '::':
             qualifier = qualifier + (previous,) if previous and previous.isidentifier() else ()
