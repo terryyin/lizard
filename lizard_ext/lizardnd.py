@@ -57,7 +57,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         context = reader.context
         for token in tokens:
             opens_lambda = (lambda_brace is not None
-                            and context.current_function.control_body_pending
+                            and context.current_function.control_header_depth is not None
                             and lambda_brace.read(token))
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
@@ -123,7 +123,7 @@ class NDFileInfoAddition(FileInfoBuilder):
     def reset_nd_complexity(self):
         self.current_function.nesting_depth = 0
         self.current_function.levels_awaiting_body = 0
-        self.current_function.control_body_pending = False
+        self.current_function.control_header_depth = None
         self.current_function.block_levels = []
         self.current_function.prev_was_else = False
         self.reset_condition_tracking()
@@ -133,24 +133,25 @@ class NDFileInfoAddition(FileInfoBuilder):
         function = self.current_function
         function.levels_awaiting_body += 1
         if control_body:
-            function.control_body_pending = True
+            function.control_header_depth = function.condition_depth
         return self.add_nd_condition()
 
     def open_block(self, opens_lambda=False):
         """The block takes over the levels awaiting their body."""
         function = self.current_function
-        if function.control_body_pending and function.condition_depth:
+        header_depth = function.control_header_depth
+        if header_depth is not None and function.condition_depth > header_depth:
             if opens_lambda:
                 function.block_levels.append(_ConditionBrace(function))
                 function.levels_awaiting_body = 0
-                function.control_body_pending = False
+                function.control_header_depth = None
                 self.reset_condition_tracking()
             else:
                 function.block_levels.append(0)
             return
         function.block_levels.append(function.levels_awaiting_body)
         function.levels_awaiting_body = 0
-        function.control_body_pending = False
+        function.control_header_depth = None
 
     def close_block(self):
         """A block end releases the levels its block took over."""
@@ -162,7 +163,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         function.levels_awaiting_body = levels.levels
         function.condition_depth = levels.condition_depth
         function.logical_operator_added = levels.logical_operator_added
-        function.control_body_pending = True
+        function.control_header_depth = levels.header_depth
         function.in_condition = True
         return depth
 
@@ -170,7 +171,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         """A statement ends the levels of a braceless body."""
         levels = self.current_function.levels_awaiting_body
         self.current_function.levels_awaiting_body = 0
-        self.current_function.control_body_pending = False
+        self.current_function.control_header_depth = None
         return self.add_nd_condition(-levels)
 
     def set_in_condition(self, in_condition):
@@ -240,11 +241,12 @@ class _ConditionBrace:  # pylint: disable=R0903
 
     def __init__(self, function):
         self.levels = function.levels_awaiting_body
+        self.header_depth = function.control_header_depth
         self.condition_depth = function.condition_depth
         self.logical_operator_added = function.logical_operator_added
 
 
-class _ConditionLambdaBrace:
+class _ConditionLambdaBrace:  # pylint: disable=R0903
     """Find lambda body braces while a C++ or Java control header is open."""
 
     _OPERAND_STARTS = frozenset(('(', ',', '=', '&&', '||', '!', '?', ':', '{'))
@@ -310,7 +312,7 @@ def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
     self.max_nesting_depth = 0
     self.levels_awaiting_body = 0  # structure levels closed by their body
-    self.control_body_pending = False
+    self.control_header_depth = None
     self.block_levels = []  # structure levels each open block will close
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
