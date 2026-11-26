@@ -12,6 +12,8 @@ class TestCppNestingDepth(unittest.TestCase):
 
     def test_condition_lambda_keeps_its_declarator_until_the_body(self):
         functions = get_cpp_with_nestdepth("""
+        #include <concepts>
+        #include <type_traits>
         #include <utility>
         bool equalPlan(bool online, bool ready, bool cached, bool fresh) {
             if (online && ready == [=] { return cached && fresh; }()) return true;
@@ -29,8 +31,18 @@ class TestCppNestingDepth(unittest.TestCase):
             }(true)) return true;
             return false;
         }
+        bool signedPlan(bool online, bool cached, bool fresh) {
+            if (online && [=]<class T> requires std::integral<T>
+                (T value) requires std::is_signed_v<T> {
+                const bool eligible = cached && fresh;
+                if (value > 0) return eligible;
+                return false;
+            }(1)) return true;
+            return false;
+        }
         """)
-        self.assertEqual([('equalPlan', 3), ('choosePlan', 3), ('constrainedPlan', 3)],
+        self.assertEqual([('equalPlan', 3), ('choosePlan', 3), ('constrainedPlan', 3),
+                          ('signedPlan', 3)],
                          [(f.name, f.max_nesting_depth) for f in functions])
 
     def test_cpp_condition_lambda_starts_a_separate_statement_scope(self):
