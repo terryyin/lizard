@@ -4,8 +4,9 @@ Language parser for PHP
 
 import re
 from functools import lru_cache
+from itertools import compress, product
 
-from .code_reader import CodeReader
+from .code_reader import CodeReader, MemberName, _STRUCTURE_KEYWORDS, _previous_code
 from .clike import CCppCommentsMixin
 from .php_states import MEMBER_ACCESS, PHPLanguageStates
 from .token_pattern import compiled_token_pattern
@@ -99,6 +100,41 @@ def _expression_end(source, pos):
             return None
 
 
+_WORD_OPERATORS = {
+    ''.join(letters): word
+    for word in ('and', 'or')
+    for letters in product(*zip(word, word.upper()))
+}
+_NAME_PREFIX = MEMBER_ACCESS | {'\\'}
+_COMMENT_STARTS = ('//', '/*', '#')
+
+
+def _adjacent_php_code(tokens, index, step):
+    index += step
+    while 0 <= index < len(tokens) and (tokens[index] == '\n' or tokens[index].startswith(_COMMENT_STARTS)):
+        index += step
+    return index
+
+
+def _is_operator_name(tokens, index):
+    if isinstance(tokens[index], MemberName):
+        return True
+    before = _adjacent_php_code(tokens, index, -1)
+    if before >= 0 and tokens[before] in _NAME_PREFIX:
+        return True
+    after = _adjacent_php_code(tokens, index, 1)
+    if after < len(tokens) and tokens[after] in ('=', ':', ';'):
+        # A constant, named argument, or enum case can use a keyword.
+        return True
+    if before >= 0 and tokens[before] == '&':
+        before = _adjacent_php_code(tokens, before, -1)
+    if before >= 0 and tokens[before].lower() == 'function':
+        # A member called `function` can be the left operand.
+        prefix = _adjacent_php_code(tokens, before, -1)
+        return prefix < 0 or tokens[prefix] not in _NAME_PREFIX
+    return False
+
+
 class PHPReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -107,7 +143,7 @@ class PHPReader(CodeReader, CCppCommentsMixin):
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'foreach', 'while', 'catch', 'match'}
-    _logical_operators = {'&&', '||'}  # PHP also has 'and', 'or' with different precedence
+    _logical_operators = {'&&', '||', 'and', 'or'}
     _case_keywords = {'case'}
     _ternary_operators = {'?'}
     # Operators that contain '?' but are not the ternary operator
@@ -120,7 +156,9 @@ class PHPReader(CodeReader, CCppCommentsMixin):
         operators = PHPReader._non_ternary_question_operators + r"|<<=|<=|<"
         # A closing tag ends a line comment, but not a string or block comment.
         comments = r"|(?://|\#)" + _LINE_COMMENT_END + r"|\?>"
-        pattern = compiled_token_pattern(addition + variables +
+        # An adjacent backslash can make a word part of a qualified name.
+        qualified_word = rf"|(?P<qualified_word>(?ai:and|or))(?=\\[{_LABEL_START}])"
+        pattern = compiled_token_pattern(addition + variables + qualified_word +
                                          rf"""|(?=[bB'"`<])(?:{_STRING_TOKENS})""" + operators + comments)
         legacy_pattern = None
         current_pos = 0
@@ -130,7 +168,8 @@ class PHPReader(CodeReader, CCppCommentsMixin):
             pos = tag.end()
             while pos is not None:
                 for match in pattern.finditer(source_code, pos):
-                    if match.lastindex and match.lastgroup in ('doc_label', 'double_quote', 'backtick'):
+                    group = match.lastgroup
+                    if group in ('doc_label', 'double_quote', 'backtick'):
                         end = _string_end(source_code, match)
                         if end is None:
                             if legacy_pattern is None:
@@ -149,7 +188,12 @@ class PHPReader(CodeReader, CCppCommentsMixin):
                         current_pos = match.end()
                         pos = None
                         break
-                    yield token_class(match) if token_class else token
+                    if token_class:
+                        yield token_class(match)
+                    elif group == 'qualified_word':
+                        yield MemberName(token)
+                    else:
+                        yield token
                 else:
                     return
         if source_code[current_pos:]:
@@ -160,5 +204,14 @@ class PHPReader(CodeReader, CCppCommentsMixin):
         self.parallel_states = [PHPLanguageStates(context)]
 
     def preprocess(self, tokens):
-        # `$promise->catch($f)` and `function catch()` name a member.
-        return self.mark_member_names(tokens, _BEFORE_MEMBER_NAME)
+        keywords = _STRUCTURE_KEYWORDS | self.control_flow_keywords | self.case_keywords | _WORD_OPERATORS.keys()
+        tokens = [token for token in tokens if not token.isspace() or token == '\n']
+        for index in compress(range(len(tokens)), map(keywords.__contains__, tokens)):
+            token = tokens[index]
+            if token in _WORD_OPERATORS:
+                tokens[index] = MemberName(token) if _is_operator_name(tokens, index) else _WORD_OPERATORS[token]
+                continue
+            before = _previous_code(tokens, index, True)
+            if before >= 0 and tokens[before] in _BEFORE_MEMBER_NAME:
+                tokens[index] = MemberName(token)
+        return tokens
