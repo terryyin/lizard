@@ -1306,42 +1306,6 @@ class TestJavaScriptArrowBodyInParentheses(unittest.TestCase):
         self.assertEqual(0, outer)
 
 
-class TestCognitiveConditionalContinuations(unittest.TestCase):
-    def test_nested_conditional_keeps_its_nesting_across_a_comparison(self):
-        formats = (
-            'v >= 2015',
-            'v\n                  >= 2015',
-            'v >= /* edition threshold */\n                  2015',
-        )
-        for filename, parameter in (('edition.js', 'v'), ('edition.ts', 'v: number')):
-            for comparison in formats:
-                with self.subTest(filename=filename, comparison=comparison):
-                    source = """
-                        const edition = (%s) =>
-                          v === 0 ? 2026 : %s ? v - 2009 : v;
-                    """ % (parameter, comparison)
-                    self.assertEqual([3], cogc(filename, source))
-
-    def test_wrapped_logical_condition_keeps_its_ternary_parent(self):
-        for condition in ('quoted ||\n                apostrophe',
-                          'quoted\n                || apostrophe'):
-            with self.subTest(condition=condition):
-                source = """
-                    const attrEnd = (missing, quoted, apostrophe, end) =>
-                      missing ? end : %s ? end + 1 : end;
-                """ % condition
-                self.assertEqual([4], cogc('attribute.js', source))
-
-    def test_asi_ends_a_conditional_before_the_next_statement(self):
-        source = """
-            function edition(v: number, available: number | undefined) {
-              const first = v === 0 ? 2026 : available!
-              return v >= 2015 ? v - 2009 : first
-            }
-        """
-        self.assertEqual([2], cogc('edition.ts', source))
-
-
 class TestJavaScriptReaderFailure(unittest.TestCase):
     """The reader stops at code that nests too deep.  The functions that
     ended before it keep their score."""
@@ -1513,6 +1477,42 @@ class TestFunctionsTheExtensionNeverSees(unittest.TestCase):
         self.assertEqual(0, result.returncode, msg=result.stderr or result.stdout)
         self.assertRegex(result.stdout, r"\s0\s+OneLinerTest::empty_oneliner@")
         self.assertRegex(result.stdout, r"\s1\s+OneLinerTest::condition_oneliner@")
+
+
+class TestCognitiveConditionalContinuations(unittest.TestCase):
+    def test_nested_conditional_keeps_its_nesting_across_a_comparison(self):
+        formats = (
+            'v >= 2015',
+            'v\n                  >= 2015',
+            'v >= /* edition threshold */\n                  2015',
+        )
+        for filename, parameter in (('edition.js', 'v'), ('edition.ts', 'v: number')):
+            for comparison in formats:
+                with self.subTest(filename=filename, comparison=comparison):
+                    source = """
+                        const edition = (%s) =>
+                          v === 0 ? 2026 : %s ? v - 2009 : v;
+                    """ % (parameter, comparison)
+                    self.assertEqual([3], cogc(filename, source))
+
+    def test_wrapped_logical_condition_keeps_its_ternary_parent(self):
+        for condition in ('quoted ||\n                apostrophe',
+                          'quoted\n                || apostrophe'):
+            with self.subTest(condition=condition):
+                source = """
+                    const attrEnd = (missing, quoted, apostrophe, end) =>
+                      missing ? end : %s ? end + 1 : end;
+                """ % condition
+                self.assertEqual([4], cogc('attribute.js', source))
+
+    def test_asi_ends_a_conditional_before_the_next_statement(self):
+        source = """
+            function edition(v: number, available: number | undefined) {
+              const first = v === 0 ? 2026 : available!
+              return v >= 2015 ? v - 2009 : first
+            }
+        """
+        self.assertEqual([2], cogc('edition.ts', source))
 
 
 class TestCommandLine(unittest.TestCase):
