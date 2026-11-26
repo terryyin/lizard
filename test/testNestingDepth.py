@@ -10,6 +10,20 @@ def get_cpp_with_nestdepth(source):
 
 class TestCppNestingDepth(unittest.TestCase):
 
+    def test_initializer_braces_keep_the_logical_condition(self):
+        functions = get_cpp_with_nestdepth("""
+        struct Toggle { bool active; };
+        bool allowed(bool enabled, bool cached, bool verified) {
+            if (Toggle{enabled && cached && verified}.active) return true;
+            return false;
+        }
+        bool permit(bool enabled, bool cached, bool verified) {
+            if (Toggle toggle{enabled && cached && verified}; toggle.active) return true;
+            return false;
+        }
+        """)
+        self.assertEqual([2, 2], [f.max_nesting_depth for f in functions])
+
     def test_cpp_expression_block_keeps_condition_levels(self):
         functions = get_cpp_with_nestdepth("""
         bool allowed(bool enabled, bool cached, bool verified) {
@@ -243,6 +257,18 @@ class TestCppNestingDepth(unittest.TestCase):
 
 
 class TestJavaNestingDepth(unittest.TestCase):
+
+    def test_array_initializer_braces_keep_the_logical_condition(self):
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'Permissions.java', """
+        class Permissions {
+            static boolean allowed(boolean enabled, boolean cached, boolean verified) {
+                if (new boolean[]{enabled && cached && verified}[0]) return true;
+                return false;
+            }
+        }
+        """).function_list
+        self.assertEqual(2, functions[0].max_nesting_depth)
 
     def test_java_expression_block_keeps_condition_levels(self):
         functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
