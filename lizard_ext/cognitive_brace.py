@@ -19,10 +19,9 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         super(_BraceCounter, self).__init__(reader, profile, gated)
         self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
         self.actions = self._keyword_actions(profile)
-        braces = getattr(reader, 'interpolation_braces', None)
         if not profile.nesting:
             self._process = self._process_flat
-        elif braces:
+        elif (braces := getattr(reader, 'interpolation_braces', None)):
             self._interpolation_open, self._interpolation_close = braces
             self._interpolations = []
             self._process = self._process_interpolation
