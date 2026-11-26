@@ -226,15 +226,17 @@ class JavaScriptFunctionsMixin:
         self.context.add_to_long_function_name(" " + token)
 
     def _expression_operand(self, token):
+        if token not in ('.', '?.', '(', '{'):
+            return False
         bindings = self._parameter_bindings
         name = self.last_token
         if (self._decorated_parameters or not bindings.at_root
                 or bindings.in_expression or bindings._in_parameter_type
                 or name != bindings.previous):
             return False
-        if token == '{' and name in ('&&', '||'):
-            return not self._expression_body
-        return (token in ('.', '?.', '(') and name not in ('this', 'new')
+        if token == '{':
+            return name in ('&&', '||') and not self._expression_body
+        return (name not in ('this', 'new')
                 and (name[0].isalpha() or name[0] in ('_', '$')))
 
     def _expecting_func_opening_bracket(self, token):
