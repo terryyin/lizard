@@ -11,7 +11,8 @@ from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
 from .typescript_signatures import (
-    CALL_TYPE_ARGUMENTS_START, ReturnTypeColon, return_type_colon, type_arguments_followed_by_call)
+    CALL_TYPE_ARGUMENTS_START, CallTypeArgument, ReturnTypeColon,
+    call_type_argument_token_count, return_type_colon)
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
@@ -246,6 +247,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         arrows = self.context.expression_arrows = []
         signatures = self.context.ended_signatures = []
         line_start = False
+        type_argument_tokens = 0
         state = self.parallel_states[0]
         marked_punctuation = _MARKED_PUNCTUATION
         member_access_tokens = _MEMBER_ACCESS
@@ -260,6 +262,10 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         while True:
             for token in tokens:
                 if not token.isspace():
+                    if type_argument_tokens:
+                        type_argument_tokens -= 1
+                        yield CallTypeArgument(token)
+                        continue
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
                         if token in _NAME_FOLLOWERS or (
@@ -279,7 +285,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     elif (token == '<' and self._class_field_annotations
                           and state.object_call_context()):
                         tokens, lookahead = tee(tokens)
-                        if type_arguments_followed_by_call(lookahead):
+                        type_argument_tokens = call_type_argument_token_count(lookahead)
+                        if type_argument_tokens:
                             token = CALL_TYPE_ARGUMENTS_START
                         del lookahead
                         member_access = False
