@@ -40,6 +40,7 @@ _STRING_PREFIXES = _FSTRING_PREFIXES | frozenset((
 # Match at the start of a word token, before the common pattern reads \w+.
 _INTERPOLATED_START = r"""|(?P<interpolated>(?i:fr|rf|bf|fb|f|tr|rt|t))(?=['"])"""
 _GROUPING = r"|(?P<grouping>[()[\]{}])"
+_CRLF_JOIN = r"|(?P<crlf_join>\\\r\n)"
 _PY_ADDITION = r"|\#[^\n]*|//=?" + _PY_TRIPLE_QUOTE
 _CLOSERS = {'(': ')', '[': ']', '{': '}'}
 
@@ -49,7 +50,8 @@ def generate_tokens(source_code, addition='', token_class=None, *, interpolate=T
         pattern = compiled_token_pattern(_PY_ADDITION + addition)
         return _mark_prefixed_strings(
             tokens_in_span(pattern, source_code, 0, len(source_code), token_class))
-    pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _GROUPING + addition)
+    pattern = compiled_token_pattern(
+        _PY_ADDITION + _INTERPOLATED_START + _GROUPING + _CRLF_JOIN + addition)
     return _mark_prefixed_strings(_source_tokens(source_code, pattern, token_class))
 
 
@@ -63,12 +65,14 @@ def _source_tokens(source, pattern, token_class):
             if kind == 'grouping':
                 depth = max(0, depth + (1 if token in _CLOSERS else -1))
             elif kind == 'interpolated' and isinstance(value, str):
-                string = _read_string(source, match.end(), token.lower(), pattern)
+                string = _read_string(source, match.end(), token.lower(), (pattern, token_class))
                 if string is not None:
                     start, parts = string
                     yield value
                     yield from parts
                     break
+            elif kind == 'crlf_join' and token_class is None:
+                value = '\\\n'
             if depth and token in ('def', 'class'):
                 # A declaration cannot belong to an unclosed expression.
                 depth = 0

@@ -154,14 +154,28 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
             self.supports_inline_suites and token != '\n' and
             self.context.pending_function is self.context.current_function)
         if token.startswith('"""') or token.startswith("'" * 3):
-            self.context.add_nloc(-token.count('\n') - (not self.inline_suite))
+            newlines = token.count('\n')
+            self.context.add_nloc(-newlines - (not self.inline_suite))
+            if self.inline_suite and newlines:
+                self.next(self._state_global)
+                self.sub_state(self._state_after_inline_docstring)
+                return
         self.next(self._state_global, token)
+
+    def _state_after_inline_docstring(self, token):
+        if token == ';':
+            return
+        if token not in ('\n', '\\\n'):
+            # The docstring excluded this line, which also contains code.
+            self.context.add_nloc(1)
+        self.next(self.saved_state, token)
 
     def end_inline_line(self):
         # Inline suites have no body indentation to attach the function.
         self.context.add_bare_nesting()
         self.context.pop_nesting()
         self.inline_suite = False
+        self.next(self._state_global)
 
     def _state_parameterized_type_annotation(self, token):
         # Up to the "]" that closes the first "[": Callable[[int, str], int]
