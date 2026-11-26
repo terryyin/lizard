@@ -1,7 +1,7 @@
 ''' Language parser for Python '''
 
 from .code_reader import CodeStateMachine
-from .clike import CLikeReader, CLikeStates, CppNestingStackStates
+from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates
 
 
 class ObjCReader(CLikeReader):
@@ -13,7 +13,7 @@ class ObjCReader(CLikeReader):
         super(ObjCReader, self).__init__(context)
         self.parallel_states = [
                 ObjCStates(context),
-                CppNestingStackStates(context)]
+                CLikeNestingStackStates(context)]
 
     def fake_and_useless(self):
         pass

@@ -44,7 +44,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
         super(CLikeReader, self).__init__(context)
         self.parallel_states = (
                 CLikeStates(context),
-                CppNestingStackStates(context),
+                CLikeNestingStackStates(context),
                 CppRValueRefStates(context))
 
     @staticmethod
@@ -145,8 +145,16 @@ class CLikeNestingStackStates(CodeStateMachine):
             self.context.add_namespace(''.join(itertools.takewhile(
                 lambda x: x not in self.__namespace_separators, saved)))
 
+    def _template_declaration(self, token):
+        # A template parameter list can only start outside a function.
+        if token == "<" and self.context.last_function is None:
+            self._state = self._read_template_parameters
+        else:
+            self._state = self._state_global
+        self._state(token)
+
     @CodeStateMachine.read_inside_brackets_then("<>", "_state_global")
-    def _template_declaration(self, _):
+    def _read_template_parameters(self, _):
         """Ignores template parameters."""
         pass
 
@@ -154,13 +162,3 @@ class CLikeNestingStackStates(CodeStateMachine):
     def _read_attribute(self, _):
         """Ignores C++11 attributes inside [[ ]]."""
         pass
-
-
-class CppNestingStackStates(CLikeNestingStackStates):
-    def _template_declaration(self, token):
-        # A template parameter list can only start outside a function.
-        if token == "<" and self.context.last_function is None:
-            self._state = super()._template_declaration
-        else:
-            self._state = self._state_global
-        self._state(token)
