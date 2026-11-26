@@ -37,6 +37,7 @@ class RReader(CodeReader, ScriptLanguageMixIn):
         """Generate tokens for R code with R-specific patterns."""
         # R-specific token patterns
         r_patterns = (
+            r"|`(?:\\.|[^`\\])*`"  # Backtick-quoted identifiers
             r"|<-"          # Assignment operator <-
             r"|->"          # Assignment operator ->
             r"|%[a-zA-Z_*/>]+%"  # Special operators like %in%, %*%, %>%, %/%, etc.
@@ -61,6 +62,8 @@ class RStates(RDeclarationMixin, CodeStateMachine):
         self.brace_count = 0  # Track brace nesting for function bodies
         self.in_braced_function = False  # Track if current function uses braces
         self.additional_function_names = []  # Store additional names for multiple assignment
+        self._parameter_depth = 0
+        self._parameter_tokens = []
 
     def _state_global(self, token):
         """Global state - looking for function definitions."""

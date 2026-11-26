@@ -52,6 +52,20 @@ def extract_left_assignment_names(recent_tokens):
     return list(reversed(function_names)) if function_names else ["(anonymous)"]
 
 
+def extract_formal_name(tokens):
+    """Return the authoritative R formal parameter name for one declaration."""
+    head = []
+    for token in tokens:
+        if token == '=':
+            break
+        head.append(token)
+    if not head:
+        return ''
+    if len(head) == 1 and len(head[0]) >= 2 and head[0][0] == '`' and head[0][-1] == '`':
+        return head[0][1:-1]
+    return ''.join(head)
+
+
 class RDeclarationMixin:
     """Mixin handling R function declarations from `function` through body handoff."""
 
@@ -86,6 +100,8 @@ class RDeclarationMixin:
         """Expecting function parameters."""
         if token == '(':
             self.context.add_to_long_function_name("(")
+            self._parameter_depth = 0
+            self._parameter_tokens = []
             self._state = self._read_params
         else:
             # Single expression function without parentheses - rare in R
@@ -94,10 +110,25 @@ class RDeclarationMixin:
 
     def _read_params(self, token):
         """Read function parameters until closing parenthesis."""
-        if token == ')':
+        if token.isspace() or token.startswith('#'):
+            return
+        if token == ')' and self._parameter_depth == 0:
+            self._finish_parameter()
             self.context.add_to_long_function_name(")")
             self._state = self._function_body
-        elif token not in ['\n'] and not token.isspace():
-            self.context.parameter(token)
-            if token != '(':
-                self.context.add_to_long_function_name(" " + token)
+        elif token == ',' and self._parameter_depth == 0:
+            self._finish_parameter()
+        else:
+            self._parameter_tokens.append(token)
+            if token in ('(', '[', '{'):
+                self._parameter_depth += 1
+            elif token in (')', ']', '}'):
+                self._parameter_depth = max(0, self._parameter_depth - 1)
+
+    def _finish_parameter(self):
+        """Commit one completed R formal declaration and its parameter name."""
+        if self._parameter_tokens:
+            declaration = ' '.join(self._parameter_tokens)
+            name = extract_formal_name(self._parameter_tokens)
+            self.context.parameter(declaration, name=name)
+            self._parameter_tokens = []

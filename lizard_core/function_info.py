@@ -42,6 +42,7 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
         self.start_line = start_line
         self.end_line = start_line
         self.full_parameters = []
+        self._parameter_names = []
         self.filename = filename
         self.top_nesting_level = -1
         self.fan_in = 0
@@ -68,6 +69,8 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     @property
     def parameter_count(self):
+        if self._parameter_names:
+            return len(self._parameter_names)
         # Binding patterns can occupy formal slots without introducing names.
         return sum(
             bool(_PARAMETER_NAME.search(parameter))
@@ -76,6 +79,8 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
 
     @property
     def parameters(self):
+        if self._parameter_names:
+            return list(self._parameter_names)
         # Exclude empty tokens as parameters. These can occur in languages
         # allowing a trailing comma on the last parameter in an function
         # argument list.
@@ -99,7 +104,14 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
                 self.long_name += ' '
         self.long_name += app
 
-    def add_parameter(self, token):
+    def add_parameter(self, token, name=None):
+        if name is not None:
+            if self.full_parameters:
+                self.add_to_long_name(" ,")
+            self.add_to_long_name(" " + token)
+            self.full_parameters.append(token)
+            self._parameter_names.append(name)
+            return
         self.add_to_long_name(" " + token)
         self._append_parameter(self.full_parameters, token)
 

@@ -46,7 +46,7 @@ Run `nix develop -c python -m pytest -q test/test_languages/testR.py` and compar
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 When an R header contains nested defaults, only commas at the level of the formal list separate declarations. Backtick-quoted names stay whole, including punctuation inside the quotes. Commit each completed formal once through the builder, with ordered names and one slot per formal. Keep full declaration text and a single rendering of each token in the long name. Continue into the body and the next declaration at the same source positions.
 
@@ -57,6 +57,13 @@ When an R header contains nested defaults, only commas at the level of the forma
 | Duplicate-list consumer | Analyze three real temporary R files through `analyze_files` and `LizardExtension`. Two share the five names `a`, `b`, `c`, `...`, and `x y` across different defaults. One uses `x z` in the fifth slot. After the cross-file pass, assert duplicate counts and duplicate-file counts of `2, 2, 1`. |
 
 Compare the affected proof on trunk, the exact proposal, and the corrected revision. Run the focused R and duplicated-parameter-list tests, full pytest and `make` through Nix under [AGENTS.md](../../../AGENTS.md). Retain the existing PR qualification: use the [paired runner](../../../.agents/skills/lizard-process-pr/references/performance.md) for the R `api-parameters` workload and a broad frozen `cli` corpus on exact corrected production bytes, then require green hosted checks on the final head before any merge of the implementation.
+
+- Proof:
+  - Focused tests: `nix develop -c python -m pytest -q test/test_languages/testR.py test/test_languages/test_lizard_r_nested_parameters.py test/test_extensions/testDuplicatedParamList.py` passed (`40 passed in 0.36s`), covering all #643 fixtures, `f( x , y = 2)`, `f()`, `...`, backtick-quoted names with punctuation/spaces/escapes, `full_parameters`, `long_name`, body CCN 2, `g` on line 2, and real-temp-file `analyze_files` + `LizardExtension` duplicate counts `[2, 2, 1]`.
+  - CLI check: `nix develop -c python lizard.py --csv --verbose <sample.r>` on the combined example reported `PARAM=3`, `CCN=2`, full `long_name` with written backticks, and `g` on line 2 (`PARAM=1`).
+  - Full suite & style: `nix develop -c python -m pytest` passed (`3776 passed, 7 skipped`) and `nix develop -c make` passed (`pycodestyle` clean, `pylint` 9.35/10). All 6 changed files are <= 250 lines.
+  - Independent post-change refactor pass returned `none — already clean`.
+  - Paired performance qualification (noisy host, load averages 8.25–25.55): `api-parameters` run 1 (`--seconds 1.2`) `[-4.46%, +4.10%]`, `api-parameters` run 2 (`--seconds 3`) `[-6.43%, +4.61%]`, `cli` (`--seconds 1.2`) `[-3.73%, +4.96%]`. Point estimates are near zero (`-0.18%`, `-0.91%`, `+0.61%`), but host load widened the 95% CIs above the `< 3%` upper bound; a quiet-machine paired rerun is required before merging to `master`.
 
 ## Readiness review
 
