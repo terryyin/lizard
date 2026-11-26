@@ -29,8 +29,8 @@ class ErlangReader(CodeReader):
 
     @staticmethod
     def get_comment_from_token(token):
-        if token.startswith("%%"):
-            return token[2:]
+        if token.startswith("%"):
+            return token.lstrip("%")
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
