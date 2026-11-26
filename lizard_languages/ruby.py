@@ -131,10 +131,7 @@ class RubyStateMachine(RubylikeStateMachine):
             self.statement_structure_peak = 0
         super()._state_global(token)
 
-    def _read_block(self, opener, callback=None, token=None, function_body=False):
-        if self.structure_depth is None:
-            super()._read_block(opener, callback, token, function_body)
-            return
+    def _start_structure(self, opener, callback, token, function_body):
         child = self.statemachine_clone()
         depth = 0 if function_body else self.structure_depth
         child.structure_depth = depth + (opener in self.ns_structures)
@@ -151,12 +148,6 @@ class RubyStateMachine(RubylikeStateMachine):
 
         self.sub_state(child, finish_block, token)
 
-    def _read_modifier(self, token):
-        self.modifier_structure = token in self.ns_structures
-        if self.structure_depth is not None and self.modifier_structure:
-            self._record_structure(self._modified_statement_depth() + 1)
-        super()._read_modifier(token)
-
     def _count_loop_modifier(self, token):
         if self.structure_depth is not None and token in self.ns_structures:
             self._record_structure(self._modified_statement_depth() + 1)
@@ -169,11 +160,87 @@ class RubyStateMachine(RubylikeStateMachine):
         function = self.context.current_function
         function.max_nested_structures = max(function.max_nested_structures, depth)
 
+    _loop_depth = False
+    _loop_keyword = None
+
+    def _start_block(self, opener, callback=None, token=None, function_body=False):
+        if opener != 'def' and getattr(self.context, 'ruby_tracks_depth', False):
+            callback = self._depth_block_callback(opener, callback)
+        if self.structure_depth is None:
+            super()._start_block(opener, callback, token, function_body)
+        else:
+            structure = self._loop_keyword if opener == 'loop' else opener
+            self._start_structure(structure, callback, token, function_body)
+
+    def _depth_block_callback(self, opener, callback):
+        function = self.context.current_function
+        owns_depth = self._loop_depth if opener == 'loop' else (
+            opener in ('if', 'case') and self._take_pending_depth())
+        entry_depth = function.nesting_depth - owns_depth
+        parent_peak = function.ruby_block_peak
+        statement_peak = function.ruby_statement_peak
+        function.ruby_block_peak = function.nesting_depth
+        function.ruby_statement_peak = 0
+
+        def close_depth():
+            completed_peak = function.ruby_block_peak
+            function.ruby_block_peak = (
+                None if parent_peak is None else max(parent_peak, completed_peak))
+            function.ruby_statement_peak = statement_peak
+            if completed_peak > entry_depth:
+                function.ruby_statement_peak = max(statement_peak, completed_peak)
+            if owns_depth:
+                self.context.add_nd_condition(-1)
+            if callback is not None:
+                callback()
+
+        return close_depth
+
+    def _start_loop(self, opener, state):
+        self._loop_keyword = opener
+        self._loop_depth = (opener in ('while', 'for')
+                            and getattr(self.context, 'ruby_tracks_depth', False)
+                            and self._take_pending_depth())
+        super()._start_loop(opener, state)
+
+    def _take_pending_depth(self):
+        # Keep a keyword's level before a brace or line break can close it.
+        function = self.context.current_function
+        if not function.levels_awaiting_body:
+            return False
+        function.levels_awaiting_body -= 1
+        return True
+
+    def _loop_modifier(self, token):
+        if token == 'while':
+            self._record_modified_block_depth()
+        self._count_loop_modifier(token)
+
+    def _read_modifier(self, token):
+        self.modifier_structure = token in self.ns_structures
+        if self.structure_depth is not None and self.modifier_structure:
+            self._record_structure(self._modified_statement_depth() + 1)
+        if token == 'if':
+            self._record_modified_block_depth()
+        super()._read_modifier(token)
+
+    def _record_modified_block_depth(self):
+        if getattr(self.context, 'ruby_tracks_depth', False):
+            function = self.context.current_function
+            if function.ruby_statement_peak:
+                function.ruby_statement_peak += 1
+                self.context.record_nd_peak(function.ruby_statement_peak)
+
     def _if(self, token):
         # A modifier predicate can open a block: `return if jobs.any? do`.
         if token == 'do' and not self.br_count and not getattr(token, 'is_member_name', False):
             self.next(self._modifier_do)
         else:
+            if (token in ('if', 'while') and self.follows_value() and not self.br_count
+                    and not getattr(token, 'is_member_name', False)
+                    and getattr(self.context, 'ruby_tracks_depth', False)
+                    and not self.context.get_condition_depth()):
+                self._record_modified_block_depth()
             super()._if(token)
 
     def _finish_modifier_do(self):
@@ -183,7 +250,7 @@ class RubyStateMachine(RubylikeStateMachine):
         # A block with parameters or a body on the next line has a
         # distinct opening. Keep reading the predicate on other tokens.
         if self.is_newline() or token in ('|', '||', ';'):
-            self._read_block('do', callback=self._finish_modifier_do, token=token)
+            self._start_block('do', callback=self._finish_modifier_do, token=token)
         else:
             self.next(self._if, token)
 
@@ -198,6 +265,12 @@ class RubyReader(RubylikeReader):
     def track_nested_structures(self):
         self.parallel_states[0].structure_depth = 0
 
+    def nesting_semicolons(self, tokens):
+        self.context.ruby_tracks_depth = True
+        self.block_starts = ('{', '${')
+        boundaries = _NestingSemicolons(self.context)
+        return boundaries.read(tokens), boundaries
+
     def preprocess(self, tokens):
         """Drop spaces, and mark a keyword right after '.', '&.' or 'def'
         on the same line as the name of a method.  At the end of a line,
@@ -205,6 +278,8 @@ class RubyReader(RubylikeReader):
         keywords, name_before = _KEYWORDS, _NAME_BEFORE
         context = self.context
         context.at_line_end = None
+        if getattr(context, 'ruby_tracks_depth', False):
+            tokens = _mark_logical_assignments(tokens)
         name_follows = False
         tokens = _expand_percent_interpolation(tokens)
         for token in tokens:
@@ -350,3 +425,38 @@ def _percent_expression(token, start, end, pattern):
             braces -= 1
         parts.append(current)
     return parts, None
+
+
+class _NestingSemicolons:
+    """A Ruby statement normally ends at its line break."""
+
+    def __init__(self, context):
+        self.context = context
+        self.before_token = False
+
+    def read(self, tokens):
+        previous = None
+        for token in tokens:
+            if previous == 'else':
+                self.context.clear_prev_was_else()
+            self.before_token = (self.context.newline and previous is not None
+                                 and token not in ('.', '&')
+                                 and (previous in ('do', 'then') or _ends_value(previous)))
+            if (token == ';' or (self.before_token and token not in (')', ']', '}'))
+                    or (token in _BRANCH_BOUNDARIES and not getattr(token, 'is_member_name', False))):
+                self.context.current_function.ruby_statement_peak = 0
+            previous = token
+            yield token
+
+
+def _mark_logical_assignments(tokens):
+    for token in tokens:
+        if token in ('&&', '||'):
+            following = next(tokens, None)
+            if following == '=' and token.begin + len(token) == following.begin:
+                token.is_logical_assignment = True
+            yield token
+            if following is not None:
+                yield following
+        else:
+            yield token
