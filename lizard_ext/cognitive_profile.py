@@ -167,7 +167,7 @@ _MEMBER_RECEIVER_OVERRIDES = {
     'php': {'->': _PHP_THIS, '?->': _PHP_THIS},
     'groovy': {'?.': _SELF_REFERENCES, '*.': frozenset()},
     'kotlin': {'.': _SELF_REFERENCES | {'this?', 'this!!'}},
-    'lua': {':': frozenset(('self',))},
+    'lua': {':': frozenset()},  # The assigned function supplies the receiver name.
 }
 _LAMBDA_TRIGGERS = {'cpp': frozenset((']',)), 'arrow': frozenset(('->', '=>')),
                     None: frozenset()}

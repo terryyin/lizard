@@ -51,6 +51,8 @@ class _Frame(object):  # pylint: disable=R0903
 class _FunctionState(object):  # pylint: disable=R0902,R0903
     """Everything the counter remembers about one function."""
 
+    receiver_dot_is_concat = False
+
     def __init__(self):
         self.body_started = False
         self.frames = []
@@ -90,6 +92,11 @@ class _Counter(object):  # pylint: disable=R0902
         self.reader = reader
         self.context = reader.context
         self.member_receivers = profile.member_receivers
+        self.member_receiver_tokens = ()
+        if self.member_receivers:
+            self.member_receiver_tokens = self.member_receivers.keys() | {'(', ')'}
+            if ':' in self.member_receivers:
+                self.member_receiver_tokens.add('.')
         self.profile = profile
         self.gated = gated
         self.logical_ops = frozenset(
@@ -141,8 +148,8 @@ class _Counter(object):  # pylint: disable=R0902
             state.body_started = True
         if self.profile.case_insensitive:
             token = token.lower()
-        member_receivers = self.member_receivers
-        if member_receivers and (state.grouped_receiver or token in ('(', ')') or token in member_receivers):
+        receiver_tokens = self.member_receiver_tokens
+        if receiver_tokens and (state.grouped_receiver or token in receiver_tokens):
             self._remember_member_receiver(token)
         self._process(token)
         state.prev2, state.prev = state.prev, token
@@ -308,6 +315,11 @@ class _Counter(object):  # pylint: disable=R0902
         state.grouped_receiver = None
         if token in self.member_receivers:
             state.member_receiver = grouped[1] if grouped else state.prev
+            if token == ':' and state.prev2 == '.' and not state.receiver_dot_is_concat:
+                state.member_receiver = None
+        elif token == '.' and ':' in self.member_receivers:
+            # Lua reads concatenation as two dots. A single dot selects a field.
+            state.receiver_dot_is_concat = state.prev == '.'
         elif token == '(' and self._starts_receiver_group():
             if state.receiver_groups is None:
                 state.receiver_groups = {}
@@ -352,13 +364,12 @@ class _Counter(object):  # pylint: disable=R0902
                     and self._is_structure(token))
             member_receivers = self.member_receivers
             if member_receivers is not None and state.prev in member_receivers:
-                calls = state.member_receiver in member_receivers[state.prev]
-                if calls and state.prev == ':':
-                    # A Lua table assignment can declare the receiver as
-                    # its first parameter. A local function can name any
-                    # parameter ``self`` without owning that table.
+                if state.prev == ':':
+                    # A Lua table assignment declares its receiver as its first parameter.
                     calls = (function in self.context.lua_member_assignments
-                             and function.parameters[:1] == ['self'])
+                             and function.parameters[:1] == [state.member_receiver])
+                else:
+                    calls = state.member_receiver in member_receivers[state.prev]
             if calls:
                 state.pending_call = True
                 state.pending += 1
