@@ -44,7 +44,7 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
         super(PythonStates, self).__init__(context)
         self.reader = reader
         self.lambda_heads = 0
-        self.indents = PythonIndents(context)
+        self.indents = None
         self.annotation_colon_line = 0
 
     def _state_global(self, token):

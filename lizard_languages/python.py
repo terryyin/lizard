@@ -2,7 +2,7 @@
 
 from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
-from .python_structure import PythonStates, count_spaces
+from .python_structure import PythonIndents, PythonStates, count_spaces
 from .python_tokens import FStringExpressionToken, FStringLiteralToken, PrefixedStringToken, \
     generate_tokens as generate_python_tokens
 
@@ -185,7 +185,7 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
 
     def preprocess(self, tokens):
         states = self.parallel_states[0]
-        indents = states.indents
+        indents = states.indents = PythonIndents(self.context)
         current_leading_spaces = 0
         reading_leading_space = True
         for token in self._soft_keyword_lookahead(tokens):
