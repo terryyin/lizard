@@ -18,6 +18,7 @@ class JavaScriptObjectsMixin:
     # In an object: a default value is open, `{ a = async function () {} }`.
     _default_value = False
     _class_async_modifier = False
+    _class_generator_modifier = False
 
     def _typed_class_member(self):
         return (self.as_class and not self._in_prop_value
@@ -68,8 +69,9 @@ class JavaScriptObjectsMixin:
                 return False
         elif not (after_field_type or after_field_value or self._starts_class_member()):
             # A multiline initializer may already have cleared the field flag.
-            if not (self.last_token == '*' and (
-                    self._static_seen or self._async_seen and self._class_async_modifier)):
+            if not (previous == '*' and (
+                    self._class_generator_modifier or self._static_seen
+                    or self._async_seen and self._class_async_modifier)):
                 return False
         if self.started_function:
             if self._expression_body:
@@ -94,6 +96,9 @@ class JavaScriptObjectsMixin:
                 self._in_prop_value = True
             else:
                 self._default_value = True
+        if token == '*' and self.as_class:
+            self._class_generator_modifier = (
+                not self._in_prop_value and self.last_token in (None, ';', '}'))
         if (self.as_class and token.endswith('?')
                 and self._typed_class_member()):
             self.last_tokens = token[:-1]
