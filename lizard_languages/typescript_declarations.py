@@ -17,8 +17,6 @@ _EXPRESSION_PREFIXES = (
 
 
 class TypeScriptDeclarationsMixin:
-    _pending_type_alias = False
-
     def _handle_type_declaration(self, token):
         if token in ('const', 'let', 'var'):
             self._declaration_binding = True

@@ -13,6 +13,8 @@ __all__ = (
 
 
 class JavaScriptFunctionsMixin:
+    _pending_type_alias = False
+
     def _read_parenthesis_group(self):
         """Only possible signatures need provisional binding frames."""
         if parameter_group(self._prev_token):
@@ -49,6 +51,11 @@ class JavaScriptFunctionsMixin:
     def end_expression_before(self, token):
         """Called by the reader with a line's first token before it is
         counted, so an ended arrow or abandoned signature keeps none of it."""
+        if (self._pending_type_alias and ends_expression(self.last_token)
+                and starts_statement(token)):
+            # The type keyword at the end of this arrow was an identifier.
+            self._pending_type_alias = False
+            self.next(self._state_global)
         if (self._state == self._expecting_func_opening_bracket
                 and self.started_function and starts_statement(token)
                 and token != '{'):
@@ -57,13 +64,9 @@ class JavaScriptFunctionsMixin:
             self._discard_signature()
             if not self.started_function:
                 return
-        if ((self._state == self._state_global or self._pending_type_alias)
+        if (self._state == self._state_global
                 and ends_expression(self.last_token)
                 and starts_statement(token)):
-            if self._pending_type_alias:
-                # The type keyword at the end of this arrow was an identifier.
-                self._pending_type_alias = False
-                self.next(self._state_global)
             self._end_statement()
 
     def end_signature_before(self, token):
