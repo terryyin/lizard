@@ -29,6 +29,7 @@ class TypeScriptDeclarationsMixin:
             self._skip_ambient_block()
             return True
         if token in ('const', 'let', 'var'):
+            self._ts_declare = False
             self._declaration_binding = True
             self.last_tokens = self._prev_token = token
             return True
