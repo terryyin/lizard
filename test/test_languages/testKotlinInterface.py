@@ -32,6 +32,22 @@ abstract class Process {
         ''')
         self.assertEqual(["livePid"], [f.name for f in result])
 
+    def test_abstract_method_preserves_enclosing_function_forgiveness(self):
+        for before, inside in (("// #lizard forgives", ""), ("", "// #lizard forgives")):
+            with self.subTest(before=before):
+                result = get_kotlin_function_list(f'''\
+{before}
+fun samplePid(): Int {{
+    {inside}
+    abstract class Process {{
+        abstract fun read(): Int
+    }}
+    return 1
+}}
+fun livePid(): Int {{ return 2 }}
+                ''')
+                self.assertEqual(["livePid"], [f.name for f in result])
+
     def test_functions_with_a_body_in_an_interface(self):
         result = get_kotlin_function_list('''
 interface Interval {

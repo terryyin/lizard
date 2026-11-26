@@ -47,6 +47,17 @@ class TestKotlinAccessors(unittest.TestCase):
                 ''')
         self.assertEqual("get", result[0].name)
 
+    def test_directive_between_accessors_forgives_the_following_getter(self):
+        result = get_kotlin_function_list('''\
+class Process {
+    var cachedPid: Int = 1
+        private set /* #lizard forgives */ get() = field
+    fun samplePid(): Int { return 2 }
+}
+        ''')
+        self.assertEqual([("samplePid", 4, 4)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
     def test_getter_setter(self):
         result = get_kotlin_function_list('''
             class Time
