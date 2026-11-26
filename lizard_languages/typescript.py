@@ -5,6 +5,8 @@ Language parser for TypeScript
 from itertools import tee
 
 from .code_reader import CodeReader, CodeStateMachine, MemberName
+from .typescript_signatures import (
+    TypeArgumentComma, call_type_argument_span, can_start_call_type_arguments)
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
@@ -14,8 +16,6 @@ from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
-from .typescript_signatures import (
-    TypeArgumentComma, call_type_argument_span, can_start_call_type_arguments)
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
