@@ -28,7 +28,11 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         state = self.state
         line = self.line
         if line != state.line:
-            self._new_line(line)
+            if self.profile.nested_functions and (
+                    token in ('?', ':') or state.prev in ('?', ':')):
+                state.line = line
+            else:
+                self._new_line(line)
         if state.pending:
             self._resolve_pending(token)
         if _is_word(token):
