@@ -115,16 +115,18 @@ def test_quoted_arrow_property_keeps_parameters(suffix):
 
 
 @pytest.mark.parametrize('suffix', ('ts', 'tsx'))
-def test_quoted_arrow_with_parenthesized_return_type_keeps_its_body(suffix):
+@pytest.mark.parametrize('return_type', ('string', '(string | null)'))
+def test_quoted_arrow_return_type_keeps_body_and_formals(suffix, return_type):
     source = '''const hooks = {
-  'format:label': (text: string): (string | null) => {
-    if (!text) return null;
+  'format:label': (text: string, fallback: string): RETURN => {
+    if (!text) return fallback;
     return text.trim();
   },
 };
-'''
-    assert [(f.start_line, f.end_line, f.cyclomatic_complexity, f.parameter_count)
-            for f in functions(source, suffix)] == [(2, 5, 2, 1)]
+'''.replace('RETURN', return_type)
+    assert summaries(functions(source, suffix)) == [
+        ('(anonymous)', 2, 2, 5, ['text', 'fallback']),
+    ]
 
 
 @pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
