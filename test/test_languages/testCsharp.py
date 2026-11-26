@@ -677,15 +677,34 @@ class Job
 #if DEBUG
             return count;
         };
-#else
+#elif TRACE
             return count + 1;
         };
+#else
+#error Define DEBUG or TRACE
 #endif
     static int Next() => 1;
     static void Main() => Console.WriteLine(Build()() + Next());
 }'''
         functions = get_csharp_function_list(source)
-        self.assertEqual([('Job::Build', 4, 15), ('Job::Next', 17, 17), ('Job::Main', 18, 18)], [
+        self.assertEqual([('Job::Build', 4, 15), ('Job::Next', 19, 19), ('Job::Main', 20, 20)], [
+            (f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_unbraced_conditional_calls_keep_following_methods(self):
+        source = '''class Job
+{
+    int Read() =>
+#if DEBUG
+        Next();
+#elif TRACE
+        Next() + 1;
+#else
+#error Define DEBUG or TRACE
+#endif
+    int Next() => 1;
+}'''
+        functions = get_csharp_function_list(source)
+        self.assertEqual([('Job::Read', 3, 5), ('Job::Next', 11, 11)], [
             (f.name, f.start_line, f.end_line) for f in functions])
 
     def test_expression_object_initializer_does_not_emit_global_function(self):
