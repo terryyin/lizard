@@ -43,10 +43,12 @@ end
             [(function.name, function.end_line, function.cyclomatic_complexity)
              for function in functions])
 
-    def test_backtick_method_does_not_hide_later_regexps(self):
+    def test_backtick_operator_does_not_hide_later_regexps(self):
         definitions = (
             'def capture(shell, command)\n  shell.`(command)\nend\n',
             'def `(command)\n  capture(command)\nend\n',
+            'module ShellOperators\n  alias_method :execute, :`\nend\n',
+            'expect(shell).to receive(:`).with(command)\n',
         )
         usage = r'''
 def ignore_rules(rules, count)

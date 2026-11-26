@@ -164,6 +164,11 @@ def mark_forward(source, js_family):
             skip_string(ch)
             after_operand()
             return
+        if ch == ':' and ruby_append and can_regex and source.startswith(':`', i):
+            # In an operand position, a colon and backtick name an operator.
+            i += 2
+            after_operand()
+            return
         if ch == '`':
             if js_family:
                 scan_template()
