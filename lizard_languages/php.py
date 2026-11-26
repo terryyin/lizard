@@ -19,6 +19,13 @@ _TEMPLATE_OPENING_TAG = re.compile(_EXPLICIT_OPENING_TAG + r"|<\?")
 _TOKEN_SPAN = re.compile(r".*", re.S)
 _LABEL_START = r'a-zA-Z_\x80-\U0010ffff'
 _LABEL_CHAR = _LABEL_START + '0-9'
+_PHP_NAME_CHAR = re.compile(rf"[{_LABEL_CHAR}]")
+_WORD_BOUNDARY = rf"(?![{_LABEL_CHAR}]|\\[{_LABEL_START}])"
+_DECIMAL_DIGITS = r"[0-9](?:_?[0-9])*"
+_NUMBER = (
+    r"0[xX][0-9a-fA-F](?:_?[0-9a-fA-F])*|0[bB][01](?:_?[01])*|0[oO][0-7](?:_?[0-7])*"
+    rf"|(?:{_DECIMAL_DIGITS}(?:\.(?:{_DECIMAL_DIGITS})?)?|\.{_DECIMAL_DIGITS})(?:[eE][+-]?{_DECIMAL_DIGITS})?"
+)
 _DOC_OPENER = (
     rf"""[bB]?<<<[ \t]*(?P<doc_quote>['"]?)(?P<doc_label>[{_LABEL_START}][{_LABEL_CHAR}]*)(?P=doc_quote)"""
     r"(?:\r\n|[\r\n])"
@@ -166,17 +173,21 @@ class PHPReader(CodeReader, CCppCommentsMixin):
         operators = PHPReader._non_ternary_question_operators + r"|<<=|<=|<"
         # A closing tag ends a line comment, but not a string or block comment.
         comments = r"|(?://|\#)" + _LINE_COMMENT_END + r"|\?>"
-        # PHP identifiers accept every non-ASCII byte, including combining marks.
-        word = (rf"|(?<![{_LABEL_CHAR}])(?P<operator_word>(?ai:and|or))"
-                rf"(?![{_LABEL_CHAR}]|\\[{_LABEL_START}])")
-        pattern = compiled_token_pattern(addition + variables + word +
-                                         rf"""|(?=[bB'"`<])(?:{_STRING_TOKENS})""" + operators + comments)
+        word = rf"|(?P<operator_word>(?ai:and|or)){_WORD_BOUNDARY}"
+        compact_number = (rf"|(?<![{_LABEL_CHAR}])(?P<compact_number>{_NUMBER})"
+                          rf"(?=(?ai:and|or){_WORD_BOUNDARY})")
+        suffix = rf"""|(?=[bB'"`<])(?:{_STRING_TOKENS})""" + operators + comments
+        word_pattern = compiled_token_pattern(addition + variables + word + compact_number + suffix)
+        plain_pattern = compiled_token_pattern(addition + variables + suffix)
         legacy_pattern = None
         uncertain_until = 0
+        number_end = -1
         current_pos = 0
         while tag := _OPENING_TAG.search(source_code, current_pos):
             if current_pos < tag.start():
                 yield '"' + source_code[current_pos:tag.start()] + '"'
+            # A bare opening tag can be an XML processing instruction.
+            pattern = word_pattern if _EXPLICIT_TAG.match(source_code, tag.start()) else plain_pattern
             pos = tag.end()
             while pos is not None:
                 for match in pattern.finditer(source_code, pos):
@@ -203,6 +214,13 @@ class PHPReader(CodeReader, CCppCommentsMixin):
                             yield source_code[match.start():end]
                         pos = end
                         break
+                    if group == 'compact_number':
+                        if match.start() < uncertain_until:
+                            match = plain_pattern.match(source_code, match.start())
+                            yield token_class(match) if token_class else match[0]
+                            pos = match.end()
+                            break
+                        number_end = match.end()
                     token = match[0]
                     if token == '?>':
                         current_pos = match.end()
@@ -211,7 +229,12 @@ class PHPReader(CodeReader, CCppCommentsMixin):
                     if token_class:
                         yield token_class(match)
                     elif group == 'operator_word' and match.start() >= uncertain_until:
-                        yield _WordCandidate(token)
+                        start = match.start()
+                        # A numeric literal can touch an operator. A PHP
+                        # identifier, including its non-ASCII marks, cannot.
+                        if start == number_end or not _PHP_NAME_CHAR.match(source_code, start - 1):
+                            token = _WordCandidate(token)
+                        yield token
                     else:
                         yield token
                 else:
