@@ -231,6 +231,33 @@ class TestCppNestingDepth(unittest.TestCase):
         self.assertEqual(2, result[0].max_nesting_depth)
 
 
+class TestGoNestingDepth(unittest.TestCase):
+
+    def test_if_condition_keeps_one_logical_level(self):
+        code = """
+        package work
+        type Job struct { Active, Enabled bool }
+
+        func schedule(jobs []Job, cached, forced bool) bool {
+            if len(jobs) > 0 && (jobs[0].Active || cached) && forced {
+                return true
+            }
+            return false
+        }
+
+        func scheduleFirst(jobs []Job, cached, forced bool) bool {
+            if first := jobs[0]; (first.Active && first.Enabled) || cached && forced {
+                if first.Enabled { return true }
+            }
+            return false
+        }
+        """
+        functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+            'work.go', code).function_list
+        self.assertEqual([('schedule', 2), ('scheduleFirst', 3)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
+
 class TestJavaScriptNestingDepth(unittest.TestCase):
 
     def test_sibling_braceless_ifs_do_not_nest(self):
