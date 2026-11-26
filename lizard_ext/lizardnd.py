@@ -5,8 +5,6 @@ in every function.
 from lizard import FileInfoBuilder, FunctionInfo
 
 DEFAULT_ND_THRESHOLD = 7
-_EXPRESSION_BLOCK_LANGUAGES = frozenset(('cpp', 'java'))
-_CONTROL_HEADERS = frozenset(('if', 'for', 'while', 'catch'))
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -32,8 +30,6 @@ class LizardExtension(object):  # pylint: disable=R0903
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
-        if 'java' in getattr(reader, 'language_names', ()):
-            tokens = _java_lambda_expressions(tokens, reader.context)
         return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
 
     @staticmethod
@@ -45,14 +41,13 @@ class LizardExtension(object):  # pylint: disable=R0903
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
-        if hasattr(reader, "indent_indicator"):
-            indent_indicator = reader.indent_indicator
-        else:
-            indent_indicator = ';'
+        indent_indicator = getattr(reader, 'indent_indicator', ';')
         keep_condition = not _EXPRESSION_BLOCK_LANGUAGES.isdisjoint(
             getattr(reader, 'language_names', ()))
         lambda_brace = (_ConditionLambdaBrace('cpp' in reader.language_names)
                         if keep_condition else None)
+        if 'java' in getattr(reader, 'language_names', ()):
+            tokens = _java_lambda_expressions(tokens, reader.context)
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
@@ -246,6 +241,48 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.prev_was_else = False
 
 
+def get_method(cls, name):
+    """ python3 doesn't need the __func__ to get the func of the
+        method.
+    """
+    method = getattr(cls, name)
+    if hasattr(method, "__func__"):
+        method = method.__func__
+    return method
+
+
+def patch(frm, accept_class):
+    for method in [k for k in frm.__dict__ if not k.startswith("_")]:
+        setattr(accept_class, method, get_method(frm, method))
+
+
+def patch_append_method(frm, accept_class, method_name):
+    old_method = get_method(accept_class, method_name)
+
+    def appended(*args, **kargs):
+        old_method(*args, **kargs)
+        frm(*args, **kargs)
+
+    setattr(accept_class, method_name, appended)
+
+
+def _init_nesting_depth_data(self, *_):
+    self.nesting_depth = 0
+    self.max_nesting_depth = 0
+    self.levels_awaiting_body = 0  # structure levels closed by their body
+    self.control_header_depth = None
+    self.block_levels = []  # structure levels each open block will close
+    self.in_condition = False  # Track if we're inside a condition
+    self.in_control_header = False
+    self.condition_depth = 0   # Track nesting depth within conditions
+    self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
+    self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
+
+
+_EXPRESSION_BLOCK_LANGUAGES = frozenset(('cpp', 'java'))
+_CONTROL_HEADERS = frozenset(('if', 'for', 'while', 'catch'))
+
+
 def _close_logical_condition(function):
     if function.condition_depth == 0:
         function.in_condition = False
@@ -403,44 +440,6 @@ class _ConditionLambdaBrace:  # pylint: disable=R0903
         elif token in (')', '}', ',', ';'):
             self.head = False
         return False
-
-
-def get_method(cls, name):
-    """ python3 doesn't need the __func__ to get the func of the
-        method.
-    """
-    method = getattr(cls, name)
-    if hasattr(method, "__func__"):
-        method = method.__func__
-    return method
-
-
-def patch(frm, accept_class):
-    for method in [k for k in frm.__dict__ if not k.startswith("_")]:
-        setattr(accept_class, method, get_method(frm, method))
-
-
-def patch_append_method(frm, accept_class, method_name):
-    old_method = get_method(accept_class, method_name)
-
-    def appended(*args, **kargs):
-        old_method(*args, **kargs)
-        frm(*args, **kargs)
-
-    setattr(accept_class, method_name, appended)
-
-
-def _init_nesting_depth_data(self, *_):
-    self.nesting_depth = 0
-    self.max_nesting_depth = 0
-    self.levels_awaiting_body = 0  # structure levels closed by their body
-    self.control_header_depth = None
-    self.block_levels = []  # structure levels each open block will close
-    self.in_condition = False  # Track if we're inside a condition
-    self.in_control_header = False
-    self.condition_depth = 0   # Track nesting depth within conditions
-    self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
-    self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
 
 
 patch(NDFileInfoAddition, FileInfoBuilder)
