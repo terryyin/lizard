@@ -233,6 +233,27 @@ class TestCppNestingDepth(unittest.TestCase):
 
 class TestJavaScriptNestingDepth(unittest.TestCase):
 
+    def test_arrow_block_keeps_its_own_nesting_scope(self):
+        code = """
+        function refresh(authorized, stale, done) {
+          if (authorized) { load(() => { if (done) done(); }); }
+          if (stale) invalidate();
+        }
+        function schedule(authorized, stale) {
+          if (authorized) load(() => refreshCache());
+          if (stale) load(() => { refreshCache(); });
+          if (stale) invalidate();
+        }
+        """
+        for filename in ('cache.js', 'cache.ts'):
+            with self.subTest(filename=filename):
+                functions = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
+                    filename, code).function_list
+                self.assertEqual(
+                    [('(anonymous)', 1), ('refresh', 1), ('(anonymous)', 0),
+                     ('(anonymous)', 0), ('schedule', 1)],
+                    [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_sibling_braceless_ifs_do_not_nest(self):
         """Issue #573: consecutive braceless ifs are siblings, not nested"""
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
