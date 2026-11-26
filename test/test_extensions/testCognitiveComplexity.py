@@ -990,6 +990,22 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
                         f.cognitive_complexity for f in result.function_list
                         if f.name == 'status'))
 
+    def test_multiline_template_comparisons_keep_runtime_decisions(self):
+        expressions = (
+            "low < `${(enabled ? 'yes' : 'no')}` >\n    high",
+            "`${low < `${(enabled ? 'yes' : 'no')}` >\n    high}`",
+        )
+        for expression in expressions:
+            runtime = f"function compare(enabled, low, high) {{ return {expression}; }}"
+            self.assertEqual([1], cogc('compare.js', runtime))
+            source = (
+                'function compare(enabled: boolean, low: string, high: boolean) {'
+                f' return {expression}; }}'
+            )
+            for suffix in ('ts', 'tsx'):
+                with self.subTest(expression=expression, suffix=suffix):
+                    self.assertEqual([1], cogc(f'compare.{suffix}', source))
+
     def test_template_statement_after_a_type_alias(self):
         source = """
             function label(value: boolean) {
