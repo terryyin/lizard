@@ -12,7 +12,7 @@ class GDScriptReader(PythonReader):
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'elif', 'for', 'while', 'catch', 'do'}
-    _logical_operators = {'&&', '||'}
+    _logical_operators = {'&&', '||', 'and', 'or'}
     _case_keywords = {'case'}
     _ternary_operators = {'?'}
 

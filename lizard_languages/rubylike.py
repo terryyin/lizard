@@ -25,7 +25,7 @@ def _ends_value(token):
         return False
     end = token[-1]
     return end.isalnum() or end in '_)]}"\'`' or (
-        len(token) > 1 and end in '?!/') or (
+        len(token) > 1 and (end in '?!/' or token in (':*', ':**'))) or (
         token[0] == '%' and len(token) > 2)
 
 
