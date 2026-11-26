@@ -53,6 +53,27 @@ def variable_declaration(matches):
     return '', tokens.count
 
 
+# A bracket after an operand can index it. After these tokens a new
+# operand can start with an explicit array, slice, map or struct type.
+_OPERAND_STARTS = frozenset((
+    'if', ';', '(', '[', '{', ',', ':', '=', ':=',
+    '&&', '||', '==', '!=', '<', '<=', '>', '>=',
+    '+', '-', '*', '/', '%', '&', '|', '^', '&^', '<<', '>>', '<-', '!',
+))
+_LITERAL_TYPE_STARTS = frozenset(('[', 'map', 'struct'))
+
+
+class CompositeLiteralBrace(str):
+    """A brace that belongs to an explicit composite literal type."""
+
+    is_composite_literal_brace = True
+
+
+def composite_literal_starts(token, previous):
+    """Tell whether a token can start an explicit literal type here."""
+    return token in _LITERAL_TYPE_STARTS and previous in _OPERAND_STARTS
+
+
 def composite_literal_braces(matches):
     """Find the braces of an explicit composite type and its literal."""
     braces = set()

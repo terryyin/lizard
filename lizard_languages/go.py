@@ -6,8 +6,8 @@ from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
 from .go_function import (
-    GoToken, composite_literal_braces, function_signature, starts_declaration,
-    variable_declaration)
+    CompositeLiteralBrace, GoToken, composite_literal_braces, composite_literal_starts,
+    function_signature, starts_declaration, variable_declaration)
 from .token_pattern import compiled_token_pattern
 
 
@@ -39,12 +39,12 @@ class GoReader(CodeReader, CCppCommentsMixin):
                 declaration = variable_declaration(
                     pattern.finditer(source_code, match.end()))
                 token = GoToken(token, declaration)
-            elif token in _LITERAL_TYPE_STARTS and last_token in _OPERAND_STARTS:
+            elif composite_literal_starts(token, last_token):
                 literal_braces.update(composite_literal_braces(
                     pattern.finditer(source_code, match.start())))
             elif token == '{' and match.start() in literal_braces:
                 literal_braces.remove(match.start())
-                token = _CompositeLiteralBrace(token)
+                token = CompositeLiteralBrace(token)
             if not token.isspace() and not token.startswith(('//', '/*')):
                 last_token = token
             yield token
@@ -128,17 +128,3 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
             self._start_function(token, self._var_name)
         else:
             self._state_global(token)
-
-
-# A bracket after an operand can index it. After these tokens a new
-# operand can start with an explicit array, slice, map or struct type.
-_OPERAND_STARTS = frozenset((
-    'if', ';', '(', '[', '{', ',', ':', '=', ':=',
-    '&&', '||', '==', '!=', '<', '<=', '>', '>=',
-    '+', '-', '*', '/', '%', '&', '|', '^', '&^', '<<', '>>', '<-', '!',
-))
-_LITERAL_TYPE_STARTS = frozenset(('[', 'map', 'struct'))
-
-
-class _CompositeLiteralBrace(str):
-    is_composite_literal_brace = True

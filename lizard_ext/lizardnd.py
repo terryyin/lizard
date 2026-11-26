@@ -42,13 +42,13 @@ class LizardExtension(object):  # pylint: disable=R0903
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
         indent_indicator = getattr(reader, 'indent_indicator', ';')
+        go_if = 'go' in getattr(reader, 'language_names', ())
+        if go_if:
+            tokens = _go_nesting_tokens(tokens, reader.context, block_starts, block_ends)
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
-        go_if = 'go' in getattr(reader, 'language_names', ())
-        if go_if:
-            tokens = _go_nesting_tokens(tokens, reader.context, block_starts, block_ends)
         context = reader.context
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
@@ -238,21 +238,6 @@ def get_method(cls, name):
     return method
 
 
-def patch(frm, accept_class):
-    for method in [k for k in frm.__dict__ if not k.startswith("_")]:
-        setattr(accept_class, method, get_method(frm, method))
-
-
-def patch_append_method(frm, accept_class, method_name):
-    old_method = get_method(accept_class, method_name)
-
-    def appended(*args, **kargs):
-        old_method(*args, **kargs)
-        frm(*args, **kargs)
-
-    setattr(accept_class, method_name, appended)
-
-
 _GO_COMPOSITE_LITERAL = object()
 
 
@@ -288,6 +273,21 @@ def _start_go_if(context):
     function.go_if_levels = function.levels_awaiting_body
     function.logical_operator_added = False
     return depth
+
+
+def patch(frm, accept_class):
+    for method in [k for k in frm.__dict__ if not k.startswith("_")]:
+        setattr(accept_class, method, get_method(frm, method))
+
+
+def patch_append_method(frm, accept_class, method_name):
+    old_method = get_method(accept_class, method_name)
+
+    def appended(*args, **kargs):
+        old_method(*args, **kargs)
+        frm(*args, **kargs)
+
+    setattr(accept_class, method_name, appended)
 
 
 def _init_nesting_depth_data(self, *_):
