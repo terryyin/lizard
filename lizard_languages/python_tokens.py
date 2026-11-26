@@ -59,6 +59,8 @@ def generate_tokens(source_code, addition='', token_class=None, *, interpolate=T
 
 def _source_tokens(source, pattern, token_class):
     start = depth = 0
+    scanner = (pattern, token_class)
+    read_string = _read_string if token_class is None else _read_factory_string
     while True:
         for match in pattern.finditer(source, start):
             token = match.group()
@@ -67,7 +69,7 @@ def _source_tokens(source, pattern, token_class):
             if kind == 'grouping':
                 depth = max(0, depth + (1 if token in _CLOSERS else -1))
             elif kind == 'interpolated' and isinstance(value, str):
-                string = _read_string(source, match.end(), token.lower(), (pattern, token_class))
+                string = read_string(source, match.end(), token.lower(), scanner)
                 if string is not None:
                     start, parts = string
                     yield value
