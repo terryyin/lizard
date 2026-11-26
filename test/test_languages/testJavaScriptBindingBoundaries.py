@@ -171,6 +171,23 @@ def test_quoted_arrow_keeps_grouped_literal_return_type(literal):
     ]
 
 
+def test_quoted_arrow_keeps_a_grouped_generic_callable_return():
+    source = """export const handlers = {
+  'callback:generic': (enabled: boolean): (<T>(value: T) => T) => {
+    return <T>(value: T) => {
+      if (!enabled) throw new Error('disabled');
+      return value;
+    };
+  },
+};
+"""
+
+    assert summaries(functions(source, 'ts')) == [
+        ('(anonymous)', 2, 3, 6, ['value']),
+        ('(anonymous)', 1, 2, 7, ['enabled']),
+    ]
+
+
 @pytest.mark.parametrize('suffix', ('js', 'ts'))
 def test_quoted_arrow_default_ccn_belongs_to_the_arrow(suffix):
     source = '''function configure(ready) {
