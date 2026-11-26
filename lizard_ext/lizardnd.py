@@ -3,6 +3,7 @@ This is an extension of lizard, that counts the 'Nesting Depth'
 in every function.
 """
 from lizard import FileInfoBuilder, FunctionInfo
+from lizard_languages.javascript_statements import ImpliedSemicolons
 
 DEFAULT_ND_THRESHOLD = 7
 
@@ -41,10 +42,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
-        if hasattr(reader, "indent_indicator"):
-            indent_indicator = reader.indent_indicator
-        else:
-            indent_indicator = ';'
+        indent_indicator = getattr(reader, 'indent_indicator', ';')
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
@@ -61,6 +59,12 @@ class LizardExtension(object):  # pylint: disable=R0903
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:
                     context.clear_prev_was_else()
+                    if (implied_semicolons is not None and token != indent_indicator
+                            and isinstance(implied_semicolons, ImpliedSemicolons)):
+                        # The reader can start an arrow function at this brace.
+                        yield token
+                        context.open_block()
+                        continue
                 # Don't add nesting for "if" when it immediately follows "else" (else if)
                 # Syntactically else if is equivalent to else {if} but should not increase depth
                 if token == 'else' and not getattr(token, 'is_member_name', False):
