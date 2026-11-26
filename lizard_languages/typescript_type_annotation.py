@@ -98,7 +98,3 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                 '|', '&', 'keyof', 'typeof', 'readonly', 'unique', 'infer',
                 'extends', 'is', 'in', 'as')
             self._function_arrow = False
-
-    def has_complete_type(self):
-        return not (self._expect_type or self._conditional_type
-                    or self._conditional_questions or self._qualified_type)

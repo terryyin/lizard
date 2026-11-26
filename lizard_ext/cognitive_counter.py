@@ -3,8 +3,6 @@
 from itertools import chain
 from weakref import WeakKeyDictionary
 
-from lizard_languages.javascript_expression import starts_statement
-
 from .cognitive_profile import (
     _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
 
@@ -151,12 +149,12 @@ class _Counter(object):  # pylint: disable=R0902
             if not self._in_body(function):
                 return
             state.body_started = True
-        if self.profile.case_insensitive:
-            token = token.lower()
         if (self.profile.nested_functions and line != state.line and state.logical
                 and not state.pdepth and state.prev and state.prev.endswith('`')
-                and starts_statement(token)):
+                and self.reader.starts_statement(token)):
             state.logical.pop(0, None)
+        if self.profile.case_insensitive:
+            token = token.lower()
         self._process(token)
         if type(token) is _MeasuredInterpolation:
             self._add_interpolation(token)
