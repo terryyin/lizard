@@ -46,13 +46,14 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         line = self.line
         if self.kotlin_quoted_infix and token.startswith('`'):
             self._remember_quoted_name(token == '`')
-        if line != state.line:
+        previous_line = state.line
+        if line != previous_line:
+            self._new_line(line)
             if self.logical_statement_lines:
                 if (state.logical and not state.pdepth
-                        and line - state.line > self.comment_line_count):
+                        and line - previous_line > self.comment_line_count):
                     self._reset_logical_at_line_start(token)
                 self.comment_line_count = 0
-            self._new_line(line)
         if state.pending:
             self._resolve_pending(token)
         if _is_word(token):

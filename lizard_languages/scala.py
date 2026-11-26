@@ -42,43 +42,60 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
         """Drop spaces, and offer each line's first code token to the
         function body that it may end, before any counter charges it.
         A '\n' is consumed by line_counter before the states see it."""
+        if self.track_leading_infix:
+            tokens = _mark_line_leading_infix(tokens)
         open_bodies = self.parallel_states[0].open_bodies
         # 0: inside a line, 1: at a line start, 2: at a line start after a
         # blank line, 3: after a comment at a line start, which is no blank.
         after_line_break = (1, 2, 2, 1)
         line_start = 0
-        track_infix = self.track_leading_infix
-        tokens = iter(tokens)
-        while True:
-            for token in tokens:
-                if not token.isspace():
-                    if line_start:
-                        if not token.startswith(('//', '/*')):
-                            if open_bodies:
-                                open_bodies[-1].end_body_before_line(
-                                    token, line_start == 2)
-                            if (track_infix and line_start != 2
-                                    and token.endswith('_') and token.isidentifier()):
-                                # The symbolic suffix must touch the name.
-                                tokens, lookahead = tee(tokens)
-                                if _symbolic_suffix(next(lookahead, None)):
-                                    token = _LeadingInfixName(token)
-                                del lookahead
-                                line_start = 0
-                                yield token
-                                break
-                            line_start = 0
-                        elif line_start == 1:
-                            line_start = 3
-                    elif token.startswith('/*') and '\n' in token:
-                        # A block comment that ends on a later line.
+        for token in tokens:
+            if not token.isspace():
+                if line_start:
+                    if not token.startswith(('//', '/*')):
+                        if open_bodies:
+                            open_bodies[-1].end_body_before_line(
+                                token, line_start == 2)
+                        line_start = 0
+                    elif line_start == 1:
                         line_start = 3
-                    yield token
-                elif token == '\n':
-                    line_start = after_line_break[line_start]
-                    yield token
-            else:
-                return
+                elif token.startswith('/*') and '\n' in token:
+                    # A block comment that ends on a later line.
+                    line_start = 3
+                yield token
+            elif token == '\n':
+                line_start = after_line_break[line_start]
+                yield token
+
+
+def _mark_line_leading_infix(tokens):
+    """Mark an identifier whose symbolic suffix touches it at a new line."""
+    tokens = iter(tokens)
+    after_line_break = (1, 2, 2, 1)
+    line_start = 0
+    while True:
+        for token in tokens:
+            if token == '\n':
+                line_start = after_line_break[line_start]
+            elif line_start and not token.isspace():
+                if token.startswith(('//', '/*')):
+                    if line_start == 1:
+                        line_start = 3
+                else:
+                    if line_start != 2 and token.endswith('_') and token.isidentifier():
+                        tokens, lookahead = tee(tokens)
+                        if _symbolic_suffix(next(lookahead, None)):
+                            token = _LeadingInfixName(token)
+                        del lookahead
+                        line_start = 0
+                        yield token
+                        break
+                    line_start = 0
+            elif token.startswith('/*') and '\n' in token:
+                line_start = 3
+            yield token
+        else:
+            return
 
 
 class _LeadingInfixName(str):
