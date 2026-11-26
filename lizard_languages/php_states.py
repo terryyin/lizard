@@ -233,7 +233,9 @@ class PHPLanguageStates(CodeStateMachine):
             self.assignment_parens -= 1
             return
         # "and", "or" and "xor" have lower precedence than assignment.
-        if self.assignment_parens or token.lower() in _CLOSURE_EXPRESSION_CONTINUATION:
+        continues = (not getattr(token, 'is_word_operator', False)
+                     and token.lower() in _CLOSURE_EXPRESSION_CONTINUATION)
+        if self.assignment_parens or continues:
             # The assignment receives the expression result.
             closure = self.assigned_closure
             closure.long_name = '(anonymous)' + closure.long_name[len(closure.name):]
