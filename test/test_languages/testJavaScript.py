@@ -385,6 +385,161 @@ class Replay {
                      ('constructor', 1, ['events']), ('new', 1, [])],
                     [(f.name, f.cyclomatic_complexity, f.parameters) for f in functions])
 
+    def test_generator_named_new_after_field_or_access_modifier(self):
+        cases = [
+            ('a.js', '''class BufferedFeed {
+  buffer
+  *new(items) { for (const item of items) yield item; }
+}''', [('new', 3, ['items'], 2)]),
+            ('a.ts', '''class Feed {
+  public *new(items: string[]) { yield* items; }
+}
+class InternalFeed {
+  count: number
+  *new(items: string[]) { yield* items; }
+}''', [('new', 2, ['items'], 1), ('new', 6, ['items'], 1)]),
+        ]
+        for filename, source, expected in cases:
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(filename, source).function_list
+                self.assertEqual(expected, [
+                    (f.name, f.start_line, f.parameters, f.cyclomatic_complexity)
+                    for f in functions
+                ])
+
+    def test_multiplication_after_an_invoked_field_function_keeps_callback(self):
+        js_constructor = 'constructor(read) { this.read = read; }'
+        cases = [
+            ('a.js', js_constructor, '(() => 2)()', 'Gauge'),
+            ('a.js', js_constructor, '(function () { return 2; })()', 'Gauge'),
+        ]
+        for filename, initializer, operand, constructor in cases:
+            with self.subTest(filename=filename, operand=operand):
+                source = f'''class Gauge {{
+  {initializer}
+}}
+class RateReport {{
+  cost = {operand}
+    * new {constructor}(value => value || 2).read(0)
+}}
+'''
+                functions = analyze_file.analyze_source_code(filename, source).function_list
+                self.assertEqual([
+                    ('constructor', 2, ['read'], 1),
+                    ('cost', 5, [], 1),
+                    ('(anonymous)', 6, ['value'], 2),
+                ], [(f.name, f.start_line, f.parameters, f.cyclomatic_complexity)
+                    for f in functions])
+
+    def test_multiplication_in_class_fields_keeps_constructor_callbacks(self):
+        cases = [
+            ('a.js', 'constructor(read) { this.read = read; }',
+             '((() => 1)(), 2)', 1),
+            ('a.ts', 'constructor(readonly read: (value: number) => number) {}',
+             '2', 2),
+        ]
+        for filename, initializer, first_operand, product_count in cases:
+            with self.subTest(filename=filename):
+                product = '    * new Gauge(value => value || 2).read(0)\n'
+                source = f'''class Gauge {{
+  {initializer}
+}}
+class Report {{
+  cost = {first_operand}
+{product * product_count}}}
+'''
+                functions = analyze_file.analyze_source_code(filename, source).function_list
+                self.assertEqual(
+                    [(line, ['value'], 2) for line in range(6, 6 + product_count)],
+                    [(f.start_line, f.parameters, f.cyclomatic_complexity)
+                     for f in functions if f.start_line >= 6])
+
+    def test_typed_generator_named_new_with_parameters_and_return_type(self):
+        source = '''class Feed {
+  public *new<T extends object>(item: T): Generator<T> {
+    yield item;
+  }
+}
+'''
+        functions = analyze_file.analyze_source_code('a.ts', source).function_list
+        self.assertEqual([('new', 2, 4, ['item'])], [
+            (f.name, f.start_line, f.end_line, f.parameters) for f in functions
+        ])
+
+    def test_ternary_after_grouped_constructor_keeps_the_alternate(self):
+        source = '''class Gauge {
+  valueOf() { return 2; }
+}
+const Operand = Gauge as unknown as new () => number;
+class Report {
+  cost = true ? 2
+    * new (Operand) : function fallback() { return 0; }
+  read() { return this.cost; }
+}
+'''
+        functions = analyze_file.analyze_source_code('a.ts', source).function_list
+        self.assertEqual([('fallback', 7), ('read', 8)], [
+            (f.name, f.start_line) for f in functions if f.start_line >= 7
+        ])
+
+    def test_generator_named_new_after_contextual_field_names(self):
+        cases = [
+            ('a.js', '1', 'as'), ('a.js', '1', 'satisfies'), ('a.js', '1', 'await'),
+            ('a.ts', '1', 'as'), ('a.ts', '1', 'satisfies'), ('a.ts', '1', 'keyof'),
+            ('a.ts', '1', 'as?: Array<number>'),
+            ('a.ts', '[] as Array<number>', 'as'),
+            ('a.ts', '[] satisfies Array<number>', 'satisfies'),
+        ]
+        for filename, value, field in cases:
+            with self.subTest(filename=filename, value=value, field=field):
+                source = f'''class Feed {{
+  value = {value}
+  {field}
+  *new() {{ yield 2; }}
+}}
+'''
+                functions = analyze_file.analyze_source_code(filename, source).function_list
+                self.assertEqual([('new', 4, [], 1)], [
+                    (f.name, f.start_line, f.parameters, f.cyclomatic_complexity)
+                    for f in functions
+                ])
+
+    def test_multiplication_after_a_type_assertion_keeps_the_constructor_callback(self):
+        source = '''class Gauge {
+  constructor(readonly read: (value: number) => number) {}
+}
+class Report {
+  checked = 2 satisfies number
+    * new Gauge(value => value || 3).read(0)
+  cast = 2 as
+    number
+    * new Gauge(value => value || 4).read(0)
+}
+'''
+        functions = analyze_file.analyze_source_code('a.ts', source).function_list
+        self.assertEqual([
+            ('constructor', 2, ['read'], 1),
+            ('(anonymous)', 6, ['value'], 2),
+            ('(anonymous)', 9, ['value'], 2),
+        ], [(f.name, f.start_line, f.parameters, f.cyclomatic_complexity)
+            for f in functions])
+
+    def test_generator_after_a_completed_assertion_and_a_typed_field(self):
+        for assertion, name in [('number', 'is'), ('T.as', 'next'), ('T.as', 'as')]:
+            with self.subTest(assertion=assertion, field=name):
+                source = f'''declare namespace T {{ type as = number; }}
+class Feed {{
+  value = 1 as {assertion}
+  {name}: number
+  *new(value: number) {{ if (value) yield value; }}
+}}
+'''
+                functions = analyze_file.analyze_source_code('a.ts', source).function_list
+                self.assertEqual([('new', 5, ['value'], 2)], [
+                    (f.name, f.start_line, f.parameters, f.cyclomatic_complexity)
+                    for f in functions
+                ])
+
     def test_multiline_class_heritage_reads_nested_method(self):
         code = '''
 class Registry {
