@@ -194,15 +194,15 @@ def test_cli_csv_and_duplicated_param_list_with_quoted_formals():
         assert by_name[fn_name]["PARAM"] == "5"
 
     assert by_name["proc_one"]["long_name"] == (
-        "proc_one('x name' IN NUMBER DEFAULT GREATEST ( 1 , 2 ), "
+        'proc_one("x name" IN NUMBER DEFAULT GREATEST ( 1 , 2 ), '
         "b OUT VARCHAR2, c NUMBER, d NUMBER, e NUMBER)"
     )
     assert by_name["proc_two"]["long_name"] == (
-        "proc_two('x name' NUMBER := 10, b NUMBER, c VARCHAR2 ( 10 ), "
+        'proc_two("x name" NUMBER := 10, b NUMBER, c VARCHAR2 ( 10 ), '
         "d DATE, e NUMBER DEFAULT 0)"
     )
     assert by_name["proc_three"]["long_name"] == (
-        "proc_three('y name' IN NUMBER, b OUT VARCHAR2, c NUMBER, d NUMBER, e NUMBER)"
+        'proc_three("y name" IN NUMBER, b OUT VARCHAR2, c NUMBER, d NUMBER, e NUMBER)'
     )
 
     assert [
