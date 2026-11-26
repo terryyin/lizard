@@ -13,8 +13,6 @@ __all__ = (
 
 
 class JavaScriptFunctionsMixin:
-    _arrow_only_signature = False
-
     def _read_parenthesis_group(self):
         """Only possible signatures need provisional binding frames."""
         if parameter_group(self._prev_token):
@@ -270,6 +268,8 @@ class JavaScriptFunctionsMixin:
         elif token != '{' and token != '=>':
             self._discard_signature()
         self.next(self._state_global, token)
+
+    _arrow_only_signature = False
 
     def _field(self, token):
         if token in ('(', '['):
