@@ -119,7 +119,7 @@ class PHPReader(CodeReader, CCppCommentsMixin):
         # PHP comparisons must not use the shared generic angle-bracket rule.
         operators = PHPReader._non_ternary_question_operators + r"|<<=|<=|<"
         # A closing tag ends a line comment, but not a string or block comment.
-        comments = r"|(?://|\#)" + _LINE_COMMENT_END + r"|\?>"
+        comments = r"|(?://|\#(?!\[))" + _LINE_COMMENT_END + r"|\?>"
         pattern = compiled_token_pattern(addition + variables +
                                          rf"""|(?=[bB'"`<])(?:{_STRING_TOKENS})""" + operators + comments)
         legacy_pattern = None
