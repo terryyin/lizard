@@ -70,10 +70,10 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self._set_structure_keywords(self.structures)
 
     def __call__(self, tokens, reader=None):
-        if 'python' in getattr(reader, 'language_names', ()):
-            return self._indented_structures(tokens, reader)
         if 'php' in getattr(reader, 'language_names', ()):
             return _PHPNestedStructures().read(tokens, reader)
+        if 'python' in getattr(reader, 'language_names', ()):
+            return self._indented_structures(tokens, reader)
         if hasattr(reader, 'implied_semicolons'):
             return self._unterminated_statements(tokens, reader)
         return super(LizardExtension, self).__call__(tokens, reader)
