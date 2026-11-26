@@ -132,7 +132,7 @@ class _SignatureTokens:
                 self.read_type()
         elif token == 'map':
             self.take()
-            if self.peek() == '[':
+            if self.peek(newlines=True) == '[':
                 self.balanced()
                 self.read_type()
         elif token in ('struct', 'interface'):
