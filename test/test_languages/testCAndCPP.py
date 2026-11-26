@@ -391,6 +391,25 @@ unsigned capacity() { return Buffer<true>{}.capacity(); }
             ["Buffer<(sizeof(int)>1)&&(sizeof(int)<16)>::capacity", "capacity"],
             [fn.name for fn in result])
 
+    def test_following_grouped_operands_in_template_specialization(self):
+        source = """template<bool Fits> struct Buffer { int capacity(int count) const; };
+template<> int Buffer<CONDITION>::capacity(int count) const {
+    return count;
+}
+int neighbor() { return 0; }
+"""
+        for condition in (
+                "(sizeof(int) < 64) ? (alignof(int) > 1) : false",
+                "(sizeof(int) < 64) ? false : (alignof(int) > 1)",
+                "(sizeof(int) < 64) & (alignof(int) > 1)"):
+            with self.subTest(condition=condition):
+                result = get_cpp_function_list(source.replace("CONDITION", condition))
+                qualified_name = "Buffer<" + condition.replace(" ", "") + ">::capacity"
+
+                self.assertEqual(
+                    [(qualified_name, 2, 4, 1), ("neighbor", 5, 5, 0)],
+                    [(fn.name, fn.start_line, fn.end_line, fn.parameter_count) for fn in result])
+
     def test_nested_template_function(self):
         result = get_cpp_function_list("template<typename T> class c { "
                                        "template<typename S> void f() {} };")
