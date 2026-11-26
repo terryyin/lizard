@@ -21,6 +21,7 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         self._expect_type = True
         self._function_arrow = False
         self._parenthesis_first = None
+        self._parenthesis_parameter_type = False
         self._conditional_type = False
         self._conditional_questions = 0
         self._line_break = False
@@ -36,10 +37,17 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         self._line_break = False
         brackets = self._brackets
         if brackets:
-            if self._parenthesis_first is None and len(brackets) == 1:
-                # A parenthesized function type groups its own arrow; the
-                # arrow after the group belongs to the runtime signature.
-                self._parenthesis_first = token
+            if len(brackets) == 1:
+                if self._parenthesis_first is None:
+                    # The arrow after a parenthesized function type belongs
+                    # to the enclosing runtime signature.
+                    self._parenthesis_first = token
+                elif brackets[-1] == ')':
+                    if token == ':':
+                        self._parenthesis_parameter_type = True
+                    elif token in ('|', '&') and not self._parenthesis_parameter_type:
+                        # A grouped union or intersection is already a type.
+                        self._parenthesis_first = '('
             if token in self.BRACKETS:
                 brackets.append(self.BRACKETS[token])
             elif token == brackets[-1]:
@@ -83,6 +91,7 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                 token == '(' and not self._expect_type and not self._closed_type)
             brackets.append(self.BRACKETS[token])
             self._parenthesis_first = None if token == '(' else token
+            self._parenthesis_parameter_type = False
             self._function_arrow = False
         else:
             first = token[:1]

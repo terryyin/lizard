@@ -260,8 +260,12 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         group._property_formals = JavaScriptBindings(')', parameters=parameters)
 
         def after_group(token):
-            if token == '=>':
+            if token in ('=>', ':'):
                 self._pending_bindings = BindingSummary(0, 0, 0, parameters)
+            if token == ':':
+                self.next(self._state_global)
+                self._consume_type_annotation()
+                return
             self.next(self._state_global, token)
 
         self.sub_state(group, lambda: self.next(after_group))
