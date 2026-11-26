@@ -30,8 +30,6 @@ class LizardExtension(object):  # pylint: disable=R0903
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
-        if 'kotlin' in getattr(reader, 'language_names', ()):
-            tokens = _kotlin_braced_branches(tokens, reader)
         return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
 
     @staticmethod
@@ -51,6 +49,8 @@ class LizardExtension(object):  # pylint: disable=R0903
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
+        if 'kotlin' in getattr(reader, 'language_names', ()):
+            tokens = _kotlin_braced_branches(tokens, reader)
         context = reader.context
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
