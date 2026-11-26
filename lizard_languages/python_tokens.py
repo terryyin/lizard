@@ -56,10 +56,11 @@ def _source_tokens(source, pattern, token_class):
     while True:
         for match in pattern.finditer(source, start):
             token = match.group()
+            value = token_class(match) if token_class else token
             kind = match.lastgroup
             if kind == 'grouping':
                 depth = max(0, depth + (1 if token in _CLOSERS else -1))
-            elif kind == 'interpolated':
+            elif kind == 'interpolated' and isinstance(value, str):
                 string = _read_string(source, match.end(), token.lower(), pattern)
                 if string is not None:
                     start, parts = string
@@ -69,10 +70,10 @@ def _source_tokens(source, pattern, token_class):
             if depth and token in ('def', 'class'):
                 # A declaration cannot belong to an unclosed expression.
                 depth = 0
-            if token == '\n' and depth:
+            if token_class is None and token == '\n' and depth:
                 yield ContinuedLineToken(token)
             else:
-                yield token_class(match) if token_class else token
+                yield value
         else:
             return
 

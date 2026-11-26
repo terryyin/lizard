@@ -159,10 +159,9 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
         self.next(self._state_global, token)
 
     def end_inline_line(self):
-        if self._state != self._state_first_line:
-            # Inline suites have no body indentation to attach the function.
-            self.context.add_bare_nesting()
-            self.context.pop_nesting()
+        # Inline suites have no body indentation to attach the function.
+        self.context.add_bare_nesting()
+        self.context.pop_nesting()
         self.inline_suite = False
 
     def _state_parameterized_type_annotation(self, token):
