@@ -60,8 +60,10 @@ def _has_branch_separators(tokens, required):
     return False
 
 
-def template_call_type_arguments(tokens, tokenize, optional=False):
+def template_call_type_arguments(tokens, tokenize, optional=False, template_checks=None):
     """Confirm template literal types in calls and instantiation expressions."""
+    if template_checks is None:
+        template_checks = {}
     annotation = _TemplateType()
     saw_template = in_interpolation = False
     count = 0
@@ -71,16 +73,14 @@ def template_call_type_arguments(tokens, tokenize, optional=False):
         count += 1
         if token.startswith(('//', '/*')):
             continue
-        if in_interpolation:
-            if not _template_is_type(token, tokenize, in_expression=True):
+        if in_interpolation or token.startswith('`'):
+            is_type = _source_template_type(token, tokenize, in_interpolation, template_checks)
+            if is_type is False:
                 return 0
+            saw_template |= is_type is True
             in_interpolation = False
         elif token == '${':
             saw_template = in_interpolation = True
-        elif token.startswith('`') and '${' in token:
-            if not _template_is_type(token, tokenize, in_expression=False):
-                return 0
-            saw_template = True
         if annotation(token):
             if not annotation.complete():
                 return 0
@@ -91,6 +91,20 @@ def template_call_type_arguments(tokens, tokenize, optional=False):
             else:
                 return 0
     return 0
+
+
+def _source_template_type(token, tokenize, in_expression, checks):
+    # Lookahead replays the same token until the main reader reaches it.
+    key = id(token)
+    cached = checks.get(key)
+    if cached is not None and cached[1] == in_expression:
+        return cached[2]
+    is_type = None
+    if in_expression or '${' in token:
+        is_type = _template_is_type(token, tokenize, in_expression)
+    # Keep the token alive while its identity is in the cache.
+    checks[key] = (token, in_expression, is_type)
+    return is_type
 
 
 def erase_template_types(tokens):

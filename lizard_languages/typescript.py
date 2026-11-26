@@ -300,6 +300,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         member_access = False
         before_dot = ''
         track_templates = self.measure_template_types and self.context.class_field_annotations
+        template_checks = {} if track_templates else None
         type_tokens = 0
         keyword = None      # waits for the next token: `{ if: a }`
         tokens = iter(self.code_tokens(tokens))
@@ -307,6 +308,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
             for token in tokens:
                 if not token.isspace():
                     if track_templates:
+                        if template_checks:
+                            template_checks.pop(id(token), None)
                         self._in_call_type_arguments = bool(type_tokens)
                         if type_tokens:
                             type_tokens -= 1
@@ -319,7 +322,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             tokens, lookahead = tee(tokens)
                             type_tokens = template_call_type_arguments(
                                 lookahead, self.script_tokens,
-                                optional=state.last_token == '?.')
+                                optional=state.last_token == '?.', template_checks=template_checks)
                             del lookahead
                     if keyword is not None:
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
