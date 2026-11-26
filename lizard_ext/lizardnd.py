@@ -41,12 +41,12 @@ class LizardExtension(object):  # pylint: disable=R0903
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
+        standalone_chains = (isinstance(implied_semicolons, ImpliedSemicolons)
+                             or not {'cpp', 'java'}.isdisjoint(getattr(reader, 'language_names', ())))
         if 'cpp' in getattr(reader, 'language_names', ()):
             tokens = _cpp_grouped_commas(tokens, reader.context)
         block_starts = getattr(reader, "block_starts", ('{',))
         indent_indicator = getattr(reader, 'indent_indicator', ';')
-        standalone_chains = (isinstance(implied_semicolons, ImpliedSemicolons)
-                             or not {'cpp', 'java'}.isdisjoint(getattr(reader, 'language_names', ())))
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
