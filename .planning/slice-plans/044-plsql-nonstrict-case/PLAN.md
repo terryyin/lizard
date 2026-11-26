@@ -60,6 +60,10 @@ The casing proof fails on trunk for the uppercase nonstrict and capitalized case
 
 Delivered: `merge_compound_keywords` now wraps each whole condition keyword token in a `_Keyword` `str` subclass. The token keeps its source spelling but hashes and compares by its lowercase form. The keyword set is built once per reader from the static category sets, and the uppercase condition copies are gone. The first version lowercased the token text, which rewrote declaration text such as `DEFAULT TRUE OR FALSE` in long names (G1). A separate generator pass cost about 6% on the PL/SQL API workload, so marking moved into the existing pass. `test/test_languages/test_lizard_plsql_mixed_case.py` passes 6 tests on the corrected revision. On trunk `aec8a87d` 5 fail, and on #645 `a86cc287` 3 fail: uppercase nonstrict, long-name spelling, and parameters from #645's older base. The probe reports `If_And_Ready` 8/5 and `For_Case` 4/4 in every casing. `lizard.py -Enonstrict --csv` reports 5, 5, 5. Focused PL/SQL, NonStrict, ComplexityTags and CognitiveComplexity pass 217 tests, the full suite passes 4000 with 7 skipped, and `make` is clean (pycodestyle silent, pylint 9.16 unchanged). Paired runner against trunk `15f07437`, under the 3% bound: the API PL/SQL corpus of 63 sources gives a 95% interval of [-3.7, 2.6]%. With `-E ns` it gives [-4.9, 2.6]%. The `cli` corpus of 449 files gave [-2.2, 6.3]% at 20 pairs under host load. A 40-pair retry, chosen before its launch, gave [-6.0, -0.2]%. Evidence stays local in the session job directory.
 
+## Execution complete
+
+Product advice: no change to the delivered PL/SQL behavior. Wrap-up should dispose one follow-up candidate: COBOL keeps uppercase condition copies, the same pattern this story removed for PL/SQL, so it probably has the same nonstrict uppercase `AND`/`OR` gap. This story explicitly excluded COBOL, so any correction needs its own observed baseline.
+
 ## Story obligations
 
 ### G1. Keyword lowercasing rewrote long-name text (discovered at slice 2 acceptance)
