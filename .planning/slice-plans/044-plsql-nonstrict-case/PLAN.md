@@ -34,11 +34,13 @@ Every run reported the function name `If_And_Ready`. The uppercase nonstrict res
 
 Type: Structure
 
-Status: planned
+Status: done
 
 Move `PLSQLReader.preprocess`'s compound `END` and `EXIT WHEN` handling, together with the case-insensitive condition setup in `__init__`, into a focused PL/SQL keyword module. Keep the reader as the entry point and leave the state machine's flow and builder ownership unchanged. Rebase on trunk first. Bring every edited PL/SQL module within the [250-line file-size check](../../../.agents/skills/dough-post-change-refactor/references/refactor-checks.md#file-size). If the sibling's declaration-state module is on trunk, keep its seam. Otherwise make the split along that same declaration seam, so the two stories reconcile mechanically.
 
 Run `nix develop -c python -m pytest -q test/test_languages/testPLSQL.py test/test_languages/test_lizard_plsql_alternative_quotes.py`. Rerun the baseline probes and require the trunk values above. This slice gives the next slice one location for keyword casing.
+
+Delivered: the sibling's `plsql_declarations.py` (230 lines) was already on trunk, so `plsql.py` started at 227 lines, not 426. The new `lizard_languages/plsql_keywords.py` (75 lines) holds `case_insensitive_conditions` and `merge_compound_keywords`, the former `preprocess` body copied unchanged. `plsql.py` is 174 lines. The focused PL/SQL tests passed (51), the full suite passed (3994 passed, 7 skipped), and the baseline probe reproduced every trunk value in the table. The refactor pass made no changes. In this environment `nix develop` needs `--extra-experimental-features 'nix-command flakes'`.
 
 ### 2. Count PL/SQL keywords the same in every casing
 
