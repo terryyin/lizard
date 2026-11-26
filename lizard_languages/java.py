@@ -74,6 +74,7 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         self.handling_method_ref = False
         self._java_after_unqualified_annotation = False
         self._new_generic_depth = 0
+        self._in_ternary_branch = False
 
     def _consume_java_expression_tokens(self, token):
         """Skip tokens that are not class declarations: Foo.class, Type::meth."""
@@ -101,11 +102,34 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
             # Annotation type element, e.g. `String value() default "m";`, has no body
             self._state = self._state_element_default
             return
+        if token == ':' and self._in_ternary_branch:
+            self._in_ternary_branch = False
+            self._state = self._state_ternary_fallback
+            return
         super()._state_dec_to_imp(token)
 
     @CodeStateMachine.read_until_then(';')
     def _state_element_default(self, _token, _tokens):
         self._state = self._state_global
+
+    def _state_ternary_fallback(self, token):
+        if token[0].isalnum() or token[0] in "_$'\"":
+            self._state = self._state_after_ternary_value
+        else:
+            self.next(self._state_initialization_list, token)
+
+    def _state_after_ternary_value(self, token):
+        if token == ';':
+            self._state = self._state_after_ternary_field
+        else:
+            self.next(self._state_one_initialization, token)
+
+    def _state_after_ternary_field(self, token):
+        # Resume member discovery when another declaration starts.
+        if token[0].isalpha() or token[0] in '_$@':
+            self.next(self._state_global, token)
+        else:
+            self.next(self._state_one_initialization, token)
 
     def _state_imp(self, token):
         # When entering a function implementation, set the flag
@@ -172,6 +196,10 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
     def _state_global(self, token):
         if self._consume_java_expression_tokens(token):
             return
+        if token == '?':
+            self._in_ternary_branch = True
+        elif self._in_ternary_branch and token in (';', '{', '}', ':'):
+            self._in_ternary_branch = False
         use_after_annotation = self._java_after_unqualified_annotation
         if token != "record":
             self._java_after_unqualified_annotation = False
