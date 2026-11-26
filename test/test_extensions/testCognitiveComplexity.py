@@ -585,7 +585,7 @@ class TestOtherBraceLanguages(unittest.TestCase):
               supports() { return true; }
             }
             class Derived extends Base {
-              supports(useBase) {
+              supports(useBase = true) {
                 return useBase ? super.supports() : false;
               }
             }"""
