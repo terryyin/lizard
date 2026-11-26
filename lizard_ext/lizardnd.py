@@ -268,7 +268,7 @@ class _ConditionLambdaBrace:  # pylint: disable=R0903
         self.head = False
         self.capture = False
         self.closers = []
-        self.requires_count = 0
+        self.requires_body = False
 
     def read(self, token):
         previous, self.previous = self.previous, token
@@ -277,11 +277,11 @@ class _ConditionLambdaBrace:  # pylint: disable=R0903
         if self.closers:
             self._read_group(token, previous)
         elif self.head:
-            return self._read_declarator(token)
+            return self._read_declarator(token, previous)
         elif token == '[' and previous in self._OPERAND_STARTS:
             self.head = self.capture = True
             self.closers.append(']')
-            self.requires_count = 0
+            self.requires_body = False
         return False
 
     def _read_group(self, token, previous):
@@ -298,11 +298,11 @@ class _ConditionLambdaBrace:  # pylint: disable=R0903
         if not self.closers:
             self.capture = False
 
-    def _read_declarator(self, token):
+    def _read_declarator(self, token, previous):
         if token == '{':
-            if self.requires_count > 1:
+            if self.requires_body:
                 # A requires-expression in the constraint owns this group.
-                self.requires_count = 1
+                self.requires_body = False
                 self.closers.append('}')
             else:
                 self.head = False
@@ -312,7 +312,9 @@ class _ConditionLambdaBrace:  # pylint: disable=R0903
         elif token == '<':
             self.closers.append('>')
         elif token == 'requires':
-            self.requires_count += 1
+            # Here a constraint can start with a requires-expression. A
+            # requires after a complete operand starts a new clause instead.
+            self.requires_body = previous in ('requires', '&&', '||')
         elif token in (')', '}', ',', ';'):
             self.head = False
         return False
