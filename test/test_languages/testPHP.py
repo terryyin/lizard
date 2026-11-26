@@ -37,7 +37,7 @@ class Test_tokenizing_PHP(unittest.TestCase):
         self.check_tokens(['"this is a string\nwith two lines"'], '<?php"this is a string\nwith two lines"?>')
 
     def test_multiple_line_string_alternative(self):
-        self.check_tokens(['<<<blah xxx blah'], '<?php<<<blah xxx blah?>')
+        self.check_tokens(['<<<blah\nxxx\nblah'], '<?php<<<blah\nxxx\nblah?>')
 
     def test_dollar_var(self):
         self.check_tokens(['$a'], '<?$a?>')
