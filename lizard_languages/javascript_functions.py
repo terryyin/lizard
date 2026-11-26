@@ -13,8 +13,6 @@ __all__ = (
 
 
 class JavaScriptFunctionsMixin:
-    _pending_type_alias = False
-
     def _read_parenthesis_group(self):
         """Only possible signatures need provisional binding frames."""
         if parameter_group(self._prev_token):
@@ -47,6 +45,8 @@ class JavaScriptFunctionsMixin:
             self._close_expression_body()
         self.started_function = None
         self._in_prop_value = False
+
+    _pending_type_alias = False
 
     def end_expression_before(self, token):
         """Called by the reader with a line's first token before it is
