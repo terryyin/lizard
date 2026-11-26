@@ -124,6 +124,9 @@ class JavaScriptObjectsMixin:
                 return True
             # Only "field = (" and "key: (" can open a group; a "(" after
             # a member name opens parameters.
+            self._async_signature = (
+                self._prev_token == 'async' and (
+                    self.last_token != 'async' or self._in_prop_value))
             self._signature = self.last_token not in ('=', ':')
             if not self.started_function:
                 # When last_tokens is '=' we're in a field assignment
@@ -186,6 +189,9 @@ class JavaScriptObjectsMixin:
             # The end of a regular expression can be a token of its own,
             # `"" + /a/` + line break + `{`.  Nothing divides by an object.
             return False
+        if (previous == 'await' and self._prev_token == 'await'
+                and getattr(self.context.current_function, 'javascript_async_body', False)):
+            return True
         if self.context.newline and (
                 previous == '!' or previous[0].isalpha() or previous[0] in '_$'):
             # A "{" that starts a line after a word or a '!' is almost always
