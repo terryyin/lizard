@@ -150,3 +150,18 @@ func after() {}
 ''')
     assert [(fn.name, fn.parameter_count) for fn in result] == [
         ('combine', 2), ('after', 0)]
+
+
+@pytest.mark.parametrize('declaration', [
+    'func consume(operation func(Pair[int, string]))',
+    'var consume = func(operation func(int, int) Pair[int, string])',
+    'func consume(operation func() struct{ Value int })',
+])
+def test_parameter_types_that_end_in_brackets_keep_their_slot(declaration):
+    result = get_go_function_list('''package p
+type Pair[A, B any] struct { First A; Second B }
+''' + declaration + ''' {
+    _ = operation
+}
+''')
+    assert [(fn.name, fn.parameter_count) for fn in result] == [('consume', 1)]
