@@ -268,6 +268,29 @@ class Test_Python_function_structure(unittest.TestCase):
         function, = get_python_function_list(code)
         self.assertEqual(2, function.max_nesting_depth)
 
+    def test_nesting_depth_separates_sibling_ternaries(self):
+        code = """
+        def pack(ready, cached):
+            return (1 if ready else 0, 2 if cached else 0)
+
+        def choose(enabled, ready, cached):
+            return (1 if ready else 0, 2 if cached else 0) if enabled else ()
+        """
+        functions = get_python_function_list(code)
+        self.assertEqual([('pack', 1), ('choose', 2)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_nesting_depth_counts_defaults_with_the_enclosing_function(self):
+        code = """
+        def create(ready, value):
+            def save(item=value if ready else None):
+                return item
+            return save
+        """
+        functions = get_python_function_list(code)
+        self.assertEqual([('create.save', 0), ('create', 1)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_odd_line_with_comment(self):
         code = "class c:\n" + \
                 "    def f():\n" +\
