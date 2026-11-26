@@ -39,6 +39,7 @@ _RUBY_EXPRESSION_KEYWORDS = _EXPRESSION_KEYWORDS | frozenset({
     'then', 'next', 'break',
 })
 _NEEDS_FORWARD = re.compile(r'\b(?:for|async)\b')
+_JS_OPERATOR_SLASH = re.compile(r'(?:[<>]\s*|/\s+)/(?![/*])')
 # Cheap gate from the same keyword set; longer names first so ``in`` loses to
 # ``instanceof``. Skip the shared scan when no keyword/=> can open a literal.
 _MAYBE_KEYWORD_OPEN = re.compile(
@@ -78,13 +79,14 @@ def _mark_regex_literal_starts(source, language):
     if language == 'ruby':
         from .js_style_regex_forward_scan import mark_forward
         return mark_forward(source, js_family=False)
+    javascript_operators = language == 'javascript' and _JS_OPERATOR_SLASH.search(source) is not None
     if _NEEDS_FORWARD.search(source):
         from .js_style_regex_forward_scan import mark_forward
-        return mark_forward(source, js_family=True)
-    if _MAYBE_KEYWORD_OPEN.search(source) is None:
+        return mark_forward(source, js_family=True, javascript_operators=javascript_operators)
+    if not javascript_operators and _MAYBE_KEYWORD_OPEN.search(source) is None:
         return source
     from .js_style_regex_keyword_scan import mark_keyword_slashes
-    return mark_keyword_slashes(source)
+    return mark_keyword_slashes(source, javascript_operators=javascript_operators)
 
 
 def _apply_marks(source, marks):

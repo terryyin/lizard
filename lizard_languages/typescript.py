@@ -331,9 +331,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     @staticmethod
     @js_style_regex_expression
     def generate_tokens(source_code, addition='', token_class=None):
-        # Line comment, private method (#), optional name (?), dollar
-        # identifiers, nullish (??).
-        addition = (addition + "|" + LINE_COMMENT + r"|(?:#\w+)"
-                    + OPTIONAL_NAME + JS_IDENTIFIER + NULLISH_COALESCING
-                    + OPTIONAL_ACCESS)
-        yield from template_tokens(source_code, addition, token_class)
+        return _generate_js_tokens(source_code, addition, token_class)
+
+
+def _generate_js_tokens(source_code, addition='', token_class=None):
+    """Tokenize JavaScript and TypeScript code after marking regex literals."""
+    addition = (addition + "|" + LINE_COMMENT + r"|(?:#\w+)"
+                + OPTIONAL_NAME + JS_IDENTIFIER + NULLISH_COALESCING
+                + OPTIONAL_ACCESS)
+    return template_tokens(source_code, addition, token_class)

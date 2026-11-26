@@ -13,7 +13,7 @@ from .js_style_regex_context import (
 from .ruby_documentation import match_opaque_span, may_have_documentation
 
 
-def mark_forward(source, js_family):
+def mark_forward(source, js_family, *, javascript_operators=False):
     """Full forward context when of/await/for/async structure matters."""
     n = len(source)
     i = 0
@@ -224,7 +224,7 @@ def mark_forward(source, js_family):
             i += 1
             after_operand(next_can_regex=(ch == ';'))
             return
-        if ch in '+-*%~^@':
+        if ch in '+-*%~^@' or (javascript_operators and ch in '<>/'):
             i += 1
             after_operand(next_can_regex=True)
             return
