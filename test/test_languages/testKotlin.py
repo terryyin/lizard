@@ -469,6 +469,27 @@ fun retry(
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
+    def test_escaped_parameter_name_survives_next_line_block_comment(self):
+        for comment in ('/* Public label. */', '/* Public /* older label */ label. */'):
+            with self.subTest(comment=comment):
+                functions = get_kotlin_function_list(f'''\
+fun follow(
+    `subject line`
+    {comment} : String,
+    `max attempts`
+    // The service allows retries.
+    : Int,
+    message: String = """Try
+later""".trimIndent(),
+): String {{
+    return "${{`subject line`}}: ${{`max attempts`}}: $message"
+}}
+''')
+                self.assertEqual(
+                    [("follow", ["subject line", "max attempts", "message"], 3)],
+                    [(f.name, f.parameters, f.parameter_count) for f in functions],
+                )
+
     def test_typed_lambda_default_keeps_its_own_commas(self):
         functions = get_kotlin_function_list('''\
 fun applyOffset(
