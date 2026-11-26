@@ -3,6 +3,10 @@
 from .javascript_expression import active_js_state, ends_expression
 from .javascript_statements import opens_object
 
+
+_CLASS_EXPRESSION_PREFIXES = frozenset((
+    '=', '&&=', '||=', '??=', '?', ':', '&&', '||', '??', ','))
+
 # The tokens before the name of a method in an object literal; it reads
 # the first member with no token before it.
 _MEMBER_STARTS = frozenset((None, ',', '*', 'async', 'get', 'set'))
@@ -155,8 +159,31 @@ class JavaScriptObjectsMixin:
                 return True
         return False
 
+    _class_expression_roles = None
+
+    def _remember_class_role(self):
+        if not hasattr(self.context, 'closed_class_expression'):
+            return
+        if self._class_expression_roles is None:
+            self._class_expression_roles = []
+        previous = self._prev_token
+        self._class_expression_roles.append(
+            self._expression_body or previous in _CLASS_EXPRESSION_PREFIXES
+            or previous in ('return', 'throw', 'yield') and not self.context.newline)
+
     def read_object(self):
+        roles = self._class_expression_roles
+        class_expression = False
+        if roles:
+            if self._class_body_pending:
+                # A base class expression can leave the derived header open.
+                class_expression = roles.pop() and not roles
+            else:
+                roles.clear()
+
         def callback(summary):
+            if class_expression:
+                self.context.closed_class_expression = True
             self._pending_bindings = summary
             self.next(self._state_global)
 
