@@ -43,7 +43,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
         self.parallel_states = (
-                CLikeStates(context),
+                CppStates(context),
                 CLikeNestingStackStates(context),
                 CppRValueRefStates(context))
 
@@ -71,6 +71,68 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                         yield '\n'
                 else:
                     yield token
+
+
+class CppStates(CLikeStates):  # pylint: disable=R0903
+    _initializer_type = None
+
+    def _state_function(self, token):
+        if token == "=":
+            self._state = self._state_initializer_start
+        else:
+            super()._state_function(token)
+
+    def _state_initializer_start(self, token):
+        self._state = self._state_global
+        self._state(token)
+        if token in ("sizeof", "decltype"):
+            self._initializer_type = self.context.current_function
+
+    def _state_dec_to_imp(self, token):
+        if token == "{" and self.context.current_function is self._initializer_type:
+            # An operand in an initializer can resemble a function declaration.
+            self._initializer_type = None
+            self.br_count = 1
+            self._state = self._state_initializer
+        else:
+            super()._state_dec_to_imp(token)
+
+    def _state_template_in_name(self, token):
+        if token == "<":
+            if not self.br_count:
+                self._state = self._state_template_start
+            self.br_count += 1
+        elif token == ">":
+            self.br_count -= 1
+        self.context.add_to_function_name(token)
+        if not self.br_count:
+            self._state = self._state_function
+
+    def _state_template_start(self, token):
+        self._state = self._state_shift_or_digraph if token == "<" else self._state_template_in_name
+        self._state_template_in_name(token)
+
+    def _state_shift_or_digraph(self, token):
+        if token == "::":
+            # This can qualify the shift operand or be part of '<::>'.
+            self.context.add_to_function_name(token)
+            return
+        # The tokenizer joins ':=' when the capture starts with '<:='.
+        if token in (":", ":=") or (token == ">" and self.context.current_function.name.endswith("::")):
+            self._state = self._state_template_in_name
+        else:
+            self.br_count = 0
+            self._state = self._state_initializer
+        self._state(token)
+
+    def _state_initializer(self, token):
+        # A braced operand can contain semicolons, as in a lambda body.
+        if token in (";", "}") and not self.br_count:
+            self._state = self._state_global
+        elif token == "{":
+            self.br_count += 1
+        elif token == "}":
+            self.br_count -= 1
 
 
 class CppRValueRefStates(CodeStateMachine):
