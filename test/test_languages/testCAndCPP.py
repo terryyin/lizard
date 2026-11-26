@@ -437,6 +437,31 @@ bool save(bool ready, Slot* slots, int index, int input) {
 
         self.assertEqual([("save", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
+    def test_gnu_label_addresses_are_not_logical_operators(self):
+        source = """int choose(int code) {
+    static void *destinations[] = {&&skip, &&run};
+    goto *destinations[code != 0];
+skip:
+    return 0;
+run:
+    return 1;
+}
+
+int matches(void *target, int ready) {
+    if (target == &&done && ready) return 1;
+done:
+    return 0;
+}
+"""
+
+        for filename in ("dispatch.c", "dispatch.cpp"):
+            with self.subTest(filename=filename):
+                result = analyze_file.analyze_source_code(filename, source).function_list
+
+                self.assertEqual(
+                    [("choose", 1), ("matches", 3)],
+                    [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
     def test_logical_and_with_negated_assignment(self):
         result = get_cpp_function_list("""int find_index();
 bool missing(bool normal) {
