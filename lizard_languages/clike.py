@@ -98,7 +98,10 @@ class CppRValueRefStates(CodeStateMachine):
     def __init__(self, context, conditions):
         super().__init__(context)
         self._conditions = conditions
-        self._recognize_references = context is not None and not context.fileinfo.filename.lower().endswith(".c")
+        suffix = context.fileinfo.filename.lower().rsplit(".", 1)[-1] if context is not None else ""
+        self._recognize_references = context is not None and suffix != "c"
+        self._operator_keyword = suffix in ("cpp", "cc", "cxx", "hh", "hpp")
+        self._qualified_operator = False
         # Track whether a counted && can still be deducted at an initializer.
         self._initializer_deduction = None
         self._label_probe_fallback = None
@@ -111,6 +114,8 @@ class CppRValueRefStates(CodeStateMachine):
         events = self._events
         if events is None or token in events:
             self._state(token)
+        if token == "operator":
+            self._qualified_operator = self.last_token == "::"
         self.last_token = token
 
     def _set_state(self, state, events=None):
@@ -135,6 +140,10 @@ class CppRValueRefStates(CodeStateMachine):
         if not self._counts_and(token):
             return
         previous = self.last_token
+        if previous == "operator" and (self._operator_keyword or self._qualified_operator):
+            self.context.add_condition(-1)
+            self._end_reference_scan()
+            return
         if previous and previous[0].isdigit():
             self._end_reference_scan()
             return
@@ -276,7 +285,24 @@ class CppRValueRefStates(CodeStateMachine):
             # GNU C and C++ use unary && to take a label's address.
             if self._counts_and(token):
                 self.context.add_condition(-1)
+        elif token == "(":
+            self._set_state(self._read_parenthesized_assignment_rhs)
         else:
+            self._state_global(token)
+
+    def _read_parenthesized_assignment_rhs(self, token):
+        if token != "(":
+            if token.isidentifier():
+                self._set_state(self._read_assignment_cast)
+            else:
+                self._read_grouped_assignment_rhs(token)
+
+    def _read_assignment_cast(self, token):
+        if token == ")" and self.last_token == "*":
+            # A parenthesized pointer type cannot be a logical left operand.
+            self._set_state(self._read_grouped_assignment_rhs)
+        elif token not in ("*", "::") and not token.isidentifier():
+            self._end_reference_scan()
             self._state_global(token)
 
     def _end_reference_scan(self):
