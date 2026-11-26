@@ -1,5 +1,5 @@
 import unittest
-from lizard import analyze_file
+from lizard import FileAnalyzer, analyze_file, get_extensions
 
 
 def get_ruby_function_list(source_code):
@@ -53,6 +53,76 @@ end
             [(function.name, function.start_line, function.end_line)
              for function in result])
         self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_nesting_depth_uses_ruby_if_boundaries(self):
+        source = '''
+def render(ready, cached)
+  if ready
+    show_current
+  end
+  if cached
+    show_saved
+  end
+end
+
+def dispatch(jobs, paused, silent)
+  if jobs.any? { |job| job.pending? }
+    queue_jobs(jobs) if paused
+    if silent
+      record_dispatch
+    end
+  end
+end
+
+def release(ready, active)
+  if ready
+    release_workers
+  else
+    if active
+      notify_workers
+    end
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['nd']))
+
+        functions = analyzer.analyze_source_code('dispatch.rb', source).function_list
+
+        self.assertEqual(
+            [('render', 1), ('dispatch', 2), ('release', 2)],
+            [(function.name, function.max_nesting_depth)
+             for function in functions])
+
+    def test_logical_assignment_does_not_open_an_extra_nesting_level(self):
+        source = '''
+def store_path(options, path)
+  if options[:gemspec]
+    store_gemspec(path)
+  else
+    @global_path ||= path if options[:global]
+  end
+end
+
+def load_cache(enabled)
+  if enabled
+    keys = {}
+    keys[:name] ||= read_name
+  end
+end
+
+def validate_cache(ready, expired)
+  if ready || expired
+    validate
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['nd']))
+
+        functions = analyzer.analyze_source_code('cache.rb', source).function_list
+
+        self.assertEqual(
+            [('store_path', 2), ('load_cache', 1), ('validate_cache', 2)],
+            [(function.name, function.max_nesting_depth) for function in functions])
 
     def test_basic_if_with_then_on_one_line(self):
         result = get_ruby_function_list('''
