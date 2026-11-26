@@ -1,7 +1,7 @@
 """Per-function cognitive-complexity state and shared increments."""
 
 from itertools import chain
-from weakref import WeakKeyDictionary
+from weakref import WeakKeyDictionary, WeakSet
 
 from .cognitive_profile import (
     _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
@@ -89,6 +89,8 @@ class _Counter(object):  # pylint: disable=R0902
         self.logical_ops = frozenset(
             getattr(reader, 'logical_operators', ())) - _UNARY_OR_COALESCING
         self.states = WeakKeyDictionary()
+        if profile.nested_functions:
+            self.context.bare_recursive_functions = WeakSet()
         self.function = None
         self.state = None
         self.line = None

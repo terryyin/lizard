@@ -34,7 +34,6 @@ The extension never changes the token stream or the language readers, so
 enabling it leaves every other metric untouched.
 """
 import sys
-from weakref import WeakSet
 
 from lizard import FunctionInfo
 
@@ -65,8 +64,6 @@ class LizardExtension(object):  # pylint: disable=R0903
     def __call__(self, tokens, reader):
         _add_default_field(type(reader.context.global_pseudo_function))
         counter = _counter_for(reader)
-        if counter.profile.nested_functions:
-            reader.context.bare_recursive_functions = WeakSet()
         for token in tokens:
             counter.process(token)
             yield token
