@@ -106,7 +106,9 @@ def test_async_can_name_an_optional_typescript_parameter(space):
     result = functions(
         f'const use = (async{space}?: (name: string) => string) => async?.("job");',
         'ts')
-    assert [(f.name, f.parameters) for f in result] == [('use', ['async'])]
+    assert [(f.name, f.parameters, f.cyclomatic_complexity) for f in result] == [
+        ('use', ['async'], 1),
+    ]
 
 
 def test_defaults_and_wrapper_call():
