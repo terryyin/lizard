@@ -149,6 +149,7 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        addition = r'|`[^`\r\n]+`' + addition
         if token_class is not None or not ('"""' in source_code or '${' in source_code or '$"' in source_code):
             return CodeReader.generate_tokens(source_code, addition, token_class)
         addition = _STRING_DELIMITERS + addition
@@ -206,20 +207,11 @@ class ScalaStates(GoLikeStates):  # pylint: disable=R0903
         return ScalaStates(self.context, self.open_bodies)
 
     def _function_name(self, token):
-        if token == '`':
-            self._state = self._quoted_function_name
+        if token.startswith('`') and len(token) > 2:
+            self.context.add_to_function_name(token[1:-1])
+            self._state = self._expect_function_dec
         else:
             super()._function_name(token)
-
-    def _quoted_function_name(self, token):
-        """A name in backticks, such as `match`. As for other names, only
-        its first word is kept."""
-        self.context.add_to_function_name(token)
-        self._state = self._rest_of_quoted_name
-
-    def _rest_of_quoted_name(self, token):
-        if token == '`':
-            self._state = self._expect_function_dec
 
     def _expect_function_dec(self, token):
         if token in ('(', '[', '<'):
