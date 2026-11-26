@@ -34,6 +34,10 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     @staticmethod
     def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
+        interpolations = None
+        if getattr(reader, 'has_scala_interpolation', False):
+            interpolations = []
+            tokens = _scala_nd_tokens(tokens, reader.context)
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -51,6 +55,10 @@ class LizardExtension(object):  # pylint: disable=R0903
         ).union(block_ends, block_starts, loops)
         context = reader.context
         for token in tokens:
+            if interpolations is not None and getattr(token, 'is_scala_interpolation', False):
+                l_depth = _interpolation_depth(token, context, interpolations)
+                yield token
+                continue
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
                 context.clear_prev_was_else()
@@ -241,3 +249,60 @@ def _init_nesting_depth_data(self, *_):
 
 patch(NDFileInfoAddition, FileInfoBuilder)
 patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")
+
+
+def _interpolation_depth(token, context, open_scopes):
+    """A substitution preserves the depth of its containing expression."""
+    function = context.current_function
+    if token == '{':
+        open_scopes.append((
+            function, function.nesting_depth, function.levels_awaiting_body,
+            function.block_levels, function.prev_was_else, function.in_condition,
+            function.condition_depth, function.logical_operator_added))
+        function.levels_awaiting_body = 0
+        function.block_levels = []
+        function.prev_was_else = False
+        context.reset_condition_tracking()
+    elif open_scopes:
+        (owner, depth, awaiting_body, blocks, prev_else, in_condition,
+         condition_depth, has_logical) = open_scopes.pop()
+        owner.nesting_depth = depth
+        owner.levels_awaiting_body = awaiting_body
+        owner.block_levels = blocks
+        owner.prev_was_else = prev_else
+        owner.in_condition = in_condition
+        owner.condition_depth = condition_depth
+        owner.logical_operator_added = has_logical
+    return function.nesting_depth
+
+
+def _scala_nd_tokens(tokens, context):
+    """Handle Scala XML case boundaries and the levels of indented matches."""
+    enclosing = []
+    for token in tokens:
+        events = getattr(token, 'xml_indent_events', None)
+        if events:
+            opening, activating, closing = events
+            for has_xml in closing:
+                owner, outer_levels = enclosing.pop()
+                if has_xml:
+                    owner.nesting_depth -= owner.levels_awaiting_body
+                    owner.levels_awaiting_body = outer_levels
+                    owner.prev_was_else = False
+            if opening:
+                owner = context.current_function
+                enclosing.append((owner, owner.levels_awaiting_body))
+            if activating:
+                # A scope with ordinary patterns keeps its existing metric behavior.
+                owner, outer_levels = enclosing[-1]
+                protected = min(outer_levels, owner.levels_awaiting_body)
+                owner.levels_awaiting_body -= protected
+                enclosing[-1] = owner, protected
+        if token in ('case', '}') and getattr(token, 'ends_scala_case', False):
+            # A closing brace also releases its block's levels in the main loop.
+            context.clear_prev_was_else()
+            context.end_statement()
+        elif token == 'if' and getattr(token, 'is_scala_case_guard', False):
+            # A guard uses the case's open level, as an else-if uses its if level.
+            context.set_prev_was_else(True)
+        yield token
