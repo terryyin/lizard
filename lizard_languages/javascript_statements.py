@@ -11,7 +11,7 @@ CLOSERS = frozenset((')', ']'))
 # Operators that can come after their operand: `count++`, `item!`.
 POSTFIX = frozenset(('++', '--', '!'))
 TRACKED = (HEADED | UNHEADED | OPENERS | CLOSERS | POSTFIX
-           | {'{', '${', '}', 'await'})
+           | {'{', '${', '}', ';', 'await'})
 # Words that a line break after them always ends: `return` + line break.
 RESTRICTED = frozenset(('return', 'break', 'continue', 'yield'))
 # Words that need more after them, so a line break after them continues.
@@ -76,6 +76,7 @@ class ImpliedSemicolons:
         postfix = False         # the last "!", "++" or "--" is postfix
         object_ended = False    # the last "}" closed an object literal
         loop_ended = False      # the ")" of "do … while (…)"
+        arrow_at_semicolon = None
         found = False
         busy = False            # found, or one of the four flags above
         # The flags that the last token left: only a busy token reads them.
@@ -87,7 +88,13 @@ class ImpliedSemicolons:
                 if busy or line != last_line or token == '}':
                     if found:
                         found = self.before_token = False
-                    if loop_ended:
+                    if arrow_at_semicolon is not None:
+                        # The reader consumes the semicolon before it ends
+                        # the arrow. Its enclosing statement still has to end.
+                        found = (token != ';' and arrow_at_semicolon
+                                 not in context.expression_arrows)
+                        arrow_at_semicolon = None
+                    elif loop_ended:
                         found = token != ';'
                     elif (not (groups or head_starts or body_starts)
                           # A block end has ended its statement already.
@@ -157,6 +164,10 @@ class ImpliedSemicolons:
                         head = None
                         open_loops = 0
                         loop_ends = False
+                    elif token == ';':
+                        if not groups and context.expression_arrows:
+                            arrow_at_semicolon = context.expression_arrows[-1]
+                            busy = True
                     elif token in POSTFIX:
                         postfix = (
                             line == last_line
