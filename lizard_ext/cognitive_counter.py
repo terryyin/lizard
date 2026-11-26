@@ -301,9 +301,7 @@ class _Counter(object):  # pylint: disable=R0902
         function = self.function
         # The reader may still be appending to the name (``A`` -> ``A::f``),
         # so it is compared on every candidate token.
-        if (token in function.name and token == function.unqualified_name
-                and (not self.php_member_access or state.prev in self.php_member_access
-                     or '::' not in function.name)):
+        if token in function.name and token == function.unqualified_name:
             if state.prev in _MEMBER_ACCESS:
                 calls = state.prev != '::' and state.prev2 in _SELF_REFERENCES
             else:
@@ -312,8 +310,10 @@ class _Counter(object):  # pylint: disable=R0902
                     self.profile.reserved_structures
                     and self._is_structure(token))
             if calls:
-                state.pending_call = True
-                state.pending += 1
+                if (not self.php_member_access or state.prev in self.php_member_access
+                        or '::' not in function.name):
+                    state.pending_call = True
+                    state.pending += 1
         if token in self.profile.jumps and \
                 not getattr(token, 'is_member_name', False):
             state.pending_jump_line = self.line
