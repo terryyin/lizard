@@ -260,15 +260,13 @@ class _LambdaHeader:
         if self.in_capture_prefix:
             if token == "=":
                 self._capture_has_initializer = True
-            elif token == "@" or (
+            elif token in ("@", "[") or (
                     token.isidentifier() and (previous.isidentifier() or previous in (")", "}"))):
-                # Objective-C messages can use literals or adjacent receiver and selector tokens.
+                # Objective-C receivers can contain literals or subscripts.
                 return 0
         if token in (")", "]", "}") or (section == "(" and token == "="):
             return 0
         if at_outer_group and token == ";" and groups[-1] != "}":
-            return 0
-        if section == "[" and token == "[" and previous == "[" and at_outer_group:
             return 0
         if token in self._GROUPS:
             if token != "<" or groups[-1] == ">" or (section == "(" and at_outer_group):
