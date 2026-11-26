@@ -38,6 +38,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         # '=' or 'async'; a generic call `x = f<T>(...)` follows a callee.
         self._generic_prefix = ''
         self._in_prop_value = False  # Track if inside property value (after ':')
+        self._next_property_key = 0
         self._in_abstract_context = False  # Track abstract method declarations
         self._condition_kind = None
         self._ternary_depth = 0
@@ -242,6 +243,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 if self._declaration_binding is not None:
                     self._declaration_binding = True
                 if self.as_object:
+                    if self.holds_members and not self.as_class:
+                        self._next_property_key = self.context.fileinfo.token_count + 1
                     self._in_prop_value = self._default_value = False
         if token == '<':
             self._generic_prefix = self._prev_token

@@ -152,6 +152,34 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
             tokens = self._implied_semicolons.read(tokens, self.context)
         return tokens, self._implied_semicolons
 
+    def track_object_property_depth(self, tokens):
+        """Keep logical levels from one property out of its siblings."""
+        context = self.context
+        for token in tokens:
+            function = context.current_function
+            logical = token in ('&&', '||')
+            pending = getattr(function, 'js_property_logical_levels', None)
+            if not (logical or pending):
+                yield token
+                continue
+
+            before = function.levels_awaiting_body
+            yield token
+            after = function.levels_awaiting_body
+            if pending and after < before:
+                while pending and pending[-1] > after:
+                    pending.pop()
+            if logical and after > before:
+                if pending is None:
+                    pending = function.js_property_logical_levels = []
+                pending.append(after)
+            elif (pending and token in (':', '...')
+                  and context.__dict__.get('js_object_property') == context.fileinfo.token_count):
+                function.levels_awaiting_body -= len(pending)
+                function.logical_operator_added = False
+                context.add_nd_condition(-len(pending))
+                pending.clear()
+
     def script_tokens(self, code):
         """Tokens of a piece of code; Vue tokenizes its files as markup."""
         return self.generate_tokens(code)

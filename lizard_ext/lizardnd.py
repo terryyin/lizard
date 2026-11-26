@@ -15,6 +15,19 @@ class LizardExtension(object):  # pylint: disable=R0903
                 "average_caption": " Avg.ND "}}
 
     @staticmethod
+    def _with_object_property_depth(read_depth):
+        """Let the JS reader observe depth changes on its token stream."""
+        from functools import wraps
+
+        @wraps(read_depth)
+        def read(self, tokens, reader, l_depth=0):
+            track_properties = getattr(reader, 'track_object_property_depth', None)
+            if track_properties is not None:
+                tokens = track_properties(tokens)
+            return read_depth(self, tokens, reader, l_depth)
+        return read
+
+    @staticmethod
     def set_args(parser):
         parser.add_argument(
             "-N", "--ND",
@@ -240,4 +253,5 @@ def _init_nesting_depth_data(self, *_):
 
 
 patch(NDFileInfoAddition, FileInfoBuilder)
+LizardExtension.__call__ = LizardExtension._with_object_property_depth(LizardExtension.__call__)
 patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")

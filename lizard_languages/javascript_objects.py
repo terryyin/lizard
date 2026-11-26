@@ -62,6 +62,7 @@ class JavaScriptObjectsMixin:
             return True
         # Support for getter/setter: look for 'get' or 'set' before method name
         if token == '...':
+            self._record_property_start(0)
             # What a spread takes is a value: ...(c && {f() {}}), ...g(x)
             self._in_prop_value = True
             self.last_tokens = token
@@ -93,6 +94,7 @@ class JavaScriptObjectsMixin:
             self._consume_type_annotation()
             return True
         if token == ':':
+            self._record_property_start(1)
             # Only set function_name for valid identifiers
             name = self.last_tokens
             if name and (name[0].isalpha() or name[0] in ('_', '$', '#')):
@@ -203,10 +205,13 @@ class JavaScriptObjectsMixin:
         # Collect tokens between [ and its ]
         tokens = []
         depth = [0]
+        starts_property = self._next_property_key == self.context.fileinfo.token_count
 
         def collect(token):
             depth[0] += {'[': 1, ']': -1}.get(token, 0)
             if depth[0] < 0:
+                if starts_property:
+                    self._next_property_key = self.context.fileinfo.token_count
                 # Try to join tokens and camelCase if possible
                 name = ''.join(tokens)
                 # Remove quotes and pluses for simple cases
@@ -228,3 +233,9 @@ class JavaScriptObjectsMixin:
         if not parts:
             return s
         return parts[0][0].lower() + parts[0][1:] + ''.join(p.capitalize() for p in parts[1:])
+
+    def _record_property_start(self, key_offset):
+        """A key followed by a colon, or a spread, confirms the comma's role."""
+        position = self.context.fileinfo.token_count
+        if position == self._next_property_key + key_offset:
+            self.context.js_object_property = position
