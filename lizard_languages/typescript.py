@@ -337,10 +337,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         if type_tokens:
                             type_tokens -= 1
                     if keyword is not None:
+                        if token[0] in _PARAMETER_STARTS and state.member_after_return_type(keyword):
+                            keyword = _MemberName(keyword)
                         # `{ if: a }`, `catch = f`, `catch(e) {}` in a class
                         if token in _NAME_FOLLOWERS or (
                                 token[0] in _PARAMETER_STARTS
-                                and state.member_name_context(keyword)):
+                                and state.member_name_context()):
                             keyword = _MemberName(keyword)
                         yield keyword
                         keyword = None
