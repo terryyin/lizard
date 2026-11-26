@@ -818,6 +818,34 @@ class Test_cpp11_Attributes(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("A::foo", result[0].name)
 
+    def test_class_alignment(self):
+        source = """struct ATTRIBUTES CacheLine {
+    unsigned used;
+    unsigned size() const { return used; }
+};
+
+unsigned capacity() { return CacheLine{16}.size(); }
+"""
+        for attributes in ("alignas(32)", "[[nodiscard]] alignas(alignof(long long)) alignas(32)"):
+            with self.subTest(attributes=attributes):
+                result = get_cpp_function_list(source.replace("ATTRIBUTES", attributes))
+                self.assertEqual(
+                    [("CacheLine::size", 3, 3), ("capacity", 6, 6)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_anonymous_class_alignment(self):
+        result = get_cpp_function_list("""static struct alignas(32) {
+    unsigned used;
+    unsigned size() const { return used; }
+} cache{16};
+
+unsigned capacity() { return cache.size(); }
+""")
+
+        self.assertEqual(
+            [("size", 3, 3), ("capacity", 6, 6)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
     def test_function(self):
         result = get_cpp_function_list("void foo() [[noreturn]] {}")
         self.assertEqual(1, len(result))
