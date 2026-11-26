@@ -418,6 +418,14 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
             return CodeStateMachine.__call__(self, token)
         return None
 
+    def _function_type_result(self, token):
+        if self._open_types:
+            # An arrow inside type arguments belongs to the type, so it
+            # cannot introduce a lambda initializer elsewhere in the body.
+            self.next(self._state_global, token)
+        else:
+            super()._function_type_result(token)
+
     def _track_top_level(self, token):
         if self._annotation is not None or token == '@':
             self._track_annotation(token)
