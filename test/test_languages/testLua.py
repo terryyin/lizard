@@ -294,6 +294,20 @@ end
             [('visit', 2, 6), ('sample', 7, 9)],
             [(f.name, f.start_line, f.end_line) for f in result])
 
+    def test_assigned_lua_method_uses_the_qualified_target_name(self):
+        source = '''
+local function install(routes, handler)
+  routes.main.handler = function(request)
+    return handler(request)
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        result = analyzer.analyze_source_code('routes.lua', source)
+        self.assertEqual(
+            [('routes.main.handler', 0), ('install', 0)],
+            [(f.name, f.cognitive_complexity) for f in result.function_list])
+
     def test_callback_call_to_an_outer_parameter_does_not_count_as_recursion(self):
         analyzer = FileAnalyzer(get_extensions(['cognitive']))
         result = analyzer.analyze_source_code('routes.lua', '''

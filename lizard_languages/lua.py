@@ -70,6 +70,9 @@ class LuaStateMachine(RubylikeStateMachine):
         if token == "=":
             self.next(self._assigning)
             return
+        if token == "." and self.last_token is not None and self.last_token.isidentifier():
+            self.next(self._member_name)
+            return
         self.probable_function_name = token
         if token in self._STATE_TOKENS:
             if token == "do":
@@ -112,6 +115,13 @@ class LuaStateMachine(RubylikeStateMachine):
     def _def_body(self, token):
         body = LuaStateMachine(self.context, self.nesting_metrics)
         self.sub_state(body, self._end_def, token)
+
+    def _member_name(self, token):
+        if token.isidentifier() and self.probable_function_name is not None:
+            self.probable_function_name += "." + token
+            self.next(self._state_global)
+        else:
+            self.next(self._state_global, token)
 
     def _assigning(self, token):
         if token == self.FUNC_KEYWORD:
