@@ -16,7 +16,9 @@ class PerlStates(CodeStateMachine):
         self._state = self._state_global
 
     def _start_function(self, name):
-        if self.package_name:
+        if name.startswith('::'):
+            name = 'main' + name
+        elif self.package_name and '::' not in name:
             name = f"{self.package_name}::{name}"
         self.context.try_new_function(name)
         self.context.confirm_new_function()
@@ -108,11 +110,13 @@ class PerlStates(CodeStateMachine):
             self._start_function('<anonymous>')
             self.next(self._state_anon_brace_search)
         elif not token.isspace():
-            if not self.in_attribute:
-                self.function_name = token
-            else:
+            if self.in_attribute:
                 # Skip attribute name
                 self.in_attribute = False
+            elif token == '::' or self.function_name.endswith('::'):
+                self.function_name += token
+            else:
+                self.function_name = token
 
     def _state_function_prototype(self, token):
         # Handle parameter prototypes after function name: sub fetch($) { ... }
