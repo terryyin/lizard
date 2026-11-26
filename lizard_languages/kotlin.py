@@ -334,6 +334,7 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
         'object', 'class', 'interface', 'typealias',
     }
     _BRACKET_CHANGES = {'(': 1, '[': 1, ')': -1, ']': -1}
+    _type_argument_end = -1
 
     def __init__(self, parent):
         super().__init__(parent.context, expression_bodies=parent._expression_bodies)
@@ -459,8 +460,8 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
         if token == ',':
             # Not a comma between type arguments, `Map<K, V>`, or between
             # the supertypes of an `object :` expression.
-            return (self._anonymous and not self._in_type_arguments()
-                    and self._state == self._state_global)  # pylint: disable=W0143
+            return (self._anonymous and self._state == self._state_global  # pylint: disable=W0143
+                    and self._ends_at_comma(tokens, index))
         return line_start and not (
             self._closes_condition
             or token == '(' and self.last_token == 'catch' and self._token_before_last == '}'
@@ -472,6 +473,46 @@ class KotlinExpressionBody(KotlinStates):  # pylint: disable=R0902,R0903
             or self._ends_with_prefix_not()
             or token in self._CONTINUES_AT_LINE_START
             or self._continues_with_block(token, tokens, index))
+
+    def _ends_at_comma(self, tokens, index):
+        if not self._open_types:
+            return True
+        # The tokens before the comma can be either a comparison with a
+        # constant or the start of a type list. Check the closing angle
+        # once and reuse its position for later commas in that list.
+        if index >= self._type_argument_end:
+            self._type_argument_end = self._find_type_argument_end(tokens, index)
+        return index >= self._type_argument_end
+
+    def _find_type_argument_end(self, tokens, index):
+        depth = self._open_types
+        index = _next_significant(tokens, index + 1)
+        while index is not None:
+            token = tokens[index]
+            if token in ('(', '['):
+                index = self._after_annotation_group(tokens, index)
+                continue
+            if token == '<':
+                depth += 1
+            elif token == '>':
+                depth -= 1
+                if not depth:
+                    return index if self._has_type_argument_suffix(tokens, index) else -1
+            elif (token not in self._TYPE_ARGUMENT_TOKENS
+                  and not (self._is_name(token) and token not in ('true', 'false', 'null'))
+                  and not (token[0] == '<' and token[-1] == '>')):
+                break
+            index = _next_significant(tokens, index + 1)
+        return -1
+
+    def _has_type_argument_suffix(self, tokens, index):
+        if self._type_operand:
+            return True
+        suffix = _next_significant(tokens, index + 1)
+        if suffix is None:
+            return False
+        return (tokens[suffix] in ('(', '{', '.', '?', '::', '@')
+                or self._is_name(tokens[suffix]) and suffix + 1 < len(tokens) and tokens[suffix + 1] == '@')
 
     def _continues_with_block(self, token, tokens, index):
         takes_lambda = not self._type_operand and (self.last_token == ')' or self._closes_type)
