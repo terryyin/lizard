@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Rina-chan",
+  "email": "rina-chan@example.org",
+  "identity": "SEED-075#plsql-national-literals",
+  "mode": "story-branch",
+  "branch": "claude/keep-national-character-pl-sql-alternative-liter",
+  "host": "claude"
+}

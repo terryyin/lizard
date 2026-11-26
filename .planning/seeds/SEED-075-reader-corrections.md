@@ -41,14 +41,25 @@ frozen master `6ff51711d14d7aebca1d72690130fab6e1889fe8`.
 
 **Identity:** SEED-075#r-raw-literal-delimiters
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/040-r-raw-literal-delimiters/PLAN.md"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/040-r-raw-literal-delimiters/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"eea5bb40b2a74bb0bab22cdf47123566949abd261ab72f7a9fa21c81f55f4f38","plan":"20ab9b96cdbddcd2f97635e913018cd04388478409dd7d8c17fe58499f92a24e"}}
 ```
 
 **Goal:** R users get correct CCN and following function locations for raw literals with either quote style and supported delimiters.
 
-**Scope:** Correct the specific language reader behavior reproduced during review of [#638](https://github.com/terryyin/lizard/pull/638) at `ad503916d19b37ca0eedf208f35dbbda589dcc71`.
+**Scope:** Correct the specific language reader behavior reproduced during review of [#638](https://github.com/terryyin/lizard/pull/638) at `ad503916d19b37ca0eedf208f35dbbda589dcc71`. Follow #638's direction: an R raw string is one token, so its text adds no decisions and its newlines keep following functions on their real lines. Make that hold for every form the R lexer accepts: an `r` or `R` prefix, a double or single quote that must match at the close, zero or more dashes, and a `(`, `[`, `{` or `|` delimiter that closes with its counterpart, the same dashes and the same quote. Preserve #638's double-quote bracket, brace, dash and multiline behavior, ordinary strings, identifiers named `r`, and unrelated reader behavior. Out of scope: other SEED-075 reader corrections, non-R languages, and unterminated raw strings.
 
 **Finding:** A valid single-quoted `r'(some ' if (hidden) {} ' text)'` adds a false decision on master and #638. The R lexer accepts both quote characters. The current R lexer also supports a vertical-bar delimiter and #638 leaves that form unchanged. [Language reference](https://raw.githubusercontent.com/wch/r-source/trunk/src/main/gram.y).
+
+**Key examples:**
+
+- Each source is `f <- function() { x <- <raw>; if (a) {} }` then `g <- function() { 1 }` on the next line, with `<raw>` hiding an `if (x) {}` behind an embedded quote. Expected: f CCN 2 and g at line 2 with CCN 1.
+  - `r"(text " if (x) {} " end)"` → #638 passes; master f CCN 3.
+  - `r'(some ' if (hidden) {} ' text)'` → master and #638 f CCN 3.
+  - `R'[some ' if (hidden) {} ' text]'` and `r'--{some ' if (hidden) {} ' text}--'` → master and #638 f CCN 3.
+  - `r"|text " if (x) {} " end|"`, `r'|some ' if (hidden) {} ' text|'` and `r"--|text " if (x) {} " end|--"` → master and #638 f CCN 3.
+- A single-quoted multiline raw string `r'-(line` / `' if (x) {} '` / `last)-'` followed by `; if (a) {} }` and `g` → f CCN 2 and g starts at line 4 (master and #638: f CCN 3).
+- A close that lacks the opening dashes or quote ends nothing: `r"-(a)" if (x) {} )-"` is one raw string, f CCN 2 (#638 passes; master f CCN 3).
+- An ordinary string such as `"r\"("` and an identifier `r` used in `if (r)` open no raw string: f CCN 2.
 
 **Plan:** [Keep valid R raw-string delimiter forms opaque](../slice-plans/040-r-raw-literal-delimiters/PLAN.md)
 
@@ -59,14 +70,23 @@ frozen master `6ff51711d14d7aebca1d72690130fab6e1889fe8`.
 
 **Identity:** SEED-075#plsql-national-literals
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/041-plsql-national-literals/PLAN.md"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/041-plsql-national-literals/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"671910be12b429b96e44c0dd316443346bd3fb16f62bbe0e15d54196bb7695be","plan":"38e8a7d2aa5eb82c46a8dfc1269d7ab758e3ac7e2bc30b481c93b6ec690d1185"}}
 ```
 
-**Goal:** PL/SQL users get the same metrics for Q and NQ literals containing apparent executable code.
+**Goal:** PL/SQL users get the same CCN and following function locations for national-character `NQ` alternative-quoted literals as for the equivalent `Q` literals when the literal text contains apparent executable code.
 
-**Scope:** Correct the specific language reader behavior reproduced during review of [#639](https://github.com/terryyin/lizard/pull/639) at `887ad0bff86a05c71eca26d9eb6eba6a0b7dde4f`.
+**Scope:** Correct the specific language reader behavior reproduced during review of [#639](https://github.com/terryyin/lizard/pull/639) at `887ad0bff86a05c71eca26d9eb6eba6a0b7dde4f`. Follow #639's direction: an alternative-quoted literal is one token, so its text adds no decisions and its newlines keep following functions on their real lines. Make that hold for the `N` national-character prefix in any letter case (`nq`, `NQ`, `Nq`, `nQ`) with every delimiter #639 accepts: `[]`, `{}`, `()`, `<>` and a repeated single character. Preserve #639's `Q` behavior, ordinary and `N'...'` strings, identifiers named `nq`, and unrelated reader behavior. Out of scope: other SEED-075 reader corrections, non-PL/SQL languages, and unterminated alternative-quoted literals.
 
-**Finding:** In a function returning `nq'[it's if x then end if;]'`, #639 reports CCN 2. The equivalent Q form passes and both prefixes are valid Oracle syntax. [Language reference](https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/Literals.html).
+**Finding:** In a function returning `nq'[it's if x then end if;]'`, master and #639 report CCN 2. The equivalent Q form gives CCN 1 on #639. With a repeated-character delimiter such as `Nq'#...#'`, master and #639 lose function f entirely. Oracle accepts `[N|n][Q|q]'` before the quote delimiter. [Language reference](https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/Literals.html).
+
+**Key examples:**
+
+- Each source is `CREATE FUNCTION f RETURN varchar2 AS BEGIN RETURN <literal>; END;` then `CREATE PROCEDURE g AS BEGIN NULL; END;` on the next line, with `<literal>` hiding `if x then end if;` behind an embedded quote `it's`. Expected: f CCN 1 and g at line 2 with CCN 1.
+  - `q'[it's if x then end if;]'` → #639 passes; master f CCN 2.
+  - `nq'[...]'`, `NQ'{...}'`, `nq'(...)'` and `nq'<...>'` → master and #639 f CCN 2.
+  - `Nq'#...#'` → master and #639 report no function f.
+- A multiline `nq'[it's` / `if x then end if;` / `]'` → f CCN 1 and g starts at line 4 (master and #639: f CCN 2).
+- An ordinary national string `N'it''s'` followed by a real `IF x THEN NULL; END IF;` → f CCN 2, and a variable named `nq` used in `IF nq > 1` → f CCN 2 (unchanged on master and #639).
 
 **Plan:** [Keep national-character PL/SQL alternative literals opaque](../slice-plans/041-plsql-national-literals/PLAN.md)
 
@@ -77,14 +97,20 @@ frozen master `6ff51711d14d7aebca1d72690130fab6e1889fe8`.
 
 **Identity:** SEED-075#r-formal-parameter-boundaries
 ```json dough-story-state
-{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/042-r-formal-parameter-boundaries/PLAN.md"}
+{"schemaVersion":1,"refinement":"refined","approach":"planned","plan":"../slice-plans/042-r-formal-parameter-boundaries/PLAN.md","assessment":"ready","reasons":[],"basis":{"document":"e78db6151563775d44c06ac4acb44db04abf705eb7d845fcd76a89f729b1fb9f","plan":"707d9a6c1470362f804dc1b9bbf55374b2466efe02e9abc335c0ac1a7b502ac4"}}
 ```
 
-**Goal:** R users get the number of formal parameter slots and readable names when defaults contain nested expressions.
+**Goal:** R users get accurate parameter counts and readable signatures for functions with nested defaults, variadic parameters, and backtick-quoted names.
 
-**Scope:** Correct the specific language reader behavior reproduced during review of [#643](https://github.com/terryyin/lizard/pull/643) at `ecf44a70dd83a17fed5b47fca9f1fa5b5bc0fb90`.
+**Scope:** Follow [#643](https://github.com/terryyin/lizard/pull/643)'s balanced reading of calls, indexing, and braced expressions in defaults. Each top-level formal contributes one slot. Report the names in declaration order, with `...` as one entry and a backtick-quoted name returned as the text inside its backticks. Keep the quoted spelling and complete defaults in the displayed signature. Preserve empty and ordinary declarations, body CCN, and recognition of the following function. Raw-string support is owned by [the R raw literal story](#r-raw-literal-delimiters). Other language readers and new recovery behavior for malformed R are outside scope. [R Language Definition](https://cran.r-project.org/doc/manuals/r-release/R-lang.html#Function-definitions)
 
-**Finding:** For `function(a = list(1, 2), ...)`, #643 reports one parameter. The public full-parameter strings contain two slots but the common name extraction ignores the ellipsis. A quoted formal paired with a nested default is also omitted by #643.
+**Finding:** At `ecf44a70dd83a17fed5b47fca9f1fa5b5bc0fb90`, #643 collects both declarations in `function(a = list(1, 2), ...)`, but reports just `a`. It also omits a backtick-quoted formal with a nested default. When the quoted name contains a comma and `)`, #643 splits its text and closes the signature early.
+
+**Key examples:**
+
+- `function(a = list(1, 2), b = 3)` reports two parameters named `a` and `b`. The same declaration with `...` in place of `b = 3` reports `a` and `...`.
+- ``function(a = {list(1, 2)[1]}, ..., `x, ) y` = list(1, 2))`` reports three parameters named `a`, `...`, and `x, ) y`. The long name contains both complete defaults and the written backticks. With one `if` in the body and `g <- function(z) { z }` on the next line, `f` has CCN 2 and `g` starts on line 2 with parameter `z`.
+- `function()` reports zero parameters. `function(x, y = 2)` reports `x` and `y` and displays each signature token once.
 
 **Plan:** [Count R variadic and quoted formals with nested defaults](../slice-plans/042-r-formal-parameter-boundaries/PLAN.md)
 
