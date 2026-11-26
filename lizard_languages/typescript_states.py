@@ -12,12 +12,15 @@ from .typescript_declarations import (
 # Ordinary tokens skip declaration and marker dispatch together.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
 _SPECIAL_TOKENS = DECLARATION_WORDS | _MARKER_TOKENS
-_TAIL_TOKENS = frozenset(('`', ':', ',', '!'))
+_TAIL_TOKENS = frozenset(('`', ':', ',', '!', '/'))
 
 
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        JavaScriptObjectsMixin, TypeScriptDeclarationsMixin,
                        CodeStateMachine):
+    _last_slash_line = None
+    _slash_can_close_literal = False
+
     def __init__(self, context):
         super().__init__(context)
         self.last_tokens = ''
@@ -236,6 +239,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 return
             elif token == '!':
                 self._postfix_operand = self._assertion_operand()
+            elif token == '/':
+                line = self.context.current_line
+                self._slash_can_close_literal = self._last_slash_line == line
+                self._last_slash_line = line
             elif token == ',':
                 if self._declaration_binding is not None:
                     self._declaration_binding = True
