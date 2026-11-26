@@ -40,9 +40,6 @@ class LizardExtension(object):  # pylint: disable=R0903
 
     @staticmethod
     def _nesting_depth(tokens, reader, l_depth, implied_semicolons):  # pylint: disable=R0912
-        # Reopen a branch only when ND can also find the end of its body.
-        reopen_else_if = not _EXPLICIT_BRANCH_ENDS.isdisjoint(
-            getattr(reader, 'language_names', ()))
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
@@ -74,7 +71,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 # Syntactically else if is equivalent to else {if} but should not increase depth
                 if token == 'else' and not getattr(token, 'is_member_name', False):
                     context.set_prev_was_else(True)
-                elif token == 'if' and token in loops and context.reuse_if_level(reopen_else_if):
+                elif token == 'if' and token in loops and context.reuse_if_level(reader):
                     pass
                 # Handle opening parenthesis - start of condition
                 elif token == '(':
@@ -125,7 +122,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.nesting_depth = 0
         self.current_function.levels_awaiting_body = 0
         self.current_function.block_levels = []
-        self.current_function.else_token_count = None
+        self.current_function.prev_was_else = False
         self.reset_condition_tracking()
 
     def open_level(self):
@@ -204,20 +201,21 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def set_prev_was_else(self, value):
         function = self.current_function
-        function.else_token_count = function.token_count if value else None
+        function.prev_was_else = function.token_count if value else False
 
-    def reuse_if_level(self, reopen_else_if):
+    def reuse_if_level(self, reader):
         function = self.current_function
-        else_position = function.else_token_count
-        if else_position is None:
+        else_position = function.prev_was_else
+        if else_position is False:
             return False
-        function.else_token_count = None
+        function.prev_was_else = False
         # An adjacent else-if needs a new level if the prior body closed it.
-        return (not reopen_else_if or function.levels_awaiting_body > 0
-                or function.token_count != else_position + 1)
+        return (function.levels_awaiting_body > 0
+                or function.token_count != else_position + 1
+                or _EXPLICIT_BRANCH_ENDS.isdisjoint(getattr(reader, 'language_names', ())))
 
     def clear_prev_was_else(self):
-        self.current_function.else_token_count = None
+        self.current_function.prev_was_else = False
 
 
 def get_method(cls, name):
@@ -253,7 +251,7 @@ def _init_nesting_depth_data(self, *_):
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
-    self.else_token_count = None  # Position of the last unmatched "else"
+    self.prev_was_else = False  # Token position when an "else" is pending
 
 
 patch(NDFileInfoAddition, FileInfoBuilder)
