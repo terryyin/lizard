@@ -17,17 +17,6 @@ class Test_tokenizing_Kotlin(unittest.TestCase):
 
 class TestKotlinStringLiterals(unittest.TestCase):
 
-    def test_callable_reference_after_comment_keeps_expression_token_count(self):
-        function, = get_kotlin_function_list('''\
-fun bound(): () -> Int {
-    val `message label` = """ready
-set"""
-    return (`message label`
-        /* Bind the property on this value. */ ::length)
-}
-''')
-        self.assertEqual(27, function.token_count)
-
     def test_raw_string_with_an_unpaired_quote_keeps_the_next_function(self):
         functions = get_kotlin_function_list('''\
 fun quoteFragment(): String {
@@ -162,6 +151,17 @@ fun jobReport(active: Boolean, priority: Boolean, jobId: Int): String {
 }
 ''')
         self.assertEqual([5, 5], [f.cognitive_complexity for f in result.function_list])
+
+    def test_callable_reference_after_comment_keeps_expression_token_count(self):
+        function, = get_kotlin_function_list('''\
+fun bound(): () -> Int {
+    val `message label` = """ready
+set"""
+    return (`message label`
+        /* Bind /* the property */ on this value. */ ::length)
+}
+''')
+        self.assertEqual(27, function.token_count)
 
     def test_interpolation_closes_pending_cognitive_checks(self):
         analyzer = FileAnalyzer(get_extensions(["cognitive"]))

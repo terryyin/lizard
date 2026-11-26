@@ -17,7 +17,7 @@ _EXPRESSION_MARK = re.compile(_CODE_MARKS + r'|[{}]', re.S)
 _RAW_MARK = re.compile(r'"{3,}|\$+')
 _LINE_MARK = re.compile(r'\\.|"|\$+', re.S)
 _COMMENT_MARK = re.compile(r'/\*|\*/')
-_TYPE_TRIVIA = re.compile(r'\s*(/\*|//[^\r\n]*|:)')
+_TYPE_TRIVIA = re.compile(r'\s*(/\*|//[^\r\n]*|:(?!:))')
 
 
 class TemplateTokens(chain):  # pylint: disable=R0903
