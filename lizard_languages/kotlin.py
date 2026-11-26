@@ -10,33 +10,40 @@ from .golike import GoLikeStates
 from .swift import SwiftReplaceLabel
 
 
+# Raw strings may end in extra quotes: `"""a""""` holds `a"`.
+_RAW_STRING = r'""".*?""""*'
+_QUOTED_NAME = r"`[^`\r\n]+`"
 _KOTLIN_TRIVIA = re.compile(
-    r'//[^\n]*|""".*?"""|"(?:\\.|[^"\\])*"|'
-    r"'(?:\\.|[^'\\])*'|`[^`\n]*`|/\*", re.S)
+    r'//[^\n]*|' + _RAW_STRING + r'|"(?:\\.|[^"\\])*"|'
+    r"'(?:\\.|[^'\\])*'|" + _QUOTED_NAME + r"|/\*", re.S)
 _COMMENT_DELIMITER = re.compile(r'/\*|\*/')
 
 
 def _flatten_nested_comments(source):
-    """Preserve positions while hiding inner closers from the shared lexer."""
+    """Kotlin block comments nest. Preserve positions while hiding inner
+    closers from the shared lexer. Each search resumes after the last
+    literal or comment, so text inside one cannot hide the next opener."""
     if '/*' not in source:
         return source
     pieces = []
     start = 0
-    for match in _KOTLIN_TRIVIA.finditer(source):
-        if match.start() < start or match.group() != '/*':
-            continue
-        depth = 1
-        for delimiter in _COMMENT_DELIMITER.finditer(source, match.end()):
-            depth += 1 if delimiter.group() == '/*' else -1
-            if depth == 0:
-                end = delimiter.end()
-                pieces.append(source[start:match.end()])
-                pieces.append(source[match.end():end - 2].replace('*/', '* '))
-                pieces.append('*/')
-                start = end
+    match = _KOTLIN_TRIVIA.search(source)
+    while match:
+        resume = match.end()
+        if match.group() == '/*':
+            depth = 1
+            for delimiter in _COMMENT_DELIMITER.finditer(source, resume):
+                depth += 1 if delimiter.group() == '/*' else -1
+                if depth == 0:
+                    resume = delimiter.end()
+                    break
+            else:
                 break
-        else:
-            break
+            pieces.append(source[start:match.end()])
+            pieces.append(source[match.end():resume - 2].replace('*/', '* '))
+            pieces.append('*/')
+            start = resume
+        match = _KOTLIN_TRIVIA.search(source, resume)
     pieces.append(source[start:])
     return ''.join(pieces)
 
@@ -66,8 +73,8 @@ class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
     def generate_tokens(source_code, addition='', token_class=None):
         return CodeReader.generate_tokens(
             _flatten_nested_comments(source_code),
-            r'|""".*?""""*' +
-            r"|`[^`\r\n]+`" +
+            "|" + _RAW_STRING +
+            "|" + _QUOTED_NAME +
             r"|\w+\?" +
             r"|\w+\!!" +
             r"|\?\?" +

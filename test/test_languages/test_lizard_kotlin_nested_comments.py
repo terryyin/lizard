@@ -36,3 +36,30 @@ class TestNestedKotlinComments(unittest.TestCase):
                 self.assertEqual([('f', 2), ('g', 1)],
                                  [(f.name, f.cyclomatic_complexity)
                                   for f in functions])
+
+    def test_quote_in_one_comment_does_not_hide_the_next_comment(self):
+        samples = [
+            ('/* " */', 'val s = "x"'),
+            ('/* """ */', 'val s = """x"""'),
+            ("/* ' */", "val c = 'x'"),
+            ('/* ` */', 'val `x` = 1'),
+        ]
+        for first, literal in samples:
+            with self.subTest(first=first):
+                source = ('fun f() {\n' + first + '\n'
+                          '/* outer /* inner */ if (hidden) {} */\n' +
+                          literal + '\nif (real) {}\n}\nfun g() {}')
+                result = analyze_file.analyze_source_code('sample.kt', source)
+                f, g = result.function_list
+                self.assertEqual(('f', 2, 4), (f.name, f.cyclomatic_complexity, f.nloc))
+                self.assertEqual(('g', 1, 7), (g.name, g.cyclomatic_complexity, g.start_line))
+                self.assertEqual(5, result.nloc)
+
+    def test_raw_string_with_trailing_quotes_does_not_hide_a_comment(self):
+        source = ('fun f() {\nval s = """x""""\n'
+                  '/* outer /* inner */ if (hidden) {} */\n'
+                  'val t = "y"\nif (real) {}\n}\nfun g() {}')
+        functions = analyze_file.analyze_source_code(
+            'sample.kt', source).function_list
+        self.assertEqual([('f', 2), ('g', 1)],
+                         [(f.name, f.cyclomatic_complexity) for f in functions])
