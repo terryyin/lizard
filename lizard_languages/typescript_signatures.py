@@ -74,20 +74,19 @@ def template_call_type_arguments(tokens, tokenize, optional=False):
         if token.startswith(('//', '/*')):
             continue
         if in_interpolation:
-            if not _interpolation_is_type(token, tokenize):
+            if not _template_is_type(token, tokenize, in_expression=True):
                 return 0
             in_interpolation = False
         elif token == '${':
             saw_template = in_interpolation = True
         elif token is NESTED_TEMPLATE_START:
-            size = _nested_template_size(tokens)
+            size = _template_type_size(tokens)
             if size is None:
                 return 0
             count += size
             saw_template = True
         elif token.startswith('`') and '${' in token:
-            if not all(_interpolation_is_type(token[start:end], tokenize)
-                       for start, end in interpolation_code(token, False)):
+            if not _template_is_type(token, tokenize, in_expression=False):
                 return 0
             saw_template = True
         if annotation(token):
@@ -102,7 +101,7 @@ def template_call_type_arguments(tokens, tokenize, optional=False):
     return 0
 
 
-def _nested_template_size(tokens):
+def _template_type_size(tokens):
     """Validate each substitution and count the flattened template tokens."""
     depth = 1
     substitutions = []
@@ -111,15 +110,15 @@ def _nested_template_size(tokens):
         if token is NESTED_TEMPLATE_END:
             depth -= 1
             if not depth:
-                return count
+                return count if not substitutions else None
             continue
         if token.isspace():
             continue
         count += 1
         if token is NESTED_SUBSTITUTION_START:
-            substitutions.append(TypeScriptTypeAnnotationStates(None))
+            substitutions.append(_TemplateSubstitution())
         elif token is NESTED_SUBSTITUTION_END:
-            if not _complete_template_type(substitutions.pop()):
+            if not substitutions.pop().complete():
                 return None
         elif not _type_whitespace(token):
             if substitutions[-1](token):
@@ -147,12 +146,46 @@ def _follows_type_arguments(tokens, optional):
     return not optional
 
 
-def _interpolation_is_type(source, tokenize):
-    annotation = TypeScriptTypeAnnotationStates(None)
-    for token in tokenize(source):
-        if not _type_whitespace(token) and annotation(token):
-            return False
-    return _complete_template_type(annotation)
+def _template_is_type(source, tokenize, in_expression):
+    def tokens():
+        for part in interpolation_code(source, in_expression, delimiters=True, track_nested=True):
+            if isinstance(part, str):
+                yield part
+            else:
+                start, end = part
+                yield from tokenize(source[start:end])
+        yield NESTED_TEMPLATE_END
+
+    return _template_type_size(tokens()) is not None
+
+
+class _TemplateSubstitution(TypeScriptTypeAnnotationStates):
+    """A type substitution needs a type role for each question mark."""
+
+    def __init__(self):
+        super().__init__(None)
+        self._conditional_depths = set()
+        self._optional_question = False
+
+    def complete(self):
+        return not self._optional_question and _complete_template_type(self)
+
+    def _state_global(self, token):
+        if token in ('&&', '||', '??') or (
+                self._optional_question and token not in (':', ',', ')', ']')):
+            self.statemachine_return()
+            return
+        self._optional_question = False
+        depth = len(self._brackets)
+        if token == 'extends' and (self.last_token == '>'
+                                   or ends_expression(self.last_token or '')):
+            self._conditional_depths.add(depth)
+        elif token == '?':
+            self._optional_question = depth not in self._conditional_depths
+            self._conditional_depths.discard(depth)
+        super()._state_global(token)
+        if len(self._brackets) < depth:
+            self._conditional_depths.discard(depth)
 
 
 def _complete_template_type(annotation):

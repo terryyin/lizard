@@ -117,8 +117,10 @@ def interpolation_code(source, in_expression=False, delimiters=False,
     if not (in_expression or (source.startswith('`') and '${' in source)):
         return
     stack, pos, code = ([1], 0, 0) if in_expression else ([0], 1, None)
+    open_substitution = NESTED_SUBSTITUTION_START if track_nested else '('
+    close_substitution = NESTED_SUBSTITUTION_END if track_nested else ')'
     if delimiters and in_expression:
-        yield '('
+        yield open_substitution
     while stack:
         pattern = _TEMPLATE_SPECIAL if stack[-1] == 0 else _EXPRESSION_SPECIAL
         match = pattern.search(source, pos)
@@ -129,8 +131,7 @@ def interpolation_code(source, in_expression=False, delimiters=False,
         if stack[-1] == 0:
             if token == '${':
                 if delimiters:
-                    yield (NESTED_SUBSTITUTION_START if track_nested and len(stack) > 1
-                           else '(')
+                    yield open_substitution
                 stack.append(1)
                 code = pos
             elif token == '`':
@@ -151,12 +152,11 @@ def interpolation_code(source, in_expression=False, delimiters=False,
                 yield code, match.start()
                 stack.pop()
                 if delimiters:
-                    yield (NESTED_SUBSTITUTION_END if track_nested and len(stack) > 1
-                           else ')')
+                    yield close_substitution
     if stack and stack[-1]:
         yield code, len(source)
         if delimiters and in_expression:
-            yield ')'
+            yield close_substitution
 
 
 def template_tokens(source, addition='', token_class=None, split=True,

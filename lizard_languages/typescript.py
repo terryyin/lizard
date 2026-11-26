@@ -180,28 +180,38 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         if getattr(token, 'interpolation_measured', False):
             return None
         emit = measure is not None
-        track_nested = emit and self.context.class_field_annotations and '<' in token
+        track_nested = (emit and self.context.class_field_annotations and '<' in token
+                        and token.count('`') > (0 if in_expression else 2))
         tokens = self._interpolation_tokens(token, in_expression, emit, track_nested)
         if track_nested:
-            tokens = self._erase_template_types(tokens)
+            tokens = self._erase_template_types(tokens, len(token) * 2)
         result = measure(tokens) if measure is not None else None
         for _ in tokens:
             pass
         return result
 
-    def _erase_template_types(self, tokens):
+    def _erase_template_types(self, tokens, budget):
         """Remove confirmed template type arguments from a measurement stream."""
+        def bounded(lookahead):
+            # Rejected candidates can share a long suffix. Limit their total reads.
+            nonlocal budget
+            for part in lookahead:
+                if not budget:
+                    return
+                budget -= 1
+                yield part
+
         previous = ''
         while True:
             for token in tokens:
                 if token is javascript_templates.NESTED_TEMPLATE_END:
                     continue
-                if token == '<' and (previous == '?.' or ends_expression(previous)):
+                if budget and token == '<' and (previous == '?.' or ends_expression(previous)):
                     tokens, lookahead = tee(tokens)
                     count = template_call_type_arguments(
-                        lookahead, self.script_tokens, optional=previous == '?.')
+                        bounded(lookahead), self.script_tokens, optional=previous == '?.')
                     del lookahead
-                    if count:
+                    if count and budget:
                         for part in tokens:
                             count -= not part.isspace()
                             if not count:
