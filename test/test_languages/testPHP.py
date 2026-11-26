@@ -36,8 +36,10 @@ class Test_tokenizing_PHP(unittest.TestCase):
     def test_multiple_line_string(self):
         self.check_tokens(['"this is a string\nwith two lines"'], '<?php"this is a string\nwith two lines"?>')
 
-    def test_multiple_line_string_alternative(self):
-        self.check_tokens(['<<<blah xxx blah'], '<?php<<<blah xxx blah?>')
+    def test_heredoc_token(self):
+        literal = '<<<NOTICE\nThis is a notice.\nNOTICE'
+        self.check_tokens(['\n', 'echo', ' ', literal, ';', '\n'],
+                          '<?php\necho ' + literal + ';\n')
 
     def test_dollar_var(self):
         self.check_tokens(['$a'], '<?$a?>')
