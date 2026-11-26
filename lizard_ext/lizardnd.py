@@ -228,6 +228,135 @@ def patch_append_method(frm, accept_class, method_name):
     setattr(accept_class, method_name, appended)
 
 
+def _kotlin_else_if_branches(tokens, reader):
+    """Give a reopened else-if level to the body that owns it."""
+    context = reader.context
+    interpolation = getattr(reader, 'interpolation_braces', None)
+    interpolation_start, interpolation_end = interpolation or (None, None)
+    headers = []
+    regions = []
+    braced_bodies = []
+    previous = None
+    after_else_if = False
+    for token in tokens:
+        if regions:
+            function = context.current_function
+            for index in reversed(range(len(regions))):
+                region = regions[index]
+                if region.function is function and not region.read(token, context.current_line):
+                    context.end_statement()
+                    context.close_block()
+                    del regions[index]
+        if token == '}' and token is not interpolation_end and braced_bodies:
+            function = context.current_function
+            if braced_bodies[-1] == (function, len(function.block_levels)):
+                braced_bodies.pop()
+                context.end_statement()
+        if headers and previous == ')':
+            function = context.current_function
+            owner, depth = headers[-1]
+            if owner is function and context.get_condition_depth() == depth:
+                headers.pop()
+                if token == '{' and token is not interpolation_start:
+                    context.open_level()
+                    braced_bodies.append((function, len(function.block_levels) + 1))
+                elif token == 'if' and not getattr(token, 'is_member_name', False):
+                    context.open_level()
+                    context.open_block()
+                    region = _KotlinIfBody(function)
+                    region.read(token, context.current_line)
+                    regions.append(region)
+        if after_else_if and token == '(':
+            function = context.current_function
+            if not function.levels_awaiting_body:
+                headers.append((function, context.get_condition_depth()))
+        after_else_if = (token == 'if' and previous == 'else'
+                         and not getattr(token, 'is_member_name', False))
+        previous = token
+        yield token
+
+
+class _KotlinIfBody:
+    """Find the end of a nested if, including its nearest matching else."""
+
+    _CLOSING = {'(': ')', '[': ']', '{': '}'}
+    _CONTINUED = frozenset((
+        '.', '?.', '::', '?:', '!!', '+', '-', '*', '/', '%', '&&', '||',
+        '=', '+=', '-=', '*=', '/=', '%=', '==', '!=', '===', '!==',
+        '<', '>', '<=', '>=', 'in', '!in', 'is', '!is', 'as', 'as?',
+        '..', '..<', ':', ',', '->', '!', 'catch', 'finally',
+    ))
+
+    def __init__(self, function):
+        self.function = function
+        self.alternates = []
+        self.groups = []
+        self.phase = 'body'
+        self.previous = None
+        self.line = None
+
+    def read(self, token, line):
+        if self.groups:
+            self._read_group(token)
+        elif token == 'else' and self.phase in ('plain', 'done'):
+            if not self._attach_else():
+                return False
+        elif self.phase == 'done' or token in (')', ']', '}'):
+            return False
+        elif self.phase == 'plain' and self._starts_sibling(token, line):
+            return False
+        elif token == 'if' and self.phase in ('body', 'plain'):
+            self.alternates.append(False)
+            self.phase = 'head'
+        elif token == ';':
+            self.phase = 'done'
+        else:
+            if self.phase == 'body':
+                self.phase = 'block' if token == '{' else 'plain'
+            if token in self._CLOSING:
+                self.groups.append(self._CLOSING[token])
+        self.previous, self.line = token, line
+        return True
+
+    def _read_group(self, token):
+        if token in self._CLOSING:
+            self.groups.append(self._CLOSING[token])
+        elif token == self.groups[-1]:
+            self.groups.pop()
+            if not self.groups:
+                if self.phase == 'head':
+                    self.phase = 'body'
+                elif self.phase == 'block':
+                    self.phase = 'done'
+
+    def _attach_else(self):
+        while self.alternates and self.alternates[-1]:
+            self.alternates.pop()
+        if not self.alternates:
+            return False
+        self.alternates[-1] = True
+        self.phase = 'body'
+        return True
+
+    def _starts_sibling(self, token, line):
+        return (line - token.count('\n') != self.line
+                and self.previous not in self._CONTINUED
+                and token not in self._CONTINUED
+                and token not in self._CLOSING
+                and token != ';')
+
+
+def _track_kotlin_branches(read):
+    def track(extension, tokens, reader, l_depth=0):
+        if 'kotlin' in getattr(reader, 'language_names', ()):
+            tokens = _kotlin_else_if_branches(tokens, reader)
+        return read(extension, tokens, reader, l_depth)
+    return track
+
+
+LizardExtension.__call__ = _track_kotlin_branches(LizardExtension.__call__)
+
+
 def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
     self.max_nesting_depth = 0

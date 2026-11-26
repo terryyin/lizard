@@ -363,6 +363,69 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
         return next(f.max_nesting_depth for f in result if f.name == name)
 
 
+class TestKotlinUnbracedBranchNestingDepth(unittest.TestCase):
+
+    def test_else_if_with_unbraced_nested_if_body(self):
+        for nested_body in ("return false", "{ return false }"):
+            with self.subTest(nested_body=nested_body):
+                source = f"""
+                fun refresh(offline: Boolean, cached: Boolean, stale: Boolean): Boolean {{
+                    if (offline) {{ return false }}
+                    else if (cached)
+                        if (stale) {nested_body}
+                    return true
+                }}
+                """
+                self.assertEqual(2, self.nesting_depth(source))
+
+    def test_unbraced_nested_if_level_does_not_enter_sibling_if(self):
+        source = """
+        fun refresh(offline: Boolean, cached: Boolean, stale: Boolean): Boolean {
+            if (offline) { return false }
+            else if (cached)
+                if (stale) return false
+            if (cached) { return true }
+            return false
+        }
+        """
+        self.assertEqual(2, self.nesting_depth(source))
+
+    def test_nested_sibling_has_its_own_depth(self):
+        for branch in ("if (stale) return 2", "{ if (stale) return 2 }"):
+            with self.subTest(branch=branch):
+                source = f"""
+                fun refresh(offline: Boolean, cached: Boolean, stale: Boolean, retry: Boolean): Int {{
+                    if (offline) {{ return 1 }}
+                    else if (cached) {branch}
+                    if (stale) {{ if (retry) {{ return 3 }} }}
+                    return 4
+                }}
+                """
+                self.assertEqual(2, self.nesting_depth(source))
+
+    def test_inner_else_if_keeps_its_containing_branch(self):
+        for left, right in (("", ""), ("{", "}")):
+            with self.subTest(braced=bool(left)):
+                source = f"""
+                fun refresh(a: Boolean, b: Boolean, c: Boolean, d: Boolean, e: Boolean): Int {{
+                    if (a) {{ return 1 }}
+                    else if (b) {left}
+                        if (c) return 2
+                        else if (d)
+                            if (e) {{ return 3 }}
+                    {right}
+                    return 4
+                }}
+                """
+                self.assertEqual(3, self.nesting_depth(source))
+
+    @staticmethod
+    def nesting_depth(source):
+        analyzer = FileAnalyzer(get_extensions(['nd']))
+        function, = analyzer.analyze_source_code('refresh.kt', source).function_list
+        return function.max_nesting_depth
+
+
 class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
     """A statement that ends at a line break closes its levels,
     as a statement that ends with ';' does."""
