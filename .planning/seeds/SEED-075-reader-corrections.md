@@ -6,7 +6,7 @@ planted: 2026-11-24
 
 # SEED-075 Reader corrections found in PR review
 
-Source review [SEED-074](SEED-074-process-prs-past-24h.md#process-prs-past-24h) at
+Source review [SEED-074](https://github.com/terryyin/lizard/blob/6f33c36786a1d85d49ca7b908964c512e6a64804/.planning/seeds/SEED-074-process-prs-past-24h.md#process-prs-past-24h) at
 frozen master `6ff51711d14d7aebca1d72690130fab6e1889fe8`.
 
 <a id="ruby-percent-literal-context"></a>

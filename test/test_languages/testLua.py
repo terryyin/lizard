@@ -245,6 +245,23 @@ end
             [('visit', 2, 6), ('sample', 7, 9)],
             [(f.name, f.start_line, f.end_line) for f in result])
 
+    def test_callback_call_to_an_outer_parameter_does_not_count_as_recursion(self):
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        result = analyzer.analyze_source_code('routes.lua', '''
+local function install(routes, check, handler)
+  prepare() if check(function() routes.main.handler
+      = function(request)
+        return handler(request)
+      end
+    end) then
+    return true
+  end
+end
+''')
+        self.assertEqual(
+            [0],
+            [f.cognitive_complexity for f in result.function_list if f.start_line == 4])
+
     def test_identifier_named_it_is_no_rspec_example(self):
         result = get_function_list('''
 local it = 1
