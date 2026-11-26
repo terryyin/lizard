@@ -125,10 +125,6 @@ class CppRValueRefStates(CodeStateMachine):
         self._set_state(self._r_value_ref, self._REFERENCE_SCAN_TOKENS)
         if not self._counts_and(token):
             return
-        if self._lambda is not None and self._lambda.in_return_type:
-            self._lambda.return_reference_pending = True
-            self._initializer_deduction = False
-            return
         if self._initializer_deduction is None:
             self._initializer_deduction = True
         # A stand-alone && can be a macro argument. An operator name is also separate.
@@ -182,7 +178,11 @@ class CppRValueRefStates(CodeStateMachine):
         if not header.in_group or token in self._LAMBDA_GROUP_TOKENS:
             adjustment = header.advance(token, self.last_token)
         self._state, self._events = header.resume
-        if self._events is None or token in self._events:
+        if token == "&&" and header.in_return_type and self._counts_and(token):
+            header.return_reference_pending = True
+            self._initializer_deduction = False
+            self._set_state(self._r_value_ref, self._REFERENCE_SCAN_TOKENS)
+        elif self._events is None or token in self._events:
             self._state(token)
         if adjustment is None:
             self._track_lambda(header)
