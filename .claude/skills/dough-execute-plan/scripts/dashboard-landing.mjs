@@ -9,17 +9,6 @@ import {
 } from "./dashboard-completion.mjs";
 import { clearFirstLandingExpectationForContext } from "./first-landing-expectation.mjs";
 const commit = /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/;
-// A launch with no story supplies a context naming no identity; its landing
-// is kept by its launch reference alone. A caller reads this before handing
-// such a context to this installation.
-export const acceptsLandingWithoutIdentity = true;
-
-// The launch label travels beside the context so it stays out of the
-// retained capture request, whose wire format is shared with older clients.
-export function sessionTitlePathBeside(contextFile) {
-  return path.join(path.dirname(contextFile), "session-title.json");
-}
-
 function validate(submission) {
   const allowed = new Set([
     "origin",

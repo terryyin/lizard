@@ -43,7 +43,7 @@ export function requireUnlistedWork(document, request) {
 // An entry whose link already spells its identity exactly names nothing
 // beyond that link, so an anchored home has nothing to confirm. An entry that
 // claims a name of its own must have that name in the canonical home the link
-// points at, read the same way adoption reads it — recorded there already, or,
+// points at, recorded there already or,
 // for an anchored story that has recorded nothing yet, composed from the
 // seed's own document ID and the story's anchor. This never asks the link path
 // itself to spell the identity: a home whose record matches while its own path

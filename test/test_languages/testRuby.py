@@ -741,6 +741,12 @@ class Test_Ruby_percent_literal(unittest.TestCase):
     def check_tokens(self, expect, source):
         self.assertEqual(expect, list(RubyReader.generate_tokens(source)))
 
+    def check_ccn(self, expect, source):
+        self.assertEqual(
+            expect,
+            [(f.name, f.cyclomatic_complexity)
+             for f in get_ruby_function_list(source)])
+
     def test_interpolation_in_a_literal_does_not_end_the_function(self):
         result = get_ruby_function_list(r'''
 class Store
@@ -794,6 +800,26 @@ end
             [('details', 2, 8, 1)],
             [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
              for f in result])
+
+    def test_modulo_before_a_decision_counts_the_decision(self):
+        for modulo in ('a%=2', 'a %= 2', 'a = a % 2', 'a%i==0'):
+            self.check_ccn(
+                [('f', 2)],
+                'def f(a, i); %s; if a==0 then a else 0 end; end' % modulo)
+
+    def test_any_punctuation_delimits_a_literal(self):
+        for delimiter in ('@', '#', '=', '^', '-'):
+            self.check_ccn(
+                [('f', 2), ('g', 1)],
+                'def f\n  value = %%q%s if fake end %s\n'
+                '  if real then 1 end\nend\ndef g\n  1\nend\n'
+                % (delimiter, delimiter))
+
+    def test_a_nested_pair_keeps_a_literal_opaque(self):
+        self.check_ccn(
+            [('f', 2), ('g', 1)],
+            'def f\n  value = %q{ if {fake} end }\n'
+            '  if real then 1 end\nend\ndef g\n  1\nend\n')
 
     def test_nested_pairs_and_interpolation_stay_in_the_literal(self):
         self.check_tokens([r'%r{/dp/#{a}\z}i'], r'%r{/dp/#{a}\z}i')

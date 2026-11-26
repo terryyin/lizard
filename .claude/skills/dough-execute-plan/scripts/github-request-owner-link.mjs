@@ -1,8 +1,7 @@
 // One process's private connection to the GitHub request owner of its host
 // and login, found by its record and started when none answers. Reads may
-// be asked again after a login change. An action requires the owner's
-// explicit capability and is never resent. Unreachable or incompatible
-// owners leave requests unanswered, never run through a fallback process.
+// be asked again after a login change. An action is never resent.
+// Unreachable or incompatible owners leave requests unanswered.
 import {
   EndpointBinding,
   standingRecord,
@@ -11,7 +10,6 @@ import {
   greeted,
   scopeOf,
   startOwnerProcess,
-  supportsWorkflowRerun,
 } from "./github-request-owner-endpoint-connection.mjs";
 import { send } from "./github-request-owner-wire.mjs";
 import {
@@ -155,13 +153,6 @@ export class OwnerLink {
       this.#connected(directory).then(
         (socket) => {
           if (signal.aborted) return;
-          if (
-            request.operation !== undefined &&
-            !supportsWorkflowRerun(socket)
-          ) {
-            settle({ refused: "operation-unavailable" });
-            return;
-          }
           this.#asked += 1;
           sent = { id: this.#asked, socket, owner: link.owner };
           link.waiting.set(sent.id, settle);
