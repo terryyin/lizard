@@ -18,12 +18,17 @@ _C_LINE_COMMENT = r"|\/\/(?:\\\n|[^\n])*"
 _ANGLE_CHANGE = {"<": 1, ">": -1}
 # The preprocessor can join a tilde to the following delimiter.
 _GROUP_CHANGE = {"(": 1, ")": -1, "~(": 1, "~)": -1, "[": 1, "]": -1, "~[": 1, "~]": -1}
+_EXPRESSION_OPERATORS = frozenset((
+    "+", "-", "*", "/", "%", "&", "|", "^", "&&", "||", "?", ":",
+    "==", "!=", "<=", ">=", "!", "and", "or", "bitand", "bitor", "xor", "not", "not_eq",
+))
 
 
 class _CppTemplateAngles:
     _template_group_depth = 0
     _at_template_argument = False
     _after_template_group = False
+    _in_grouped_expression = False
     _in_comparison_operand = False
     _template_braces = 0
     _grouped_angle = False
@@ -33,10 +38,12 @@ class _CppTemplateAngles:
             if token == "<":
                 # A parenthesized left operand cannot introduce another angle list.
                 self._at_template_argument = True
+                self._in_grouped_expression = True
                 self._in_comparison_operand = True
                 return False
             self._after_template_group = False
-            if token in ("&&", "||", "and", "or"):
+            if token in _EXPRESSION_OPERATORS:
+                self._in_grouped_expression = True
                 self._at_template_argument = True
                 return False
         if self._template_group_depth:
@@ -62,9 +69,11 @@ class _CppTemplateAngles:
             self.br_count += _ANGLE_CHANGE.get(token, 0)
             if self.br_count == 1 and token == ",":
                 self._in_comparison_operand = False
+                self._in_grouped_expression = False
             # A second '<' could be part of an ungrouped comparison.
             self._at_template_argument = (
-                token in ("<", "=", ",") and (self.br_count == 1 or self._in_comparison_operand))
+                (token in ("<", "=", ",") and (self.br_count == 1 or self._in_comparison_operand))
+                or (self._in_grouped_expression and self.br_count == 1 and token in _EXPRESSION_OPERATORS))
         if not self.br_count:
             self._reset_template_angles()
         return False
@@ -72,6 +81,7 @@ class _CppTemplateAngles:
     def _reset_template_angles(self):
         self._at_template_argument = False
         self._after_template_group = False
+        self._in_grouped_expression = False
         self._in_comparison_operand = False
         self._template_braces = 0
         self._grouped_angle = False
