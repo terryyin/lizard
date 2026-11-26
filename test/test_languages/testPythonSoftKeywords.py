@@ -281,3 +281,44 @@ def f(x):
 '''
         modified = self._get_funcs(code, NestDepth(), Modified())
         self.assertEqual(1, modified[0].cyclomatic_complexity)
+
+    def test_case_call_keeps_the_next_match_and_case_statements(self):
+        code = """\
+def classify(value, case):
+    match value:
+        case 1:
+            case(value)
+            match value:
+                case 2:
+                    return True
+        case _:
+            return False
+"""
+        for extensions, expected_ccn in (((), 4), (('modified',), 3)):
+            with self.subTest(extensions=extensions):
+                function, = self._get_funcs(code, *extensions)
+                self.assertEqual(expected_ccn, function.cyclomatic_complexity)
+
+    def test_wrapped_fstring_guard_keeps_case_operand_roles(self):
+        code = """\
+def classify(value):
+    match value:
+        case (1, item) if (
+            f"{item}" and item
+        ):
+            return item
+        case _:
+            return None
+"""
+        control, = self._get_funcs(code, 'ND')
+        function, = self._get_funcs(code.replace('item', 'case'), 'ND')
+        self.assertEqual(5, function.cyclomatic_complexity)
+        self.assertEqual(control.max_nesting_depth, function.max_nesting_depth)
+
+    def test_bare_case_expression_before_semicolon_is_an_identifier(self):
+        code = """\
+def keep_value(case):
+    case; return case
+"""
+        function, = self._get_funcs(code)
+        self.assertEqual(1, function.cyclomatic_complexity)
