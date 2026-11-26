@@ -119,7 +119,7 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
 
     def _state_colon(self, token):
         if token == ':':
-            self._begin_suite()
+            self.next(self._state_first_line)
         elif self.read_return_annotations and token == '->':
             self.ignore_indentation = True
             self.br_count = 0
@@ -148,13 +148,12 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
                     self.lambda_heads -= 1
                 else:
                     self.ignore_indentation = False
-                    self._begin_suite()
-
-    def _begin_suite(self):
-        self.inline_suite = self.supports_inline_suites
-        self.next(self._state_first_line)
+                    self.next(self._state_first_line)
 
     def _state_first_line(self, token):
+        self.inline_suite = (
+            self.supports_inline_suites and token != '\n' and
+            self.context.pending_function is self.context.current_function)
         if token.startswith('"""') or token.startswith("'" * 3):
             self.context.add_nloc(-token.count('\n') - (not self.inline_suite))
         self.next(self._state_global, token)

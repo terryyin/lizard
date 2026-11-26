@@ -63,7 +63,7 @@ def _source_tokens(source, pattern, token_class):
                 string = _read_string(source, match.end(), token.lower(), pattern)
                 if string is not None:
                     start, parts = string
-                    yield token_class(match) if token_class else token
+                    yield value
                     yield from parts
                     break
             if depth and token in ('def', 'class'):
@@ -84,11 +84,11 @@ def _mark_prefixed_strings(tokens):
         if prefix is not None:
             yield prefix
             prefix = None
-            if token[:1] in ('"', "'") and not isinstance(
+            if isinstance(token, str) and token[:1] in ('"', "'") and not isinstance(
                     token, (FStringExpressionToken, FStringLiteralToken, PrefixedStringToken)):
                 yield PrefixedStringToken(token)
                 continue
-        if (token.lower() in _STRING_PREFIXES and
+        if (isinstance(token, str) and token.lower() in _STRING_PREFIXES and
                 not isinstance(token, FStringExpressionToken)):
             prefix = token
         else:
