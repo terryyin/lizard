@@ -80,6 +80,106 @@ class TestPHPOperatorNestingDepth(unittest.TestCase):
         self.assertEqual(1, functions[0].max_nesting_depth)
 
 
+class TestPHPStrings(unittest.TestCase):
+
+    def test_quoted_multiline_strings(self):
+        for label in ("'NOTICE'", '"NOTICE"'):
+            with self.subTest(label=label):
+                source = '''<?php
+function adminNotice() {
+    return <<<LABEL
+        Show this warning if maintenance is active.
+        NOTICE;
+}
+function isAdmin($user) {
+    return $user->isAdmin();
+}
+'''.replace('LABEL', label)
+                functions = get_php_function_list(source)
+                self.assertEqual([('adminNotice', 2, 6, 1), ('isAdmin', 7, 9, 1)],
+                                 [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_nested_heredoc_delimiter(self):
+        for expression in ('<<<NOTICE\nMaintenance starts at midnight.\nNOTICE',
+                           '"Maintenance starts at midnight.\nNOTICE\nCheck the status page."'):
+            with self.subTest(expression=expression):
+                source = '''<?php
+function renderNotice($view) {
+    return <<<"NOTICE"
+{$view->render(EXPRESSION)}
+Check the status page if maintenance is active.
+NOTICE;
+}
+
+function isMaintenanceActive($status) {
+    return $status === 'maintenance';
+}
+'''.replace('EXPRESSION', expression)
+                functions = get_php_function_list(source)
+                self.assertEqual([('renderNotice', 2, 9, 1), ('isMaintenanceActive', 11, 13, 1)],
+                                 [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_heredoc_expressions(self):
+        for argument in ('"{$labels["https://example.org/status"]}"', '#[Template] fn() => "active"'):
+            with self.subTest(argument=argument):
+                source = '''<?php
+function renderNotice($view, $labels) {
+    return <<<NOTICE
+{$view->render(ARGUMENT)}
+Check the status page if maintenance is active.
+NOTICE;
+}
+
+function renderFallback() {
+    return <<<NOTICE
+Please contact support if the page is unavailable.
+NOTICE;
+}
+'''.replace('ARGUMENT', argument)
+                functions = get_php_function_list(source)
+                self.assertEqual([('renderNotice', 2, 7, 1), ('renderFallback', 9, 13, 1)],
+                                 [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                                  for f in functions])
+
+    def test_label_in_heredoc_text(self):
+        functions = get_php_function_list('''<?php
+function updateNotice($version) {
+    return <<<NOTICE
+        System NOTICE: if version $version is unsupported, contact support.
+        NOTICE;
+}
+''')
+        self.assertEqual([('updateNotice', 6, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_nowdoc_opener_in_string(self):
+        for literal in (
+            """`sed 's/REPORT/Preview/' <<<'REPORT'
+`""",
+            '''"Example: {$view->render("Use the <<<'REPORT'
+marker to start a nowdoc.")}"''',
+        ):
+            with self.subTest(literal=literal):
+                source = '''<?php
+function previewReport($view) {
+    return LITERAL;
+}
+
+function formatReport() {
+    return <<<REPORT
+Show the report if it is ready.
+REPORT;
+}
+'''.replace('LITERAL', literal)
+                self.assertIn(literal, list(PHPReader.generate_tokens(source)))
+                functions = get_php_function_list(source)
+                self.assertEqual([('previewReport', 2, 5, 1), ('formatReport', 7, 11, 1)],
+                                 [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                                  for f in functions])
+
+
 class Test_parser_for_PHP(unittest.TestCase):
 
     def test_closing_tag_in_string_preserves_later_methods(self):
