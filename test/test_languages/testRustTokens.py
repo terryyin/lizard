@@ -8,6 +8,53 @@ from .testRust import get_rust_function_list
 
 class TestRustTokens(unittest.TestCase):
 
+    def test_raw_byte_string_keeps_the_return_type_macro_boundary(self):
+        result = get_rust_function_list('''macro_rules! bytes {
+            ($tag:literal) => { [u8; $tag.len()] };
+        }
+
+        pub fn header() -> bytes!(br#"RIFF"#) {
+            *b"RIFF"
+        }
+
+        pub fn chunk_count() -> usize {
+            4
+        }
+        ''')
+        self.assertEqual(
+            [('header', 5, 7), ('chunk_count', 9, 11)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_raw_text_string_counts_as_one_token(self):
+        result = get_rust_function_list('''fn example_source() -> &'static str {
+            r#"fn greet() { println!("hello"); }"#
+        }
+        ''')
+        self.assertEqual(
+            [('example_source', 1, 3, 11, 1)],
+            [(f.name, f.start_line, f.end_line, f.token_count,
+              f.cyclomatic_complexity) for f in result])
+
+    def test_raw_c_prefix_does_not_hide_later_functions(self):
+        for source in (
+                r'''macro_rules! save { (cr # $text:literal #) => {}; }
+                fn first() {
+                    save!(cr#"a\"#b"#);
+                }
+                fn next() { let _ = "ok"; }
+                ''',
+                r'''macro_rules! save { ($raw:literal $text:literal) => {}; }
+                fn first() {
+                    save!(cr#"text"#r"a\"b");
+                }
+                fn next() { let _ = "ok"; }
+                '''):
+            with self.subTest(source=source):
+                result = get_rust_function_list(source)
+                self.assertEqual(
+                    [('first', 2, 4), ('next', 5, 5)],
+                    [(f.name, f.start_line, f.end_line) for f in result])
+
     def test_closure_without_parameters_is_one_token(self):
         # `||` of a closure without parameters is one token of the source,
         # and not a logical or.
