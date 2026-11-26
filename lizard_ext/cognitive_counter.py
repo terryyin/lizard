@@ -6,7 +6,8 @@ from weakref import WeakKeyDictionary
 from lizard_languages.javascript_expression import FunctionCallParen
 
 from .cognitive_profile import (
-    _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING, _is_word)
+    _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
+from .cognitive_profile import _is_word
 
 HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY = range(5)
 

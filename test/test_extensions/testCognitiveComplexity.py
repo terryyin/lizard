@@ -976,48 +976,6 @@ sub catch {
                 self.assertEqual(expected, cogc(filename, source))
 
 
-class TestJavaScriptNestedDeclarations(unittest.TestCase):
-
-    def test_object_method_does_not_call_surrounding_function(self):
-        self.assertEqual([0, 0], cogc("task.js", """
-            class Task {
-              run() {
-                return { run() { return startTask(); } };
-              }
-            }
-        """))
-
-    def test_typed_nested_function_does_not_call_surrounding_function(self):
-        self.assertEqual([0, 0], cogc("task.ts", """
-            function schedule() {
-              function schedule(): boolean { return true; }
-              return schedule;
-            }
-        """))
-
-    def test_recursive_property_value_keeps_its_increment(self):
-        self.assertEqual([2], cogc("task.js", """
-            function load(remaining) {
-              if (remaining <= 0) return {};
-              return { load: load(remaining - 1) };
-            }
-        """))
-
-    def test_recursive_ternary_call_in_class_field_keeps_its_increment(self):
-        functions = analyze("cache.js", """
-            function load(remaining) {
-              if (remaining <= 0) return 0;
-              return new class {
-                value = remaining > 0
-                  ? load(remaining - 1)
-                  : { fallback: 1 }.fallback
-              }().value;
-            }
-        """).function_list
-        enclosing = min(functions, key=lambda function: function.start_line)
-        self.assertEqual(3, enclosing.cognitive_complexity)
-
-
 class TestJavaScriptGroupedExpressions(unittest.TestCase):
     """The reader takes ``x = (`` as the possible start of an arrow function
     and discards that function when no ``=>`` follows.  The expression then
@@ -1131,6 +1089,48 @@ class TestJavaScriptGroupedExpressions(unittest.TestCase):
               const set = value => model.value = (value) && ready(value);  // +1
               return set;
             }"""))
+
+
+class TestJavaScriptNestedDeclarations(unittest.TestCase):
+
+    def test_object_method_does_not_call_surrounding_function(self):
+        self.assertEqual([0, 0], cogc("task.js", """
+            class Task {
+              run() {
+                return { run() { return startTask(); } };
+              }
+            }
+        """))
+
+    def test_typed_nested_function_does_not_call_surrounding_function(self):
+        self.assertEqual([0, 0], cogc("task.ts", """
+            function schedule() {
+              function schedule(): boolean { return true; }
+              return schedule;
+            }
+        """))
+
+    def test_recursive_property_value_keeps_its_increment(self):
+        self.assertEqual([2], cogc("task.js", """
+            function load(remaining) {
+              if (remaining <= 0) return {};
+              return { load: load(remaining - 1) };
+            }
+        """))
+
+    def test_recursive_ternary_call_in_class_field_keeps_its_increment(self):
+        functions = analyze("cache.js", """
+            function load(remaining) {
+              if (remaining <= 0) return 0;
+              return new class {
+                value = remaining > 0
+                  ? load(remaining - 1)
+                  : { fallback: 1 }.fallback
+              }().value;
+            }
+        """).function_list
+        enclosing = min(functions, key=lambda function: function.start_line)
+        self.assertEqual(3, enclosing.cognitive_complexity)
 
 
 class TestJavaScriptCallsInCaseBlocks(unittest.TestCase):
