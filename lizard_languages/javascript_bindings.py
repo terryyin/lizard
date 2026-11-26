@@ -31,6 +31,15 @@ class OptionalCallBinding(str):
         return reference
 
 
+def read_recursive_local_bindings(read_token):
+    def read(self, token, reader=None):
+        if self._recursive_local_pattern is not None:
+            self._read_recursive_local_pattern(token)
+        return read_token(self, token, reader)
+
+    return read
+
+
 class JavaScriptBindings:
     """Recognize defaults in binding patterns, excluding initializer expressions."""
 

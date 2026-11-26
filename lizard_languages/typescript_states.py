@@ -1,7 +1,7 @@
 """Shared JavaScript and TypeScript runtime state dispatch."""
 
 from .code_reader import CodeStateMachine
-from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
+from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin, read_recursive_local_bindings
 from .javascript_expression import JSXChildBrace, ends_expression
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
@@ -47,15 +47,11 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._open_groups = 0  # "(" of a group read as parameters
         self._in_condition = False  # Inside `if (...)` / `for (...)`
 
+    @read_recursive_local_bindings
     def __call__(self, token, reader=None):
         if self._binding_candidate:
             # Only named-formal readers need events for initializer dispatch.
             self._binding_candidate.read_token(token, report=False)
-        return self._dispatch_binding_token(token, reader)
-
-    def _dispatch_binding_token(self, token, reader):
-        if self._recursive_local_pattern is not None:
-            self._read_recursive_local_pattern(token)
         return CodeStateMachine.__call__(self, token, reader)
 
     def next(self, state, token=None):
