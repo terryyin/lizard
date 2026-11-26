@@ -3,7 +3,7 @@
 from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
 from .python_structure import PythonIndents, PythonStates, count_spaces
-from .python_tokens import FStringLiteralToken, PrefixedStringToken, \
+from .python_tokens import FStringExpressionToken, FStringLiteralToken, PrefixedStringToken, \
     generate_tokens as generate_python_tokens
 
 
@@ -75,7 +75,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
             self.context.add_condition()
 
         # --- Triple-quoted string comment suppression ---
-        if (token.startswith('"""') or token.startswith("'''")) and len(token) >= 6:
+        if (token.startswith('"""') or token.startswith("'''")) and len(token) >= 6 \
+                and not isinstance(token, FStringExpressionToken):
             # Check if this is likely a standalone comment (not a docstring)
             # Docstrings are handled separately in _state_first_line
             current_state = self.parallel_states[0]._state
