@@ -38,10 +38,8 @@ class LizardExtension(object):  # pylint: disable=R0903
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
-            loops = {'if', 'foreach', 'for', 'while', '&&', '||',
-                     '?', 'catch', 'case', 'try'}
-            if not _DEF_KEYWORD_LANGUAGES.isdisjoint(getattr(reader, 'language_names', ())):
-                loops.add('def')
+            loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
+                         '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
         if hasattr(reader, "indent_indicator"):
@@ -53,6 +51,9 @@ class LizardExtension(object):  # pylint: disable=R0903
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
         context = reader.context
+        if (not hasattr(reader, "loops") and
+                _DEF_KEYWORD_LANGUAGES.isdisjoint(getattr(reader, 'language_names', ()))):
+            loops.discard('def')
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
