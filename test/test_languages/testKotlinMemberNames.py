@@ -13,6 +13,32 @@ def kotlin_metrics(source_code):
                 "a.kt", source_code).function_list]
 
 
+class TestKotlinBranchNestingDepth(unittest.TestCase):
+
+    def test_braced_else_if_body_keeps_the_branch_level(self):
+        functions = FileAnalyzer(get_extensions(['nd'])).analyze_source_code(
+            'cache.kt', """
+        fun refresh(offline: Boolean, cached: Boolean, stale: Boolean): Boolean {
+            if (offline) { return false }
+            else if (cached) { if (stale) return false }
+            return true
+        }
+        fun recheck(offline: Boolean, cached: Boolean, stale: Boolean): Boolean {
+            if (offline) return false
+            else if (cached) { if (stale) return false }
+            return true
+        }
+        fun evaluate(offline: Boolean, cached: Boolean, stale: Boolean): Boolean {
+            if (offline) { return false }
+            else if (cached) return true
+            if (stale) { return false }
+            return true
+        }
+        """).function_list
+        self.assertEqual([('refresh', 2), ('recheck', 2), ('evaluate', 1)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
+
 class Test_Kotlin_keyword_as_the_name_of_a_member(unittest.TestCase):
     """`catch` and `finally` are soft keywords: after a member access they
     name a member, `flow.catch { }`. A hard keyword needs backticks."""
