@@ -124,6 +124,14 @@ When slice planning names an already-oversized suite as the only proof home and 
   - Evidence: plan 034 outside-in proof named `testCognitiveComplexity.py` (~1377 lines); conversation `708d604e-26b6-4ae7-94ff-9212fda6318d` refactor stop then human chose option 1; delivered extract `test/test_extensions/testCognitivePeerCommaEndsTernary.py` at `579fd508`
   - Observed effect: Slice 1 product/proof were accepted before commit; delivery paused until extract authorization; extract completed and increment published
   - Inference: The Jidoka stop matched the file-size rule; avoidable cost was the mid-delivery human decision that planning could have pre-settled
+- Execution: SEED-075#perl-word-operator-context
+  - Timestamp: unknown
+  - Tool: Cursor
+  - Model: auto
+  - Open Dough release: 0.3.114
+  - Evidence: plan 038 Current decisions allowed extending shared `mark_member_names` or a Perl-local wrap and settled only "no reader-file split"; implementation edited `lizard_languages/code_reader.py` (269 lines); conversation `89a21532-f79f-4cc8-900e-cda83a0a689d` refactor subagent `4b02ce7d-0671-4a00-9681-6e7785f4398d` returned `## REFACTOR JIDOKA STOP`; 2026-11-26 07:21-07:58 +08:00
+  - Observed effect: Production helper over 250 lines had no size decision; the refactor pass stopped, the coordinator settled keep-without-split from the plan's own helper-extension decision, and the pass resumed
+  - Inference: Same gap as above on a shared production file rather than a proof home; naming each alternative's target file size and keep-or-extract decision in the plan would have avoided one stop and resume round trip
 
 ## DD-491 — Black assumed as selective formatter, then `git checkout` wiped the slice
 
