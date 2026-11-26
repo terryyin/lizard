@@ -2,6 +2,7 @@
 This is an extension of lizard, that counts the 'Nesting Depth'
 in every function.
 """
+from lizard_languages.typescript import TypeScriptReader
 from lizard import FileInfoBuilder, FunctionInfo
 
 DEFAULT_ND_THRESHOLD = 7
@@ -27,6 +28,8 @@ class LizardExtension(object):  # pylint: disable=R0903
             default=DEFAULT_ND_THRESHOLD)
 
     def __call__(self, tokens, reader, l_depth=0):
+        if isinstance(reader, TypeScriptReader):
+            tokens = _record_logical_levels(tokens, reader.context)
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
@@ -103,8 +106,31 @@ class LizardExtension(object):  # pylint: disable=R0903
             yield token
             if (token in (':', '...')
                     and context.__dict__.get('js_object_property') == context.fileinfo.token_count):
-                l_depth = context.end_statement()
-                context.set_logical_operator_added(False)
+                l_depth = _end_object_property(context)
+
+
+def _record_logical_levels(tokens, context):
+    """Remember the pending levels that come from logical operators."""
+    for token in tokens:
+        if token in ('&&', '||'):
+            function = context.current_function
+            before = function.levels_awaiting_body
+            yield token
+            if function.levels_awaiting_body > before:
+                function.logical_levels.append(function.levels_awaiting_body)
+        else:
+            yield token
+
+
+def _end_object_property(context):
+    function = context.current_function
+    pending = function.logical_levels
+    count = sum(level <= function.levels_awaiting_body for level in pending)
+    pending.clear()
+    if count:
+        function.levels_awaiting_body -= count
+        function.logical_operator_added = False
+    return context.add_nd_condition(-count)
 
 
 class NDFileInfoAddition(FileInfoBuilder):
@@ -118,6 +144,7 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def reset_nd_complexity(self):
         self.current_function.nesting_depth = 0
+        self.current_function.logical_levels.clear()
         self.current_function.levels_awaiting_body = 0
         self.current_function.block_levels = []
         self.current_function.prev_was_else = False
@@ -125,7 +152,12 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def open_level(self):
         """A structure opens a level that its body will close."""
-        self.current_function.levels_awaiting_body += 1
+        function = self.current_function
+        pending = function.logical_levels
+        # A block or group can release these positions before another level opens.
+        while pending and pending[-1] > function.levels_awaiting_body:
+            pending.pop()
+        function.levels_awaiting_body += 1
         return self.add_nd_condition()
 
     def open_block(self):
@@ -141,6 +173,7 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def end_statement(self):
         """A statement ends the levels of a braceless body."""
+        self.current_function.logical_levels.clear()
         levels = self.current_function.levels_awaiting_body
         self.current_function.levels_awaiting_body = 0
         return self.add_nd_condition(-levels)
@@ -235,6 +268,7 @@ def patch_append_method(frm, accept_class, method_name):
 def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
     self.max_nesting_depth = 0
+    self.logical_levels = []
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
     self.in_condition = False  # Track if we're inside a condition
