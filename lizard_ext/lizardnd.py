@@ -47,9 +47,10 @@ class LizardExtension(object):  # pylint: disable=R0903
             indent_indicator = reader.indent_indicator
         else:
             indent_indicator = ';'
-        languages = getattr(reader, 'language_names', ())
-        keep_condition = not _EXPRESSION_BLOCK_LANGUAGES.isdisjoint(languages)
-        lambda_brace = _ConditionLambdaBrace('cpp' in languages) if keep_condition else None
+        keep_condition = not _EXPRESSION_BLOCK_LANGUAGES.isdisjoint(
+            getattr(reader, 'language_names', ()))
+        lambda_brace = (_ConditionLambdaBrace('cpp' in reader.language_names)
+                        if keep_condition else None)
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
