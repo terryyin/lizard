@@ -153,6 +153,15 @@ class _WordCandidate(str):
     """A word whose source boundaries allow it to be an operator."""
 
 
+class _OpeningGroup(str):
+    """An opening parenthesis with its preceding PHP code token."""
+
+    def __new__(cls, previous):
+        token = super().__new__(cls, '(')
+        token.php_leading_token = previous
+        return token
+
+
 class _AttributeStart(str):
     starts_attribute = True
 
@@ -255,10 +264,15 @@ class PHPReader(CodeReader, CCppCommentsMixin):
 
     def preprocess(self, tokens):
         keywords = (_STRUCTURE_KEYWORDS | _DECLARATION_KEYWORDS | self.control_flow_keywords
-                    | self.case_keywords | _WORD_OPERATORS.keys())
+                    | self.case_keywords | _WORD_OPERATORS.keys() | {'('})
         tokens = [token for token in tokens if not token.isspace() or token == '\n']
         for index in compress(range(len(tokens)), map(keywords.__contains__, tokens)):
             token = tokens[index]
+            if token == '(':
+                before = _adjacent_php_code(tokens, index, -1)
+                if before >= 0:
+                    tokens[index] = _OpeningGroup(tokens[before])
+                continue
             if token in _WORD_OPERATORS:
                 if isinstance(token, _WordCandidate) and not _is_operator_name(tokens, index):
                     tokens[index] = _WORD_OPERATORS[token]

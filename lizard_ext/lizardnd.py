@@ -49,8 +49,6 @@ class LizardExtension(object):  # pylint: disable=R0903
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
-        php = 'php' in getattr(reader, 'language_names', ())
-        previous_token = None
         context = reader.context
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
@@ -71,7 +69,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     context.clear_prev_was_else()
                 # Handle opening parenthesis - start of condition
                 elif token == '(':
-                    context.open_condition(previous_token)
+                    context.open_condition(getattr(token, 'php_leading_token', None))
                 # Handle closing parenthesis - end of condition
                 elif token == ')':
                     context.close_condition()
@@ -102,7 +100,6 @@ class LizardExtension(object):  # pylint: disable=R0903
             if l_depth < 0:
                 l_depth = 0
                 context.reset_nd_complexity()
-            previous_token = token if php else None
             yield token
 
 
