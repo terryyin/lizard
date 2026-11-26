@@ -3,8 +3,10 @@
 from .code_reader import CodeReader
 from .script_language import ScriptLanguageMixIn
 from .python_structure import PythonStates, count_spaces
-from .python_tokens import FStringExpressionToken, FStringLiteralToken, PrefixedStringToken, \
-    generate_tokens as generate_python_tokens
+from .python_tokens import (
+    ContinuedLineToken, FStringExpressionToken, FStringLiteralToken, PrefixedStringToken,
+    generate_tokens as generate_python_tokens,
+)
 
 
 class PythonReader(CodeReader, ScriptLanguageMixIn):
@@ -127,7 +129,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
         tokens_iter = iter(tokens)
         for token in tokens_iter:
             if token == '\n':
-                at_line_start = True
+                if not isinstance(token, (ContinuedLineToken, FStringExpressionToken)):
+                    at_line_start = True
                 yield token
             elif token.isspace():
                 yield token
@@ -201,8 +204,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                                      not states.ignore_indentation)):
                                 indents.set_nesting(current_leading_spaces, token)
                         reading_leading_space = False
-            else:
-                if states.inline_suite and not isinstance(token, FStringExpressionToken):
+            elif not isinstance(token, (ContinuedLineToken, FStringExpressionToken)):
+                if states.inline_suite:
                     states.end_inline_line()
                 reading_leading_space = True
                 current_leading_spaces = 0
