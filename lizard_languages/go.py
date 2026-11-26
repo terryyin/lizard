@@ -110,6 +110,8 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
             function = self.context.current_function
             function.add_to_long_name(' ,')
             function.full_parameters[-1] += ' ,'
+        elif token == ')' and not self.br_count:
+            self.context.current_function.explicit_parameter_slots = True
         elif token not in '()':
             self.context.parameter(token)
 
