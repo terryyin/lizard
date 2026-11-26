@@ -453,6 +453,29 @@ end
             [('f', 2, 6), ('g', 7, 9)],
             [(f.name, f.start_line, f.end_line) for f in result])
 
+    def test_if_and_while_can_follow_a_statement_on_the_same_line(self):
+        source = '''
+local function enable(account)
+  account:refresh() if account.active
+  then
+    account:enable()
+  end
+end
+
+local function drain(queue)
+  queue:refresh() while queue.pending
+  do
+    queue:drain()
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['nd', 'ns']))
+        result = analyzer.analyze_source_code('state.lua', source)
+        self.assertEqual(
+            [('enable', 2, 7, 1, 1), ('drain', 9, 14, 1, 1)],
+            [(f.name, f.start_line, f.end_line, f.max_nesting_depth, f.max_nested_structures)
+             for f in result.function_list])
+
     def test_nesting_across_lua_conditional_branches(self):
         source = '''
 local function nested(cache)
