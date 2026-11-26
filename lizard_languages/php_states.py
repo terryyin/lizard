@@ -197,6 +197,7 @@ class PHPLanguageStates(CodeStateMachine):
         elif token == ';':
             # Interface and abstract methods declare a signature without a body.
             self.fold_into_enclosing_function()
+            self.context.forgive = False
             self.started_function = False
             self._state = self._state_global
 
