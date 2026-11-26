@@ -2,7 +2,7 @@
 PHP function/class/match state machine.
 '''
 
-from .code_reader import CodeStateMachine
+from .code_reader import CodeStateMachine, MemberName
 
 MEMBER_ACCESS = frozenset(('->', '?->', '::'))
 _SKIPPED = frozenset(('fn', 'public', 'private', 'protected', 'static'))
@@ -22,6 +22,8 @@ class PHPLanguageStates(CodeStateMachine):
         self.in_class = False
         self.in_trait = False
         self.bracket_level = 0
+        self.attribute_bracket_level = 0
+        self.attribute_forgive = False
         self.brace_level = 0
         self.function_brace_level = 0
         self.started_function = False
@@ -33,8 +35,8 @@ class PHPLanguageStates(CodeStateMachine):
         self.match_case_count = 0
 
     def _state_global(self, token):
-        if token in _SKIPPED or (self.last_token in MEMBER_ACCESS
-                                 and token.isidentifier()):
+        if (token in _SKIPPED or isinstance(token, MemberName)
+                or (self.last_token in MEMBER_ACCESS and token.isidentifier())):
             # An arrow function (PHP 7.4+), a visibility modifier, or a
             # member, `User::class` or `$app->use()`, starts no statement.
             pass
@@ -165,7 +167,18 @@ class PHPLanguageStates(CodeStateMachine):
             self._state = self._function_args_continue
 
     def _function_args_continue(self, token):
-        if token == '(':
+        if token == '#' and getattr(token, 'starts_attribute', False):
+            # An attribute can contain its own closure and parameters.
+            self.attribute_forgive = self.context.forgive
+            self.context.forgive = False
+            self.context.push_new_function('')
+            # The tokenizer already counted the opening marker in the method.
+            attribute = self.context.current_function
+            attribute.nloc = 0
+            attribute.token_count = 0
+            self.attribute_bracket_level = 0
+            self._state = self._parameter_attribute
+        elif token == '(':
             self.bracket_level += 1
         elif token == ')':
             self.bracket_level -= 1
@@ -211,6 +224,16 @@ class PHPLanguageStates(CodeStateMachine):
                     self.context.end_of_function()
                     self.started_function = False
                 self._state = self._state_global
+
+    def _parameter_attribute(self, token):
+        if token == '[':
+            self.attribute_bracket_level += 1
+        elif token == ']':
+            self.attribute_bracket_level -= 1
+            if self.attribute_bracket_level == 0:
+                self.fold_into_enclosing_function()
+                self.context.forgive = self.attribute_forgive
+                self._state = self._function_args_continue
 
     def _condition_expected(self, token):
         if token == '(':
