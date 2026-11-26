@@ -61,6 +61,8 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
 
     def __init__(self, context, in_match_arms=False):
         super().__init__(context)
+        self._forgive_enclosing = (context.forgive
+                                   and context.current_function is not context.global_pseudo_function)
         self._in_match_arms = in_match_arms
         self._seen_match_arm = False
         self._match_subject_nesting = 0
@@ -83,6 +85,45 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
         if self._count_let_else(token):
             return
         super()._state_global(token)
+
+    def _function_name(self, token):
+        if token == '(':
+            # A bare function type has no name between `fn` and `(`.
+            self._fold_signature()
+            self.next(self._state_global, token)
+        else:
+            super()._function_name(token)
+
+    def _expect_function_impl(self, token):
+        if token == '{':
+            # Bracket depth guards semicolons. A brace still starts the body.
+            self.br_count = 0
+            super()._expect_function_impl(token)
+        elif token in ('[', '('):
+            self.br_count += 1
+        elif token in (']', ')') and self.br_count:
+            self.br_count -= 1
+        elif token[0] == '#' or (token[0] == '"' and self.last_token in ('r', 'br', 'cr')):
+            # The tokenizer can hide delimiters around raw strings. With
+            # an incomplete signature, keep looking for the body.
+            self.br_count = 0
+            self.next(super()._expect_function_impl)
+        elif token == ';' and not self.br_count:
+            self._fold_signature()
+            if not self._forgive_enclosing:
+                self.context.forgive = False
+            self.next(self._state_global)
+
+    def _fold_signature(self):
+        self.fold_into_enclosing_function()
+        # The enclosing scope already counted the opening `fn` token.
+        self.context.current_function.nloc -= 1
+        self.context.current_function.token_count -= 1
+
+    def _function_impl(self, token):
+        # A full function body consumes the pending forgiveness.
+        self._forgive_enclosing = False
+        super()._function_impl(token)
 
     def _count_let_else(self, token):
         """Count `let ... else`. The `else` of an `if` is not another condition.
