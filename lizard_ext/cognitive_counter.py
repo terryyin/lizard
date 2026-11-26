@@ -3,8 +3,6 @@
 from itertools import chain
 from weakref import WeakKeyDictionary
 
-from lizard_languages.php_states import MEMBER_ACCESS as _PHP_MEMBER_ACCESS
-
 from .cognitive_profile import (
     _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
 
@@ -94,7 +92,7 @@ class _Counter(object):  # pylint: disable=R0902
         self.function = None
         self.state = None
         self.line = None
-        self.php_methods_need_receiver = reader.language_names[0] == 'php'
+        self.php_member_access = profile.php_member_access
         self.openers = []       # (bracket, function) of each open bracket
         self.previous = None    # the token before this one
         self.previous_function = None   # and the function it arrived in
@@ -303,7 +301,9 @@ class _Counter(object):  # pylint: disable=R0902
         function = self.function
         # The reader may still be appending to the name (``A`` -> ``A::f``),
         # so it is compared on every candidate token.
-        if token in function.name and token == function.unqualified_name:
+        if (token in function.name and token == function.unqualified_name
+                and (not self.php_member_access or state.prev in self.php_member_access
+                     or '::' not in function.name)):
             if state.prev in _MEMBER_ACCESS:
                 calls = state.prev != '::' and state.prev2 in _SELF_REFERENCES
             else:
@@ -329,10 +329,7 @@ class _Counter(object):  # pylint: disable=R0902
         if state.pending_call:
             state.pending_call = False
             state.pending -= 1
-            if (token == '(' and not state.recursed
-                    and (not self.php_methods_need_receiver
-                         or state.prev2 in _PHP_MEMBER_ACCESS
-                         or '::' not in self.function.name)):
+            if token == '(' and not state.recursed:
                 state.recursed = True
                 self._fundamental()
         if state.pending_jump_line is not None:

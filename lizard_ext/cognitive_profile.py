@@ -2,6 +2,8 @@
 
 from copy import copy
 
+from lizard_languages.php_states import MEMBER_ACCESS as _PHP_MEMBER_ACCESS
+
 # The readers list the control-flow keywords that add cyclomatic complexity
 # (``control_flow_keywords``); this is what those words mean here.  A word
 # means the same in every language that has it, so a profile only adds what
@@ -73,6 +75,7 @@ class _Profile(object):  # pylint: disable=R0902,R0903
         profile = copy(self)
         for role, words in _ROLES.items():
             setattr(profile, role, getattr(self, role) | (known & words))
+        profile.php_member_access = _PHP_MEMBER_ACCESS if reader.language_names[0] == 'php' else ()
         return profile
 
 
