@@ -25,8 +25,19 @@ class TestCppNestingDepth(unittest.TestCase):
                          int count, int threshold, int limit) {
             return (enabled && cached && count < threshold, limit > (ready && fresh));
         }
+        struct State { bool ready; };
+        bool operator>(int* pending, State state) {
+            delete pending;
+            return state.ready;
+        }
+        bool checkAllocation(bool enabled, bool cached, bool ready, bool fresh,
+                             int count, int threshold) {
+            return (enabled && cached && count < threshold,
+                    new int > (State{ready && fresh}));
+        }
         """)
-        self.assertEqual([('allow', 0), ('accept', 2), ('acceptPair', 2), ('checkLimits', 1)],
+        self.assertEqual([('allow', 0), ('accept', 2), ('acceptPair', 2), ('checkLimits', 1),
+                          ('operator >', 0), ('checkAllocation', 1)],
                          [(f.name, f.max_nesting_depth) for f in functions])
 
     def test_grouped_comma_separates_logical_expressions(self):
