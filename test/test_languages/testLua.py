@@ -21,6 +21,17 @@ class Test_tokenizing_Lua(unittest.TestCase):
         self.check_tokens(['[[this is a string]]'], '[[this is a string]]')
         self.check_tokens(['[==[this is a string]==]'], '[==[this is a string]==]')
 
+    def test_custom_token_backreference_keeps_its_capture_number(self):
+        addition = r'|(\d+)-\1|\[[^\n]+?\]'
+        source = 'return 12-12, [=[first ]] line]=], [==[second]=] line]==]'
+
+        tokens = list(LuaReader.generate_tokens(source, addition))
+
+        self.assertEqual(
+            ['return', ' ', '12-12', ',', ' ', '[=[first ]] line]=]',
+             ',', ' ', '[==[second]=] line]==]'],
+            tokens)
+
     def test_comment(self):
         self.check_tokens(['a', ' ', '--this is a comment', '\n'], "a --this is a comment\n")
 
