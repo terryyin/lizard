@@ -6,6 +6,10 @@ from .javascript_expression import JSXChildBrace, ends_expression, starts_statem
 HEADED = frozenset(('if', 'for', 'while', 'with', 'switch', 'catch'))
 # Structures with their body directly after the word.
 UNHEADED = frozenset(('else', 'do', 'try', 'finally'))
+# These words cannot be the operand of prefix '!'.
+_STATEMENT_ONLY = HEADED | UNHEADED | {
+    'break', 'continue', 'return', 'throw', 'const', 'var',
+}
 OPENERS = frozenset(('(', '['))
 CLOSERS = frozenset((')', ']'))
 # Operators that can come after their operand: `count++`, `item!`.
@@ -71,6 +75,7 @@ class ImpliedSemicolons:
         body_starts = False     # a structure waits for its body
         label_starts = False    # the body may start with a label
         postfix = False         # the last "!", "++" or "--" is postfix
+        braced_assertion = False
         object_ended = False    # the last "}" closed an object literal
         loop_ended = False      # the ")" of "do … while (…)"
         found = False
@@ -100,8 +105,13 @@ class ImpliedSemicolons:
                                 token, line, last_line)
                         else:
                             found = (
-                                _expression_ended(
+                                (_expression_ended(
                                     previous, before_previous, postfix)
+                                 # A statement-only word confirms that `}!`
+                                 # ended a TypeScript expression.
+                                 or (previous == '!' and braced_assertion
+                                     and token in _STATEMENT_ONLY
+                                     and context.class_field_annotations))
                                 and starts_statement(token)
                                 and _starts_line(token, line, last_line))
                     if found:
@@ -149,6 +159,9 @@ class ImpliedSemicolons:
                         open_loops = 0
                         loop_ends = False
                     elif token in POSTFIX:
+                        braced_assertion = (
+                            token == '!' and line == last_line
+                            and (previous == '}' or previous == '!' and braced_assertion))
                         postfix = (
                             line == last_line
                             and _value_ended(
