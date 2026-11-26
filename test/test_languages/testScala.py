@@ -437,7 +437,7 @@ class TestScala(unittest.TestCase):
               def `set asScala`(s: Set[Int]): Int = s.size
             }
             ''')
-        self.assertEqual([("match", 4, 4), ("outer", 3, 6), ("set", 7, 7)],
+        self.assertEqual([("match", 4, 4), ("outer", 3, 6), ("set asScala", 7, 7)],
                          [(f.name, f.start_line, f.end_line)
                           for f in result])
 
@@ -662,3 +662,13 @@ class TestScala(unittest.TestCase):
         self.assertEqual([("first", 4, 1)],
                          [(f.name, f.end_line, f.cyclomatic_complexity)
                           for f in result])
+
+    def test_hash_in_a_backtick_name_keeps_the_next_method(self):
+        result = get_scala_function_list('''
+            object Requests {
+              def `request#42 keeps the default status`(): Int = 200
+              def timeout(): Int = 504
+            }
+            ''')
+        self.assertEqual([("request#42 keeps the default status", 3, 3), ("timeout", 4, 4)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
