@@ -27,6 +27,16 @@ class LizardExtension(object):  # pylint: disable=R0903
             dest="ND",
             default=DEFAULT_ND_THRESHOLD)
 
+    @staticmethod
+    def _open_logical_level(context, depth):
+        if not context.get_in_condition():
+            return context.open_level()
+        # A condition counts only its first logical operator.
+        if not context.get_logical_operator_added():
+            depth = context.open_level()
+            context.set_logical_operator_added(True)
+        return depth
+
     def __call__(self, tokens, reader, l_depth=0):
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
@@ -40,46 +50,32 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
-        js_branches = isinstance(implied_semicolons, ImpliedSemicolons)
-        if js_branches:
-            loops = loops.union(('do',))
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
-        if hasattr(reader, "indent_indicator"):
-            indent_indicator = reader.indent_indicator
-        else:
-            indent_indicator = ';'
+        indent_indicator = getattr(reader, 'indent_indicator', ';')
         # Most tokens cannot change the depth: one lookup skips them.
+        js_nesting = (JavaScriptNesting(reader.context, implied_semicolons)
+                      if isinstance(implied_semicolons, ImpliedSemicolons) else None)
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
         context = reader.context
-        js_statement_ended = False
         for token in tokens:
-            if js_statement_ended:
-                if not _continues_javascript_statement(token, implied_semicolons):
-                    context.close_javascript_branches()
-                js_statement_ended = False
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
                 context.clear_prev_was_else()
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
-                    if js_branches and not _continues_javascript_statement(token, implied_semicolons):
-                        context.close_javascript_branches()
-            if token in depth_tokens:
-                if (js_branches and token in ('if', 'else')
-                        and not getattr(token, 'is_member_name', False)):
-                    if token == 'if':
-                        l_depth = context.open_javascript_if()
-                    else:
-                        l_depth = context.open_javascript_else()
-                    yield token
-                    continue
+            if js_nesting and (implied_semicolons.before_token or js_nesting.body_ended
+                               or token in JS_BRANCH_BOUNDARIES):
+                js_nesting.read_boundary(token, implied_semicolons.before_token)
+
+            is_depth_token = token in depth_tokens
+            if (is_depth_token and js_nesting and token in ('if', 'else')
+                    and not getattr(token, 'is_member_name', False)):
+                l_depth = js_nesting.open_branch(token)
+            elif is_depth_token:
                 if token in block_ends:
-                    if js_branches:
-                        context.close_javascript_branches()
-                        js_statement_ended = implied_semicolons.closes_control_body
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:
                     context.clear_prev_was_else()
@@ -96,29 +92,13 @@ class LizardExtension(object):  # pylint: disable=R0903
                 elif token == ')':
                     context.close_condition()
 
-                # Handle logical operators && and || within conditions
                 elif token in ('&&', '||'):
-                    if context.get_in_condition():
-                        # Only add nesting depth for the first logical operator in a condition
-                        # Subsequent && or || operators in the same condition don't add depth
-                        if not context.get_logical_operator_added():
-                            l_depth = context.open_level()
-                            context.set_logical_operator_added(True)
-                    else:
-                        # Not in a condition, treat as regular nesting
-                        l_depth = context.open_level()
-
-                elif js_branches and token == 'do':
-                    if not getattr(token, 'is_member_name', False):
-                        context.start_do_body()
+                    l_depth = LizardExtension._open_logical_level(context, l_depth)
 
                 # Handle other loop keywords (if, for, while, etc.)
                 elif token in loops and token not in ('&&', '||') \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
-                    if (js_branches and token == 'while'
-                            and implied_semicolons.while_closes_do_body):
-                        context.end_do_body()
                     l_depth = context.open_level()
 
                 if token in block_starts:
@@ -126,18 +106,10 @@ class LizardExtension(object):  # pylint: disable=R0903
                 if token == indent_indicator and \
                         context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
-                    js_statement_ended = js_branches
             if l_depth < 0:
                 l_depth = 0
                 context.reset_nd_complexity()
             yield token
-
-
-def _continues_javascript_statement(token, finder):
-    if getattr(token, 'is_member_name', False):
-        return False
-    return (token in ('else', 'catch', 'finally')
-            or (token == 'while' and finder.while_closes_do_body))
 
 
 class NDFileInfoAddition(FileInfoBuilder):
@@ -177,54 +149,6 @@ class NDFileInfoAddition(FileInfoBuilder):
         levels = self.current_function.levels_awaiting_body
         self.current_function.levels_awaiting_body = keep_levels
         return self.add_nd_condition(keep_levels - levels)
-
-    def open_javascript_if(self):
-        function = self.current_function
-        if not hasattr(function, 'js_if_levels'):
-            function.js_if_levels = []
-        after_else = getattr(function, 'js_else_position', None)
-        continues_else = after_else == function.token_count - 1
-        outer_levels = function.levels_awaiting_body - continues_else
-        function.js_if_levels.append((len(function.block_levels), outer_levels))
-        return function.nesting_depth if continues_else else self.open_level()
-
-    def open_javascript_else(self):
-        """An else uses its if's level and releases any intervening levels."""
-        function = self.current_function
-        branches = getattr(function, 'js_if_levels', ())
-        if not branches or branches[-1][0] != len(function.block_levels):
-            return function.nesting_depth
-        _, outer_levels = branches.pop()
-        function.js_else_position = function.token_count
-        return self.end_statement(outer_levels + 1)
-
-    def close_javascript_branches(self):
-        """Discard unmatched ifs whose scope or statement has ended."""
-        function = self.current_function
-        branches = getattr(function, 'js_if_levels', ())
-        if branches:
-            scope = len(function.block_levels)
-            while branches and branches[-1][0] >= scope:
-                branches.pop()
-
-    def start_do_body(self):
-        """Remember the enclosing levels before reading a JS do body."""
-        function = self.current_function
-        if not hasattr(function, 'do_body_levels'):
-            function.do_body_levels = []
-        branches = getattr(function, 'js_if_levels', ())
-        function.do_body_levels.append((function.levels_awaiting_body, len(branches)))
-
-    def end_do_body(self):
-        """The trailing while counts the loop outside its completed body."""
-        function = self.current_function
-        levels = getattr(function, 'do_body_levels', ())
-        if levels:
-            enclosing, branch_count = levels.pop()
-            self.end_statement(enclosing)
-            branches = getattr(function, 'js_if_levels', None)
-            if branches:
-                del branches[branch_count:]
 
     def set_in_condition(self, in_condition):
         self.current_function.in_condition = in_condition
@@ -296,6 +220,84 @@ def get_method(cls, name):
     if hasattr(method, "__func__"):
         method = method.__func__
     return method
+
+
+JS_BRANCH_BOUNDARIES = frozenset((';', '}', 'do', 'while'))
+
+
+class JavaScriptNesting:
+    """If and do branches keep the levels of the statements around them."""
+
+    def __init__(self, context, finder):
+        self.context = context
+        self.finder = finder
+        self.body_ended = False
+
+    def read_boundary(self, token, implied_end):
+        while_tail = token == 'while' and self.finder.while_closes_do_body
+        if self.body_ended or (implied_end and self.context.get_condition_depth() == 0):
+            if not (token in ('else', 'catch', 'finally') or while_tail) or getattr(token, 'is_member_name', False):
+                self._close_branches()
+            self.body_ended = False
+        if token == '}':
+            self._close_branches()
+            self.body_ended = self.finder.closes_control_body
+        elif token == ';':
+            self.body_ended = self.context.get_condition_depth() == 0
+        elif not getattr(token, 'is_member_name', False):
+            if token == 'do':
+                self._start_do()
+            elif while_tail:
+                self._end_do()
+
+    def open_branch(self, token):
+        if token == 'if':
+            return self._open_if()
+        return self._open_else()
+
+    def _open_if(self):
+        function = self.context.current_function
+        if not hasattr(function, 'js_if_levels'):
+            function.js_if_levels = []
+        # An immediate if continues at the level already opened by else.
+        continues_else = getattr(function, 'js_else_position', None) == function.token_count - 1
+        outer_levels = function.levels_awaiting_body - continues_else
+        function.js_if_levels.append((len(function.block_levels), outer_levels))
+        return function.nesting_depth if continues_else else self.context.open_level()
+
+    def _open_else(self):
+        function = self.context.current_function
+        branches = getattr(function, 'js_if_levels', ())
+        if not branches or branches[-1][0] != len(function.block_levels):
+            return function.nesting_depth
+        _, outer_levels = branches.pop()
+        function.js_else_position = function.token_count
+        return self.context.end_statement(outer_levels + 1)
+
+    def _close_branches(self):
+        function = self.context.current_function
+        branches = getattr(function, 'js_if_levels', ())
+        if branches:
+            scope = len(function.block_levels)
+            while branches and branches[-1][0] >= scope:
+                branches.pop()
+
+    def _start_do(self):
+        function = self.context.current_function
+        if not hasattr(function, 'do_body_levels'):
+            function.do_body_levels = []
+        branches = getattr(function, 'js_if_levels', ())
+        function.do_body_levels.append((function.levels_awaiting_body, len(branches)))
+
+    def _end_do(self):
+        function = self.context.current_function
+        levels = getattr(function, 'do_body_levels', ())
+        if levels:
+            enclosing, branch_count = levels.pop()
+            self.context.end_statement(enclosing)
+            branches = getattr(function, 'js_if_levels', None)
+            if branches:
+                del branches[branch_count:]
 
 
 def patch(frm, accept_class):
