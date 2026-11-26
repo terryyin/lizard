@@ -376,7 +376,8 @@ def _svelte_script_blocks(source, end_pattern):
 
     # An unfinished expression must not hide later script blocks.
     start = match.start()
-    for tag_start, code_start, end in vue._find_script_blocks(source[start:], end_pattern):
+    for tag_start, code_start, end in vue._find_component_scripts(
+            source[start:], end_pattern, template_v_pre=False):
         yield start + tag_start, start + code_start, start + end
 
 
@@ -735,7 +736,6 @@ class SvelteReader(VueReader):
 
     ext = ['svelte']
     language_names = ['svelte']
-    _template_v_pre = False
 
     def implied_semicolons(self, tokens):
         """As TypeScriptReader.implied_semicolons, with script ends ending
