@@ -124,9 +124,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                         return
                 if token != ':':
                     if token == '?' or not self.as_object:
+                        if token == 'case':
+                            self._binding_case_depth = self._ternary_depth + 1
                         self._ternary_depth += 1
                 elif self._ternary_depth or (
                         self.last_tokens == 'default' and not self.as_object):
+                    self._case_body_start = not self.as_object and (
+                        self.last_tokens == 'default' or self._ternary_depth == self._binding_case_depth)
+                    if self._case_body_start:
+                        self._binding_case_depth = None
                     # Runtime colons must not swallow a following function type.
                     if self.last_tokens != 'default':
                         if (self._expression_body and self._ternary_depth
@@ -326,8 +332,11 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
 
     def _at_function_declaration_start(self):
         return (self._prev_token in ('', ';', '{', '}')
+                or self._prev_token == ':' and self._case_body_start
                 or self.context.newline and ends_expression(self._prev_token))
 
+    _binding_case_depth = None
+    _case_body_start = False
     recursive_statement_scope = None
 
     def _expecting_statement_or_block(self, token, shadows=None):
