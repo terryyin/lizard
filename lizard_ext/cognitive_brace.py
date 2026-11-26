@@ -6,6 +6,10 @@ from .cognitive_counter import (
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 
 
+# A question mark can be a Scala operator or a type wildcard.
+_SCALA_EXPRESSION_BREAKERS = _EXPRESSION_BREAKERS - {'?'}
+
+
 class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     """Nesting from braces, parentheses and semicolons (C-like languages).
 
@@ -21,6 +25,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         self.actions = self._keyword_actions(profile)
         if not profile.nesting:
             self._process = self._process_flat
+        self.expression_breakers = (_SCALA_EXPRESSION_BREAKERS if reader.language_names[0] == 'scala'
+                                    else _EXPRESSION_BREAKERS)
 
     def _process(self, token):  # pylint: disable=E0202
         if token == '?' and getattr(token, 'is_optional', False):
@@ -49,7 +55,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                     state.pending_logical_word = False
                 return
             self._logical_operator(token)
-        elif token in _EXPRESSION_BREAKERS:
+        elif token in self.expression_breakers:
             state.logical.pop(state.pdepth, None)
             if token == ',':
                 self._pop_expression_frames(peer_comma=True)
