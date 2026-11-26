@@ -65,10 +65,14 @@ class TypeScriptDeclarationsMixin:
                         phase[0] = 1
                     else:
                         self.last_tokens = 'type'
+                        runtime = t == '=>' or (
+                            t in ('(', '`') and (
+                                self._expression_body or self._prev_token == 'return'))
+                        if runtime:
+                            self._prev_token = 'type'
                         self.next(self._state_global)
                         self._state_global(t)
-                        # Keep the state entered by the runtime token.
-                        return False
+                        return not runtime
                 elif phase[0] == 1:
                     if t == '<':
                         generic_depth[0] = 1
