@@ -16,9 +16,9 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
     """
 
     def __init__(self, reader, profile, gated):
-        self.track_ternary_arms = reader.language_names[0] in ('cpp', 'objectivec')
         super(_BraceCounter, self).__init__(reader, profile, gated)
         self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
+        self.track_ternary_arms = reader.language_names[0] in ('cpp', 'objectivec')
         self.actions = self._keyword_actions(profile)
         if not profile.nesting:
             self._process = self._process_flat
