@@ -13,6 +13,8 @@ __all__ = (
 
 
 class JavaScriptFunctionsMixin:
+    _generic_async_parameters = False
+
     def _read_parenthesis_group(self):
         """Only possible signatures need provisional binding frames."""
         if parameter_group(self._prev_token):
@@ -118,6 +120,10 @@ class JavaScriptFunctionsMixin:
 
     def _arrow_function(self, token):
         self._push_arrow_function()
+        if self.started_function:
+            self.context.current_function.javascript_generic_async_arrow = (
+                self._generic_async_parameters)
+        self._generic_async_parameters = False
         arrow_line = getattr(self, '_arrow_line', None)
         if (arrow_line is not None and self.started_function
                 and self.context.current_function):

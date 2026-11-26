@@ -107,6 +107,9 @@ class JavaScriptObjectsMixin:
                 self._consume_generic_type_params()
             return True
         elif token == '(':
+            # The member reader keeps 'async' across the type parameters.
+            self._generic_async_parameters = (
+                self.last_token == '>' and self._prev_token == 'async')
             # Check if this is a method call (previous token was . or new)
             if self._prev_token == '.' or self._prev_token == 'new':
                 # Method call inside object — use its group reader so
@@ -188,6 +191,9 @@ class JavaScriptObjectsMixin:
             return False
         if self.context.newline and (
                 previous == '!' or previous[0].isalpha() or previous[0] in '_$'):
+            if (previous == 'await' and self._prev_token == 'await'
+                    and getattr(self.context.current_function, 'javascript_generic_async_arrow', False)):
+                return True
             # A "{" that starts a line after a word or a '!' is almost always
             # a block: `return`, `x!`, `[1] as const`, `factory.of`.  An
             # object there, `export default` + line break + `{`, keeps its
