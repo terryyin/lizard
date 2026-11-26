@@ -32,6 +32,16 @@ class Test_tokenizing_Lua(unittest.TestCase):
              ',', ' ', '[==[second]=] line]==]'],
             tokens)
 
+    def test_verbose_custom_tokens_preserve_a_shebang(self):
+        addition = r'(?x)| ([0-9]+) - \1'
+        script = '#!/usr/bin/env lua\nreturn 12-12\n'
+        expected = ['#!/usr/bin/env lua', '\n', 'return', ' ', '12-12', '\n']
+
+        self.assertEqual(expected, list(LuaReader.generate_tokens(script, addition)))
+        self.assertEqual(
+            ['\ufeff'] + expected,
+            list(LuaReader.generate_tokens('\ufeff' + script, addition)))
+
     def test_comment(self):
         self.check_tokens(['a', ' ', '--this is a comment', '\n'], "a --this is a comment\n")
 

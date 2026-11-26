@@ -23,7 +23,7 @@ class LuaReader(RubylikeReader):
         # Lua can start with a hash line for the interpreter. Elsewhere,
         # a hash is the length operator.
         if source_code.startswith(("#", "\ufeff#")):
-            addition = r"|(?:\A|(?<=\A\ufeff))#[^\n]*" + addition
+            addition = r"|(?:\A|(?<=\A\ufeff))\#[^\n]*" + addition
         pattern = compiled_token_pattern(
             lua_patterns +
             r"|\-\-.*?$" +
