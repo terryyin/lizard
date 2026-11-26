@@ -10,6 +10,29 @@ def get_cpp_with_nestdepth(source):
 
 class TestCppNestingDepth(unittest.TestCase):
 
+    def test_condition_lambda_keeps_its_declarator_until_the_body(self):
+        functions = get_cpp_with_nestdepth("""
+        #include <utility>
+        bool equalPlan(bool online, bool ready, bool cached, bool fresh) {
+            if (online && ready == [=] { return cached && fresh; }()) return true;
+            return false;
+        }
+        bool choosePlan(bool online, bool cached, bool fresh) {
+            if (online && [=]() -> std::pair<bool, bool> {
+                return {cached && fresh, false};
+            }().first) return true;
+            return false;
+        }
+        bool constrainedPlan(bool online, bool cached, bool fresh) {
+            if (online && [=]<class T>(T ready) requires requires { bool(ready); } {
+                return bool(ready) && cached && fresh;
+            }(true)) return true;
+            return false;
+        }
+        """)
+        self.assertEqual([('equalPlan', 3), ('choosePlan', 3), ('constrainedPlan', 3)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
     def test_cpp_condition_lambda_starts_a_separate_statement_scope(self):
         functions = get_cpp_with_nestdepth("""
         template<class Check> bool verify(Check check) { return check(); }
