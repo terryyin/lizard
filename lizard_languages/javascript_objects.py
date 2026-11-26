@@ -183,9 +183,9 @@ class JavaScriptObjectsMixin:
             # A value, `{ a: {`, but in a block, `finally { label: {`.
             return self.holds_members
         if previous == '/':
-            # The end of a regular expression can be a token of its own,
-            # `"" + /a/` + line break + `{`.  Nothing divides by an object.
-            return False
+            # Division can take an object operand on the same line. After
+            # a line break, the slash can also close a split regex literal.
+            return not self.context.newline
         if self.context.newline and (
                 previous == '!' or previous[0].isalpha() or previous[0] in '_$'):
             # A "{" that starts a line after a word or a '!' is almost always
