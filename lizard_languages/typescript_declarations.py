@@ -19,7 +19,8 @@ _AMBIENT_BLOCKS = frozenset(('class', 'namespace', 'module', 'global'))
 
 class TypeScriptDeclarationsMixin:
     def _handle_type_declaration(self, token):
-        if self._ts_declare and self.context.class_field_annotations and not self.context.newline:
+        if (self._ts_declare and not self.as_class
+                and self.context.class_field_annotations and not self.context.newline):
             if token == 'abstract':
                 return True
             if token in _AMBIENT_BLOCKS:
