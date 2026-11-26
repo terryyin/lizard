@@ -32,11 +32,11 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             return
         state = self.state
         if (self.profile.nested_functions and self.line != state.line
-                and (token in ('?', ':') or state.prev in ('?', ':'))):
+                and self._conditional_continues(token)):
             state.line = self.line
         line = self.line
         if line != state.line:
-            self._new_line(line, token)
+            self._new_line(line)
         if state.pending:
             self._resolve_pending(token)
         if _is_word(token):
@@ -83,7 +83,15 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
 
     # -- statement boundaries ---------------------------------------------------
 
-    def _new_line(self, line, token):
+    def _conditional_continues(self, token):
+        state = self.state
+        if token in ('?', ':') or state.prev in ('?', ':'):
+            return True
+        return (bool(state.frames) and state.frames[-1].kind == 'ternary'
+                and (token in _JS_INFIX_CONTINUATIONS
+                     or state.prev in _JS_INFIX_CONTINUATIONS))
+
+    def _new_line(self, line):
         state = self.state
         state.line = line
         if not self.profile.newline_ends_statement or state.pdepth or \
@@ -91,10 +99,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             return
         if state.frames and not state.frames[-1].closing:
             top = state.frames[-1]
-            if (self.profile.nested_functions and top.kind == 'ternary'
-                    and (token in _JS_INFIX_CONTINUATIONS
-                         or state.prev in _JS_INFIX_CONTINUATIONS)):
-                return
             if top.phase == BODY and not top.braced:
                 self._statement_end()
 
