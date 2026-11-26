@@ -581,31 +581,6 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """, "a.ts"))
 
-    def test_generic_call_keeps_nested_logical_argument_depth_in_property(self):
-        cases = ('', '<number, string>', '<number, Box<string>>')
-        for type_arguments in cases:
-            with self.subTest(type_arguments=type_arguments):
-                source = f"""
-                function pack(a: string, b: string) {{
-                  return {{ a: a || format{type_arguments}(0, b || "b") }};
-                }}
-                """
-                analyzer = FileAnalyzer(get_extensions([NestDepth()]))
-                functions = analyzer.analyze_source_code("a.ts", source).function_list
-
-                self.assertEqual([('pack', 2)], [(f.name, f.max_nesting_depth) for f in functions])
-
-    def test_comparison_before_a_sibling_property_with_greater_than(self):
-        source = """
-        function compare(a: number, b: number, c: number, d: number) {
-          return { lower: a < b && "low", higher: c > (d) && "high" };
-        }
-        """
-        analyzer = FileAnalyzer(get_extensions([NestDepth()]))
-        functions = analyzer.analyze_source_code("a.ts", source).function_list
-
-        self.assertEqual([('compare', 2)], [(f.name, f.max_nesting_depth) for f in functions])
-
     def test_object_literals_stay_in_their_statement(self):
         self.assertEqual(2, self.nesting_depth("""
         function flags(user, post) {
@@ -646,6 +621,31 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
           return false;
         }
         """, "a.ts"))
+
+    def test_generic_call_keeps_nested_logical_argument_depth_in_property(self):
+        cases = ('', '<number, string>', '<number, Box<string>>')
+        for type_arguments in cases:
+            with self.subTest(type_arguments=type_arguments):
+                source = f"""
+                function pack(a: string, b: string) {{
+                  return {{ a: a || format{type_arguments}(0, b || "b") }};
+                }}
+                """
+                analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+                functions = analyzer.analyze_source_code("a.ts", source).function_list
+
+                self.assertEqual([('pack', 2)], [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_comparison_before_a_sibling_property_with_greater_than(self):
+        source = """
+        function compare(a: number, b: number, c: number, d: number) {
+          return { lower: a < b && "low", higher: c > (d) && "high" };
+        }
+        """
+        analyzer = FileAnalyzer(get_extensions([NestDepth()]))
+        functions = analyzer.analyze_source_code("a.ts", source).function_list
+
+        self.assertEqual([('compare', 2)], [(f.name, f.max_nesting_depth) for f in functions])
 
     def test_tsx_generic_return_type(self):
         self.assertEqual(1, self.nesting_depth("""
