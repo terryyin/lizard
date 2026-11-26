@@ -365,6 +365,55 @@ class TestRustTokens(unittest.TestCase):
                     [('choose', 2)],
                     [(f.name, f.cyclomatic_complexity) for f in result])
 
+    def test_feature_selected_quote_alias_preserves_executable_metrics(self):
+        evaluate = '''#[cfg(feature = "proc-macro")]
+        use evaluate as render;
+        '''
+        interpolate = '''#[cfg(not(feature = "proc-macro"))]
+        use quote::quote as render;
+        '''
+        calls = '''
+        #[cfg(feature = "proc-macro")]
+        fn choose(flag: bool) -> usize {
+            render!(if flag { 1 } else { 0 })
+        }
+
+        #[cfg(not(feature = "proc-macro"))]
+        fn emit(value: proc_macro2::TokenStream) -> proc_macro2::TokenStream {
+            render! { #value }
+        }
+        '''
+        analyzer = FileAnalyzer(get_extensions(['ND', 'cognitive']))
+        for items in ((evaluate, interpolate, calls), (interpolate, evaluate, calls),
+                      (interpolate, calls, evaluate)):
+            with self.subTest(items=items):
+                source = 'macro_rules! evaluate { ($value:expr) => { $value }; }\n' + ''.join(items)
+                functions = analyzer.analyze_source_code('feature_alias.rs', source).function_list
+                self.assertEqual(
+                    [('choose', 2, 1, 2), ('emit', 1, 0, 0)],
+                    [(f.name, f.cyclomatic_complexity, f.max_nesting_depth,
+                      f.cognitive_complexity) for f in functions])
+
+    def test_quote_import_after_the_call_is_visible(self):
+        result = get_rust_function_list('''use proc_macro2::TokenStream;
+
+        fn emit(value: TokenStream) -> TokenStream {
+            quote! { #value fn generated() {} }
+        }
+
+        fn choose(flag: bool) -> usize {
+            macro_rules! evaluate { ($body:expr) => { $body }; }
+            use evaluate as quote;
+            quote!(if flag { 1 } else { 0 })
+        }
+
+        use quote::quote;
+        ''')
+        self.assertEqual(
+            [('emit', 3, 5, 1), ('choose', 7, 11, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
     def test_quote_reexport_keeps_function_delimiters(self):
         result = get_rust_function_list('''mod reexport {
             pub(crate) use quote::quote;
