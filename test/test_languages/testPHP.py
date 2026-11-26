@@ -252,6 +252,19 @@ class Store {
         self.assertNotIn('$candidate', method.long_name)
         self.assertEqual(6, method.nloc)
 
+    def test_parameter_attribute_forgive_does_not_hide_method(self):
+        functions = get_php_function_list("""<?php
+class Store {
+    public function set(
+        #[Validate(static function (string $candidate): bool {
+            // #lizard forgive
+            return $candidate !== '';
+        })] string $name
+    ): void {}
+}
+""")
+        self.assertEqual(['Store::set'], [f.name for f in functions])
+
     def test_attribute_markers_in_nowdoc_stay_text(self):
         functions = get_php_function_list("""<?php
 function sample(): string {
