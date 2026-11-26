@@ -1,4 +1,5 @@
 import unittest
+from lizard import analyze_file
 from lizard_languages import CLikeReader
 from ..testHelpers import get_cpp_fileinfo, get_cpp_function_list
 
@@ -362,6 +363,78 @@ unsigned capacity_mask() { return mask; }
         self.assertEqual(
             [("table::capacity_mask", 5, 5)],
             [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_parameters_after_shift_operand_comparison(self):
+        cpp = """constexpr unsigned bits = 4;
+constexpr unsigned shift(bool small) { return small ? 1 : 2; }
+constexpr bool fits = ((bits << shift(bits < 8)) >> 1) > 7;
+int result(int yes, int no) { return fits ? yes : no; }
+int later(int value) { return value; }
+"""
+        c = """enum { bits = 4, fits = ((bits << sizeof(bits < 8)) >> 1) > 7 };
+int result(int yes, int no) { return fits ? yes : no; }
+int later(int value) { return value; }
+"""
+        for filename, source, expected in (
+                ("table.cpp", cpp, [("shift", 1), ("result", 2), ("later", 1)]),
+                ("table.c", c, [("result", 2), ("later", 1)])):
+            with self.subTest(filename=filename):
+                result = analyze_file.analyze_source_code(filename, source)
+                self.assertEqual(expected, [(fn.name, fn.parameter_count) for fn in result.function_list])
+
+    def test_no_function_for_braced_shift_operand(self):
+        cpp = """constexpr unsigned width = 4;
+constexpr auto mask = (width << decltype(width){2}) >> 1;
+unsigned capacity() { return mask; }
+"""
+        c = """enum { BASE = 2, MASK = (BASE << sizeof (char[]){ 'a', 'b' }) >> 1 };
+int mask(void) { return MASK; }
+"""
+        for filename, source, expected in (
+                ("table.cpp", cpp, [("capacity", 3, 3)]),
+                ("table.c", c, [("mask", 2, 2)])):
+            with self.subTest(filename=filename):
+                result = analyze_file.analyze_source_code(filename, source)
+                self.assertEqual(
+                    expected, [(fn.name, fn.start_line, fn.end_line) for fn in result.function_list])
+
+    def test_parameters_after_parenthesized_shift_operand(self):
+        source = """constexpr unsigned width = 4;
+constexpr unsigned mask = width << (1 + 2), guard = 7;
+unsigned capacity(unsigned count) { return count & mask & guard; }
+"""
+
+        result = get_cpp_function_list(source)
+
+        self.assertEqual([("capacity", 1)], [(fn.name, fn.parameter_count) for fn in result])
+
+    def test_no_function_for_braced_initializer_after_shift(self):
+        cpp = """constexpr unsigned width = 4, mask = width << 3;
+constexpr unsigned count = decltype(width){2} + (16 >> 1);
+unsigned capacity() { return mask + count; }
+"""
+        c = """enum { WIDTH = 4, MASK = WIDTH << 3 };
+unsigned count = sizeof (char[]){ 'a', 'b' } + (16 >> 1);
+unsigned capacity(void) { return MASK + count; }
+"""
+        for filename, source in (("table.cpp", cpp), ("table.c", c)):
+            with self.subTest(filename=filename):
+                result = analyze_file.analyze_source_code(filename, source).function_list
+
+                self.assertEqual(
+                    [("capacity", 3, 3)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_nested_template_return_after_leading_requires(self):
+        source = """template<class T> struct ParseError {};
+template<class T, class Error> struct Result {};
+template<class T> requires(true)
+Result<T, ParseError<T>> parse(T value) { return {}; }
+"""
+
+        result = get_cpp_function_list(source)
+
+        self.assertEqual([("parse", 1)], [(fn.name, fn.parameter_count) for fn in result])
 
     def test_template_argument_starting_with_lambda_digraph(self):
         source = """template <auto F>
