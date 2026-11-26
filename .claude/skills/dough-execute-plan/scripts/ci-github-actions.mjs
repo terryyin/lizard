@@ -5,7 +5,6 @@
 import { GitHubRequests } from "./github-requests.mjs";
 import { GhFailure } from "./github-request-answer.mjs";
 import { ownerFailureText } from "./github-request-owner-failure.mjs";
-import { labelledArchive } from "./github-request-owner-wire.mjs";
 import { readCiConfiguration } from "./ci-project-configuration.mjs";
 
 // Every request this process asks of GitHub for CI evidence: one `gh api`
@@ -50,8 +49,6 @@ function failureText(failure) {
       "output-bound": "gh output exceeded the request's size limit",
       "timed-out": "gh did not answer within the request's time limit",
       "not-archive": "GitHub's answer is not an archive",
-      "archive-as-text":
-        "the local GitHub request owner, started by an earlier Open Dough, passed the archive on as text",
     }[failure.kind] ?? "gh failed"
   );
 }
@@ -89,16 +86,12 @@ async function askGitHub(args, signal = new AbortController().signal) {
   return (await answered(args, signal)).body;
 }
 
-// The bytes of `answer` to `route`, which GitHub labels as an archive; a
-// `GitHubAcquisitionFailed` when it is not one ("not-archive"), or when the
-// local GitHub request owner passed it on as text, as one an earlier Open
-// Dough started does ("archive-as-text").
+// The archive bytes the request owner delivers as base64. A reply without
+// that encoding is unreadable as an archive.
 export function archiveBytes(route, answer) {
   if (answer.bodyEncoding === "base64")
     return Buffer.from(answer.body, "base64");
-  throw new GitHubAcquisitionFailed(route, {
-    kind: labelledArchive(answer.headers) ? "archive-as-text" : "not-archive",
-  });
+  throw new GitHubAcquisitionFailed(route, { kind: "not-archive" });
 }
 
 // The bytes of one `gh api` answer GitHub labels as an archive, such as an

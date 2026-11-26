@@ -20,6 +20,7 @@ import {
 import { resumeInterruptedPublication } from "../../dough-execute-plan/scripts/publication-resume.mjs";
 import { isAncestor } from "../../dough-execute-plan/scripts/workspace-publication-ownership.mjs";
 import { closureObservers } from "./trunk-closure-observer.mjs";
+import { closurePair } from "./trunk-closure-session-record.mjs";
 
 const publicationRecoveries = {
   conflict:
@@ -39,9 +40,11 @@ async function resumeAcceptedClosure({
   remote,
   observers,
 }) {
+  const { base: suffixBase } = await closurePair(inspection, accepted);
   const resumed = await resumeInterruptedPublication({
     ownedWorkspace: inspection,
     candidateSha: accepted,
+    suffixBase,
     supersededShas: superseded,
     targetRef,
     remote,

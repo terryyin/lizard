@@ -36,11 +36,6 @@ export function pinnedRound(record, named) {
   return { ...named, round: diagnosisOf(record, named).rounds.length };
 }
 
-// Every round of every diagnosis of the story.
-export function roundsOf(story) {
-  return Object.values(story.diagnoses ?? {}).flatMap(({ rounds }) => rounds);
-}
-
 function cumulativeMinutes({ rounds }, now) {
   return minutes(rounds.reduce((sum, round) => sum + elapsedMs(round, now), 0));
 }

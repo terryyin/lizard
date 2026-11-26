@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "sessionId": "70ef2990-0b5c-4249-9d61-214356437afa",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-26T00:44:47.134Z",
+  "story": "SEED-075#source-documentation-directives",
+  "ranges": [
+    {
+      "base": "aff3ebadba4657d0ca4737b3fadcc6f38b3ac138",
+      "candidate": "f8ffdc3ae68452daeb2f7863add1cf5fac003a7c"
+    },
+    {
+      "base": "f8ffdc3ae68452daeb2f7863add1cf5fac003a7c",
+      "candidate": "bb63f1cba407e7540716d85d9b021a008cc08f42"
+    },
+    {
+      "base": "bb63f1cba407e7540716d85d9b021a008cc08f42",
+      "candidate": "7e411efb4737fdb172b9b76751a4c9f6c3ea8078"
+    },
+    {
+      "base": "7e411efb4737fdb172b9b76751a4c9f6c3ea8078",
+      "candidate": "b7947a019436c3b78cf3a479a7c147d9f01e9947"
+    }
+  ]
+}

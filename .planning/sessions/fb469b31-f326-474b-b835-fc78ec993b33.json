@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "sessionId": "fb469b31-f326-474b-b835-fc78ec993b33",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-26T00:34:11.491Z",
+  "story": "SEED-075#perl-word-operator-context",
+  "ranges": [
+    {
+      "base": "00728da3f293e9cce3dba03da0c6eeb3cc95a6f0",
+      "candidate": "cb1ffa2270ba9cca9e103eeae6f2817515eb8b49"
+    },
+    {
+      "base": "cb1ffa2270ba9cca9e103eeae6f2817515eb8b49",
+      "candidate": "eee5ff8cd460a12633116eacae6e386925ad630b"
+    },
+    {
+      "base": "eee5ff8cd460a12633116eacae6e386925ad630b",
+      "candidate": "223a633a0b9a69edba9f6f2cebae7efa8447ce1a"
+    },
+    {
+      "base": "223a633a0b9a69edba9f6f2cebae7efa8447ce1a",
+      "candidate": "d2f9326db43758d5e0e26c99c1024cbbd42bb478"
+    }
+  ]
+}

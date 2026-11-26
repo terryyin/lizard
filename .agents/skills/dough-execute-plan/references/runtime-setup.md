@@ -9,15 +9,11 @@ require a POSIX host with `ps` and signals. Apply this project's tooling wrapper
 to launches if needed; hook commands must find Node directly without entering a
 build environment.
 
-For checkout-bound work, resolve the installed skill directory inside the
-selected execution checkout. Prefer the current host's alias
-(`.agents/skills/dough-execute-plan` for Codex/Cursor or
-`.claude/skills/dough-execute-plan` for Claude Code). When that alias is
-absent, use any other usable same-checkout installation rather than copying
-another checkout or declaring coverage unavailable solely from the missing
-path. Do not reuse the installed directory that supplied the initially loaded
-skill when it belongs to another checkout. The runtime derives checkout
-identity four levels above its `scripts/` module; preserve that layout.
+For checkout-bound work, resolve the invoking host's installed skill directory
+inside the selected execution checkout. Claude Code uses
+`.claude/skills/dough-execute-plan`. Codex and Cursor use
+`.agents/skills/dough-execute-plan`. The runtime derives checkout identity four
+levels above its `scripts/` module.
 
 Managed delivery resolves that runtime itself for ordinary increments and
 repairs. Explicit observation callers below still canonicalize the selected
@@ -146,9 +142,8 @@ limit when a busy repository requires coverage beyond those bounds.
 Ordinary install and update register the managed Cursor and Claude Code hook
 entries from [cursor-hooks.json](../assets/cursor-hooks.json) and
 [claude-hooks.json](../assets/claude-hooks.json) into `.cursor/hooks.json` and
-`.claude/settings.json`. The fragment paths assume the platform's installed
-skill root above; registration adapts only that path when this project uses a
-different supported delivery location.
+`.claude/settings.json`. Each fragment invokes the runtime from its host's
+installed skill root.
 
 During observation setup, verify readiness through the
 [host adapter](ci-notify-hosts.md). Do not merge fragments, edit host settings,

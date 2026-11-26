@@ -132,6 +132,16 @@ end
             [('page_count', 2, 4), ('create_frame', 6, 8), ('start_session', 10, 12)],
             [(f.name, f.start_line, f.end_line) for f in result])
 
+    def test_unless_is_a_regular_lua_callback(self):
+        result = get_function_list('''
+local function deliver(request, unless)
+  unless(request)
+end
+''')
+        self.assertEqual(
+            [('deliver', 2, 4)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
     def test_class_field_in_a_test_callback_preserves_the_enclosing_function(self):
         result = get_function_list('''
 local function register_dns_tests()
@@ -221,6 +231,23 @@ end
         self.assertEqual(
             [('visit', 2, 6), ('sample', 7, 9)],
             [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_callback_call_to_an_outer_parameter_does_not_count_as_recursion(self):
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        result = analyzer.analyze_source_code('routes.lua', '''
+local function install(routes, check, handler)
+  prepare() if check(function() routes.main.handler
+      = function(request)
+        return handler(request)
+      end
+    end) then
+    return true
+  end
+end
+''')
+        self.assertEqual(
+            [0],
+            [f.cognitive_complexity for f in result.function_list if f.start_line == 4])
 
     def test_identifier_named_it_is_no_rspec_example(self):
         result = get_function_list('''

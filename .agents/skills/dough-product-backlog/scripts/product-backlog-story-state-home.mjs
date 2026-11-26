@@ -10,7 +10,7 @@ import { sameDocument } from "./product-backlog-plan.mjs";
 import { BacklogError } from "./product-backlog-refusal.mjs";
 import { applyToFile, readFile } from "./product-backlog-store.mjs";
 import { readStoryDependencies } from "./product-backlog-story-dependencies.mjs";
-import { preparationPayload } from "./product-backlog-story-state-preparation.mjs";
+import { preparationPayload } from "./product-backlog-story-state-schema.mjs";
 import {
   readStoryState,
   recordStoryState,
