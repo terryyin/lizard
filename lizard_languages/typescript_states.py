@@ -100,6 +100,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 if isinstance(token, ReturnTypeColon):
                     self._consume_type_annotation()
                     return
+                if token == 'async' and hasattr(self.context, 'bare_recursive_functions'):
+                    self._async_declaration_start = not self.as_object and self._at_function_declaration_start()
                 if token == 'static':
                     # Hot path: most `static`/`async` tokens are not inside an
                     # open field value; avoid the helper call overhead there.
@@ -256,8 +258,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if token == 'function' and self._state == self._function:
             self._explicit_function = hasattr(self.context, 'bare_recursive_functions')
             self._local_function_declaration = self._explicit_function and (
-                self._prev_token in ('', ';', '{', '}')
-                or self.context.newline and ends_expression(self._prev_token))
+                self._starts_local_function_declaration())
         self.last_tokens = token
         # Don't overwrite _prev_token if it's 'new' (preserve for next token)
         if self._prev_token != 'new':
@@ -316,6 +317,16 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 self.recursive_statement_scope = shadows
 
         self.next(read_body)
+
+    def _starts_local_function_declaration(self):
+        if (self.last_token == 'async' and self._prev_token == 'async'
+                and not self.context.newline):
+            return getattr(self, '_async_declaration_start', False)
+        return self._at_function_declaration_start()
+
+    def _at_function_declaration_start(self):
+        return (self._prev_token in ('', ';', '{', '}')
+                or self.context.newline and ends_expression(self._prev_token))
 
     recursive_statement_scope = None
 
