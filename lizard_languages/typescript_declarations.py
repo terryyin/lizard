@@ -25,7 +25,7 @@ class TypeScriptDeclarationsMixin:
             self.last_tokens = self._prev_token = token
             return True
         elif token == 'class' and (not self.as_object or self._in_prop_value):
-            self._pending_class_bodies += 1
+            self._class_body_pending += 1
         elif (token in ('as', 'satisfies')
               and (not self.as_object or self._in_prop_value)
               and self._assertion_operand()):
@@ -143,7 +143,7 @@ class TypeScriptDeclarationsMixin:
     def _assertion_operand(self):
         """Assertions follow consumed operands, not expression/statement starts."""
         if (self.context.newline or not self._prev_token
-                or self._declaration_binding is True or self._pending_class_bodies):
+                or self._declaration_binding is True or self._class_body_pending):
             return False
         token = self.last_token or ''
         if token == '!':

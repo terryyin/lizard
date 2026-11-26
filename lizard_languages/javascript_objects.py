@@ -54,7 +54,7 @@ class JavaScriptObjectsMixin:
     def _read_class_new(self, token, after_field_type=False):
         """Whether "new" names a class member outside a field value."""
         previous = self.last_token
-        if self._pending_class_bodies and previous == 'extends':
+        if self._class_body_pending and previous == 'extends':
             return False
         after_field_value = self.context.newline and (
             previous == '!' and getattr(self, '_postfix_operand', False)
@@ -201,10 +201,10 @@ class JavaScriptObjectsMixin:
 
         object_reader = self._read_binding_candidate(
             '}', callback, as_object=True, track_complexity=False)
-        object_reader.as_class = bool(self._pending_class_bodies)
+        object_reader.as_class = bool(self._class_body_pending)
         object_reader.holds_members = self._opens_members()
         if object_reader.as_class:
-            self._pending_class_bodies -= 1
+            self._class_body_pending -= 1
         object_reader._static_seen = self._static_seen
         object_reader._async_seen = self._async_seen
         self._static_seen = False
@@ -214,7 +214,7 @@ class JavaScriptObjectsMixin:
         """Whether the '{' just read holds members, `x = {` or a class
         body, and not statements, `finally {`."""
         previous = self.last_token
-        if self._pending_class_bodies:
+        if self._class_body_pending:
             return True
         if previous is None:
             # A group's first token, `f({`, but in a block, `finally { {`.

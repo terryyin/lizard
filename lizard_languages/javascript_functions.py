@@ -57,7 +57,7 @@ class JavaScriptFunctionsMixin:
             self._discard_signature()
             if not self.started_function:
                 return
-        if (self._state == self._state_global and not self._pending_class_bodies
+        if (self._state == self._state_global and not self._class_body_pending
                 and ends_expression(self.last_token)
                 and starts_statement(token)):
             self._end_statement()
