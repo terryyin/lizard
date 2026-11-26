@@ -1330,6 +1330,20 @@ class TestCognitiveOptionalRecursion(unittest.TestCase):
         """
         self.assertEqual([0, 4], cogc('workflow.ts', source))
 
+    def test_async_declaration_in_switch_case_block_shadows_optional_call(self):
+        source = """
+            async function restore(count: number): Promise<number> {
+              switch (count) {
+                case 1: {
+                  async function restore<T>(value: T): Promise<T> { return value; }
+                  return restore?.(count);
+                }
+                default: return 0;
+              }
+            }
+        """
+        self.assertEqual([0, 1], cogc('workflow.ts', source))
+
     def test_destructured_parameter_key_and_binding(self):
         source = """
             function run({run, n}) { if (n) run?.({run: n - 1}); }
