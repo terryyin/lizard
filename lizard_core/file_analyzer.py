@@ -40,11 +40,12 @@ def comment_counter(tokens, reader):
 
 def line_counter(tokens, reader):
     context = reader.context
+    count_newlines = getattr(reader, 'count_token_newlines', None)
     context.current_line = 1
     newline = 1
     for token in tokens:
         if token != "\n":
-            count = token.count('\n')
+            count = token.count('\n') if count_newlines is None else count_newlines(token)
             context.current_line += count
             context.add_nloc(count + newline)
             newline = 0

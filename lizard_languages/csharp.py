@@ -23,7 +23,14 @@ _KEYWORDS = (
     'true', 'try', 'typeof', 'uint', 'ulong', 'unchecked', 'unsafe',
     'ushort', 'using', 'virtual', 'void', 'volatile', 'while')
 _VERBATIM_KEYWORD = r"|@(?:" + "|".join(_KEYWORDS) + r")\b"
+_NEWLINE_CHARS = '\r\n\x85\u2028\u2029'
+_LINE_ENDING = re.compile(r'\r\n|[' + _NEWLINE_CHARS + ']')
 _NON_LF_LINE_BREAK = re.compile(r'\r(?!\n)|[\x85\u2028\u2029]')
+_LINE_COMMENT = r'//[^' + _NEWLINE_CHARS + ']*'
+_DIRECTIVE_TEXT = r'\#[^' + _NEWLINE_CHARS + ']*'
+_DIRECTIVE_START = r'(?<![^' + _NEWLINE_CHARS + r'])[^\S' + _NEWLINE_CHARS + r']*'
+_LINE_TOKENS = '|' + '|'.join((
+    _LINE_COMMENT, _DIRECTIVE_TEXT, _LINE_ENDING.pattern, r'[^\S' + _NEWLINE_CHARS + ']+'))
 
 
 class CSharpReader(CLikeReader):
@@ -47,21 +54,30 @@ class CSharpReader(CLikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
-        # Both the literal scanner and the metric counters use LF for line breaks.
-        if not source_code.isascii() or '\r' in source_code:
-            source_code = _NON_LF_LINE_BREAK.sub('\n', source_code)
         # A verbatim identifier, `@if`, is one name and never a keyword.
         # // comments end on the same line (not C/C++ line continuation).
         patterns = r"|(?:\?\?)" + _VERBATIM_KEYWORD
+        needs_csharp_lines = ((not source_code.isascii() or '\r' in source_code) and
+                              _NON_LF_LINE_BREAK.search(source_code))
+        if needs_csharp_lines:
+            patterns += _LINE_TOKENS
         if any(prefix in source_code for prefix in ('$"', '@"', '"""')):
             tokens = _literal_tokens(source_code, patterns, token_class)
         else:
             tokens = clike_tokens(source_code, patterns, token_class)
+        if token_class is None and needs_csharp_lines:
+            tokens = _line_tokens_as_lf(tokens)
         if token_class is None and '?' in source_code:
             tokens = _mark_questions(tokens)
         if token_class is None and '#' in source_code and _CONDITIONAL_DIRECTIVE.search(source_code):
             tokens = _mark_conditional_code(tokens)
         return tokens
+
+    @staticmethod
+    def count_token_newlines(token):
+        if token.isascii() and '\r' not in token:
+            return token.count('\n')
+        return len(_LINE_ENDING.findall(token))
 
     def __call__(self, tokens, reader):
         # Interpolation code belongs to metrics, but cannot start or end
@@ -217,7 +233,7 @@ class CSharpStates(CLikeStates):
 
 _OPEN_LITERAL = r'(?P<literal>\$*"{3,}|\$@"|@\$?"|\$")'
 _CODE_UNITS = (
-    r'(?m:^[^\S\n]*\#[^\n]*)|//[^\n]*|/\*.*?\*/|'
+    _DIRECTIVE_START + _DIRECTIVE_TEXT + '|' + _LINE_COMMENT + r'|/\*.*?\*/|'
     + _OPEN_LITERAL
     + r'|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''
 )
@@ -232,6 +248,13 @@ _WHOLE_TOKEN = re.compile(r'.*', re.S)
 
 class _InterpolationPart(str):
     """Part of a literal after its first token, visible only to metrics."""
+
+
+def _line_tokens_as_lf(tokens):
+    """Normalize standalone line endings and preserve the text inside tokens."""
+    for token in tokens:
+        is_line_ending = token == '\r\n' or (len(token) == 1 and token in _NEWLINE_CHARS)
+        yield '\n' if is_line_ending else token
 
 
 def _literal_tokens(source, addition, token_class):
@@ -376,7 +399,8 @@ def _mark_questions(tokens):
     pending = 0
     question = None
     previous = before_previous = None
-    reading_type = type_pattern = False
+    reading_type = False
+    type_pattern_depth = None
     type_brackets = constraint = 0
     for token in tokens:
         if buffered or token == '?':
@@ -396,6 +420,7 @@ def _mark_questions(tokens):
             if token == '?':
                 index = len(buffered) - 1
                 empty_rank = previous == ']' and before_previous in ('[', ',')
+                type_pattern = type_pattern_depth is not None
                 if not reading_type and (type_pattern or not (empty_rank or previous in _TYPE_WORDS)):
                     question = index
                 mark = _OptionalHoleQuestion if isinstance(token, _InterpolationPart) else _OptionalQuestion
@@ -433,9 +458,14 @@ def _mark_questions(tokens):
             elif not type_brackets and token in _TYPE_END:
                 reading_type = False
         if token == 'is':
-            type_pattern = True
-        elif type_pattern and token in _TYPE_PATTERN_END:
-            type_pattern = False
+            type_pattern_depth = 0
+        elif type_pattern_depth is not None:
+            if token == '(':
+                type_pattern_depth += 1
+            elif token == ')' and type_pattern_depth:
+                type_pattern_depth -= 1
+            elif token in _TYPE_PATTERN_END:
+                type_pattern_depth = None
         if token != '@':
             before_previous, previous = previous, token
     yield from buffered
