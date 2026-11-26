@@ -217,6 +217,58 @@ class A {
         self.assertEqual(["(anonymous)::g", "A::f"], [f.name for f in result])
         self.assertEqual(16, result[1].token_count)
 
+    def test_method_call_in_ternary_field_preserves_constructor(self):
+        result = get_java_function_list("""class OptionalCache {
+    private final String cache = Boolean.getBoolean("cache") ? load() : null;
+
+    OptionalCache() {}
+    private String load() { return "default"; }
+}
+""")
+        self.assertEqual([('OptionalCache::OptionalCache', 4, 4), ('OptionalCache::load', 5, 5)],
+                         [(function.name, function.start_line, function.end_line)
+                          for function in result])
+
+    def test_method_call_in_anonymous_ternary_field_preserves_method(self):
+        result = get_java_function_list("""class EscaperFactory {
+    interface Escaper { char[] escapeUnsafe(char c); }
+
+    Escaper build(String replacement) {
+        return new Escaper() {
+            final char[] replacementChars =
+                replacement != null ? replacement.toCharArray() : null;
+
+            @Override
+            public char[] escapeUnsafe(char c) {
+                return replacementChars;
+            }
+        };
+    }
+}
+""")
+        self.assertEqual([('(anonymous)::escapeUnsafe', 10, 12), ('EscaperFactory::build', 4, 14)],
+                         [(function.name, function.start_line, function.end_line)
+                          for function in result])
+
+    def test_ternary_text_block_preserves_nested_members(self):
+        for opener in ('"""\n', r'"""\u000a'):
+            with self.subTest(opener=opener):
+                result = get_java_function_list(f'''class TokenConfig {{
+    class Nested {{
+        String tokens = {opener}
+            " int size = ready ? capacity() : null; }} void ghost() {{}} "
+            """;
+
+        Nested() {{}}
+        void member() {{}}
+    }}
+
+    void outer() {{}}
+}}
+''')
+                self.assertEqual(['Nested::Nested', 'Nested::member', 'TokenConfig::outer'],
+                                 [function.name for function in result[-3:]])
+
     def test_record_with_explicit_constructor(self):
         result = get_java_function_list("""
 record R(int x, int y) {
