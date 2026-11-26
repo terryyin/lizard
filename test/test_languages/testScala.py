@@ -310,6 +310,57 @@ class TestScala(unittest.TestCase):
         self.assertEqual([("send", 3), ("stop", 5)],
                          [(f.name, f.end_line) for f in result])
 
+    def test_comment_and_symbol_literals_inside_interpolation(self):
+        result = get_scala_function_list('''
+            object Status {
+              def label(): String = s"${/* outer /* example */ if */ 1}"
+              def report(): String = s"key ${'mode.name}"
+              def next(): Symbol = 'status
+            }
+            ''')
+        self.assertEqual([("label", 3, 1), ("report", 4, 1), ("next", 5, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity) for f in result])
+
+    def test_scala3_macro_quotes_keep_their_ranges(self):
+        result = get_scala_function_list('''
+            import scala.quoted.*
+
+            inline def example: Int = ${ exampleImpl }
+            def exampleImpl(using Quotes): Expr[Int] =
+              val ignored = '{ 1 }
+
+              '{ 2 }
+            ''')
+        self.assertEqual([("exampleImpl", 5, 8)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_interpolations_keep_surrounding_and_sibling_nesting(self):
+        cases = (
+            ('interpolation in a branch',
+             '''if (ok) s"user ${id.toString}" + (if (verbose) " selected" else "") else ""''',
+             '''if (ok) "user " + id.toString + (if (verbose) " selected" else "") else ""'''),
+            ('adjacent interpolations',
+             '''s"${if (ok) 1 else 0}, ${if (ok) 2 else 3}"''',
+             '''{
+                val first = if (ok) 1 else 0;
+                val second = if (ok) 2 else 3;
+                first.toString + ", " + second.toString
+             }'''),
+        )
+        for name, interpolation, control in cases:
+            with self.subTest(name):
+                result = self._status_metrics(interpolation)
+                self.assertEqual(self._status_metrics(control), result)
+
+    def _status_metrics(self, expression):
+        analyzer = FileAnalyzer(get_extensions(['ND', 'NS', 'cognitive']))
+        source = (
+            'object Status {\n'
+            'def status(ok: Boolean, verbose: Boolean, id: Int): String = ' + expression + '\n}')
+        function, = analyzer.analyze_source_code('status.scala', source).function_list
+        return (function.cyclomatic_complexity, function.max_nesting_depth,
+                function.max_nested_structures, function.cognitive_complexity)
+
     def test_expression_body_that_continues_after_else(self):
         result = get_scala_function_list('''
             object Pick {
@@ -537,6 +588,32 @@ class TestScala(unittest.TestCase):
             ''')
         self.assertEqual([("usage", 3, 4), ("next", 5, 6)],
                          [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_quotes_in_a_multi_line_string(self):
+        result = get_scala_function_list('''
+            object Users {
+              def query(): String =
+                """SELECT "if" FROM users
+                  |WHERE name = "guest"""".stripMargin
+              def next(): Int = 1
+            }
+            ''')
+        self.assertEqual([("query", 5, 1), ("next", 6, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
+
+    def test_conditions_in_string_interpolation(self):
+        result = get_scala_function_list('''
+            object Status {
+              def label(ok: Boolean): String = s"status: ${if (ok) "ready" else "failed"}"
+              def report(ok: Boolean): String =
+                s"""status: ${if (ok) """ready""" else """failed"""}"""
+              def next(): Int = 0
+            }
+            ''')
+        self.assertEqual([("label", 3, 2), ("report", 5, 2), ("next", 6, 1)],
+                         [(f.name, f.end_line, f.cyclomatic_complexity)
+                          for f in result])
 
     def test_call_of_a_function_with_the_backtick_name_def(self):
         result = get_scala_function_list('''
