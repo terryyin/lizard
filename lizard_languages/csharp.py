@@ -305,7 +305,7 @@ def _mark_questions(tokens):
     buffered = []
     pending = 0
     question = None
-    previous = None
+    previous = before_previous = None
     reading_type = False
     type_brackets = constraint = 0
     for token in tokens:
@@ -330,7 +330,9 @@ def _mark_questions(tokens):
                 mark = _OptionalHoleQuestion if isinstance(token, _InterpolationPart) else _OptionalQuestion
                 buffered[index] = mark(token)
             elif token == ':':
-                if constraint == 1:
+                # A named argument starts after the comma. Its colon does
+                # not pair with a question mark in the previous argument.
+                if constraint == 1 or (before_previous == ',' and previous.lstrip('@').isidentifier()):
                     pending -= _clear_questions(groups[-1])
                 else:
                     pending -= _resolve_ternary(groups[-1], buffered)
@@ -339,7 +341,7 @@ def _mark_questions(tokens):
             elif token in _CLOSE_GROUP:
                 group = groups.pop() if len(groups) > 1 else groups[0]
                 pending -= _clear_questions(group)
-            elif token in (',', ';'):
+            elif token == ';':
                 pending -= _clear_questions(groups[-1])
             if token == 'where' and previous == ')':
                 constraint = 2
@@ -359,7 +361,8 @@ def _mark_questions(tokens):
                 type_brackets -= 1
             elif not type_brackets and token in _TYPE_END:
                 reading_type = False
-        previous = token
+        if token != '@':
+            before_previous, previous = previous, token
     yield from buffered
 
 
