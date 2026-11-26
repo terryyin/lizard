@@ -155,9 +155,6 @@ class JavaScriptObjectsMixin:
                 return True
         return False
 
-    as_namespace = False
-    as_namespace_class = False
-
     def read_object(self):
         def callback(summary):
             self._pending_bindings = summary
@@ -222,6 +219,9 @@ class JavaScriptObjectsMixin:
             tokens.append(token)
             return False
         self.next(collect)
+
+    as_namespace = False
+    as_namespace_class = False
 
     def _to_camel_case(self, s):
         # Simple camelCase conversion for test case
