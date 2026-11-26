@@ -3,8 +3,11 @@ import csv
 import io
 import subprocess
 import sys
+import unittest
 
 import pytest
+
+from lizard import FileAnalyzer, get_extensions
 
 from .testJavaScriptBindingBoundaries import SUFFIXES, functions, summaries
 
@@ -239,3 +242,30 @@ def test_optional_member_marker_is_not_an_enclosing_runtime_decision(suffix, ext
     if extension == 'complextags':
         assert result[2].complex_tags == [['?', 1], ['?', 1]]
         assert result[3].complex_tags == [['?', 2]]
+
+class TestTypeLiteralKeywordMetrics(unittest.TestCase):
+    def test_parameter_literal_signature_has_no_control_flow(self):
+        code = 'function inspect(handler: { catch(): void }) { return handler; }'
+        self.assertEqual([('inspect', 1, 0, 0, 0)], self.metrics(code))
+
+    def test_return_literal_signature_has_no_control_flow(self):
+        code = 'function inspect(): { catch(): void } { throw new Error(); }'
+        self.assertEqual([('inspect', 1, 0, 0, 0)], self.metrics(code))
+
+    def test_catch_in_a_typed_parameter_default_still_counts(self):
+        code = """\
+function inspect(handler: { catch(): void } = (() => {
+  try { return getHandler(); } catch { return fallback; }
+})()) {
+  return handler;
+}
+"""
+        self.assertEqual([('(anonymous)', 2, 1, 1, 1), ('inspect', 2, 0, 0, 0)],
+                         self.metrics(code))
+
+    @staticmethod
+    def metrics(code):
+        analyzer = FileAnalyzer(get_extensions(['cognitive', 'nd', 'ns']))
+        functions = analyzer.analyze_source_code('handler.ts', code).function_list
+        return [(f.name, f.cyclomatic_complexity, f.cognitive_complexity,
+                 f.max_nesting_depth, f.max_nested_structures) for f in functions]
