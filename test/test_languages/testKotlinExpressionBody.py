@@ -58,6 +58,25 @@ fun ordinary(flag: Boolean): Int {{ return if (flag) 1 else 0 }}
                 )
                 self.assertEqual((1, 1), (result[0].start_line, result[0].end_line))
 
+    def test_leading_forgiveness_respects_the_comment_hook(self):
+        def keep_directive_token(tokens, reader):
+            normal_comment = reader.get_comment_from_token
+
+            def classify(token):
+                if token.startswith("// #lizard"):
+                    return None
+                return normal_comment(token)
+
+            reader.get_comment_from_token = classify
+            yield from tokens
+
+        result = FileAnalyzer(get_extensions([keep_directive_token])).analyze_source_code("a.kt", '''\
+fun ready() = 1
+// #lizard forgives
+fun following() {}
+        ''').function_list
+        self.assertEqual(["ready", "following"], [f.name for f in result])
+
     def test_forgiveness_inside_a_continued_expression_body(self):
         result = get_kotlin_function_list('''\
 fun component(): Any =
