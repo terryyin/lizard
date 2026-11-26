@@ -51,6 +51,34 @@ class Test_parser_for_Kotlin_expression_body(unittest.TestCase):
         self.assertEqual("exprBody", result[0].name)
         self.assertEqual(2, result[0].cyclomatic_complexity)
 
+    def test_anonymous_when_case_counts_the_arm_in_the_caller(self):
+        result = get_kotlin_function_list("""
+fun classify(candidate: (Int) -> Boolean): Boolean {
+    return when (candidate) {
+        fun(n: Int) = n < 0 -> true
+        else -> false
+    }
+}
+""")
+        self.assertEqual([("", 4, 4, 1), ("classify", 2, 7, 2)], rows(result))
+
+    def test_function_type_arrows_stay_inside_anonymous_when_cases(self):
+        return_types = (
+            "(Int) -> Boolean", "List<(Int) -> Boolean>",
+            "(Int) -> (Long) -> Boolean", "suspend (Int) -> Boolean",
+        )
+        for return_type in return_types:
+            with self.subTest(return_type=return_type):
+                result = get_kotlin_function_list(f"""
+fun classify(candidate: () -> ({return_type}), value: Any): Boolean {{
+    return when (candidate) {{
+        fun() = value as {return_type} -> true
+        else -> false
+    }}
+}}
+""")
+                self.assertEqual([("", 4, 4, 1), ("classify", 2, 7, 2)], rows(result))
+
     def test_expression_body_class_reference_is_not_a_new_function(self):
         result = get_kotlin_function_list('''
             fun exprBody() = Foo::class
