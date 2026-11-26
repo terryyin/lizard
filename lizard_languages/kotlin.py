@@ -7,7 +7,8 @@ from .code_reader import CodeReader, CodeStateMachine
 from .golike import GoLikeStates
 from .kotlin_literals import (INTERPOLATION_CLOSE, INTERPOLATION_OPEN, TemplateText,
                               TemplateTokens, literal_tokens, may_have_nested_comment)
-from .swift import SwiftReplaceLabel, _is_local_name
+from .swift import SwiftReplaceLabel
+from .swift import _is_local_name
 
 
 class KotlinReader(CodeReader, CCppCommentsMixin, SwiftReplaceLabel):
