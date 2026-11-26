@@ -3,7 +3,8 @@ and where an expression-bodied arrow ends."""
 
 from .javascript_bindings import JavaScriptBindings
 from .javascript_expression import (
-    JSXChildBrace, JSXMarkup, OPERAND_WORDS, active_js_state, ends_expression,
+    FunctionCallParen, JSXChildBrace, JSXMarkup, OPERAND_WORDS,
+    active_js_state, ends_expression,
     parameter_group, starts_statement)
 
 # Public API kept stable for external callers.
@@ -13,6 +14,8 @@ __all__ = (
 
 
 class JavaScriptFunctionsMixin:
+    _signature_paren = None
+
     def _read_parenthesis_group(self):
         """Only possible signatures need provisional binding frames."""
         if parameter_group(self._prev_token):
@@ -175,6 +178,7 @@ class JavaScriptFunctionsMixin:
                 if self.started_function and not self._signature:
                     # For the extensions: this "(" can open a group.
                     self.context.current_function.optimistic = True
+                self._signature_paren = token if isinstance(token, FunctionCallParen) else None
             self._parameter_bindings = JavaScriptBindings(
                 ')', self.context.current_function)
             self._decorated_parameters = False

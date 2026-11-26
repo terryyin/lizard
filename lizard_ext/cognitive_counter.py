@@ -3,8 +3,10 @@
 from itertools import chain
 from weakref import WeakKeyDictionary
 
+from lizard_languages.javascript_expression import FunctionCallParen
+
 from .cognitive_profile import (
-    _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING)
+    _MEMBER_ACCESS, _SELF_REFERENCES, _UNARY_OR_COALESCING, _is_word)
 
 HEAD, PAREN_HEAD, BRACE_HEAD, BODY_PENDING, BODY = range(5)
 
@@ -98,10 +100,13 @@ class _Counter(object):  # pylint: disable=R0902
         self.candidates = []    # functions the reader can still abandon
         self.held = {}          # function -> lists of (order, token, line)
         self.order = 0          # number of tokens held so far
+        self.possible_recursions = []
 
     def process(self, token, line=None, function=None):
         """Count the token for its function.  The held tokens come back with
-        the line and the function they were read in."""
+        the line and the function they were read in. Pass the source
+        token back to the reader, with a declaration marker if needed."""
+        source_token = token
         if function is None:
             context = self.context
             line, function = context.current_line, context.current_function
@@ -111,6 +116,10 @@ class _Counter(object):  # pylint: disable=R0902
                     self._settle()
                 in_brackets = (candidates and
                                len(self.openers) >= candidates[-1].depth)
+                if token == '(' and (
+                        (self.state is not None and self.state.pending_call)
+                        or (candidates and _is_word(self.previous))):
+                    token = source_token = FunctionCallParen(token)
                 read = token
                 if token in _BRACKETS:
                     function, token = self._route(function, token)
@@ -124,19 +133,20 @@ class _Counter(object):  # pylint: disable=R0902
                 self.previous = read
                 self.previous_function = context.current_function
                 if held:
-                    return
+                    return source_token
         if function is not self.function:
             self._switch_function(function)
         self.line = line
         state = self.state
         if self.gated and not state.body_started:
             if not self._in_body(function):
-                return
+                return source_token
             state.body_started = True
         if self.profile.case_insensitive:
             token = token.lower()
         self._process(token)
         state.prev2, state.prev = state.prev, token
+        return source_token
 
     def finish(self):
         """The end of the file: count what is still held."""
@@ -144,6 +154,10 @@ class _Counter(object):  # pylint: disable=R0902
             self._settle()
             del self.candidates[:]
             self._release(*list(self.held))
+        for function, state, candidate in self.possible_recursions:
+            if not (state.recursed or candidate.starts_function):
+                state.recursed = True
+                function.cognitive_complexity += 1
 
     def _route(self, function, token):
         """The function that counts the bracket, and the token to count.
@@ -327,8 +341,11 @@ class _Counter(object):  # pylint: disable=R0902
             state.pending_call = False
             state.pending -= 1
             if token == '(' and not state.recursed:
-                state.recursed = True
-                self._fundamental()
+                if isinstance(token, FunctionCallParen):
+                    self.possible_recursions.append((self.function, state, token))
+                else:
+                    state.recursed = True
+                    self._fundamental()
         if state.pending_jump_line is not None:
             if token not in (';', '}') and \
                     self.line == state.pending_jump_line:
