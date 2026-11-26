@@ -68,14 +68,16 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def __init__(self):
         super(LizardExtension, self).__init__(None)
-        self.structure_piles = [0]  # Invariant: must always have at least one element
         self._open_ifs = None
         self._if_head = False
+        self.structure_piles = [0]  # Invariant: must always have at least one element
         # The tokens that _state_global reads; it skips the others.
         self._global_tokens = frozenset(self.structures) | frozenset((
             '{', ';', '}', 'else', '.', '?.'))
 
     def __call__(self, tokens, reader=None):
+        self._open_ifs = None
+        self._if_head = False
         if 'python' in getattr(reader, 'language_names', ()):
             return self._indented_structures(tokens, reader)
         if hasattr(reader, 'implied_semicolons'):
@@ -85,8 +87,6 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def _start_file(self, reader):
         super(LizardExtension, self)._start_file(reader)
         self.structure_piles = [0]
-        self._open_ifs = None
-        self._if_head = False
 
     def _unterminated_statements(self, tokens, reader):
         """JavaScript ends a statement without a ';' too: read a ';'
