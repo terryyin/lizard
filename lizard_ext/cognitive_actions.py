@@ -2,7 +2,7 @@
 
 from .cognitive_counter import BODY, BODY_PENDING, HEAD, _IF_LIKE
 from .cognitive_profile import (
-    _EXPRESSION_BREAKERS, _NOT_TERNARY_NEXT, _NULLABLE_TYPE_FOLLOWERS,
+    _EXPRESSION_BREAKERS, _NULLABLE_TYPE_FOLLOWERS,
     _is_word)
 
 
@@ -77,9 +77,10 @@ class _BraceActions(object):
         state = self.state
         if state.pending_ternary == 1:
             state.pending_ternary = 0
-            if token in _NOT_TERNARY_NEXT:
+            profile = self.profile
+            if token in profile.not_ternary_next:
                 return
-            if self.profile.nullable_types:
+            if profile.nullable_types:
                 if self.line != state.pending_ternary_line:
                     return
                 if _is_word(token):     # ``T? x`` or ``c ? x : y``
@@ -161,7 +162,7 @@ class _BraceActions(object):
             self._close_bracket()
         if state.pending_ternary:
             state.pending_ternary = 0
-            if token not in _NOT_TERNARY_NEXT:
+            if token not in profile.not_ternary_next:
                 self._structural()
         if token in profile.ifs:
             # ``ELSE IF`` is one hybrid increment; `m.else` is a method.

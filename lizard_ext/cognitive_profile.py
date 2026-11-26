@@ -20,6 +20,13 @@ _ROLES = {
 }
 
 
+# ``?`` followed by one of these is not a ternary operator: ``?.``, ``??``,
+# ``?:``, nullable types ``T?)``, Rust's ``foo()?;``, Java's ``? extends``.
+_NOT_TERNARY_NEXT = frozenset((
+    '?', '.', ':', ')', ']', '}', ',', ';', '=', '>', '<', '&&', '||',
+    'extends', 'super'))
+
+
 class _Profile(object):  # pylint: disable=R0902,R0903
     """What a language adds to what its reader already knows."""
 
@@ -30,7 +37,8 @@ class _Profile(object):  # pylint: disable=R0902,R0903
                  paren_heads=True, newline_ends_statement=False,
                  nullable_types=False, rvalue_refs=False, lambda_style=None,
                  case_insensitive=False, nesting=True,
-                 nested_functions=False, reserved_structures=False):
+                 nested_functions=False, reserved_structures=False,
+                 *, not_ternary_next=_NOT_TERNARY_NEXT):
         # Structures the reader does not list; completed in ``for_reader``.
         self.ifs = frozenset(ifs)
         self.else_ifs = frozenset(else_ifs)
@@ -44,6 +52,7 @@ class _Profile(object):  # pylint: disable=R0902,R0903
         self.ignore = frozenset(ignore)
         self.jumps = frozenset(jumps)             # count when followed by a label
         self.ternary = ternary
+        self.not_ternary_next = not_ternary_next
         # Heads are parenthesized (``if (...)``); otherwise a head runs until
         # the ``{`` of the body (Go, Rust, Swift).
         self.paren_heads = paren_heads
@@ -84,9 +93,11 @@ _FLAT = {'nesting': False, 'ternary': False, 'jumps': ()}
 # C-like, without goto: JavaScript has no goto statement, and
 # `page.goto(url)` is a call. reserved_structures: `{ if: a }` / method
 # names like catch are not control-flow structures.
+# A ternary branch may start with a call like ``super.method()``.
 _JS_LIKE = {'switches': ('switch',), 'do_likes': ('do',),
             'newline_ends_statement': True, 'nested_functions': True,
-            'reserved_structures': True}
+            'reserved_structures': True,
+            'not_ternary_next': _NOT_TERNARY_NEXT - {'super'}}
 
 _PROFILES = {
     'cpp': _Profile(loops=('foreach',),         # Qt
@@ -146,12 +157,6 @@ _UNARY_OR_COALESCING = frozenset((
 _EXPRESSION_BREAKERS = frozenset((
     ';', ',', '{', '}', '?', ':', '=', '+=', '-=', '*=', '/=', '%=',
     '&=', '|=', '^=', '<<=', '>>=', 'return', 'yield'))
-
-# ``?`` followed by one of these is not a ternary operator: ``?.``, ``??``,
-# ``?:``, nullable types ``T?)``, Rust's ``foo()?;``, Java's ``? extends``.
-_NOT_TERNARY_NEXT = frozenset((
-    '?', '.', ':', ')', ']', '}', ',', ';', '=', '>', '<', '&&', '||',
-    'extends', 'super'))
 
 # ``T? x`` followed by one of these is a nullable type, not ``c ? x : y``.
 _NULLABLE_TYPE_FOLLOWERS = frozenset((
