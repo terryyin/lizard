@@ -83,14 +83,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
 
     # -- statement boundaries ---------------------------------------------------
 
-    def _conditional_continues(self, token):
-        state = self.state
-        if token in ('?', ':') or state.prev in ('?', ':'):
-            return True
-        return (bool(state.frames) and state.frames[-1].kind == 'ternary'
-                and (token in _JS_INFIX_CONTINUATIONS
-                     or state.prev in _JS_INFIX_CONTINUATIONS))
-
     def _new_line(self, line):
         state = self.state
         state.line = line
@@ -101,6 +93,14 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             top = state.frames[-1]
             if top.phase == BODY and not top.braced:
                 self._statement_end()
+
+    def _conditional_continues(self, token):
+        state = self.state
+        if token in ('?', ':') or state.prev in ('?', ':'):
+            return True
+        return (bool(state.frames) and state.frames[-1].kind == 'ternary'
+                and (token in _JS_INFIX_CONTINUATIONS
+                     or state.prev in _JS_INFIX_CONTINUATIONS))
 
     def _top_structure(self):
         for frame in reversed(self.state.frames):
