@@ -1,9 +1,6 @@
 '''
 Language parser for Scala
 '''
-from itertools import tee
-from unicodedata import category
-
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
@@ -70,6 +67,8 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
 
 def _mark_line_leading_infix(tokens):
     """Mark an identifier whose symbolic suffix touches it at a new line."""
+    from itertools import tee  # pylint: disable=import-outside-toplevel
+
     tokens = iter(tokens)
     after_line_break = (1, 2, 2, 1)
     line_start = 0
@@ -107,6 +106,8 @@ class _LeadingInfixName(str):
 def _symbolic_suffix(token):
     if not token or token.startswith(('//', '/*')):
         return False
+    from unicodedata import category  # pylint: disable=import-outside-toplevel
+
     first = token[0]
     return first in '!#%&*+-/:<=>?@\\^|~' or category(first) in ('Sm', 'So')
 
