@@ -5,6 +5,33 @@ from .kotlin_helpers import get_kotlin_function_list
 
 class Test_parser_for_Kotlin_interface(unittest.TestCase):
 
+    def test_forgiven_abstract_method_does_not_forgive_the_next_function(self):
+        result = get_kotlin_function_list('''\
+abstract class Process {
+    // #lizard forgives
+    abstract fun read(): Int
+}
+
+fun samplePid(): Int {
+    return 1
+}
+        ''')
+        self.assertEqual([("samplePid", 6, 8)],
+                         [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_forgiveness_after_an_abstract_method_applies_to_the_next_method(self):
+        result = get_kotlin_function_list('''\
+abstract class Process {
+    abstract fun read(
+        key: String
+    )
+    // #lizard forgives
+    fun cachedPid(): Int { return 1 }
+    fun livePid(): Int { return 2 }
+}
+        ''')
+        self.assertEqual(["livePid"], [f.name for f in result])
+
     def test_functions_with_a_body_in_an_interface(self):
         result = get_kotlin_function_list('''
 interface Interval {
