@@ -52,6 +52,27 @@ def starts_statement(token):
     return token in _LINE_START_OPERATORS
 
 
+def awaiting_class_field(state):
+    return (not state.context.class_field_annotations
+            and _in_javascript_class_field(active_js_state(state)))
+
+
+def mark_class_field_start(state, token):
+    active = active_js_state(state)
+    if (_in_javascript_class_field(active)
+            and active._state == active._state_global
+            and (token[0].isalnum() or token[0] in _STATEMENT_STARTS or token[0] == '@')
+            and starts_statement(token)
+            and ends_expression(active.last_token or '')):
+        return ClassFieldStart(token)
+    return token
+
+
+def _in_javascript_class_field(state):
+    return (state.as_class and state._in_prop_value
+            and not state.context.class_field_annotations)
+
+
 def parameter_group(prefix):
     return (prefix is None or prefix in ('return', 'yield', 'await', 'async')
             or (not ends_expression(prefix) and prefix not in ('.', '?.', 'new')))
@@ -63,32 +84,16 @@ def active_js_state(state):
     return state
 
 
-def awaiting_line_token(state):
+def awaiting_function_body(state):
     active = active_js_state(state)
-    return (active._state == active._expecting_func_opening_bracket
-            or _in_javascript_class_field(active))
+    return active._state == active._expecting_func_opening_bracket
 
 
 def end_before_line_token(state, arrows, token):
     """Offer a line's first token before counters charge it."""
-    active = active_js_state(state)
-    if _starts_next_class_field(active, token):
-        token = ClassFieldStart(token)
     if arrows:
         arrows[-1].end_expression_before(token)
-    elif active._state == active._expecting_func_opening_bracket:
-        active.end_expression_before(token)
-    return token
-
-
-def _starts_next_class_field(state, token):
-    return (_in_javascript_class_field(state)
-            and state._state == state._state_global
-            and (token[0].isalnum() or token[0] in _STATEMENT_STARTS or token[0] == '@')
-            and starts_statement(token)
-            and ends_expression(state.last_token or ''))
-
-
-def _in_javascript_class_field(state):
-    return (state.as_class and state._in_prop_value
-            and not state.context.class_field_annotations)
+    else:
+        active = active_js_state(state)
+        if active._state == active._expecting_func_opening_bracket:
+            active.end_expression_before(token)
