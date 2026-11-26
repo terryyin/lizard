@@ -41,15 +41,23 @@ class LizardExtension(object):  # pylint: disable=R0903
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
-        if hasattr(reader, "indent_indicator"):
-            indent_indicator = reader.indent_indicator
-        else:
-            indent_indicator = ';'
+        indent_indicator = getattr(reader, 'indent_indicator', ';')
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
         context = reader.context
+        languages = getattr(reader, 'language_names', ())
+        keep_condition = not _EXPRESSION_BLOCK_LANGUAGES.isdisjoint(languages)
+        lambda_brace = None
+        if keep_condition:
+            from .nd_condition import ConditionLambdaBrace, java_lambda_expressions
+
+            lambda_brace = ConditionLambdaBrace('cpp' in languages)
+            if 'java' in languages:
+                tokens = java_lambda_expressions(tokens, context, lambda_brace)
+            else:
+                tokens = lambda_brace.track(tokens, context)
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
@@ -76,7 +84,7 @@ class LizardExtension(object):  # pylint: disable=R0903
 
                 # Handle logical operators && and || within conditions
                 elif token in ('&&', '||'):
-                    if context.get_in_condition():
+                    if context.get_in_condition() or (keep_condition and context.in_condition_lambda()):
                         # Only add nesting depth for the first logical operator in a condition
                         # Subsequent && or || operators in the same condition don't add depth
                         if not context.get_logical_operator_added():
@@ -90,10 +98,15 @@ class LizardExtension(object):  # pylint: disable=R0903
                 elif token in loops and token not in ('&&', '||') \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
-                    l_depth = context.open_level()
+                    l_depth = (context.open_control_level(token)
+                               if keep_condition and token in _CONTROL_HEADERS
+                               else context.open_level())
 
                 if token in block_starts:
-                    context.open_block()
+                    if keep_condition:
+                        context.open_header_block(lambda_brace.opens_body)
+                    else:
+                        context.open_block()
                 if token == indent_indicator and \
                         context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
@@ -101,6 +114,29 @@ class LizardExtension(object):  # pylint: disable=R0903
                 l_depth = 0
                 context.reset_nd_complexity()
             yield token
+
+
+_EXPRESSION_BLOCK_LANGUAGES = frozenset(('cpp', 'java'))
+_CONTROL_HEADERS = frozenset(('if', 'for', 'while', 'catch'))
+
+
+def _close_logical_condition(function):
+    if function.condition_depth == 0:
+        function.in_condition = False
+    if function.condition_depth in (0, function.control_header_depth):
+        function.logical_operator_added = False
+        function.in_control_header = False
+
+
+class _ConditionBrace:  # pylint: disable=R0903
+    """A condition suspended while a lambda body reads its statements."""
+
+    def __init__(self, function):
+        self.levels = function.levels_awaiting_body
+        self.header_depth = function.control_header_depth
+        self.in_control_header = function.in_control_header
+        self.condition_depth = function.condition_depth
+        self.logical_operator_added = function.logical_operator_added
 
 
 class NDFileInfoAddition(FileInfoBuilder):
@@ -115,6 +151,7 @@ class NDFileInfoAddition(FileInfoBuilder):
     def reset_nd_complexity(self):
         self.current_function.nesting_depth = 0
         self.current_function.levels_awaiting_body = 0
+        self.current_function.control_header_depth = None
         self.current_function.block_levels = []
         self.current_function.prev_was_else = False
         self.reset_condition_tracking()
@@ -132,14 +169,31 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def close_block(self):
         """A block end releases the levels its block took over."""
-        levels = self.current_function.block_levels
-        return self.add_nd_condition(-(levels.pop() if levels else 1))
+        function = self.current_function
+        levels = function.block_levels.pop() if function.block_levels else 1
+        if not isinstance(levels, _ConditionBrace):
+            return self.add_nd_condition(-levels)
+        depth = self.end_statement()
+        function.levels_awaiting_body = levels.levels
+        function.condition_depth = levels.condition_depth
+        function.logical_operator_added = levels.logical_operator_added
+        function.control_header_depth = levels.header_depth
+        function.in_control_header = levels.in_control_header
+        function.in_condition = True
+        return depth
 
     def end_statement(self):
         """A statement ends the levels of a braceless body."""
         levels = self.current_function.levels_awaiting_body
         self.current_function.levels_awaiting_body = 0
+        self.current_function.control_header_depth = None
+        self.current_function.in_control_header = False
+        self.current_function.logical_operator_added = False
         return self.add_nd_condition(-levels)
+
+    def in_condition_lambda(self):
+        levels = self.current_function.block_levels
+        return bool(levels and isinstance(levels[-1], _ConditionBrace))
 
     def set_in_condition(self, in_condition):
         self.current_function.in_condition = in_condition
@@ -152,15 +206,13 @@ class NDFileInfoAddition(FileInfoBuilder):
         function = self.current_function
         function.in_condition = True
         function.condition_depth += 1
-        function.logical_operator_added = False
+        if not function.in_control_header:
+            function.logical_operator_added = False
 
     def close_condition(self):
         """A ")" closes a level, and the condition with its last level."""
         self.decrement_condition_depth()
-        function = self.current_function
-        if function.condition_depth == 0:
-            function.in_condition = False
-            function.logical_operator_added = False
+        _close_logical_condition(self.current_function)
 
     def increment_condition_depth(self):
         self.current_function.condition_depth += 1
@@ -175,9 +227,31 @@ class NDFileInfoAddition(FileInfoBuilder):
             enclosing = self.stacked_functions[-1]
             if enclosing.condition_depth > 0:
                 enclosing.condition_depth -= 1
-                if enclosing.condition_depth == 0:
-                    enclosing.in_condition = False
-                    enclosing.logical_operator_added = False
+                _close_logical_condition(enclosing)
+
+    def open_header_block(self, opens_lambda):
+        """Keep the control header open through an expression body."""
+        function = self.current_function
+        header_depth = function.control_header_depth
+        if header_depth is not None and function.condition_depth > header_depth:
+            if opens_lambda:
+                function.block_levels.append(_ConditionBrace(function))
+                function.levels_awaiting_body = 0
+                function.control_header_depth = None
+                self.reset_condition_tracking()
+            else:
+                function.block_levels.append(0)
+            return
+        self.open_block()
+        function.control_header_depth = None
+        function.in_control_header = False
+
+    def open_control_level(self, header):
+        """Open a control header whose body can contain expression braces."""
+        function = self.current_function
+        function.control_header_depth = function.condition_depth
+        function.in_control_header = header in ('if', 'while')
+        return self.open_level()
 
     def get_condition_depth(self):
         return self.current_function.condition_depth
@@ -186,6 +260,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.in_condition = False
         self.current_function.condition_depth = 0
         self.current_function.logical_operator_added = False
+        self.current_function.in_control_header = False
 
     def set_logical_operator_added(self, added):
         self.current_function.logical_operator_added = added
@@ -232,8 +307,10 @@ def _init_nesting_depth_data(self, *_):
     self.nesting_depth = 0
     self.max_nesting_depth = 0
     self.levels_awaiting_body = 0  # structure levels closed by their body
+    self.control_header_depth = None
     self.block_levels = []  # structure levels each open block will close
     self.in_condition = False  # Track if we're inside a condition
+    self.in_control_header = False
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
