@@ -69,7 +69,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     context.clear_prev_was_else()
                 # Handle opening parenthesis - start of condition
                 elif token == '(':
-                    context.open_condition()
+                    context.open_condition(getattr(token, 'php_leading_token', None))
                 # Handle closing parenthesis - end of condition
                 elif token == ')':
                     context.close_condition()
@@ -147,12 +147,22 @@ class NDFileInfoAddition(FileInfoBuilder):
     def get_in_condition(self):
         return self.current_function.in_condition
 
-    def open_condition(self):
+    def open_condition(self, php_leading_token=None):
         """A "(" opens a condition, or a level inside one."""
         function = self.current_function
+        if function.condition_depth == 0:
+            function.in_php_header = (php_leading_token in ('if', 'elseif', 'while') and
+                                      not getattr(php_leading_token, 'is_member_name', False))
         function.in_condition = True
         function.condition_depth += 1
-        function.logical_operator_added = False
+        if function.in_php_header:
+            if function.condition_depth > 1 and _php_call_target(php_leading_token):
+                function.php_arguments.append((function.condition_depth,
+                                               function.levels_awaiting_body,
+                                               function.logical_operator_added))
+                function.logical_operator_added = False
+        else:
+            function.logical_operator_added = False
 
     def close_condition(self):
         """A ")" closes a level, and the condition with its last level."""
@@ -168,13 +178,13 @@ class NDFileInfoAddition(FileInfoBuilder):
     def decrement_condition_depth(self):
         function = self.current_function
         if function.condition_depth > 0:
-            function.condition_depth -= 1
+            _decrement_condition(function)
         elif self.stacked_functions:
             # The function did not read the "(" of this ")": the reader
             # started it inside a group that the function around it read.
             enclosing = self.stacked_functions[-1]
             if enclosing.condition_depth > 0:
-                enclosing.condition_depth -= 1
+                _decrement_condition(enclosing)
                 if enclosing.condition_depth == 0:
                     enclosing.in_condition = False
                     enclosing.logical_operator_added = False
@@ -186,6 +196,7 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.in_condition = False
         self.current_function.condition_depth = 0
         self.current_function.logical_operator_added = False
+        self.current_function.php_arguments.clear()
 
     def set_logical_operator_added(self, added):
         self.current_function.logical_operator_added = added
@@ -201,6 +212,25 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def clear_prev_was_else(self):
         self.current_function.prev_was_else = False
+
+
+_PHP_GROUP_KEYWORDS = frozenset(('if', 'elseif', 'while', 'match', 'return', 'throw', 'yield'))
+
+
+def _php_call_target(token):
+    return (token in (')', ']', '}') or getattr(token, 'is_member_name', False) or
+            token is not None and token not in _PHP_GROUP_KEYWORDS and
+            (token.isidentifier() or token.startswith('$')))
+
+
+def _decrement_condition(function):
+    arguments = function.php_arguments
+    if arguments and arguments[-1][0] == function.condition_depth:
+        _, prior_levels, function.logical_operator_added = arguments.pop()
+        levels = max(function.levels_awaiting_body - prior_levels, 0)
+        function.levels_awaiting_body -= levels
+        function.nesting_depth -= levels
+    function.condition_depth -= 1
 
 
 def get_method(cls, name):
@@ -234,6 +264,8 @@ def _init_nesting_depth_data(self, *_):
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
     self.in_condition = False  # Track if we're inside a condition
+    self.in_php_header = False
+    self.php_arguments = []
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)

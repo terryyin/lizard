@@ -18,6 +18,32 @@ class Test_PHP_keyword_as_the_name_of_a_member(unittest.TestCase):
     """Since PHP 7 a keyword can name a member: `$promise->catch($f)` calls
     a method, and `User::class` names a class."""
 
+    def test_named_attribute_arguments_keep_function_names(self):
+        for label in ('match', 'function', 'class', 'use'):
+            with self.subTest(label=label):
+                functions = get_php_function_list("""<?php
+class Formatter {
+    #[Handler(LABEL /* option name */: 'trim')]
+    public function format(string $value): string { return trim($value); }
+    public function fallback(): string { return 'none'; }
+}
+""".replace('LABEL', label))
+                self.assertEqual(['Formatter::format', 'Formatter::fallback'],
+                                 [f.name for f in functions])
+
+    def test_named_attribute_argument_does_not_add_complexity(self):
+        metrics = php_metrics("""<?php
+function createRenderer(): object {
+    return new
+        #[Renderer(
+            # behavior for this renderer
+            if: true
+        )]
+        class {};
+}
+""")
+        self.assertEqual([('createRenderer', 1, 0, 0, 0, [])], metrics)
+
     def test_keyword_after_a_member_access_adds_no_structure(self):
         self.assertEqual(
             [('CreateTeamsTable::up', 1, 0, 0, 0, []),
@@ -121,3 +147,170 @@ function boot() {
              ('*global*', 1)],
             [(f.name, f.cyclomatic_complexity)
              for f in result.function_list])
+
+
+class Test_PHP_logical_operators(unittest.TestCase):
+
+    def test_calls_keep_word_operators_in_the_control_condition(self):
+        result = FileAnalyzer(get_extensions(['nd'])).analyze_source_code(
+            'permissions.php', """<?php
+class Permissions {
+    public static function or($account) {
+        return $account->active;
+    }
+
+    public static function canPublish($ready, $account, $override) {
+        if ($ready AnD self::or($account) Or $override) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function canEdit($ready, $account, $override) {
+        if ($ready && self::or($account) || $override) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function canReview($ready, $verified, $account, $override) {
+        if ($ready AnD self::or(($verified AnD $account) Or $override)) {
+            return true;
+        }
+        return false;
+    }
+
+    public static function canApprove($ready, $verified, $account) {
+        if (self::or($verified && $account) && $ready) {
+            return true;
+        }
+        return false;
+    }
+}
+""").function_list
+        self.assertEqual([('Permissions::or', 0), ('Permissions::canPublish', 2),
+                          ('Permissions::canEdit', 2),
+                          ('Permissions::canReview', 3), ('Permissions::canApprove', 2)],
+                         [(f.name, f.max_nesting_depth) for f in result])
+
+    def test_word_operators_count_and_keep_their_case_insensitive_sequences(self):
+        self.assertEqual(
+            [('canPublish', 5, 3, 2, 1,
+              [['if', 3], ['&&', 3], ['&&', 3], ['||', 3]])],
+            php_metrics("""<?php
+function canPublish($ready, $approved, $verified, $isAdmin) {
+    if ($ready and $approved AND $verified or $isAdmin) {
+        return true;
+    }
+    return false;
+}
+"""))
+
+    def test_xor_keeps_both_operands_on_the_same_path(self):
+        self.assertEqual(
+            [('matchesOne', 2, 1, 1, 1, [['if', 3]])],
+            php_metrics("""<?php
+function matchesOne($primary, $fallback) {
+    if ($primary xor $fallback) {
+        return true;
+    }
+    return false;
+}
+"""))
+
+    def test_word_operator_names_count_only_when_used_as_operators(self):
+        self.assertEqual(
+            [('Rule::or', 1, 0, 0, 0, []),
+             ('validate', 2, 1, 1, 0, [['||', 10]])],
+            php_metrics("""<?php
+class Rule {
+    public const AND = 1, OR = 2;
+
+    public function or($alternative) {
+        return new self($this, self::OR, $alternative);
+    }
+}
+function validate($rule, $alternative, $value) {
+    return $rule->or($alternative)->matches($value) OR $value === null;
+}
+"""))
+
+    def test_word_operator_next_to_a_qualified_name(self):
+        self.assertEqual(
+            [('isReady', 2, 1, 1, 0, [['&&', 3]])],
+            php_metrics(r"""<?php
+function isReady($job) {
+    return Or\Rules::matches($job) and \is_readable($job->path);
+}
+"""))
+
+    def test_word_from_ambiguous_template_does_not_count(self):
+        metrics = php_metrics("""<?php
+function render($view, $ready, $visible) {
+    $show = $ready and $visible;
+    return "Preview: {$view->capture(function () { ?>
+<script>
+    const sample = "Use '<?' to reopen PHP and then close the blocks with }}.";
+</script>
+<?php
+})}
+See the report if maintenance is active.";
+}
+function status() { return 'ready'; }
+""")
+        self.assertEqual([('render', 2, 1), ('status', 1, 0)],
+                         [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
+
+    def test_word_operator_inside_a_unicode_identifier_does_not_count(self):
+        metrics = php_metrics("""<?php
+define("RE\\u{0301}SUME\\u{0301}OR", true);
+function hasFallback(): bool {
+    return RÉSUMÉOR ? true : false;
+}
+""")
+        self.assertEqual([('hasFallback', 2, 1)],
+                         [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
+
+    def test_word_operators_resume_after_template_string(self):
+        metrics = php_metrics("""<?php
+function render(Preview $view): string {
+    return "Preview: {$view->capture(function () { ?><? echo 'preview'; ?><?php })}";
+}
+function status(bool $left, bool $right): bool {
+    return $left and $right;
+}
+?>
+<p>and or</p>
+<?php
+function afterMarkup(bool $left, bool $right): bool {
+    return $left or $right;
+}
+""")
+        self.assertEqual([('render', 1, 0), ('status', 2, 1), ('afterMarkup', 2, 1)],
+                         [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
+
+    def test_word_operators_skip_xml_processing_instructions(self):
+        metrics = php_metrics("""<?php
+function renderFilter(): void {
+    ?>
+    <filter><?condition enabled and visible ?></filter>
+    <?php
+}
+
+function isVisible(bool $enabled, bool $visible): bool {
+    return $enabled and $visible;
+}
+""")
+        self.assertEqual([('renderFilter', 1, 0), ('isVisible', 2, 1)],
+                         [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
+
+    def test_word_operator_can_touch_a_numeric_operand(self):
+        for expression in ('1and', '0or', '1_000and', '.5and', '1e2and', '0x1or', '0b10and', '0o7or'):
+            with self.subTest(expression=expression):
+                metrics = php_metrics(f"""<?php
+function isAvailable(bool $available): bool {{
+    return {expression} $available;
+}}
+""")
+                self.assertEqual([('isAvailable', 2, 1)],
+                                 [(name, ccn, cognitive) for name, ccn, cognitive, *_ in metrics])
