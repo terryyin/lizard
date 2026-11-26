@@ -886,6 +886,25 @@ class TestJavaScriptTemplateLiterals(unittest.TestCase):
             }
         """))
 
+    def test_template_literal_types_do_not_count_as_runtime_conditions(self):
+        source = """
+            function format<T extends boolean>(value: T) {
+              type Label = `status: ${T extends true ? 'ready' : 'waiting'}`;
+              return `status: ${value ? 'ready' : 'waiting'}` as Label;
+            }
+            function literalType<T extends boolean>(value: T) {
+              type Label = `status: ${T extends true ? 'ready' : 'waiting'}`;
+              return (value ? 'status: ready' : 'status: waiting') as Label;
+            }
+            function typeOnly<T extends boolean>(value: T) {
+              type Label = `${T extends true ? 'yes' : 'no'}`;
+              return { value, labels: [] as Label[] };
+            }
+        """
+        for filename in ('labels.ts', 'labels.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([1, 1, 0], cogc(filename, source))
+
     def test_runtime_ternary_and_conditional_type_inside_interpolation(self):
         self.assertEqual([0, 1], cogc("status.ts", """
             function label(value: unknown) {
