@@ -7,9 +7,9 @@ from lizard_languages.javascript_expression import starts_statement
 from lizard_languages.typescript import TypeScriptReader
 
 from .cognitive_actions import _BraceActions
+from .cognitive_counter import _MeasuredInterpolation
 from .cognitive_counter import (
-    BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE,
-    _MeasuredInterpolation)
+    BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE)
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 
 

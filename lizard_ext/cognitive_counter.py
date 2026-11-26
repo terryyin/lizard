@@ -171,7 +171,8 @@ class _Counter(object):  # pylint: disable=R0902
         two (``if (list.some(item => item.ok))``); the enclosing function
         would otherwise never see its bracket close.
 
-        Template interpolation delimiters group an expression."""
+        The ``}`` of a template interpolation ends no block.  It ends the
+        sequence of logical operators before it, so it counts as ``,``."""
         openers = self.openers
         if token in _CLOSER_OF:
             if not _is_markup(token):
