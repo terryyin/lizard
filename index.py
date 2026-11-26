@@ -81,6 +81,7 @@ def analysis_result(payload):
     if source_bytes > MAX_SOURCE_BYTES:
         raise RequestEntityTooLarge()
     if (not isinstance(filename, str) or len(filename) > 128
+            or "/" in filename or "\\" in filename or ".." in filename
             or get_reader_for(filename) is None):
         raise InvalidSource("Choose a supported language or filename extension.")
     info = analyze_file.analyze_source_code(filename, code)
