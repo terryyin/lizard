@@ -31,7 +31,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
         if 'kotlin' in getattr(reader, 'language_names', ()):
-            tokens = _kotlin_braced_branches(tokens, reader)
+            tokens = _kotlin_else_if_branches(tokens, reader)
         return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
 
     @staticmethod
@@ -230,8 +230,8 @@ def patch_append_method(frm, accept_class, method_name):
     setattr(accept_class, method_name, appended)
 
 
-def _kotlin_braced_branches(tokens, reader):
-    """Reopen a closed else-if level when the branch has a braced body."""
+def _kotlin_else_if_branches(tokens, reader):
+    """Reopen a closed else-if level for a block or a direct nested if."""
     context = reader.context
     interpolation = getattr(reader, 'interpolation_braces', None)
     interpolation_start = interpolation[0] if interpolation else None
@@ -240,15 +240,24 @@ def _kotlin_braced_branches(tokens, reader):
     after_else_if = False
     for token in tokens:
         if headers and previous == ')':
-            function, depth = headers[-1]
+            function, depth, nested = headers[-1]
             if function is context.current_function and context.get_condition_depth() == depth:
                 headers.pop()
-                if token == '{' and token is not interpolation_start:
+                braced = token == '{' and token is not interpolation_start
+                direct_if = token == 'if' and not getattr(token, 'is_member_name', False)
+                if not nested and (braced or direct_if):
                     context.open_level()
+                if direct_if:
+                    headers.append((function, depth, True))
+                elif nested and not braced:
+                    # The nested condition has recorded its depth. A plain
+                    # body has no explicit block to close the reopened level.
+                    function.levels_awaiting_body -= 1
+                    context.add_nd_condition(-1)
         if after_else_if and token == '(':
             function = context.current_function
             if function.levels_awaiting_body == 0:
-                headers.append((function, context.get_condition_depth()))
+                headers.append((function, context.get_condition_depth(), False))
         after_else_if = (token == 'if' and previous == 'else'
                          and not getattr(token, 'is_member_name', False))
         previous = token
