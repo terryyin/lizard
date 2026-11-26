@@ -1,5 +1,6 @@
 import inspect
 import unittest
+from textwrap import dedent
 
 from .testPython import get_python_function_list
 
@@ -118,8 +119,7 @@ class Test_Python_function_structure(unittest.TestCase):
         self.assertEqual("function1", functions[1].name)
         self.assertEqual(5, functions[1].end_line)
         self.assertEqual(2, functions[1].cyclomatic_complexity)
-        self.assertEqual(2, functions[1].max_nesting_depth)
-        # will be fixed, should be equal to 1
+        self.assertEqual(1, functions[1].max_nesting_depth)
 
     def test_nested_functions_ended_at_eof(self):
         class namespace6:
@@ -192,6 +192,81 @@ class Test_Python_function_structure(unittest.TestCase):
                 "         pass\n"
         functions = get_python_function_list(code)
         self.assertEqual(4, functions[0].end_line)
+
+    def test_nesting_depth_closes_suites_at_dedent(self):
+        code = dedent("""
+            def collect_ready(rows):
+                if rows is None:
+                    return []
+                ready = []
+                for row in rows:
+                    if row.ready:
+                        ready.append(row)
+                return ready if ready else rows
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
+
+    def test_nesting_depth_counts_context_manager_and_sibling_handlers(self):
+        code = dedent("""
+            async def read_all(client):
+                try:
+                    async with client.session() as session:
+                        return await session.read()
+                except OSError:
+                    if client.closed:
+                        return b''
+                    raise
+                finally:
+                    client.flush()
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
+
+    def test_nesting_depth_counts_with_suite(self):
+        code = dedent("""
+            async def read_buffer(client):
+                async with client.session() as session:
+                    if session.ready:
+                        return await session.read()
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
+
+    def test_nesting_depth_counts_alternative_branch_body(self):
+        code = dedent("""
+            def emit(record, write):
+                if record.skip:
+                    if record.log:
+                        write("skipped")
+                elif record.urgent:
+                    write(record)
+                else:
+                    while record.has_data():
+                        write(record.read())
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
+
+    def test_nesting_depth_keeps_inline_suite_through_semicolon(self):
+        code = dedent("""
+            def render(record, write):
+                if record.visible: write(record); write(record.text if record.loud else "")
+                if record.done: write("done")
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
+
+    def test_nesting_depth_keeps_multiline_expression_in_its_suite(self):
+        code = dedent("""
+            def available(primary, backup, use_primary):
+                if primary is None: return backup
+                if (primary
+                        if use_primary else backup):
+                    return primary
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
 
     def test_odd_line_with_comment(self):
         code = "class c:\n" + \
