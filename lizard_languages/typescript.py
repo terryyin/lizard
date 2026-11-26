@@ -14,6 +14,7 @@ from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
 from .javascript_statements import ImpliedSemicolons
+from .javascript_objects import COMPUTED_PROPERTY_START, computed_property_follows
 
 # One token, so each ? in ?? is not its own ternary decision.
 NULLISH_COALESCING = r"|(?:\?\?)"
@@ -83,7 +84,7 @@ class _OptionalMemberQuestion(str):
 
 
 _OPTIONAL_MEMBER_QUESTION = _OptionalMemberQuestion('?')
-_ANNOTATION_PUNCTUATION = frozenset(('?', ':'))
+_ANNOTATION_PUNCTUATION = frozenset(('?', ':', '['))
 
 
 class _MemberName(str):
@@ -173,7 +174,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                 if pending is None:
                     pending = function.js_property_logical_levels = []
                 pending.append(after)
-            elif (pending and token in (':', '...')
+            elif (pending and token in (':', '...', '[')
                   and context.__dict__.get('js_object_property') == context.fileinfo.token_count):
                 function.levels_awaiting_body -= len(pending)
                 function.logical_operator_added = False
@@ -311,6 +312,13 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                             if (self.context.class_field_annotations
                                     and state.optional_member_context()):
                                 token = _OPTIONAL_MEMBER_QUESTION
+                        elif token == '[' and state.computed_property_context():
+                            tokens, lookahead = tee(tokens)
+                            if computed_property_follows(lookahead):
+                                token = COMPUTED_PROPERTY_START
+                            del lookahead
+                            yield token
+                            break
                         elif token == ':' and state.last_token == ')':
                             annotation = state.return_annotation_context()
                             if annotation is not None:
