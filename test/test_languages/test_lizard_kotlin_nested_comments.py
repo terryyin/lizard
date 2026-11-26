@@ -3,6 +3,27 @@ from lizard import analyze_file
 
 
 class TestNestedKotlinComments(unittest.TestCase):
+    def test_adjacent_nested_comment_after_delimiter_inside_comment(self):
+        for delimiter, declaration in (
+                ('"', 'val s = "x"'),
+                ('"""', 'val s = """x"""'),
+                ("'", "val s = 'x'"),
+                ('`', 'val `x` = 1')):
+            with self.subTest(delimiter=delimiter):
+                source = (
+                    f'fun f() {{\n/* {delimiter} */\n'
+                    '/* outer /* inner */ if (hidden) {} */\n'
+                    f'{declaration}\nif (real) {{}}\n}}\nfun g() {{}}'
+                )
+                result = analyze_file.analyze_source_code('sample.kt', source)
+                self.assertEqual(
+                    [('f', 2, 4, 1), ('g', 1, 1, 7)],
+                    [(function.name, function.cyclomatic_complexity,
+                      function.nloc, function.start_line)
+                     for function in result.function_list],
+                )
+                self.assertEqual(5, result.nloc)
+
     def test_nested_comments_do_not_add_decisions(self):
         for comment in ('/* outer /* inner */ if (fake) {} */',
                         '/* outer /* one /* two */ end */ if (fake) {} */',

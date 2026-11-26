@@ -130,6 +130,9 @@ class FileInfoBuilder(object):
     def parameter(self, token):
         self.current_function.add_parameter(token)
 
+    def add_parameter_declaration(self, name, declaration):
+        self.current_function.add_parameter_declaration(name, declaration)
+
     def end_of_function(self):
         if not self.forgive:
             if self.current_function.name != '*global*' or not self.forgive_global:

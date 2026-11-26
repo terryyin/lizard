@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-075#plsql-national-literals",
+  "title": "Keep national-character PL/SQL alternative literals opaque",
+  "completedAt": "2026-11-26T09:57:31.623Z",
+  "developer": "Terry Yin",
+  "agent": "Rina-chan",
+  "host": "claude"
+}
