@@ -69,7 +69,7 @@ def _source_tokens(source, pattern, token_class):
             if kind == 'grouping':
                 depth = max(0, depth + (1 if token in _CLOSERS else -1))
             elif kind == 'interpolated' and isinstance(value, str):
-                string = read_string(source, match.end(), token.lower(), scanner)
+                string = read_string(source, match.end(), value.lower(), scanner)
                 if string is not None:
                     start, parts = string
                     yield value
