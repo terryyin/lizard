@@ -196,13 +196,13 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             # Expression arrows read object operands; block bodies and typed
             # signatures awaiting a real body still open a nested function.
             if self.started_function and not self._expression_body:
-                self.sub_state(
-                    self.__class__(self.context),
-                    self._pop_function_from_stack)
                 signature_paren = getattr(self, '_signature_paren', None)
                 if signature_paren is not None:
                     signature_paren.starts_function = True
                     self._signature_paren = None
+                self.sub_state(
+                    self.__class__(self.context),
+                    self._pop_function_from_stack)
             elif self._statement_block_start():
                 # A block statement, `{ const r = f(() => 1); }`, holds
                 # statements rather than object members.
