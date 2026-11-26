@@ -3,6 +3,7 @@ This is an extension of lizard, that counts the 'Nesting Depth'
 in every function.
 """
 from lizard import FileInfoBuilder, FunctionInfo
+from lizard_languages.javascript_statements import ImpliedSemicolons
 
 DEFAULT_ND_THRESHOLD = 7
 
@@ -39,6 +40,9 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
+        js_do_bodies = isinstance(implied_semicolons, ImpliedSemicolons)
+        if js_do_bodies:
+            loops = loops.union(('do',))
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
         if hasattr(reader, "indent_indicator"):
@@ -86,10 +90,17 @@ class LizardExtension(object):  # pylint: disable=R0903
                         # Not in a condition, treat as regular nesting
                         l_depth = context.open_level()
 
+                elif js_do_bodies and token == 'do':
+                    if not getattr(token, 'is_member_name', False):
+                        context.start_do_body()
+
                 # Handle other loop keywords (if, for, while, etc.)
                 elif token in loops and token not in ('&&', '||') \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
+                    if (js_do_bodies and token == 'while'
+                            and implied_semicolons.while_closes_do_body):
+                        context.end_do_body()
                     l_depth = context.open_level()
 
                 if token in block_starts:
@@ -135,11 +146,24 @@ class NDFileInfoAddition(FileInfoBuilder):
         levels = self.current_function.block_levels
         return self.add_nd_condition(-(levels.pop() if levels else 1))
 
-    def end_statement(self):
+    def end_statement(self, keep_levels=0):
         """A statement ends the levels of a braceless body."""
         levels = self.current_function.levels_awaiting_body
-        self.current_function.levels_awaiting_body = 0
-        return self.add_nd_condition(-levels)
+        self.current_function.levels_awaiting_body = keep_levels
+        return self.add_nd_condition(keep_levels - levels)
+
+    def start_do_body(self):
+        """Remember the enclosing levels before reading a JS do body."""
+        function = self.current_function
+        if not hasattr(function, 'do_body_levels'):
+            function.do_body_levels = []
+        function.do_body_levels.append(function.levels_awaiting_body)
+
+    def end_do_body(self):
+        """The trailing while counts the loop outside its completed body."""
+        levels = getattr(self.current_function, 'do_body_levels', ())
+        if levels:
+            self.end_statement(levels.pop())
 
     def set_in_condition(self, in_condition):
         self.current_function.in_condition = in_condition
