@@ -99,6 +99,34 @@ class Parser:
             for f in functions
         ])
 
+    def test_multiline_return_annotation_keeps_inline_suite(self):
+        source = """\
+class Parser:
+    def read(self, enabled) -> (
+        int
+    ): return 1 if enabled else 0
+    def fallback(self):
+        return 2
+"""
+        functions = get_python_function_list(source)
+        self.assertEqual([("read", 4, 2), ("fallback", 6, 1)], [
+            (f.name, f.end_line, f.cyclomatic_complexity) for f in functions
+        ])
+
+    def test_inline_annotation_keeps_bounds_with_reused_fstring_quotes(self):
+        source = """\
+class Parser:
+    def read(self, table) -> (
+        str
+    ): return f"{table["["]}"
+    def fallback(self):
+        return "empty"
+"""
+        functions = get_python_function_list(source)
+        self.assertEqual([("read", 4), ("fallback", 6)], [
+            (f.name, f.end_line) for f in functions
+        ])
+
     def test_function_surrounded_by_global_statements(self):
         source = """
         s1 = 'global statement'
