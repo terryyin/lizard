@@ -6,8 +6,8 @@ from itertools import tee
 
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
-from .javascript_expression import awaiting_class_field, mark_class_field_start
 from .js_style_regex_expression import js_style_regex_expression
+from .javascript_expression import awaiting_class_field, mark_class_field_start
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
