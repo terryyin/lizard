@@ -691,6 +691,13 @@ class TestLogicalStatementBoundaries(unittest.TestCase):
                 ready && record()
             }"""))
 
+    def test_kotlin_block_comment_does_not_end_a_logical_sequence(self):
+        self.assertEqual([1], cogc("Permissions.kt", """
+            fun visible(enabled: Boolean, ready: Boolean, verified: Boolean, online: Boolean): Boolean =
+                enabled && ready /* The flag is combined with the test.
+                */ xor verified && online
+        """))
+
     def test_swift_logical_sequence_before_if(self):
         self.assertEqual([3], cogc("Permissions.swift", """
             func visible(_ enabled: Bool, _ verified: Bool) -> Bool {
