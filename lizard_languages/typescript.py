@@ -164,11 +164,10 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         if getattr(token, 'interpolation_measured', False):
             return None
         tokens = self._interpolation_tokens(token, in_expression, measure is not None)
-        if measure is not None:
-            return measure(tokens)
+        result = measure(tokens) if measure is not None else None
         for _ in tokens:
             pass
-        return None
+        return result
 
     def _interpolation_tokens(self, token, in_expression, emit):
         # Re-tokenize opaque interpolation spans; keyword members stay non-
@@ -192,7 +191,12 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                           or inner.startswith(_COMMENT_STARTS)):
                     earlier, previous = previous, inner
                 if emit:
-                    yield inner
+                    if inner.startswith(_COMMENT_STARTS):
+                        # Interpolation comments cannot end the source file.
+                        for _ in inner.splitlines()[1:]:
+                            yield '\n'
+                    else:
+                        yield inner
 
     def _count_conditions_from_token(self, previous, token):
         # Split JS/TS exposes '${' then the expression; atomic TSX/JSX

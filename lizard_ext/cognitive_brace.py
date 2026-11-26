@@ -1,6 +1,6 @@
 """Brace, parenthesis, and semicolon nesting for cognitive complexity."""
 
-from lizard_core.file_analyzer import comment_counter, line_counter, token_counter
+from lizard_core.file_analyzer import line_counter, token_counter
 from lizard_core.file_info_builder import FileInfoBuilder
 from lizard_languages.javascript import JavaScriptReader
 from lizard_languages.javascript_expression import starts_statement
@@ -278,7 +278,7 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         reader = reader_class(context)
         counter = _InterpolationCounter(reader, self.profile, gated=False)
         tokens = reader.preprocess(tokens)
-        tokens = token_counter(line_counter(comment_counter(tokens, reader), reader), reader)
+        tokens = token_counter(line_counter(tokens, reader), reader)
         for token in reader(counter.measure(tokens), reader):
             pass
         counter.finish()
