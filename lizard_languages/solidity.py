@@ -25,3 +25,10 @@ class SolidityReader(CodeReader, CCppCommentsMixin):
 
 class SolidityStates(GoLikeStates):  # pylint: disable=R0903
     FUNC_KEYWORD = 'function'
+
+    def _state_global(self, token):
+        if token in ('constructor', 'receive', 'fallback'):
+            self.context.push_new_function(token)
+            self._state = self._expect_function_dec
+        else:
+            super()._state_global(token)
