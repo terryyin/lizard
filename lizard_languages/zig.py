@@ -24,6 +24,11 @@ class ZigReader(CodeReader, CCppCommentsMixin):
         super().__init__(context)
         self.parallel_states = [ZigStates(context)]
 
+    @staticmethod
+    def generate_tokens(source_code, addition='', token_class=None):
+        return CodeReader.generate_tokens(
+            source_code, r"|\\\\[^\r\n]*" + addition, token_class)
+
 
 class ZigStates(GoLikeStates):
     FUNC_KEYWORD = "fn"
