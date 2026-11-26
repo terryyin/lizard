@@ -60,7 +60,7 @@ class JavaScriptObjectsMixin:
             previous == '!' and getattr(self, '_postfix_operand', False)
             or previous == 'new' and self._prev_token == '.')
         if self._in_prop_value:
-            if after_field_value:
+            if after_field_type or after_field_value:
                 self._end_statement()
             else:
                 self._end_field_before_modifier()
