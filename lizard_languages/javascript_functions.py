@@ -14,8 +14,6 @@ __all__ = (
 
 
 class JavaScriptFunctionsMixin:
-    _signature_paren = None
-
     def _read_parenthesis_group(self):
         """Only possible signatures need provisional binding frames."""
         if parameter_group(self._prev_token):
