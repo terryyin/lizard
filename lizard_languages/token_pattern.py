@@ -111,7 +111,8 @@ def _token_text(match):
 def tokens_in_span(pattern, source, start, end, token_class=None,
                    macros=True):
     """With `macros`, a lone '#' starts a preprocessor line kept as one
-    token; languages without a preprocessor keep '#' as its own token."""
+    token. Lexer rules can name a hash group `standalone_hash` to keep it
+    separate. Languages without a preprocessor can disable grouping with False."""
     if token_class is None:
         token_class = _token_text
     macro = ""
@@ -124,7 +125,7 @@ def tokens_in_span(pattern, source, start, end, token_class=None,
                 yield macro
                 yield token
                 macro = ""
-        elif token == "#" and macros:
+        elif token == "#" and macros and match.lastgroup != "standalone_hash":
             macro = token
         else:
             yield token
