@@ -20,6 +20,64 @@ public String funcB() {
         self.assertEqual('funcA()', result[0].long_name)
         self.assertEqual('funcB()', result[1].long_name)
 
+    def test_json_text_block_counts_as_one_token(self):
+        code = '''
+class DiscountSchema {
+    String schema() {
+        return """
+            {
+                "if": {"required": ["discount"]},
+                "then": {"required": ["price"]}
+            }
+            """;
+    }
+
+    boolean enabled(int n) {
+        return n > 0;
+    }
+}
+'''
+        schema, enabled = get_java_function_list(code)
+        self.assertEqual(1, schema.cyclomatic_complexity)
+        self.assertEqual(8, schema.token_count)
+        self.assertEqual(8, schema.nloc)
+        self.assertEqual(10, schema.end_line)
+        self.assertEqual(12, enabled.start_line)
+
+    def test_text_block_with_escaped_quote_keeps_the_full_literal(self):
+        code = r'''
+class Help {
+    String example() {
+        return """
+            Use \""" to quote a text block.
+            if (ready) run();
+            """ + "\n";
+    }
+}
+'''
+        result, = get_java_function_list(code)
+        self.assertEqual(1, result.cyclomatic_complexity)
+        self.assertEqual(10, result.token_count)
+        self.assertEqual(6, result.nloc)
+
+    def test_unicode_escapes_in_text_block_delimiters(self):
+        for opening, closing in (
+                (r'\u0022\u0022\u0022' + '\n', r'\u0022\u0022\u0022'),
+                (r'"""\u0020\u000a\u005c\u0022"" ', '"""')):
+            with self.subTest(opening=opening, closing=closing):
+                result = get_java_function_list(f'''class JavaExample {{
+    String render() {{
+        return {opening}" if (ready) run(); "
+            {closing};
+    }}
+    void later() {{}}
+}}
+''')
+                self.assertEqual(
+                    [('JavaExample::render', 1, 8), ('JavaExample::later', 1, 5)],
+                    [(function.name, function.cyclomatic_complexity, function.token_count)
+                     for function in result])
+
     def test_function_with_throws(self):
         result = get_java_function_list("void fun() throws e1, e2{}")
         self.assertEqual(1, len(result))
@@ -216,6 +274,102 @@ class A {
 """)
         self.assertEqual(["(anonymous)::g", "A::f"], [f.name for f in result])
         self.assertEqual(16, result[1].token_count)
+
+    def test_method_call_in_ternary_field_preserves_constructor(self):
+        result = get_java_function_list("""class OptionalCache {
+    private final String cache = Boolean.getBoolean("cache") ? load() : null;
+
+    OptionalCache() {}
+    private String load() { return "default"; }
+}
+""")
+        self.assertEqual([('OptionalCache::OptionalCache', 4, 4), ('OptionalCache::load', 5, 5)],
+                         [(function.name, function.start_line, function.end_line)
+                          for function in result])
+
+    def test_negative_ternary_fallback_preserves_constructor(self):
+        for fallback in ('-1', '-.5'):
+            with self.subTest(fallback=fallback):
+                result = get_java_function_list(f'''class ScreenConfig {{
+    private final double scale = Boolean.getBoolean("uiScale") ? readScale() : {fallback};
+
+    ScreenConfig() {{}}
+    private double readScale() {{ return 2; }}
+}}
+''')
+                self.assertEqual(
+                    [('ScreenConfig::ScreenConfig', 4, 4), ('ScreenConfig::readScale', 5, 5)],
+                    [(function.name, function.start_line, function.end_line) for function in result])
+
+    def test_method_call_in_anonymous_ternary_field_preserves_method(self):
+        result = get_java_function_list("""class EscaperFactory {
+    interface Escaper { char[] escapeUnsafe(char c); }
+
+    Escaper build(String replacement) {
+        return new Escaper() {
+            final char[] replacementChars =
+                replacement != null ? replacement.toCharArray() : null;
+
+            @Override
+            public char[] escapeUnsafe(char c) {
+                return replacementChars;
+            }
+        };
+    }
+}
+""")
+        self.assertEqual([('(anonymous)::escapeUnsafe', 10, 12), ('EscaperFactory::build', 4, 14)],
+                         [(function.name, function.start_line, function.end_line)
+                          for function in result])
+
+    def test_ternary_field_before_closing_brace_preserves_outer_member(self):
+        result = get_java_function_list("""class CacheConfig {
+    class Entry {
+        int limit = Boolean.getBoolean("cache") ? capacity() : 1;
+    }
+
+    int capacity() {
+        return 4;
+    }
+}
+""")
+        self.assertEqual([('CacheConfig::capacity', 6, 8)],
+                         [(function.name, function.start_line, function.end_line)
+                          for function in result])
+
+    def test_escaped_text_block_fallback_preserves_constructor(self):
+        for delimiter in (r'\u0022""', r'\u0022\u0022\u0022'):
+            with self.subTest(delimiter=delimiter):
+                result = get_java_function_list(f'''class CacheConfig {{
+    String value = Boolean.getBoolean("cache") ? load() : {delimiter}
+        {{"mode": "safe"}}
+        {delimiter};
+    CacheConfig() {{}}
+    String load() {{ return ""; }}
+}}
+''')
+                self.assertEqual(
+                    [('CacheConfig::CacheConfig', 5, 5), ('CacheConfig::load', 6, 6)],
+                    [(function.name, function.start_line, function.end_line) for function in result])
+
+    def test_ternary_text_block_preserves_nested_members(self):
+        for opener in ('"""\n', r'"""\u000a'):
+            with self.subTest(opener=opener):
+                result = get_java_function_list(f'''class TokenConfig {{
+    class Nested {{
+        String tokens = {opener}
+            " int size = ready ? capacity() : null; }} void ghost() {{}} "
+            """;
+
+        Nested() {{}}
+        void member() {{}}
+    }}
+
+    void outer() {{}}
+}}
+''')
+                self.assertEqual(['Nested::Nested', 'Nested::member', 'TokenConfig::outer'],
+                                 [function.name for function in result])
 
     def test_record_with_explicit_constructor(self):
         result = get_java_function_list("""

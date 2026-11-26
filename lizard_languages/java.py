@@ -5,6 +5,29 @@ Language parser for Java
 from lizard_languages.code_reader import CodeStateMachine
 from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
 
+# A backslash escapes the next character. An unescaped triple quote ends the block.
+_JAVA_TEXT_BLOCK = r'|"""[ \t\f]*(?:\r\n?|\n)[^"\\]*(?:(?:\\.|"(?!""))[^"\\]*)*"""'
+
+
+def _unicode_text_block_pattern():
+    """Match escaped delimiters in the raw source to keep physical line counts."""
+    hex_digit = '[0-9a-fA-F]'
+    unicode_escape = rf'\\u+{hex_digit}{{4}}'
+    quote = r'(?:"|\\u+0022)'
+    delimiter = rf'{quote}{{3}}'
+    whitespace = r'(?:[ \t\f]|\\u+(?:000[9cC]|0020))*'
+    line_break = r'(?:\r\n?|\n|\\u+000[aAdD])'
+    backslash = rf'(?:\\u+005[cC]|\\(?!u+{hex_digit}{{4}}))'
+    escaped_char = rf'{backslash}(?:{unicode_escape}|(?!{unicode_escape}).)'
+    other_unicode = rf'\\u+(?!(?:0022|005[cC])){hex_digit}{{4}}'
+    body_char = rf'(?:{escaped_char}|{other_unicode}|{quote}(?!{quote}{{2}}))'
+    plain_text = r'[^"\\]*'
+    return rf'|{delimiter}{whitespace}{line_break}{plain_text}(?:{body_char}{plain_text})*{delimiter}'
+
+
+_JAVA_UNICODE_TEXT_BLOCK = _unicode_text_block_pattern()
+
+
 # "record" is a keyword for type declarations, but a valid method/field name.
 # Treat as keyword only when it cannot be the name in "Type name" (field/method/parameter).
 _JAVA_CLASS_MODIFIERS = frozenset({
@@ -59,6 +82,11 @@ class JavaReader(CLikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        has_raw_delimiter = '"""' in source_code
+        if r'\u' in source_code and (has_raw_delimiter or 'u0022' in source_code):
+            addition = _JAVA_UNICODE_TEXT_BLOCK + addition
+        elif has_raw_delimiter:
+            addition = _JAVA_TEXT_BLOCK + addition
         return clike_tokens(source_code, addition, token_class)
 
 
@@ -74,6 +102,7 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         self.handling_method_ref = False
         self._java_after_unqualified_annotation = False
         self._new_generic_depth = 0
+        self._in_ternary_branch = False
 
     def _consume_java_expression_tokens(self, token):
         """Skip tokens that are not class declarations: Foo.class, Type::meth."""
@@ -101,11 +130,37 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
             # Annotation type element, e.g. `String value() default "m";`, has no body
             self._state = self._state_element_default
             return
+        if token == ':' and self._in_ternary_branch:
+            self._in_ternary_branch = False
+            self._state = self._state_ternary_fallback
+            return
         super()._state_dec_to_imp(token)
 
     @CodeStateMachine.read_until_then(';')
     def _state_element_default(self, _token, _tokens):
         self._state = self._state_global
+
+    def _state_ternary_fallback(self, token):
+        if token == '-':
+            self._state = self._state_negative_ternary_fallback
+            return
+        # An escaped text block is one token that keeps its raw opener.
+        if token[0].isalnum() or token.startswith(('_', '$', "'", '"', r'\u')):
+            self._state = self._state_after_ternary_value
+        else:
+            self.next(self._state_initialization_list, token)
+
+    def _state_negative_ternary_fallback(self, token):
+        if token[0].isdigit() or (token[0] == '.' and token[1:2].isdigit()):
+            self._state = self._state_after_ternary_value
+        else:
+            self.next(self._state_one_initialization, token)
+
+    def _state_after_ternary_value(self, token):
+        if token == ';':
+            self.next(self._state_global, token)
+        else:
+            self.next(self._state_one_initialization, token)
 
     def _state_imp(self, token):
         # When entering a function implementation, set the flag
@@ -172,6 +227,10 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
     def _state_global(self, token):
         if self._consume_java_expression_tokens(token):
             return
+        if token == '?':
+            self._in_ternary_branch = True
+        elif self._in_ternary_branch and token in (';', '{', '}', ':'):
+            self._in_ternary_branch = False
         use_after_annotation = self._java_after_unqualified_annotation
         if token != "record":
             self._java_after_unqualified_annotation = False
