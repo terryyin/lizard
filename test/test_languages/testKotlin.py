@@ -59,6 +59,23 @@ fun applyOffset(
             [(f.name, f.parameters, f.parameter_count) for f in functions],
         )
 
+    def test_raw_defaults_do_not_change_parameter_depth(self):
+        functions = get_kotlin_function_list('''\
+fun delimiters(
+    prefix: String = """" ( " """,
+    suffix: String = """" ) " """,
+    count: Int = 0,
+): Int {
+    return prefix.length + suffix.length + count
+}
+
+fun fallback(): Int { return 1 }
+''')
+        self.assertEqual(
+            [("delimiters", ["prefix", "suffix", "count"], 3), ("fallback", [], 0)],
+            [(f.name, f.parameters, f.parameter_count) for f in functions],
+        )
+
     def test_one_function_with_return_value(self):
         result = get_kotlin_function_list('''
             fun sayGoodbye(): String {return "bye"}
