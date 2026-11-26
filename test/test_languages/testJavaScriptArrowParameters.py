@@ -70,6 +70,22 @@ def test_bare_named_and_anonymous_arrows():
         ('(anonymous)', 1, ['$']), ('(anonymous)', 1, ['a$b'])]
 
 
+@pytest.mark.parametrize('extension', ['js', 'ts'])
+def test_async_can_name_a_parameter(extension):
+    source = '''function dispatch(async, request) { return async(request); }
+const invoke = async => async();
+const handle = (async, request) => async(request);
+const load = (async (request) => request.value);
+'''
+
+    result = functions(source, extension)
+
+    assert [(f.name, f.parameters) for f in result] == [
+        ('dispatch', ['async', 'request']), ('invoke', ['async']),
+        ('handle', ['async', 'request']), ('load', ['request']),
+    ]
+
+
 def test_defaults_and_wrapper_call():
     default, wrapped = functions(
         'list.map((a = flag ? 1 : 2, b = make(1, 2), ...rest) => '
