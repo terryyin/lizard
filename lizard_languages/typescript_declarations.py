@@ -131,8 +131,10 @@ class TypeScriptDeclarationsMixin:
 
             if self.as_object:
                 def expect_interface_name(t):
-                    if t in (':', '(', '='):
-                        self.last_tokens = self._prev_token = token
+                    if t in (':', '(', '=', '?') or t.startswith('<'):
+                        if not self._handle_object_member(token):
+                            self.last_tokens = token
+                        self._prev_token = token
                         self.next(self._state_global, t)
                     else:
                         self.next(skip_interface, t)
