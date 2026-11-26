@@ -80,6 +80,25 @@ class Test_Python_function_structure(unittest.TestCase):
         self.assertEqual(5, functions[0].nloc)
         self.assertEqual(5, functions[0].end_line)
 
+    def test_multiline_return_annotation_keeps_function_body(self):
+        source = """\
+class Parser:
+    def parse_call_args(
+        self,
+    ) -> tuple[
+        list[Expr],
+        list[Keyword],
+    ]:
+        if self.has_args():
+            return self.read_args(), []
+        return [], []
+"""
+        functions = get_python_function_list(source)
+        self.assertEqual([(2, 10, 2)], [
+            (f.start_line, f.end_line, f.cyclomatic_complexity)
+            for f in functions
+        ])
+
     def test_function_surrounded_by_global_statements(self):
         source = """
         s1 = 'global statement'
