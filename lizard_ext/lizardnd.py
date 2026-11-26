@@ -47,7 +47,6 @@ class LizardExtension(object):  # pylint: disable=R0903
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
         ).union(block_ends, block_starts, loops)
-        reader_owns_block_start = isinstance(implied_semicolons, ImpliedSemicolons)
         context = reader.context
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
@@ -60,7 +59,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:
                     context.clear_prev_was_else()
-                    if reader_owns_block_start and token != indent_indicator:
+                    if (implied_semicolons is not None and token != indent_indicator
+                            and isinstance(implied_semicolons, ImpliedSemicolons)):
                         # The reader can start an arrow function at this brace.
                         yield token
                         context.open_block()
