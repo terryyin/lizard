@@ -39,10 +39,7 @@ class CSharpReader(CLikeReader):
 
     def __init__(self, context):
         super(CSharpReader, self).__init__(context)
-        self.parallel_states = [
-            CSharpStates(context),
-            CLikeNestingStackStates(context)
-        ]
+        self.parallel_states = [CSharpStates(context)]
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
@@ -65,7 +62,7 @@ class CSharpReader(CLikeReader):
                 self.context.add_condition(-1)
             if not isinstance(token, _InterpolationPart):
                 for state in self.parallel_states:
-                    state(token)
+                    state.read_scope_token(token)
             yield token
         for state in self.parallel_states:
             state.statemachine_before_return()
@@ -88,6 +85,16 @@ class CSharpStates(CLikeStates):
         # type's own "{" is not counted; "{" seen in the global state is.
         self._enclosing_classes = []
         self._open_braces = 0
+        self._nesting = CLikeNestingStackStates(context)
+        self._expression_depth = None
+        self._expression_method = False
+
+    def read_scope_token(self, token):
+        in_expression = self._expression_depth is not None
+        self(token)
+        if not in_expression and not (
+                token in ('class', 'struct') and self._state == self._state_constraints):
+            self._nesting(token)
 
     def try_new_function(self, name):
         if not self.in_primary_constructor:
@@ -96,22 +103,43 @@ class CSharpStates(CLikeStates):
                 self.context.current_function.name = f"{self.class_name}::{name}"
 
     def _state_dec_to_imp(self, token):
-        """Override to handle C# expression-bodied members (=>)"""
         if token == '=>':
-            # Expression-bodied member: confirm function and enter expression body
-            self.context.confirm_new_function()
-            self._state = self._state_expression_body
+            self._start_expression_body(method=True)
+        elif token == 'where':
+            self._state = self._state_constraints
         else:
-            super(CSharpStates, self)._state_dec_to_imp(token)
+            super()._state_dec_to_imp(token)
+
+    def _state_constraints(self, token):
+        if token in ('{', '=>', ';'):
+            self.next(self._state_dec_to_imp, token)
+
+    def _start_expression_body(self, method):
+        self._expression_depth = 0
+        self._expression_method = method
+        if method:
+            self.context.confirm_new_function()
+            # An expression body starts at the arrow, before any braces.
+            self.context.add_bare_nesting()
+        self._state = self._state_expression_body
 
     def _state_expression_body(self, token):
-        """Read the expression body until semicolon, processing tokens for complexity"""
-        if token == ';':
-            # End of expression-bodied method, finalize function and return to global state
-            self.context.end_of_function()
+        if token == '{':
+            self._expression_depth += 1
+            self.context.add_bare_nesting()
+        elif token == '}' and self._expression_depth:
+            self._expression_depth -= 1
+            self.context.pop_nesting()
+        elif token == ';' and not self._expression_depth:
+            if self._expression_method:
+                self.context.pop_nesting()
+            self._expression_depth = None
             self._state = self._state_global
 
     def _state_global(self, token):
+        if token == '=>':
+            self._start_expression_body(method=False)
+            return
         if token == '{':
             self._open_braces += 1
         elif token == '}':
