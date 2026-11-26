@@ -28,8 +28,20 @@ class TestCppNestingDepth(unittest.TestCase):
             }) && ready) return true;
             return false;
         }
+        bool permitted(bool ready, bool warm, bool safe, bool cached) {
+            return verify([&] {
+                if (ready) {
+                    if (warm && safe) { return true; }
+                }
+                if (cached) {
+                    if (safe) { return true; }
+                }
+                return false;
+            });
+        }
         """)
-        self.assertEqual([('verify', 0), ('allowed', 3), ('allowedLater', 2)],
+        self.assertEqual([('verify', 0), ('allowed', 3), ('allowedLater', 2),
+                          ('permitted', 3)],
                          [(f.name, f.max_nesting_depth) for f in functions])
 
     def test_initializer_braces_keep_the_logical_condition(self):
@@ -302,10 +314,22 @@ class TestJavaNestingDepth(unittest.TestCase):
                 }) && ready) return true;
                 return false;
             }
+            static boolean permitted(boolean ready, boolean warm, boolean safe, boolean cached) {
+                return verify(() -> {
+                    if (ready) {
+                        if (warm && safe) { return true; }
+                    }
+                    if (cached) {
+                        if (safe) { return true; }
+                    }
+                    return false;
+                });
+            }
         }
         """).function_list
         self.assertEqual([('Permissions::verify', 0), ('Permissions::log', 0),
-                          ('Permissions::allowed', 3), ('Permissions::allowedLater', 2)],
+                          ('Permissions::allowed', 3), ('Permissions::allowedLater', 2),
+                          ('Permissions::permitted', 3)],
                          [(f.name, f.max_nesting_depth) for f in functions])
 
     def test_array_initializer_braces_keep_the_logical_condition(self):
