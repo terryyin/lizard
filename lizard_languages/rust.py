@@ -58,6 +58,7 @@ class RustReader(CodeReader, CCppCommentsMixin):
 
 class RustStates(GoLikeStates):  # pylint: disable=R0903
     FUNC_KEYWORD = 'fn'
+    _SIGNATURE_CLOSERS = {'(': ')', '[': ']', '{': '}', '<': '>'}
 
     def __init__(self, context, in_match_arms=False):
         super().__init__(context)
@@ -96,23 +97,47 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
 
     def _expect_function_impl(self, token):
         if token == '{':
-            # Bracket depth guards semicolons. A brace still starts the body.
-            self.br_count = 0
             super()._expect_function_impl(token)
-        elif token in ('[', '('):
-            self.br_count += 1
-        elif token in (']', ')') and self.br_count:
-            self.br_count -= 1
-        elif token[0] == '#' or (token[0] == '"' and self.last_token in ('r', 'br', 'cr')):
-            # The tokenizer can hide delimiters around raw strings. With
-            # an incomplete signature, keep looking for the body.
-            self.br_count = 0
-            self.next(super()._expect_function_impl)
-        elif token == ';' and not self.br_count:
+        elif token in ('[', '(', '<'):
+            self._open_signature_group(token)
+        elif token == '!' and (self.last_token.isidentifier() or self.last_token.startswith('r#')):
+            self.next(self._after_type_macro_bang)
+        elif token == ';':
             self._fold_signature()
             if not self._forgive_enclosing:
                 self.context.forgive = False
             self.next(self._state_global)
+        else:
+            self._fall_back_on_hidden_delimiters(token)
+
+    def _after_type_macro_bang(self, token):
+        if token == '{':
+            self._open_signature_group(token)
+        else:
+            self.next(self._expect_function_impl, token)
+
+    def _open_signature_group(self, token):
+        ends = [self._SIGNATURE_CLOSERS[token]]
+
+        def read_group(token):
+            expected = ends[-1]
+            if token == expected:
+                ends.pop()
+                if not ends:
+                    self.next(self._expect_function_impl)
+            elif token in ('[', '(', '{') or (token == '<' and expected == '>'):
+                # Angle tokens can be operators inside a const block or macro.
+                ends.append(self._SIGNATURE_CLOSERS[token])
+            else:
+                self._fall_back_on_hidden_delimiters(token)
+
+        self.next(read_group)
+
+    def _fall_back_on_hidden_delimiters(self, token):
+        if token[0] == '#' or (token[0] == '"' and self.last_token in ('r', 'br', 'cr')):
+            # The tokenizer can hide delimiters around raw strings. With
+            # an incomplete signature, keep looking for the body.
+            self.next(super()._expect_function_impl)
 
     def _fold_signature(self):
         self.fold_into_enclosing_function()
