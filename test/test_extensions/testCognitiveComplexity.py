@@ -813,6 +813,22 @@ class TestJavaScriptNestedFunctions(unittest.TestCase):
                     code = "function factory(a, b) { " + (form % (default, body)) + " }"
                     self.assertEqual([2, 0], cogc("a.js", code))
 
+    def test_quoted_async_arrow_owns_its_parameter_default(self):
+        for filename, parameter, return_type in (
+                ("a.js", "x", ""),
+                ("a.ts", "x: boolean", ": Promise<boolean>")):
+            with self.subTest(filename=filename):
+                self.assertEqual([2, 0], cogc(filename, """
+                    function factory(a = false, b = false) {
+                      return {'entry': async (%s = a || b)%s => x || b};
+                    }""" % (parameter, return_type)))
+
+    def test_call_to_async_after_quoted_key_keeps_its_argument_in_the_factory(self):
+        self.assertEqual([1], cogc("a.js", """
+            function factory(a, b, async) {
+              return {'entry': async(a || b)};
+            }"""))
+
     def test_nested_function_keeps_its_own_score(self):
         self.assertEqual([3, 2], cogc("a.js", """
             function report(errors) {
