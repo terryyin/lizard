@@ -94,6 +94,18 @@ function preview(total, count, fallback) {
                 function, = analyze_file.analyze_source_code(filename, code).function_list
                 self.assertEqual(2, function.cyclomatic_complexity)
 
+    def test_regex_spelling_inside_a_line_comment_stays_in_the_comment(self):
+        code = '''
+function preview(total, fallback) {
+  return `Ratio: ${(// Example: /x/ } ?
+    total || fallback)}`;
+}
+'''
+        for filename in ('preview.js', 'preview.ts', 'preview.jsx', 'preview.tsx'):
+            with self.subTest(filename=filename):
+                function, = analyze_file.analyze_source_code(filename, code).function_list
+                self.assertEqual(2, function.cyclomatic_complexity)
+
     def test_keyword_member_inside_interpolation_is_not_a_condition(self):
         code = "function a(p) { return `${p.catch(x)}`; }\n"
         for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
