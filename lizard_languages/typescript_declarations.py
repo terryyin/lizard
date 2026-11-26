@@ -29,8 +29,6 @@ class TypeScriptDeclarationsMixin:
         elif (token in ('as', 'satisfies')
               and (not self.as_object or self._in_prop_value)
               and self._assertion_operand()):
-            if self.as_class:
-                self._annotating_class_field = True
             self._consume_type_annotation()
             return True
         if token == 'declare':
@@ -194,7 +192,7 @@ class TypeScriptDeclarationsMixin:
                     self.next(self._state_global)
                     self._prev_token = token
                     return
-                if class_field:
+                if class_field or self.as_class and self._in_prop_value:
                     self._read_class_new(token, after_field_type=True)
                     return
             if token:
