@@ -7,12 +7,6 @@ import re
 from .code_reader import CodeReader
 from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
-from .token_pattern import compiled_token_pattern, tokens_in_span
-
-
-# A hash followed by a name or repetition can be a standalone macro token.
-# Keep the tokenizer's fallback around raw identifiers and raw strings.
-_MACRO_HASH = re.compile(r"""(?<![r"#])#[^\S\n]*(?!(?:b|c)?r#*")(?=\(|[^\W\d])""")
 
 
 class RustReader(CodeReader, CCppCommentsMixin):
@@ -39,14 +33,12 @@ class RustReader(CodeReader, CCppCommentsMixin):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         addition = (
+            (_MACRO_HASH_TOKEN if '#' in source_code else '') +
             # char literals, before lifetimes, which also start with `'`
             r"|(?:'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])')"
             r"|(?:'\w+\b)")  # lifetimes, labels
-        source_code = _flatten_nested_comments(source_code)
-        if _MACRO_HASH.search(source_code) is None:
-            return CodeReader.generate_tokens(source_code, addition, token_class)
-        return tokens_in_span(compiled_token_pattern(addition), source_code,
-                              0, len(source_code), token_class, macros=_group_rust_hash)
+        return CodeReader.generate_tokens(
+            _flatten_nested_comments(source_code), addition, token_class)
 
     def preprocess(self, tokens):
         """Normalize an empty closure's `||` to one non-logical pipe token."""
@@ -63,10 +55,6 @@ class RustReader(CodeReader, CCppCommentsMixin):
                 yield token
             if token[0] != '/':  # comments do not end an expression
                 last = token
-
-
-def _group_rust_hash(match):
-    return _MACRO_HASH.match(match.string, match.start()) is None
 
 
 class RustStates(GoLikeStates):  # pylint: disable=R0903
@@ -205,3 +193,11 @@ def _flatten_nested_comments(source):
         out.append(source[i:end])
         i = end
     return ''.join(out)
+
+
+# A hash followed by a name or repetition can be a standalone macro token.
+# Keep the tokenizer's fallback around raw identifiers and raw strings.
+_MACRO_HASH_TOKEN = (
+    r"""|(?<![r"#])(?P<standalone_hash>#)"""
+    r"""(?=[^\S\n]*(?!(?:b|c)?r#*")(?:\(|[^\W\d]))"""
+)

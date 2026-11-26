@@ -8,47 +8,6 @@ from .testRust import get_rust_function_list
 
 class TestRustTokens(unittest.TestCase):
 
-    def test_macro_interpolation_keeps_the_enclosing_range(self):
-        result = get_rust_function_list('''macro_rules! capture {
-            ($($tokens:tt)*) => { stringify!($($tokens)*) };
-        }
-        fn fields() -> &'static str {
-            capture! {
-                Record { fields: #fields } }
-        }
-        fn after() {}
-        ''')
-        self.assertEqual(
-            [('fields', 4, 7), ('after', 8, 8)],
-            [(f.name, f.start_line, f.end_line) for f in result])
-
-    def test_repeated_macro_interpolation_keeps_the_enclosing_range(self):
-        result = get_rust_function_list('''macro_rules! capture {
-            ($($tokens:tt)*) => { stringify!($($tokens)*) };
-        }
-        fn fields() -> &'static str {
-            capture! { #( #fields ),* }
-        }
-        fn after() {}
-        ''')
-        self.assertEqual(
-            [('fields', 4, 6), ('after', 7, 7)],
-            [(f.name, f.start_line, f.end_line) for f in result])
-
-    def test_executable_macro_keeps_its_condition(self):
-        analyzer = FileAnalyzer(get_extensions(['ND', 'cognitive']))
-        result = analyzer.analyze_source_code('macro.rs', '''macro_rules! run {
-            ($value:expr) => { $value };
-        }
-        fn choose(flag: bool) -> usize {
-            run! { if flag { 1 } else { 0 } }
-        }
-        ''').function_list
-        self.assertEqual(
-            [('choose', 4, 6, 2, 1, 2)],
-            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity,
-              f.max_nesting_depth, f.cognitive_complexity) for f in result])
-
     def test_closure_without_parameters_is_one_token(self):
         # `||` of a closure without parameters is one token of the source,
         # and not a logical or.
@@ -196,3 +155,44 @@ class TestRustTokens(unittest.TestCase):
             [('run', 1, 1, 24, 3), ('next', 2, 2, 17, 2)],
             [(f.name, f.start_line, f.end_line, f.token_count,
               f.cyclomatic_complexity) for f in result])
+
+    def test_macro_interpolation_keeps_the_enclosing_range(self):
+        result = get_rust_function_list('''macro_rules! capture {
+            ($($tokens:tt)*) => { stringify!($($tokens)*) };
+        }
+        fn fields() -> &'static str {
+            capture! {
+                Record { fields: #fields } }
+        }
+        fn after() {}
+        ''')
+        self.assertEqual(
+            [('fields', 4, 7), ('after', 8, 8)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_repeated_macro_interpolation_keeps_the_enclosing_range(self):
+        result = get_rust_function_list('''macro_rules! capture {
+            ($($tokens:tt)*) => { stringify!($($tokens)*) };
+        }
+        fn fields() -> &'static str {
+            capture! { #( #fields ),* }
+        }
+        fn after() {}
+        ''')
+        self.assertEqual(
+            [('fields', 4, 6), ('after', 7, 7)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_executable_macro_keeps_its_condition(self):
+        analyzer = FileAnalyzer(get_extensions(['ND', 'cognitive']))
+        result = analyzer.analyze_source_code('macro.rs', '''macro_rules! run {
+            ($value:expr) => { $value };
+        }
+        fn choose(flag: bool) -> usize {
+            run! { if flag { 1 } else { 0 } }
+        }
+        ''').function_list
+        self.assertEqual(
+            [('choose', 4, 6, 2, 1, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity,
+              f.max_nesting_depth, f.cognitive_complexity) for f in result])
