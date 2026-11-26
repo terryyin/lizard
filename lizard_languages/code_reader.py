@@ -239,7 +239,7 @@ class CodeReader:
         parameters after a declaring keyword: `fun <T> catch()`.
         Return a list."""
         keywords = (_STRUCTURE_KEYWORDS | self.control_flow_keywords
-                    | self.case_keywords)
+                    | self.case_keywords | self.logical_operators)
         tokens = [t for t in tokens if not t.isspace() or t == '\n']
         # Keywords are rare, so start from them and look back.
         for index in compress(range(len(tokens)), map(keywords.__contains__, tokens)):

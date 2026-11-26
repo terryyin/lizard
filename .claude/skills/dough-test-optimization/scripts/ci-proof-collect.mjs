@@ -1,15 +1,10 @@
 // Collects one attempt's CI proof fragments into its summary: a GitHub
 // Actions run attempt's or a CI adapter's attempt's (ci-proof-contract.mjs).
 // The declaration is the expectation: fragments present never add a part. A
-// declaration names an entry, its part count and, optionally, the unit its
+// declaration names an entry, its part count and the unit its
 // parts are counted in (`case` or `file`): only that unit's fragments fill
-// it, and its evidence keeps that unit even when no fragment arrived. A
-// declaration without a unit takes the entry's fragments of any unit no
-// declaration of the entry names, as before units were declared: its
-// evidence is counted in the one unit they report (legacy, labelled null,
-// when none was present). When they report more than one unit, it cannot
-// tell which unit its parts are counted in: every present part is
-// ambiguous, and a note says why. A fragment from another attempt, of either
+// it, and its evidence keeps that unit even when no fragment arrived.
+// A fragment from another attempt, of either
 // identity, or another revision, or for an undeclared entry, unit or part
 // count, is excluded with a note; a declared part with no fragment is
 // missing, and one with more than one is ambiguous. Neither is counted, and
@@ -19,13 +14,12 @@
 // collector (ci-proof-summary.mjs).
 import {
   COUNT_FIELDS,
-  LEGACY_UNIT,
+  DECLARED_UNITS,
   SUMMARY_SCHEMA_VERSION,
   attemptOf,
   fragmentProblems,
   summaryAttempt,
   unitNoun,
-  unitOf,
   zeroCounts,
 } from "./ci-proof-contract.mjs";
 import {
@@ -33,17 +27,6 @@ import {
   breakdownOf,
   emptyFigures,
 } from "./ci-proof-figures.mjs";
-
-// What a unit's results are called, as Intent calls them; a legacy unit
-// also names the label it was spelled with.
-const unitWords = ({ unit, label }) =>
-  unit !== LEGACY_UNIT || label === null || label === undefined
-    ? unitNoun(unit, 2)
-    : `${unitNoun(unit, 2)} (${label})`;
-
-// " for test files" after a declaration of a unit; nothing without one.
-const forUnit = ({ unit }) =>
-  unit === undefined ? "" : ` for ${unitWords({ unit })}`;
 
 // An evidence's file breakdown summed over its broken-down present
 // FRAGMENTS, or nothing when none was broken down.
@@ -60,36 +43,9 @@ function evidenceBreakdown(fragments) {
   return breakdownOf(byPath);
 }
 
-// The units the PRESENT fragments report, each once.
-function unitsReported(present) {
-  const units = new Map();
-  for (const value of present) {
-    const unit = unitOf(value);
-    units.set(JSON.stringify(unit), unit);
-  }
-  return [...units.values()];
-}
-
-// The evidence of one DECLARATION from the fragments FOUND for its parts,
-// noting in NOTES why a declaration without a unit counts none.
-function evidenceOf({ entry, parts: declared, unit, found }, notes) {
+// The evidence of one declaration from the fragments found for its parts.
+function evidenceOf({ parts: declared, unit, found }) {
   const candidatesOf = (part) => found.get(part) ?? [];
-  const present = [...found.values()]
-    .filter((candidates) => candidates.length === 1)
-    .map(([only]) => only);
-  const reported = unit === undefined ? unitsReported(present) : [];
-  const conflicting = reported.length > 1;
-  if (conflicting) {
-    notes.push(
-      `entry ${entry} declares its ${declared} parts without a unit, but its fragments report ${reported.map(unitWords).join(" and ")}, so none is counted`,
-    );
-  }
-  const counted =
-    unit !== undefined
-      ? { unit }
-      : reported.length === 1
-        ? reported[0]
-        : { unit: LEGACY_UNIT, label: null };
   const totals = zeroCounts();
   let durationMs;
   let untimed;
@@ -98,7 +54,7 @@ function evidenceOf({ entry, parts: declared, unit, found }, notes) {
     const part = index + 1;
     const candidates = candidatesOf(part);
     if (candidates.length === 0) return { part, status: "missing" };
-    if (candidates.length > 1 || conflicting) {
+    if (candidates.length > 1) {
       return { part, status: "ambiguous" };
     }
     const [only] = candidates;
@@ -120,7 +76,7 @@ function evidenceOf({ entry, parts: declared, unit, found }, notes) {
     return shown;
   });
   return {
-    ...counted,
+    unit,
     ...totals,
     ...(durationMs === undefined ? {} : { durationMs }),
     ...(untimed === undefined ? {} : { untimed }),
@@ -129,13 +85,20 @@ function evidenceOf({ entry, parts: declared, unit, found }, notes) {
   };
 }
 
-// EXPECT's declarations, each once: `{entry, parts, unit?}`.
+// Each expected entry and unit pair supplies one part count.
 function declarationsOf(expect) {
   const seen = new Set();
   return expect.map(({ entry, parts, unit }) => {
-    const key = JSON.stringify([entry, unit ?? null]);
+    if (!DECLARED_UNITS.includes(unit)) {
+      throw new Error(
+        `entry ${entry} requires a unit of ${DECLARED_UNITS.join(" or ")}`,
+      );
+    }
+    const key = JSON.stringify([entry, unit]);
     if (seen.has(key)) {
-      throw new Error(`entry ${entry} is declared twice${forUnit({ unit })}`);
+      throw new Error(
+        `entry ${entry} is declared twice for ${unitNoun(unit, 2)}`,
+      );
     }
     seen.add(key);
     return { entry, parts, unit, found: new Map() };
@@ -143,7 +106,7 @@ function declarationsOf(expect) {
 }
 
 // Builds the summary of RUN, the attempt collected, from the fragments read
-// and EXPECT, the declared entries, their parts and any unit. Returns the
+// and EXPECT, the declared entries, their parts and units. Returns the
 // summary and a note for every fragment excluded from it or not counted.
 export function summarize({ fragments, expect, run }) {
   const notes = [];
@@ -152,10 +115,6 @@ export function summarize({ fragments, expect, run }) {
     declarations.find(
       (declaration) =>
         declaration.entry === value.entry && declaration.unit === value.unit,
-    ) ??
-    declarations.find(
-      (declaration) =>
-        declaration.entry === value.entry && declaration.unit === undefined,
     );
   for (const { source, value } of fragments) {
     const problems = fragmentProblems(value);
@@ -172,12 +131,12 @@ export function summarize({ fragments, expect, run }) {
     } else if (declaration === undefined) {
       exclude(
         declarations.some(({ entry }) => entry === value.entry)
-          ? `entry ${value.entry} declares no parts for ${unitWords(value)}`
+          ? `entry ${value.entry} declares no parts for ${unitNoun(value.unit, 2)}`
           : `entry ${value.entry} is not declared`,
       );
     } else if (value.of !== declaration.parts) {
       exclude(
-        `of ${value.of}, but ${value.entry} declares ${declaration.parts} parts${forUnit(declaration)}`,
+        `of ${value.of}, but ${value.entry} declares ${declaration.parts} parts for ${unitNoun(declaration.unit, 2)}`,
       );
     } else {
       const { found } = declaration;
@@ -186,7 +145,7 @@ export function summarize({ fragments, expect, run }) {
   }
   const entries = [];
   for (const declaration of declarations) {
-    const evidence = evidenceOf(declaration, notes);
+    const evidence = evidenceOf(declaration);
     const entry = entries.find(({ path }) => path === declaration.entry);
     if (entry === undefined) {
       entries.push({ path: declaration.entry, evidence: [evidence] });
@@ -215,7 +174,7 @@ export function describeSummary(summary) {
       const gaps = evidence.parts
         .filter((part) => part.status !== "present")
         .map((part) => `part ${part.part} of ${of} ${part.status}`);
-      const counts = `${evidence.passed} passed, ${evidence.failed} failed, ${evidence.other} other ${unitWords(evidence)}`;
+      const counts = `${evidence.passed} passed, ${evidence.failed} failed, ${evidence.other} other ${unitNoun(evidence.unit, 2)}`;
       return [`${entry.path}: ${counts}`, ...gaps].join("; ");
     }),
   );

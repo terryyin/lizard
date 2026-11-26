@@ -1,20 +1,13 @@
-// Git mechanics for a validated execution increment or owned repair: owned
-// workspace/suffix, authorized target, and acceptance receipt. Resolves
-// the previously published base after fetch; refuses unresolvable or
-// unpublished bases; accepts an already-held candidate; reconciles an owned
-// suffix once on a racing tip with applicable proof; transport timeouts stop
-// without rewrite. Reconciliation lives in
-// execution-increment-reconciliation.mjs; remote/accept helpers in
-// execution-increment-publication-support.mjs. Installed guidance is the
-// agent's contract.
+// Apply execution ownership and proof to the shared exact publication loop.
 import { fetchedTargetStop, stopped } from "./applicable-candidate-proof.mjs";
 import { reconcileAndRequireProof } from "./execution-increment-reconciliation.mjs";
 import { retainLandingComparison } from "./dashboard-landing.mjs";
-import { executionIncrementRemoteOps } from "./execution-increment-publication-support.mjs";
+import { acceptPublishedExecutionIncrement } from "./execution-increment-publication-support.mjs";
 import { resolvePublicationLandingContext } from "./resolve-publication-landing-context.mjs";
 import { defaultBacklogPath } from "../../dough-product-backlog/scripts/product-backlog-store.mjs";
 import { resolveCommitId, remoteHolds, revParse } from "./publication-git.mjs";
 import { isAncestor } from "./workspace-publication-ownership.mjs";
+import { publishExactCandidate } from "./publication-loop.mjs";
 import { doneRecordsStop } from "./publication-backlog-validation.mjs";
 
 export async function publishExecutionIncrement({
@@ -45,57 +38,8 @@ export async function publishExecutionIncrement({
     previouslyPublishedBase: suppliedBase,
     suffixBase: suppliedBase,
     reconciliations: 0,
-    remoteTip: null,
-    pushIssued: false,
   };
-  const { fetchTarget, push, readTip, accept } = executionIncrementRemoteOps({
-    workspace,
-    targetRef,
-    remote,
-    landingContext,
-    defaultCheckout,
-    preRebaseSha,
-    attempt,
-  });
-
-  const fetched = await fetchTarget("fetch");
-  if (fetched.stop) return fetched.stop;
-  // A full ID and its unique abbreviation must give one decision. Input that
-  // names no single commit is refused before anything is compared or written.
-  const resolved = await resolveCommitId(workspace, suppliedBase);
-  if (resolved.problem) {
-    return stopped("unresolvable-base", {
-      problem: resolved.problem,
-      candidate: preRebaseSha,
-      preRebaseSha,
-      remoteTip: attempt.remoteTip,
-      previouslyPublishedBase: suppliedBase,
-      error: `previously published base ${JSON.stringify(suppliedBase)} names no single commit (${resolved.problem}); rerun with the full commit ID from the delivery receipt`,
-    });
-  }
-  attempt.previouslyPublishedBase = resolved.commit;
-  attempt.suffixBase = resolved.commit;
-  // Commits under a base the remote does not hold are not this suffix: pushing
-  // would publish them and reconciling would rebase them off the branch.
-  if (
-    !(await remoteHolds(workspace, attempt.previouslyPublishedBase, remote))
-  ) {
-    return stopped("unpublished-base", {
-      candidate: preRebaseSha,
-      preRebaseSha,
-      remoteTip: attempt.remoteTip,
-      previouslyPublishedBase: attempt.previouslyPublishedBase,
-    });
-  }
-  const held = (n) =>
-    fetchedTargetStop(onFetchedTarget, n, {
-      candidate: attempt.candidate,
-      preRebaseSha,
-      remoteTip: attempt.remoteTip,
-      previouslyPublishedBase: attempt.previouslyPublishedBase,
-      suffixBase: attempt.suffixBase,
-      reconciliations: attempt.reconciliations,
-    });
+  const facts = (remoteTip) => ({ ...attempt, preRebaseSha, remoteTip });
   // Reconciles, advancing this attempt's state, or returns the stop.
   const reconcileOnto = async (onto, upstream, retry = false) => {
     const rewritten = await reconcileAndRequireProof({
@@ -119,32 +63,8 @@ export async function publishExecutionIncrement({
     attempt.reconciliations = rewritten.reconciliations;
     return null;
   };
-  if (validatedCandidate && preRebaseSha !== validatedCandidate) {
-    return stopped("candidate-mismatch", {
-      candidate: preRebaseSha,
-      validatedCandidate,
-      preRebaseSha,
-      remoteTip: attempt.remoteTip,
-      previouslyPublishedBase: attempt.previouslyPublishedBase,
-    });
-  }
-  if (validatedCandidate) {
-    attempt.candidate = validatedCandidate;
-  }
-
-  // As resume classifies it: the remote already holds this candidate, so this
-  // delivery only reports and registers that acceptance. An empty suffix has
-  // nothing to deliver and still moves onto the fetched tip below.
-  if (
-    attempt.remoteTip &&
-    attempt.candidate !== attempt.previouslyPublishedBase &&
-    (await isAncestor(workspace, attempt.candidate, attempt.remoteTip))
-  ) {
-    return accept(attempt.remoteTip, "already-published");
-  }
-
   const checkedCandidates = new Set();
-  const invalidCandidate = async () => {
+  const invalidCandidate = async (remoteTip) => {
     const { candidate } = attempt;
     if (checkedCandidates.has(candidate)) return null;
     const invalid = await doneRecordsStop({
@@ -157,83 +77,123 @@ export async function publishExecutionIncrement({
       return null;
     }
     return stopped(invalid.status, {
-      preRebaseSha,
-      remoteTip: attempt.remoteTip,
-      previouslyPublishedBase: attempt.previouslyPublishedBase,
-      suffixBase: attempt.suffixBase,
-      reconciliations: attempt.reconciliations,
+      ...facts(remoteTip),
       ...invalid.fields,
     });
   };
-  const invalid = await invalidCandidate();
-  if (invalid) return invalid;
-  const heldFirst = await held(0);
-  if (heldFirst) return heldFirst;
-  // Validated resume supplies previouslyPublishedBase as the tip the candidate
-  // already extends. Only a further remote advance rewrites again.
-  if (
-    attempt.remoteTip &&
-    attempt.remoteTip !== attempt.previouslyPublishedBase
-  ) {
-    const stop = await reconcileOnto(
-      attempt.remoteTip,
-      attempt.previouslyPublishedBase,
-    );
-    if (stop) return stop;
-  }
 
-  const preparePush = async (n) => {
-    const invalid = await invalidCandidate();
-    if (invalid) return invalid;
-    const comparison = {
-      candidate: attempt.candidate,
-      suffixBase: attempt.suffixBase,
+  const checkInitialCandidate = async (remoteTip) => {
+    // Only the fetched remote can establish the base of the owned suffix.
+    const resolved = await resolveCommitId(workspace, suppliedBase);
+    const baseFields = {
+      candidate: preRebaseSha,
+      preRebaseSha,
+      remoteTip,
+      previouslyPublishedBase: resolved.commit ?? suppliedBase,
     };
-    if (landingContext)
-      await retainLandingComparison(landingContext, comparison, {
-        remote,
-        targetRef,
-      });
-    await beforePush?.({ attempt: n, ...comparison });
-  };
-  const firstStop = await preparePush(0);
-  if (firstStop) return firstStop;
-  let pushed = await push("push");
-  if (pushed.stop) return pushed.stop;
-  if (pushed.value.rejected) {
-    const refetched = await fetchTarget("fetch-after-rejection");
-    if (refetched.stop) return refetched.stop;
-    const heldRetry = await held(1);
-    if (heldRetry) return heldRetry;
-    const stop = await reconcileOnto(
-      attempt.remoteTip,
-      attempt.suffixBase,
-      true,
-    );
-    if (stop) return stop;
-
-    const retryStop = await preparePush(1);
-    if (retryStop) return retryStop;
-    pushed = await push("retry-push");
-    if (pushed.stop) return pushed.stop;
-    if (pushed.value.rejected) {
-      const contended = await readTip("contention-tip");
-      if (contended.stop) return contended.stop;
-      return stopped("persistent-contention", {
-        candidate: attempt.candidate,
-        preRebaseSha,
-        remoteTip: contended.value,
-        previouslyPublishedBase: attempt.previouslyPublishedBase,
-        suffixBase: attempt.suffixBase,
-        reconciliations: attempt.reconciliations,
-      });
+    if (resolved.problem) {
+      return {
+        stop: stopped("unresolvable-base", {
+          ...baseFields,
+          problem: resolved.problem,
+          error: `previously published base ${JSON.stringify(suppliedBase)} names no single commit (${resolved.problem}); rerun with the full commit ID from the delivery receipt`,
+        }),
+      };
     }
-  }
+    attempt.previouslyPublishedBase = resolved.commit;
+    attempt.suffixBase = resolved.commit;
+    if (!(await remoteHolds(workspace, resolved.commit, remote))) {
+      return { stop: stopped("unpublished-base", baseFields) };
+    }
+    if (validatedCandidate && preRebaseSha !== validatedCandidate) {
+      return {
+        stop: stopped("candidate-mismatch", {
+          ...baseFields,
+          validatedCandidate,
+        }),
+      };
+    }
+    if (
+      remoteTip &&
+      preRebaseSha !== resolved.commit &&
+      (await isAncestor(workspace, preRebaseSha, remoteTip))
+    ) {
+      return { alreadyPublished: true };
+    }
+    const stop = await invalidCandidate(remoteTip);
+    if (stop) return { stop };
+  };
 
-  const confirmed = await readTip("confirmation-tip");
-  if (confirmed.stop) return confirmed.stop;
-  if (confirmed.value !== attempt.candidate) {
-    throw new Error("remote did not accept the candidate");
+  const { acceptedTip, contentionTip, pushCount, stop, timeout } =
+    await publishExactCandidate({
+      workspace,
+      remote,
+      targetRef,
+      retryRejected: true,
+      prepareCandidate: async ({ attempt: attemptNumber, remoteTip }) => {
+        if (attemptNumber === 0) {
+          const initial = await checkInitialCandidate(remoteTip);
+          if (initial) return initial;
+        }
+        const held = await fetchedTargetStop(
+          onFetchedTarget,
+          attemptNumber,
+          facts(remoteTip),
+        );
+        if (held) return { stop: held };
+        const retry = attemptNumber > 0;
+        if (
+          retry ||
+          (remoteTip && remoteTip !== attempt.previouslyPublishedBase)
+        ) {
+          const conflict = await reconcileOnto(
+            remoteTip,
+            attempt.suffixBase,
+            retry,
+          );
+          if (conflict) return { stop: conflict };
+        }
+
+        const invalid = await invalidCandidate(remoteTip);
+        if (invalid) return { stop: invalid };
+        const comparison = {
+          candidate: attempt.candidate,
+          suffixBase: attempt.suffixBase,
+        };
+        if (landingContext)
+          await retainLandingComparison(landingContext, comparison, {
+            remote,
+            targetRef,
+          });
+        await beforePush?.({ attempt: attemptNumber, ...comparison });
+        return comparison;
+      },
+    });
+  if (stop) return stop;
+  if (timeout) {
+    const { stage, remoteTip, pushIssued, error } = timeout;
+    return stopped("transport-timeout", {
+      ...facts(remoteTip),
+      stage,
+      pushIssued,
+      boundMs: error.boundMs,
+      remote,
+      target: targetRef,
+    });
   }
-  return accept(confirmed.value);
+  if (contentionTip !== undefined) {
+    return stopped("persistent-contention", facts(contentionTip));
+  }
+  if (!acceptedTip) throw new Error("remote did not accept the candidate");
+  return acceptPublishedExecutionIncrement({
+    ...attempt,
+    workspace,
+    remote,
+    targetRef,
+    landingContext,
+    defaultCheckout,
+    preRebaseSha,
+    acceptedTip,
+    classification: pushCount === 0 ? "already-published" : undefined,
+  });
 }
