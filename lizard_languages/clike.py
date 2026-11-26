@@ -75,7 +75,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                         yield macro.group(2) or "\"\""
                     for _ in macro.group(2).split('\n')[1:]:
                         yield '\n'
-                    if macro.group(1) in ('define', 'undef'):
+                    if macro.group(1) in _MacroPrefixDefinitions.DIRECTIVES:
                         self._read_macro_directive(macro.group(1), macro.group(2))
                 else:
                     yield token
@@ -96,10 +96,6 @@ class CppRValueRefStates(CodeStateMachine):
     _LAMBDA_IDLE_TOKENS = _LAMBDA_GROUP_TOKENS | _IDLE_TOKENS
     _LAMBDA_SCAN_TOKENS = _LAMBDA_GROUP_TOKENS | _REFERENCE_SCAN_TOKENS
 
-    _PREFIX_MACRO = re.compile(
-        r"(?P<name>\w+)\(\s*(?P<left>\w+)\s*,\s*(?P<right>\w+)\s*\)"
-        r"\s*\(\s*(?P=left)\s+(?P=right)\s*\)\s*(?://[^\n]*)?\Z")
-
     def __init__(self, context, conditions):
         super().__init__(context)
         self._conditions = conditions
@@ -109,20 +105,14 @@ class CppRValueRefStates(CodeStateMachine):
         self._type_before_paren = False
         self._lambda = None
         self._events = self._IDLE_TOKENS
+        self._macro_definitions = _MacroPrefixDefinitions()
         self._prefix_macros = set()
         self._macro_candidate = False
         self._macro_prefix_depth = 0
 
     def read_macro_directive(self, directive, definition):
-        if not self._recognize_references:
-            return
-        macro = self._PREFIX_MACRO.match(definition) if directive == "define" else None
-        if macro:
-            self._prefix_macros.add(macro["name"])
-        elif self._prefix_macros:
-            name = re.match(r"\w+", definition)
-            if name:
-                self._prefix_macros.discard(name[0])
+        if self._recognize_references:
+            self._prefix_macros = self._macro_definitions.read(directive, definition)
 
     def __call__(self, token, reader=None):
         events = self._events
@@ -259,6 +249,86 @@ class CppRValueRefStates(CodeStateMachine):
         # Plain tokens have no extension metadata.
         return token.__class__ is str or not (
             getattr(token, 'is_ignored_condition', False) or getattr(token, 'is_member_name', False))
+
+
+class _MacroPrefixDefinitions:
+    """Find local prefix macros whose definitions agree with the current guards."""
+
+    _START = {"if", "ifdef", "ifndef"}
+    _ELIF = {"elif", "elifdef", "elifndef"}
+    _ALTERNATIVES = _ELIF | {"else"}
+    DIRECTIVES = _START | _ALTERNATIVES | {"endif", "define", "undef", "include"}
+
+    _PREFIX_MACRO = re.compile(
+        r"(?P<name>\w+)\(\s*(?P<left>\w+)\s*,\s*(?P<right>\w+)\s*\)"
+        r"\s*\(\s*(?P=left)\s+(?P=right)\s*\)\s*(?://[^\n]*)?\Z")
+
+    def __init__(self):
+        self._branches = []
+        self._definitions = {}
+        self._prefix_names = set()
+        self._active_prefixes = set()
+        self._macro_versions = {}
+        self._include_version = None
+
+    def read(self, directive, definition):
+        if directive in self._START:
+            self._branches.append([self._guard(directive, definition)])
+        elif self._branches and directive in self._ALTERNATIVES:
+            branch = self._branches[-1]
+            condition, sense = branch[-1]
+            branch[-1] = condition, not sense
+            if directive in self._ELIF:
+                branch.append(self._guard("if" + directive[4:], definition))
+        elif self._branches and directive == "endif":
+            self._branches.pop()
+        elif directive == "include":
+            self._include_version = object()
+
+        guards = dict(guard for branch in self._branches for guard in branch)
+        if directive in ("define", "undef"):
+            name = self._record_definition(directive, definition, guards)
+            if name in self._prefix_names and self._is_prefix(name, guards):
+                self._active_prefixes.add(name)
+            else:
+                self._active_prefixes.discard(name)
+        else:
+            self._active_prefixes = {name for name in self._prefix_names if self._is_prefix(name, guards)}
+        return self._active_prefixes
+
+    def _guard(self, directive, definition):
+        definition = definition.strip()
+        if not definition.isidentifier():
+            # For a compound condition, use only this conditional's own arms.
+            return object(), True
+        kind = "value" if directive == "if" else "defined"
+        key = kind, definition, self._macro_versions.get(definition), self._include_version
+        return key, directive != "ifndef"
+
+    def _record_definition(self, directive, definition, guards):
+        word = re.match(r"\w+", definition)
+        if not word:
+            return
+        name = word[0]
+        self._macro_versions[name] = object()
+        is_prefix = directive == "define" and bool(self._PREFIX_MACRO.match(definition))
+        if is_prefix:
+            self._prefix_names.add(name)
+        if not guards:
+            self._definitions.pop(name, None)
+            if not is_prefix:
+                self._prefix_names.discard(name)
+                return name
+        self._definitions.setdefault(name, []).append((guards, is_prefix))
+        return name
+
+    def _is_prefix(self, name, guards):
+        for required, is_prefix in reversed(self._definitions[name]):
+            if any(key in guards and guards[key] != sense for key, sense in required.items()):
+                continue
+            # A possibly active definition cannot prove an expression role.
+            return is_prefix and required.keys() <= guards.keys()
+        return False
 
 
 class _LambdaHeader:
