@@ -81,7 +81,7 @@ def template_call_type_arguments(tokens, tokenize):
                 return 0
             saw_template = True
         if annotation(token):
-            if not annotation.has_complete_type():
+            if not _complete_template_type(annotation):
                 return 0
             if token == ',':
                 annotation = TypeScriptTypeAnnotationStates(None)
@@ -98,7 +98,13 @@ def _interpolation_is_type(source, tokenize):
     for token in tokenize(source):
         if not _type_whitespace(token) and annotation(token):
             return False
-    return not annotation._brackets and annotation.has_complete_type()
+    return _complete_template_type(annotation)
+
+
+def _complete_template_type(annotation):
+    return not (annotation._brackets or annotation._expect_type
+                or annotation._conditional_type or annotation._conditional_questions
+                or annotation._qualified_type)
 
 
 def _type_whitespace(token):

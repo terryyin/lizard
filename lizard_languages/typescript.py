@@ -18,7 +18,7 @@ from .javascript_templates import LINE_COMMENT, interpolation_code, template_tok
 from .javascript_expression import (
     TypeArgumentEnd, awaiting_function_body, end_before_line_token)
 from .javascript_statements import ImpliedSemicolons
-from .javascript_expression import active_js_state, ends_expression
+from .javascript_expression import active_js_state, ends_expression, starts_statement
 from .typescript_signatures import template_call_type_arguments
 
 # One token, so each ? in ?? is not its own ternary decision.
@@ -151,6 +151,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     _scan_atomic_templates = False
     measure_template_types = False
     _in_call_type_arguments = False
+    starts_statement = staticmethod(starts_statement)
     _class_field_annotations = True
 
     # Separated condition categories
