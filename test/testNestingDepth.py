@@ -362,8 +362,9 @@ class TestJavaNestingDepth(unittest.TestCase):
         import java.util.function.BooleanSupplier;
         class Permissions {
             static boolean verify(BooleanSupplier check) { return check.getAsBoolean(); }
+            static <Left, Right> boolean check(boolean value) { return value; }
             static boolean allowed(boolean online, boolean ready, boolean cached) {
-                if (online && verify(() -> ready && cached)) return true;
+                if (online && verify(() -> Permissions.<java.util.List<String>, Boolean>check(ready && cached))) return true;
                 return false;
             }
             static boolean allowedLater(boolean online, boolean ready, boolean cached) {
@@ -372,7 +373,8 @@ class TestJavaNestingDepth(unittest.TestCase):
             }
         }
         """).function_list
-        self.assertEqual([('Permissions::verify', 0), ('Permissions::allowed', 3),
+        self.assertEqual([('Permissions::verify', 0), ('Permissions::check', 0),
+                          ('Permissions::allowed', 3),
                           ('Permissions::allowedLater', 2)],
                          [(f.name, f.max_nesting_depth) for f in functions])
 
