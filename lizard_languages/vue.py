@@ -54,27 +54,28 @@ class _ScriptTag(str):
         return (_attribute(self, 'lang') or 'js').lower()
 
 
-def _script_blocks(source):
+def _script_blocks(source, find_blocks):
     """(tag start, tag, code, code end) of each top-level script block."""
-    cached = _BLOCK_CACHE.get(id(source))
+    key = (id(source), find_blocks)
+    cached = _BLOCK_CACHE.get(key)
     if cached is not None and cached[0] is source:
         return cached[1]
     blocks = [
         (tag_start, _ScriptTag(source[tag_start:code_start]),
          source[code_start:code_end], code_end)
-        for tag_start, code_start, code_end in _find_script_blocks(source)]
-    _BLOCK_CACHE[id(source)] = (source, blocks)
+        for tag_start, code_start, code_end in find_blocks(source)]
+    _BLOCK_CACHE[key] = (source, blocks)
     return blocks
 
 
-def _find_script_blocks(source):
+def _find_script_blocks(source, search=_MARKUP.search):
     """(tag start, code start, code end) of each top-level script block.
 
     As in the Vue compiler, a top-level HTML <template> holds nested markup,
     and the other top-level blocks hold text up to their closing tag."""
     pos = 0
     while True:
-        match = _MARKUP.search(source, pos)
+        match = search(source, pos)
         if match is None:
             return
         pos = match.end()
@@ -154,6 +155,7 @@ class VueReader(TypeScriptReader):
     # A lang="tsx" block keeps whole templates, as in a .tsx file.
     _scan_atomic_templates = True
     script_tokens = staticmethod(TypeScriptReader.generate_tokens)
+    find_script_blocks = staticmethod(_find_script_blocks)
 
     def __init__(self, context):
         super(VueReader, self).__init__(context)
@@ -163,7 +165,7 @@ class VueReader(TypeScriptReader):
         """The code of the script blocks, tokenized by their lang, and the
         tokens of the markup around them."""
         pos = 0
-        for tag_start, tag, code, code_end in _script_blocks(source_code):
+        for tag_start, tag, code, code_end in _script_blocks(source_code, cls.find_script_blocks):
             yield from cls.markup_tokens(source_code, pos, tag_start)
             yield from cls.tag_tokens(tag)
             tokenizer = (TSXReader.generate_tokens if tag.lang in ('tsx', 'jsx')

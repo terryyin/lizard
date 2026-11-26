@@ -25,7 +25,7 @@ from .javascript_expression import end_before_line_token
 from .javascript_statements import ImpliedSemicolons
 from .javascript_templates import interpolation_code
 from .typescript import TypeScriptReader
-from .vue import VueReader, _attributes
+from .vue import VueReader, _MARKUP, _attributes, _find_script_blocks
 
 # In markup: a comment, a start or end tag, or a '{' that opens code.
 _MARKUP_ITEM = re.compile(r'<!--|<(/?)([A-Za-z][^\s/>{]*)|\{')
@@ -260,6 +260,36 @@ def _split_at_last(tokens, words):
     return found
 
 
+def _svelte_script_blocks(source):
+    """Skip top-level expressions before searching for script tags."""
+    last_script = source.rfind('<script')
+    if last_script < 0:
+        return ()
+    if source.find('{', 0, last_script) < 0:
+        return _find_script_blocks(source)
+
+    markup = _MarkupTokens(source, 0, len(source))
+
+    def search(source, pos):
+        if pos > last_script:
+            return None
+        match = _MARKUP.search(source, pos)
+        while match is not None and match.start() <= last_script:
+            brace = source.find('{', pos, match.start() + 1)
+            if brace < 0:
+                return match
+            head = _TAG_HEAD.match(source, brace + 1)
+            found = markup.code_end(head.end() if head else brace + 1)
+            if found is None:
+                return match
+            pos = found[0] + 1
+            if pos > match.start():
+                match = _MARKUP.search(source, pos)
+        return None
+
+    return _find_script_blocks(source, search)
+
+
 class _MarkupTokens:
     """The tokens of the markup between two script blocks."""
     # pylint: disable=R0902,R0903
@@ -336,7 +366,7 @@ class _MarkupTokens:
         if in_start_tag and head and head.group(1) != '@':
             # An attribute value is an expression: `{/x/.test(a)}`.
             head = None
-        found = self._code_end(head.end() if head else pos)
+        found = self.code_end(head.end() if head else pos)
         if found is None:
             return self.end
         close, self.code = found
@@ -351,7 +381,7 @@ class _MarkupTokens:
         yield from self.tail
         return close + 1
 
-    def _code_end(self, pos):
+    def code_end(self, pos):
         """The '}' that ends the code at pos and the tokens of the code, or
         None. The tokenizer reads up to the guessed end, and then twice as
         much up to the next '}' until a '}' in the text closes the code."""
@@ -590,6 +620,7 @@ class SvelteReader(VueReader):
 
     ext = ['svelte']
     language_names = ['svelte']
+    find_script_blocks = staticmethod(_svelte_script_blocks)
 
     def implied_semicolons(self, tokens):
         """As TypeScriptReader.implied_semicolons, with script ends ending
