@@ -99,6 +99,10 @@ def _expression_end(source, pos):
             return None
 
 
+class _AttributeStart(str):
+    starts_attribute = True
+
+
 class PHPReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -119,7 +123,7 @@ class PHPReader(CodeReader, CCppCommentsMixin):
         # PHP comparisons must not use the shared generic angle-bracket rule.
         operators = PHPReader._non_ternary_question_operators + r"|<<=|<=|<"
         # A closing tag ends a line comment, but not a string or block comment.
-        comments = r"|(?://|\#(?!\[))" + _LINE_COMMENT_END + r"|\?>"
+        comments = r"|(?P<attribute_start>\#)(?=\[)|(?://|\#)" + _LINE_COMMENT_END + r"|\?>"
         pattern = compiled_token_pattern(addition + variables +
                                          rf"""|(?=[bB'"`<])(?:{_STRING_TOKENS})""" + operators + comments)
         legacy_pattern = None
@@ -130,7 +134,8 @@ class PHPReader(CodeReader, CCppCommentsMixin):
             pos = tag.end()
             while pos is not None:
                 for match in pattern.finditer(source_code, pos):
-                    if match.lastindex and match.lastgroup in ('doc_label', 'double_quote', 'backtick'):
+                    group = match.lastgroup
+                    if group in ('doc_label', 'double_quote', 'backtick'):
                         end = _string_end(source_code, match)
                         if end is None:
                             if legacy_pattern is None:
@@ -149,7 +154,12 @@ class PHPReader(CodeReader, CCppCommentsMixin):
                         current_pos = match.end()
                         pos = None
                         break
-                    yield token_class(match) if token_class else token
+                    if token_class:
+                        yield token_class(match)
+                    elif group == 'attribute_start':
+                        yield _AttributeStart(token)
+                    else:
+                        yield token
                 else:
                     return
         if source_code[current_pos:]:
