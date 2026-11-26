@@ -2,8 +2,22 @@
 Language parser for Dart
 '''
 
+from collections import deque
+import re
+
 from .code_reader import CodeReader
 from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
+
+
+class _NullableQuestionMark(str):
+    """Dart type punctuation that adds no nesting or decision."""
+
+    is_optional = True
+
+
+_NULLABLE_QUESTION = _NullableQuestionMark('?')
+_AFTER_DECLARATION_NAME = frozenset((',', ')', ']', '}', ';', '='))
+_POSSIBLE_NULLABLE_GENERIC = re.compile(r'>\s*(?:\?|/[/*])')
 
 
 class DartReader(CLikeReader):
@@ -27,8 +41,11 @@ class DartReader(CLikeReader):
         self._switch_stack = []
 
     def process_token(self, token):
+        # A nullable type keeps its source spelling for the signature.
+        if token is _NULLABLE_QUESTION:
+            self.context.add_condition(-1)
         # `on T catch` is one clause: undo the automatic catch decision.
-        if token == 'on':
+        elif token == 'on':
             self._suppress_next_catch = True
         elif token == 'catch' and self._suppress_next_catch:
             self.context.add_condition(-1)
@@ -84,7 +101,7 @@ class DartReader(CLikeReader):
         # quotes; then nullable names, ??=, ??, ?.., ?.
         # `(?!\.)` keeps int?/T? from swallowing the ? of ?. and ?..
         # Closing ?> generics stay the existing <…?> token.
-        return clike_tokens(
+        tokens = clike_tokens(
             source_code,
             r"|(?:r)?'''[\s\S]*?'''" +
             r'|(?:r)?"""[\s\S]*?"""' +
@@ -98,6 +115,57 @@ class DartReader(CLikeReader):
             addition,
             token_class
         )
+        if _POSSIBLE_NULLABLE_GENERIC.search(source_code):
+            return _mark_nullable_questions(tokens)
+        return tokens
+
+
+def _mark_nullable_questions(tokens):
+    pending = deque()
+    previous = ''
+    after_type_operator = False
+    type_argument_depth = 0
+    while True:
+        token = pending.popleft() if pending else next(tokens, None)
+        if token is None:
+            break
+        if not _is_trivia(token):
+            # The shared tokenizer can keep a group such as `<int?>` whole.
+            if token == '?' and not after_type_operator and (
+                    previous == '>' or _is_packed_type_arguments(previous)):
+                name = _peek_code_token(tokens, pending)
+                if name.isidentifier() and _peek_code_token(tokens, pending) in _AFTER_DECLARATION_NAME:
+                    token = _NULLABLE_QUESTION
+            # After `is T<U>` or `as T<U>`, even `? name =` can start
+            # a ternary branch that assigns to the name.
+            if token in ('is', 'as') and not type_argument_depth:
+                after_type_operator = True
+            elif after_type_operator:
+                if token == '<':
+                    type_argument_depth += 1
+                elif token == '>' and type_argument_depth:
+                    type_argument_depth -= 1
+                elif not type_argument_depth and not (
+                        token in ('.', '!', '$') or token.isidentifier() or _is_packed_type_arguments(token)):
+                    after_type_operator = False
+            previous = token
+        yield token
+
+
+def _is_packed_type_arguments(token):
+    return token.startswith('<') and token.endswith('>')
+
+
+def _peek_code_token(tokens, pending):
+    for token in tokens:
+        pending.append(token)
+        if not _is_trivia(token):
+            return token
+    return ''
+
+
+def _is_trivia(token):
+    return token.isspace() or token.startswith(('//', '/*'))
 
 
 class DartStates(CLikeStates):  # pylint: disable=R0903
