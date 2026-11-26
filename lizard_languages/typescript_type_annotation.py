@@ -64,7 +64,7 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                             '%', '**', '==', '===', '!=', '!==', '>', '>=', '<=',
                             'instanceof', 'in', '^'))
 
-    def __init__(self, context, runtime_assertion=False):
+    def __init__(self, context, return_type=False, class_member=False, runtime_assertion=False):
         super().__init__(context)
         self.runtime_assertion = runtime_assertion
         self.saved_token = None
@@ -78,6 +78,10 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         self._closed_type = False
         self._qualified_type = False
         self._reference_parenthesis = False
+        self._class_member = class_member
+        self._predicate_subject = None if return_type else False
+        self._assertion_subject = False
+        self._assertion_predicate = False
 
     def _state_global(self, token):
         if token.isspace():
@@ -104,11 +108,17 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                                             and not self._reference_parenthesis
                                             and self._parenthesis_first != '(')
             return
+        if self._predicate_subject is not False and self._consume_predicate_prefix(token, newline):
+            return
         if newline and self.ends_before_line_token(token):
             self.saved_token = token
             self.statemachine_return()
             return
-        if token == 'extends':
+        if (self._qualified_type or self._assertion_subject) and self._consume_type_identifier(token, newline):
+            return
+        if token == 'is':
+            self._assertion_predicate = False
+        if token == 'extends' and not self._qualified_type:
             self._conditional_type = True
         if token == '?' and self._conditional_type:
             self._conditional_type = False
@@ -135,15 +145,59 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
             self._function_arrow = False
         else:
             first = token[:1]
+            if token == 'asserts' and self._expect_type:
+                self._assertion_subject = True
             self._closed_type = not self._qualified_type and (
                 token in self.NON_GENERIC_TYPES
                 or first in ('\"', "'", '`') or first.isdigit()
                 or first == '<' and token.endswith('>'))
+            self._expect_type = not self._qualified_type and (
+                token in ('|', '&', 'keyof', 'typeof', 'readonly', 'unique', 'infer', 'extends', 'in')
+                or token in ('is', 'as') and not self._expect_type)
             self._qualified_type = token == '.'
-            self._expect_type = token in (
-                '|', '&', 'keyof', 'typeof', 'readonly', 'unique', 'infer',
-                'extends', 'is', 'in', 'as')
             self._function_arrow = False
+
+    def _consume_predicate_prefix(self, token, newline):
+        # Check contextual type keywords separately. Other parameter names
+        # already leave the reader ready for 'is'.
+        if self._predicate_subject is None:
+            self._predicate_subject = token in ('asserts', 'keyof', 'infer', 'readonly', 'unique')
+        else:
+            self._predicate_subject = False
+            if token == 'is' and not newline:
+                self._assertion_subject = False
+                self._expect_type = True
+                return True
+        return False
+
+    def _consume_type_identifier(self, token, newline):
+        if self._assertion_subject:
+            self._assertion_subject = False
+            if not newline and (token == '\\' or token.replace('$', '_').isidentifier()):
+                self._assertion_predicate = True
+                return True
+        if self._qualified_type and token.replace('$', '_').isidentifier():
+            self._qualified_type = False
+            self._closed_type = False
+            self._expect_type = False
+            self._function_arrow = False
+            return True
+        return False
+
+    def _ends_line(self, token):
+        if self._class_member:
+            # A postfix '[' stays on the same line. A wrapped 'extends'
+            # can constrain an 'infer' variable in an open conditional type.
+            # 'as' can only continue a mapped type inside its brackets.
+            if token in ('[', 'as', '\\'):
+                return True
+            if token == 'extends':
+                return not self._conditional_type
+            if token == 'is':
+                return not self._assertion_predicate
+            if not token[0].isascii() and is_identifier(token):
+                return True
+        return token not in ('extends', 'is', 'in', 'as') and starts_statement(token)
 
     def has_complete_type(self):
         return not (self._expect_type or self._conditional_type
@@ -151,8 +205,7 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
 
     def ends_before_line_token(self, token):
         return (not self._brackets and self.has_complete_type()
-                and token not in ('extends', 'is', 'in', 'as')
-                and starts_statement(token))
+                and self._ends_line(token))
 
     def mismatched_closer(self, token):
         return (self._brackets and token in self.CLOSERS
@@ -269,4 +322,4 @@ def _simple_type_token(previous, token):
             or previous in _TYPE_PREFIXES
             and (first in "'\"-" or first.isdigit()
                  or first == '`' and '${' not in token
-                 or token.replace('$', '_').isidentifier()))
+                 or is_identifier(token)))

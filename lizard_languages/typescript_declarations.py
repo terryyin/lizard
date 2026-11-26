@@ -172,8 +172,10 @@ class TypeScriptDeclarationsMixin:
                     self.next(resume or self._state_global)
         self.next(consume)
 
-    def _consume_type_annotation(self, runtime_assertion=False):
-        typeStates = TypeScriptTypeAnnotationStates(self.context, runtime_assertion)
+    def _consume_type_annotation(self, return_type=False, class_member=False, runtime_assertion=False):
+        typeStates = TypeScriptTypeAnnotationStates(
+            self.context, return_type=return_type, class_member=class_member,
+            runtime_assertion=runtime_assertion)
 
         def callback():
             if typeStates.saved_token:

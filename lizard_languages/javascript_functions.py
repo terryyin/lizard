@@ -13,6 +13,8 @@ __all__ = (
 
 
 class JavaScriptFunctionsMixin:
+    _arrow_only_signature = False
+
     def _read_parenthesis_group(self):
         """Only possible signatures need provisional binding frames."""
         if parameter_group(self._prev_token):
@@ -75,7 +77,17 @@ class JavaScriptFunctionsMixin:
         before it is counted.  A token that cannot start the body shows that
         the signature was an expression, `x = (a)` + `if (b)`: the function
         is discarded now, so the token counts for the function around it."""
-        if token in ('{', '=>', ':') or (
+        if token == '{':
+            # An initializer such as `x = (value)` needs an arrow.
+            # Its following brace belongs to a separate block.
+            # pylint: disable-next=comparison-with-callable
+            if self._arrow_only_signature and self._state == self._expecting_func_opening_bracket:
+                self._discard_signature()
+                if not self._class_body_pending:
+                    self._end_statement()
+                    self.next(self._expecting_statement_or_block)
+            return
+        if token in ('=>', ':') or (
                 token == ';' and self.as_object and self._in_abstract_context):
             return      # for _expecting_func_opening_bracket
         self._discard_signature()
