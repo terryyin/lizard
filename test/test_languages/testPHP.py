@@ -217,6 +217,33 @@ class Example {
                 ], [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
                     for f in functions])
 
+    def test_inline_attributes_keep_function_signatures(self):
+        functions = get_php_function_list("""<?php
+class TokenStore {
+    public function issue(#[SensitiveParameter] string $token): string {
+        return hash('sha256', $token);
+    }
+}
+
+#[Deprecated] function oldLimit(): int {
+    return 10;
+}
+""")
+        self.assertEqual([('TokenStore::issue', 3, 5), ('oldLimit', 8, 10)],
+                         [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_attribute_markers_in_nowdoc_stay_text(self):
+        functions = get_php_function_list("""<?php
+function sample(): string {
+    return <<<'EXAMPLE'
+    #[SensitiveParameter] if this contains sensitive data.
+    EXAMPLE;
+}
+""")
+        self.assertEqual([('sample', 2, 6, 1)], [
+            (f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in functions
+        ])
+
     def test_real_closing_tag_still_separates_php_from_html(self):
         for closing in ('?>', '// ?>', '# ?>', '/* ?> */ ?>', 'echo $x < 1 ?>'):
             with self.subTest(closing=closing):
