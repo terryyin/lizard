@@ -303,11 +303,11 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         elif member_access:
                             before_dot = token == '.' and state.last_token
                     else:
+                        if token == ';':
+                            token = mark_class_field_semicolon(state, token)
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
                             member_access = False
-                        if token == ';':
-                            token = mark_class_field_semicolon(state, token)
                         if token in name_keywords:
                             keyword = token
                             continue
