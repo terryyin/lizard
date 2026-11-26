@@ -14,7 +14,6 @@ class JavaScriptObjectsMixin:
     holds_members = False
     # In an object: a default value is open, `{ a = async function () {} }`.
     _default_value = False
-    _next_property_key = 0
 
     def _typed_class_member(self):
         return (self.as_class and not self._in_prop_value

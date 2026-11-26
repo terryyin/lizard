@@ -15,6 +15,19 @@ class LizardExtension(object):  # pylint: disable=R0903
                 "average_caption": " Avg.ND "}}
 
     @staticmethod
+    def _with_object_property_depth(read_depth):
+        """Let the JS reader observe depth changes on its token stream."""
+        from functools import wraps
+
+        @wraps(read_depth)
+        def read(self, tokens, reader, l_depth=0):
+            track_properties = getattr(reader, 'track_object_property_depth', None)
+            if track_properties is not None:
+                tokens = track_properties(tokens)
+            return read_depth(self, tokens, reader, l_depth)
+        return read
+
+    @staticmethod
     def set_args(parser):
         parser.add_argument(
             "-N", "--ND",
@@ -39,9 +52,6 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
-        from lizard_languages.typescript import TypeScriptReader
-
-        tracks_properties = isinstance(reader, TypeScriptReader)
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
         if hasattr(reader, "indent_indicator"):
@@ -83,11 +93,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                         # Only add nesting depth for the first logical operator in a condition
                         # Subsequent && or || operators in the same condition don't add depth
                         if not context.get_logical_operator_added():
-                            l_depth = (context.open_logical_level() if tracks_properties
-                                       else context.open_level())
+                            l_depth = context.open_level()
                             context.set_logical_operator_added(True)
-                    elif tracks_properties:
-                        l_depth = context.open_logical_level()
                     else:
                         # Not in a condition, treat as regular nesting
                         l_depth = context.open_level()
@@ -107,20 +114,6 @@ class LizardExtension(object):  # pylint: disable=R0903
                 l_depth = 0
                 context.reset_nd_complexity()
             yield token
-            if (token in (':', '...')
-                    and context.__dict__.get('js_object_property') == context.fileinfo.token_count):
-                l_depth = _end_object_property(context)
-
-
-def _end_object_property(context):
-    function = context.current_function
-    pending = function.logical_levels
-    count = sum(level <= function.levels_awaiting_body for level in pending)
-    pending.clear()
-    if count:
-        function.levels_awaiting_body -= count
-        function.logical_operator_added = False
-    return context.add_nd_condition(-count)
 
 
 class NDFileInfoAddition(FileInfoBuilder):
@@ -134,7 +127,6 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def reset_nd_complexity(self):
         self.current_function.nesting_depth = 0
-        self.current_function.logical_levels.clear()
         self.current_function.levels_awaiting_body = 0
         self.current_function.block_levels = []
         self.current_function.prev_was_else = False
@@ -142,20 +134,8 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def open_level(self):
         """A structure opens a level that its body will close."""
-        function = self.current_function
-        pending = function.logical_levels
-        # A block or group can release these positions before another level opens.
-        while pending and pending[-1] > function.levels_awaiting_body:
-            pending.pop()
-        function.levels_awaiting_body += 1
+        self.current_function.levels_awaiting_body += 1
         return self.add_nd_condition()
-
-    def open_logical_level(self):
-        """Remember a level that an object property can release."""
-        depth = self.open_level()
-        function = self.current_function
-        function.logical_levels.append(function.levels_awaiting_body)
-        return depth
 
     def open_block(self):
         """The block takes over the levels awaiting their body."""
@@ -170,7 +150,6 @@ class NDFileInfoAddition(FileInfoBuilder):
 
     def end_statement(self):
         """A statement ends the levels of a braceless body."""
-        self.current_function.logical_levels.clear()
         levels = self.current_function.levels_awaiting_body
         self.current_function.levels_awaiting_body = 0
         return self.add_nd_condition(-levels)
@@ -267,7 +246,6 @@ def _init_nesting_depth_data(self, *_):
     self.max_nesting_depth = 0
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
-    self.logical_levels = []
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
@@ -275,4 +253,5 @@ def _init_nesting_depth_data(self, *_):
 
 
 patch(NDFileInfoAddition, FileInfoBuilder)
+LizardExtension.__call__ = LizardExtension._with_object_property_depth(LizardExtension.__call__)
 patch_append_method(_init_nesting_depth_data, FunctionInfo, "__init__")
