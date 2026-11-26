@@ -68,3 +68,7 @@ Compare the affected proof on trunk, the exact proposal, and the corrected revis
 ## Readiness review
 
 Plan refinement was unnecessary after separating the behavior-preserving declaration move from the formal-count correction. Both slices have a bounded proof loop and fit the project sizing rule. The observed failures and extension threshold are covered by the second slice. No remaining slice-specific concerns were found.
+
+## Execution complete
+
+Product advice: No product change; implementation and semantic tests satisfy all story promises. Hold merge to `master` until a quiet-machine paired performance rerun (`api-parameters` and `cli`) passes the `<3%` 95% upper bound (noisy host runs under load averages 8.25–25.55 showed near-zero point estimates `-0.18%`, `-0.91%`, and `+0.61%` with widened CIs).
