@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Mana-chan",
-  "email": "mana-chan@example.org",
-  "identity": "SEED-078#c-family-pr-timing",
-  "mode": "story-branch",
-  "branch": "claude/qualify-and-merge-the-held-c-family-prs",
-  "host": "claude"
-}

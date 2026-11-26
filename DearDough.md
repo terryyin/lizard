@@ -257,7 +257,7 @@ Other. The plan timed eight workloads with the paired runner's default settings 
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: 0.3.116
-  - Evidence: plan 047 slice 1 accepted proof and learnings; git-ignored `.planning/evidence/c-family-pr-timing/run-1` … `run-4` with each `DECISION.txt`; evidence commit `fc328199`
+  - Evidence: `6ee1ea00:.planning/slice-plans/047-c-family-pr-timing/PLAN.md`, slice 1 accepted proof and learnings. The run-1 to run-4 JSON and `DECISION.txt` files were Git-ignored local evidence, deleted at wrap-up.
   - Observed effect: about 2.5 hours from the first launch to the last pass, including about 50 minutes waiting for load to drop. Run 2 still missed four workloads because load rose during the runs after starting below 4.
   - Inference: on this host, start the gate with 4–8 s batches and a load threshold, and expect waits. Whether the runner's default should change remains a question for the runner's owner
 
