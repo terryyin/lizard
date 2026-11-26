@@ -129,6 +129,30 @@ def test_quoted_arrow_return_type_keeps_body_and_formals(suffix, return_type):
     ]
 
 
+@pytest.mark.parametrize('suffix', ('js', 'ts'))
+def test_quoted_arrow_default_ccn_belongs_to_the_arrow(suffix):
+    source = '''function configure(ready) {
+  return {
+    'cache:set': (ttl = ready ? 10 : 20) => ttl,
+    set: (ttl = ready ? 10 : 20) => ttl,
+    'cache:reset': ({ttl = ready ? 10 : 20} = {}) => ttl,
+    reset: ({ttl = ready ? 10 : 20} = {}) => ttl,
+  };
+}
+function response(text) {
+  return {'length': (text || '').length};
+}
+'''
+    result = functions(source, suffix, 'ND')
+
+    assert [(f.name, f.parameters, f.cyclomatic_complexity) for f in result] == [
+        ('(anonymous)', ['ttl'], 3), ('set', ['ttl'], 3),
+        ('(anonymous)', ['ttl'], 4), ('reset', ['ttl'], 4),
+        ('configure', ['ready'], 1), ('response', ['text'], 2),
+    ]
+    assert result[-1].max_nesting_depth == 1
+
+
 @pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
 def test_quoted_property_group_keeps_arrow_in_an_assignment(suffix):
     source = '''let cached: (text: string) => string | null;
