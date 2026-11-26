@@ -337,7 +337,8 @@ class RubyReader(RubylikeReader):
     @staticmethod
     @js_style_regex_expression(language='ruby')
     def generate_tokens(source_code, addition='', token_class=None):
-        addition = _RUBY_WORD_TOKENS + r"|" + _PERCENT_LITERAL + addition
+        addition = (r"|\w+:|\$\w+|\.+|:?\@{0,2}\w+\??\!?"
+                    r"|" + _PERCENT_LITERAL + addition)
         read_token = MyToken
         if "<<" in source_code:
             addition += "|" + _SIMPLE_HEREDOC
