@@ -1362,6 +1362,74 @@ class TestCognitiveOptionalRecursion(unittest.TestCase):
         """
         self.assertEqual([0, 2], cogc('retry.ts', source))
 
+    def test_recursion_through_an_optional_call_with_type_arguments(self):
+        source = """
+            function retry<T>(count: number): number {
+              if (count > 0) return retry?.<number>(count - 1);
+              return count;
+            }
+            function replay<T>(count: number): number {
+              if (count > 0) {
+                return replay?.<Readonly<{status: 'pending'}>>(count - 1);
+              }
+              return count;
+            }
+        """
+        for filename in ('retry.ts', 'retry.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([2, 2], cogc(filename, source))
+
+    def test_optional_generic_call_still_needs_the_function_binding(self):
+        source = """
+            function identity<T>(value: T): T { return value; }
+            function retry(value: number) {
+              const offset = 1, retry = identity;
+              return retry?.<number>(value + offset);
+            }
+            function closest(target: Element | null) {
+              return target?.closest?.<SVGGraphicsElement>('[data-v-map-region]');
+            }
+            function dispatch() {
+              return dispatch?.name;
+            }
+        """
+        for filename in ('retry.ts', 'retry.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 0, 0, 0], cogc(filename, source))
+
+    def test_using_declarations_shadow_optional_calls(self):
+        source = """
+            interface Reader { read<T>(id: string): T | undefined }
+            type ReaderLease = Reader['read'] & Disposable;
+
+            function recover<T>(id: string, lease: ReaderLease): T | undefined {
+              using recover = lease;
+              return recover?.<T>(id);
+            }
+            function restore<T>(id: string, lease: ReaderLease): T | undefined {
+              using restore: ReaderLease = lease;
+              return restore?.(id);
+            }
+            async function rotate<T>(leases: ReaderLease[], id: string): Promise<T | undefined> {
+              await using first = leases[0], rotate = leases[1];
+              return rotate?.<T>(id);
+            }
+            function scan<T>(leases: ReaderLease[], id: string): T | undefined {
+              for (using scan of leases) return scan?.<T>(id);
+              return undefined;
+            }
+            function of<T>(count: number): number {
+              let using = 0;
+              for (using of [1]) {
+                return count > 0 ? of?.<T>(count - using) : count;
+              }
+              return count;
+            }
+        """
+        for filename in ('lease.ts', 'lease.tsx'):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 0, 0, 1, 4], cogc(filename, source))
+
     def test_other_optional_accesses_do_not_recurse(self):
         source = """
             function run(plugin) {
