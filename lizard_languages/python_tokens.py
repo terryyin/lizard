@@ -66,6 +66,9 @@ def _source_tokens(source, pattern, token_class):
                     yield token_class(match) if token_class else token
                     yield from parts
                     break
+            if depth and token in ('def', 'class'):
+                # A declaration cannot belong to an unclosed expression.
+                depth = 0
             if token == '\n' and depth:
                 yield ContinuedLineToken(token)
             else:
