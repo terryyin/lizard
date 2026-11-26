@@ -11,20 +11,6 @@ from .go_function import (
 from .token_pattern import compiled_token_pattern
 
 
-# A bracket after an operand can index it. After these tokens a new
-# operand can start with an explicit array, slice, map or struct type.
-_OPERAND_STARTS = frozenset((
-    'if', ';', '(', '[', '{', ',', ':', '=', ':=',
-    '&&', '||', '==', '!=', '<', '<=', '>', '>=',
-    '+', '-', '*', '/', '%', '&', '|', '^', '&^', '<<', '>>', '<-', '!',
-))
-_LITERAL_TYPE_STARTS = frozenset(('[', 'map', 'struct'))
-
-
-class _CompositeLiteralBrace(str):
-    is_composite_literal_brace = True
-
-
 class GoReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -142,3 +128,17 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
             self._start_function(token, self._var_name)
         else:
             self._state_global(token)
+
+
+# A bracket after an operand can index it. After these tokens a new
+# operand can start with an explicit array, slice, map or struct type.
+_OPERAND_STARTS = frozenset((
+    'if', ';', '(', '[', '{', ',', ':', '=', ':=',
+    '&&', '||', '==', '!=', '<', '<=', '>', '>=',
+    '+', '-', '*', '/', '%', '&', '|', '^', '&^', '<<', '>>', '<-', '!',
+))
+_LITERAL_TYPE_STARTS = frozenset(('[', 'map', 'struct'))
+
+
+class _CompositeLiteralBrace(str):
+    is_composite_literal_brace = True
