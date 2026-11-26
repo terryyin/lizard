@@ -117,3 +117,14 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
             self._start_function(token, self._var_name)
         else:
             self._state_global(token)
+
+    def _expect_function_impl(self, token):
+        if token == '{':
+            if self.last_token in ('struct', 'interface'):
+                self.next(self._inline_result_type, token)
+            else:
+                self.next(self._function_impl, token)
+
+    @GoLikeStates.read_inside_brackets_then('{}', '_expect_function_impl')
+    def _inline_result_type(self, token):
+        pass
