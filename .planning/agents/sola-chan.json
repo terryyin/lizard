@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "agent": "Sola-chan",
+  "email": "sola-chan@example.org",
+  "identity": "SEED-076#ruby-reader-test-topics",
+  "mode": "story-branch",
+  "branch": "codex/split-the-ruby-reader-tests-by-topic",
+  "host": "codex",
+  "model": "gpt-6.2-sol"
+}
