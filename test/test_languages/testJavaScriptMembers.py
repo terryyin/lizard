@@ -35,6 +35,21 @@ function next(ready) {
              ('ratio', 1, []), ('next', 2, ['ready'])],
             [(f.name, f.cyclomatic_complexity, f.parameters) for f in functions])
 
+    def test_keyword_method_in_division_operand_on_next_line(self):
+        functions = get_js_function_list("""
+function newlineDivision() {
+    return 4 /
+        { valueOf() { return 2; }, catch() {} };
+}
+function afterRegex(ready) {
+    "" + /1/
+    { if (ready) run(); }
+}
+""")
+        self.assertEqual(
+            [('valueOf', 1), ('catch', 1), ('newlineDivision', 1), ('afterRegex', 2)],
+            [(f.name, f.cyclomatic_complexity) for f in functions])
+
     def test_class_method_decorators(self):
         code = '''
             class Example {
