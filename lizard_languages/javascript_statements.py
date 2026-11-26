@@ -72,6 +72,7 @@ class ImpliedSemicolons:
         label_starts = False    # the body may start with a label
         postfix = False         # the last "!", "++" or "--" is postfix
         object_ended = False    # the last "}" closed an object literal
+        last_closed_body = context.last_closed_function_body = None
         loop_ended = False      # the ")" of "do … while (…)"
         found = False
         busy = False            # found, or one of the four flags above
@@ -86,9 +87,13 @@ class ImpliedSemicolons:
                         found = self.before_token = False
                     if loop_ended:
                         found = token != ';'
-                    elif (not (groups or head_starts or body_starts)
-                          # A block end has ended its statement already.
-                          and (previous != '}' or object_ended)):
+                    elif groups or head_starts or body_starts:
+                        pass
+                    elif (previous != '}' or object_ended or (
+                            _function_closed(context, last_closed_body)
+                            # A matching clause continues the structure.
+                            and token != 'else'
+                            and not (token == 'while' and open_loops))):
                         if token == '}':
                             found = _expression_ended(
                                 previous, before_previous, postfix)
@@ -133,6 +138,8 @@ class ImpliedSemicolons:
                         if blocks:
                             (groups, head, open_loops, loop_ends,
                              is_object) = blocks.pop()
+                        if not (groups or object_ended):
+                            last_closed_body = context.last_closed_function_body
                     elif token in ('{', '${'):
                         blocks.append(
                             (groups, head, open_loops, loop_ends, is_object))
@@ -188,6 +195,13 @@ def _starts_line(token, line, last_line):
     and is not the '{' of a JSX child."""
     return (line - token.count('\n') != last_line
             and not isinstance(token, JSXChildBrace))
+
+
+def _function_closed(context, last_closed_body):
+    """Whether the reader closed a function body while reading the brace."""
+    function = context.last_closed_function_body
+    return (function is not last_closed_body
+            and not getattr(function, 'is_braceless_declaration', False))
 
 
 def _expression_ended(previous, before_previous, postfix):

@@ -9,7 +9,7 @@ import sys
 import datetime
 
 
-def html_output(result, options, *_):
+def html_output(result, options, scheme=None, *_):
     try:
         from jinja2 import Template
     except ImportError:
@@ -17,6 +17,13 @@ def html_output(result, options, *_):
                 "HTML Output depends on jinja2. `pip install jinja2` first")
         sys.exit(2)
 
+    from lizard import OutputScheme
+    scheme = scheme or OutputScheme(options.extensions)
+    core_fields = {'nloc', 'cyclomatic_complexity', 'token_count',
+                   'parameter_count', 'length', 'location'}
+    extension_columns = [item for item in scheme.items
+                         if item['value'] not in core_fields
+                         and item.get('caption')]
     file_list = []
     saved_files = []
     for source_file in result:
@@ -27,13 +34,19 @@ def html_output(result, options, *_):
             for source_function in source_file.function_list:
                 if source_function:
                     source_function_dict = _create_dict(source_function)
+                    source_function_dict.update(
+                        (column['value'], getattr(source_function,
+                                                  column['value']))
+                        for column in extension_columns)
                     func_list.append(source_function_dict)
                     source_file_dict["functions"] = func_list
         file_list.append(source_file_dict)
     output = Template(TEMPLATE).render(
             title='Lizard code complexity report',
             date=datetime.datetime.now().strftime('%Y-%m-%d %H:%M'),
-            thresholds=options.thresholds, files=file_list)
+            thresholds=options.thresholds, files=file_list,
+            extension_columns=extension_columns,
+            numeric_columns=list(range(2, 6 + len(extension_columns))))
     print(output)
     from lizard import get_warnings
     return len(list(get_warnings(saved_files, options)))
@@ -154,6 +167,10 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
         {% endif %}
       </th>
       <th>Parameter count ({{ thresholds["parameter_count"] }})</th>
+      {% for column in extension_columns %}
+      <th>{{ column.caption | trim }}{% if column.value in thresholds %}
+      ({{ thresholds[column.value] }}){% endif %}</th>
+      {% endfor %}
     </tr>
   </thead>
   <tbody>
@@ -189,6 +206,15 @@ TEMPLATE = '''<!DOCTYPE HTML PUBLIC
     {% else %}
        <td class="lesser-value">{{ func.parameter_count }}</td>
     {% endif %}
+    {% for column in extension_columns %}
+      {% if column.value not in thresholds %}
+        <td class="value">{{ func[column.value] }}</td>
+      {% elif func[column.value] is not none and func[column.value] > thresholds[column.value] %}
+        <td class="greater-value">{{ func[column.value] }}</td>
+      {% else %}
+        <td class="lesser-value">{{ func[column.value] }}</td>
+      {% endif %}
+    {% endfor %}
   </tr>
   {% endfor %}
 {% endfor %}
@@ -212,7 +238,7 @@ if (typeof jQuery !== 'undefined' && typeof jQuery.fn.dataTable !== 'undefined')
                 "pageLength": 25,
                 "order": [[2, "desc"]],  // Sort by cyclomatic complexity descending by default
                 "columnDefs": [
-                    { "type": "num", "targets": [2, 3, 4, 5] }  // Ensure numeric sorting for metric columns
+                    { "type": "num", "targets": {{ numeric_columns }} }  // Ensure numeric sorting for metric columns
                 ]
             });
         } catch (e) {

@@ -596,6 +596,23 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """))
 
+    def test_function_expression_at_the_end_of_a_statement(self):
+        self.assertEqual(1, self.nesting_depth("""
+        function configure(options) {
+          const resolve = options.resolve || function () { return true }
+          if (options.debug) log(resolve)
+        }
+        """, function_index=-1))
+
+    def test_member_access_continues_a_function_expression(self):
+        self.assertEqual(2, self.nesting_depth("""
+        function configure(options) {
+          const resolve = options.resolve || function () { return this.ready }
+            .bind(options) || options.defaultResolve
+          if (options.debug) log(resolve)
+        }
+        """, function_index=-1))
+
     def test_typescript_const_assertion_at_a_line_end(self):
         self.assertEqual(1, self.nesting_depth("""
         function side(left: Side | null, right: Side | null) {
@@ -684,7 +701,7 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """))
 
-    def nesting_depth(self, code, filename="a.js"):
+    def nesting_depth(self, code, filename="a.js", function_index=0):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             filename, code).function_list
-        return result[0].max_nesting_depth
+        return result[function_index].max_nesting_depth
