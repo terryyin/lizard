@@ -45,12 +45,12 @@ class LizardExtension(object):  # pylint: disable=R0903
             indent_indicator = reader.indent_indicator
         else:
             indent_indicator = ';'
+        go_if = 'go' in getattr(reader, 'language_names', ())
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
-        ).union(block_ends, block_starts, loops)
+        ).union(block_ends, block_starts, loops, ('=', ':=') if go_if else ())
         context = reader.context
-        go_if = 'go' in getattr(reader, 'language_names', ())
         for token in tokens:
             if implied_semicolons and implied_semicolons.before_token:
                 # The statement ends here as it does at a ";".
@@ -59,7 +59,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                     l_depth = context.end_statement()
             if token in depth_tokens:
                 if token in block_ends:
-                    l_depth = context.close_block()
+                    l_depth = context.close_go_block() if go_if else context.close_block()
                 if token in block_starts or token == indent_indicator:
                     context.clear_prev_was_else()
                 # Don't add nesting for "if" when it immediately follows "else" (else if)
@@ -81,19 +81,20 @@ class LizardExtension(object):  # pylint: disable=R0903
                         # Only add nesting depth for the first logical operator in a condition
                         # Subsequent && or || operators in the same condition don't add depth
                         if not context.get_logical_operator_added():
-                            l_depth = context.open_level()
+                            l_depth = context.open_logical_level(go_if)
                             context.set_logical_operator_added(True)
                     else:
                         # Not in a condition, treat as regular nesting
-                        l_depth = context.open_level()
+                        l_depth = context.open_logical_level(go_if)
+
+                elif go_if and token in ('=', ':='):
+                    context.mark_go_initializer()
 
                 # Handle other loop keywords (if, for, while, etc.)
                 elif token in loops and token not in ('&&', '||') \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
-                    l_depth = context.open_level()
-                    if go_if and token == 'if':
-                        context.start_go_if()
+                    l_depth = context.start_go_if() if go_if and token == 'if' else context.open_level()
 
                 if token in block_starts:
                     context.open_block()
@@ -120,6 +121,8 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.levels_awaiting_body = 0
         self.current_function.block_levels = []
         self.current_function.go_if_levels = None
+        self.current_function.go_initializer = False
+        self.current_function.go_statement_logical_levels = 0
         self.current_function.prev_was_else = False
         self.reset_condition_tracking()
 
@@ -128,23 +131,37 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.levels_awaiting_body += 1
         return self.add_nd_condition()
 
+    def open_logical_level(self, go_if):
+        function = self.current_function
+        if go_if and function.go_if_levels is None:
+            function.go_statement_logical_levels += 1
+        return self.open_level()
+
     def open_block(self):
         """The block takes over the levels awaiting their body."""
         function = self.current_function
         if function.go_if_levels is not None:
-            if function.condition_depth:
-                # A grouped literal can contain braces before the if body.
+            if function.condition_depth or function.go_initializer:
+                # An initializer still needs its semicolon before the if body.
                 function.block_levels.append(0)
                 return
             function.go_if_levels = None
             self.reset_condition_tracking()
         function.block_levels.append(function.levels_awaiting_body)
         function.levels_awaiting_body = 0
+        function.go_statement_logical_levels = 0
 
     def close_block(self):
         """A block end releases the levels its block took over."""
         levels = self.current_function.block_levels
         return self.add_nd_condition(-(levels.pop() if levels else 1))
+
+    def close_go_block(self):
+        function = self.current_function
+        if function.go_if_levels is None and function.condition_depth == 0:
+            # A case or a statement can end at a brace without a semicolon.
+            self.end_statement()
+        return self.close_block()
 
     def end_statement(self):
         """A statement ends the levels of a braceless body."""
@@ -153,15 +170,30 @@ class NDFileInfoAddition(FileInfoBuilder):
         # An explicit semicolon can separate a Go if initializer and test.
         keep = function.go_if_levels or 0
         function.levels_awaiting_body = keep
+        function.go_statement_logical_levels = 0
+        function.go_initializer = False
         if keep:
             function.logical_operator_added = False
         return self.add_nd_condition(keep - levels)
 
     def start_go_if(self):
         function = self.current_function
+        # A new if cannot be part of the preceding Go expression.
+        logical_levels = function.go_statement_logical_levels
+        if logical_levels:
+            function.levels_awaiting_body -= logical_levels
+            self.add_nd_condition(-logical_levels)
+            function.go_statement_logical_levels = 0
+        depth = self.open_level()
         function.in_condition = True
         function.go_if_levels = function.levels_awaiting_body
         function.logical_operator_added = False
+        return depth
+
+    def mark_go_initializer(self):
+        function = self.current_function
+        if function.go_if_levels is not None and function.condition_depth == 0:
+            function.go_initializer = True
 
     def set_in_condition(self, in_condition):
         self.current_function.in_condition = in_condition
@@ -257,6 +289,8 @@ def _init_nesting_depth_data(self, *_):
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
     self.go_if_levels = None
+    self.go_initializer = False
+    self.go_statement_logical_levels = 0
     self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
     self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
