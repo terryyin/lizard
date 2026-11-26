@@ -6,13 +6,6 @@ from lizard import FileInfoBuilder, FunctionInfo
 from lizard_languages.javascript_statements import ImpliedSemicolons
 
 DEFAULT_ND_THRESHOLD = 7
-_STATEMENT_EXPRESSION_SEPARATORS = frozenset(('=', ',', ':', '?'))
-_STANDALONE_BOUNDARIES = _STATEMENT_EXPRESSION_SEPARATORS | {'[', ']'}
-_GROUP_OPERAND_STARTS = _STATEMENT_EXPRESSION_SEPARATORS | {
-    None, 'return', 'co_return', 'throw', 'yield',
-    '(', '[', '{', ';', '&&', '||', '??', '!', '~', '+', '-', '*', '/', '%',
-    '|', '&', '^', '==', '!=', '===', '!==',
-}
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -38,8 +31,6 @@ class LizardExtension(object):  # pylint: disable=R0903
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
-        if 'cpp' in getattr(reader, 'language_names', ()):
-            tokens = _cpp_grouped_commas(tokens, reader.context)
         return self._nesting_depth(tokens, reader, l_depth, implied_semicolons)
 
     @staticmethod
@@ -50,6 +41,8 @@ class LizardExtension(object):  # pylint: disable=R0903
             loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
+        if 'cpp' in getattr(reader, 'language_names', ()):
+            tokens = _cpp_grouped_commas(tokens, reader.context)
         block_starts = getattr(reader, "block_starts", ('{',))
         indent_indicator = getattr(reader, 'indent_indicator', ';')
         standalone_chains = (isinstance(implied_semicolons, ImpliedSemicolons)
@@ -247,6 +240,25 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.prev_was_else = False
 
 
+def get_method(cls, name):
+    """ python3 doesn't need the __func__ to get the func of the
+        method.
+    """
+    method = getattr(cls, name)
+    if hasattr(method, "__func__"):
+        method = method.__func__
+    return method
+
+
+_STATEMENT_EXPRESSION_SEPARATORS = frozenset(('=', ',', ':', '?'))
+_STANDALONE_BOUNDARIES = _STATEMENT_EXPRESSION_SEPARATORS | {'[', ']'}
+_GROUP_OPERAND_STARTS = _STATEMENT_EXPRESSION_SEPARATORS | {
+    None, 'return', 'co_return', 'throw', 'yield',
+    '(', '[', '{', ';', '&&', '||', '??', '!', '~', '+', '-', '*', '/', '%',
+    '|', '&', '^', '==', '!=', '===', '!==',
+}
+
+
 def _close_condition_at_depth(function):
     if function.condition_depth <= len(function.standalone_groups):
         del function.standalone_groups[function.condition_depth:]
@@ -328,16 +340,6 @@ class _CppTemplateArguments:
 
     def is_call(self, token):
         return self.depth == 0 and self.has_type and token == '('
-
-
-def get_method(cls, name):
-    """ python3 doesn't need the __func__ to get the func of the
-        method.
-    """
-    method = getattr(cls, name)
-    if hasattr(method, "__func__"):
-        method = method.__func__
-    return method
 
 
 def patch(frm, accept_class):
