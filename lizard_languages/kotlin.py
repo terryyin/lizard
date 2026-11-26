@@ -278,6 +278,9 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
     def _function_name(self, token):
         if token == "<":
             self.next(self._template, token)
+        elif token == "interface":
+            self.fold_into_enclosing_function()
+            self.next(self._state_global, token)
         elif token == "@":
             self._state = self._receiver_annotation
         elif not self._receiver_type_end(token):
