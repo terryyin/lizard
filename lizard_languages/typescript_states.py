@@ -37,6 +37,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         # Token before the last '<': a generic arrow `x = <T>(...)` follows
         # '=' or 'async'; a generic call `x = f<T>(...)` follows a callee.
         self._generic_prefix = ''
+        self._generic_async_parameters = False
         self._in_prop_value = False  # Track if inside property value (after ':')
         self._in_abstract_context = False  # Track abstract method declarations
         self._condition_kind = None
@@ -145,6 +146,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self.next(self._expecting_statement_or_block)
         elif token in ('=>',):
             self._arrow_line = self.context.current_line
+            # The opening parenthesis remains the runtime prefix through a
+            # return annotation. A later bare parameter replaces that prefix.
+            if self._prev_token != '(':
+                self._generic_async_parameters = False
             if not self._pending_bindings:
                 name = self.last_tokens
                 if name.replace('$', '_').isidentifier():
@@ -160,6 +165,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._consume_generic_type_params()
         elif token == "(":
             self._parenthesis_prefix = self._prev_token
+            self._generic_async_parameters = (
+                self._parenthesis_prefix == '>' and self._generic_prefix == 'async')
             if (self._prev_token in ('.', 'new')
                     or self._binding_candidate
                     and self._binding_candidate.in_expression):
