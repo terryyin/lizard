@@ -153,6 +153,113 @@ class Test_Python_fstring_complexity(unittest.TestCase):
         self.assertIn('\\\n', tokens)
         self.assertNotIn('\\', tokens)
 
+    def test_token_factory_replays_dynamic_format_fields_in_source_order(self):
+        from lizard_languages.python import PythonReader
+
+        for field, pieces in (
+                ('value:{width}', ('value', ':', '{', 'width', '}')),
+                ('value!s:>{width}.{precision}',
+                 ('value', '!', 's', ':', '>', '{', 'width', '}', '.',
+                  '{', 'precision', '}'))):
+            with self.subTest(field=field):
+                source = 'f"{' + field + '}"'
+                calls = []
+
+                def rename_width(match):
+                    token = match.group()
+                    rename = token == 'width' and any(call[0] == 'value' for call in calls)
+                    calls.append((token, match.span(), match.string, match.pos, match.endpos))
+                    return f'width_at_{match.start() - match.pos}' if rename else token
+
+                tokens = list(PythonReader.generate_tokens(source, token_class=rename_width))
+
+                expected_calls = [
+                    ('f', (0, 1), source, 0, len(source)),
+                    (source[1:], (1, len(source)), source, 0, len(source)),
+                ]
+                offset = 0
+                for piece in pieces:
+                    end = offset + len(piece)
+                    expected_calls.append((piece, (offset, end), field, 0, len(field)))
+                    offset = end
+                self.assertEqual(expected_calls, calls)
+                width_token = f'width_at_{field.index("width")}'
+                self.assertEqual(
+                    ['f'] + [width_token if piece == 'width' else piece for piece in pieces],
+                    tokens)
+
+    def test_token_factory_keeps_source_scan_origin_across_fstrings(self):
+        from lizard_languages.python import PythonReader
+
+        source = 'f"{value}" + f"{count}" + label'
+        calls = []
+        replacements = {'"{value}"': '"{price}"', '"{count}"': '"{quantity}"', 'label': 'unit'}
+
+        def rename_label(match):
+            token = match.group()
+            calls.append((token, match.span(), match.string, match.pos, match.endpos))
+            return replacements.get(token, token) if match.pos == 0 else token
+
+        tokens = list(PythonReader.generate_tokens(source, token_class=rename_label))
+
+        self.assertEqual(['f', 'price', ' ', '+', ' ', 'f', 'quantity', ' ', '+', ' ', 'unit'], tokens)
+        self.assertEqual([
+            ('f', (0, 1), source, 0, len(source)),
+            ('"{value}"', (1, 10), source, 0, len(source)),
+            ('price', (0, 5), 'price', 0, 5),
+            (' ', (10, 11), source, 0, len(source)),
+            ('+', (11, 12), source, 0, len(source)),
+            (' ', (12, 13), source, 0, len(source)),
+            ('f', (13, 14), source, 0, len(source)),
+            ('"{count}"', (14, 23), source, 0, len(source)),
+            ('quantity', (0, 8), 'quantity', 0, 8),
+            (' ', (23, 24), source, 0, len(source)),
+            ('+', (24, 25), source, 0, len(source)),
+            (' ', (25, 26), source, 0, len(source)),
+            ('label', (26, 31), source, 0, len(source)),
+        ], calls)
+
+    def test_token_factory_keeps_source_scan_origin_after_reused_quotes(self):
+        from lizard_languages.python import PythonReader
+
+        source = 'f"{record["value"]}" + label'
+        calls = []
+
+        def rename_label(match):
+            token = match.group()
+            if token == 'label':
+                calls.append((match.span(), match.string, match.pos, match.endpos))
+                if match.pos == 0:
+                    return 'unit'
+            return token
+
+        tokens = list(PythonReader.generate_tokens(source, token_class=rename_label))
+
+        self.assertEqual(['f', 'record', '[', '"value"', ']', ' ', '+', ' ', 'unit'], tokens)
+        self.assertEqual([((23, len(source)), source, 0, len(source))], calls)
+
+    def test_token_factory_uses_custom_patterns_only_in_the_source_scan(self):
+        from lizard_languages.python import PythonReader
+
+        source = 'f"{value}" + value'
+        addition = r'|(?P<metric>value)|(?P<format_prefix>f)'
+        calls = []
+
+        def rename_metric(match):
+            token = match.group()
+            if token in ('f', 'value'):
+                calls.append((token, match.lastgroup, match.span(), match.string, match.pos, match.endpos))
+            return 'metric' if match.lastgroup == 'metric' else token
+
+        tokens = list(PythonReader.generate_tokens(source, addition, rename_metric))
+
+        self.assertEqual(['f', 'value', ' ', '+', ' ', 'metric'], tokens)
+        self.assertEqual([
+            ('f', 'format_prefix', (0, 1), source, 0, len(source)),
+            ('value', None, (0, 5), 'value', 0, 5),
+            ('value', 'metric', (13, 18), source, 0, len(source)),
+        ], calls)
+
     def test_token_factory_transforms_fstring_literal_text(self):
         from lizard_languages.python import PythonReader
 
@@ -184,10 +291,11 @@ class Test_Python_fstring_complexity(unittest.TestCase):
 
         def replace_prefix(match):
             text = match.group()
-            return 'prefix' if text == 'f' else text
+            return {'f': 'prefix', 'r': 'f'}.get(text, text)
 
         for source, expected in (
                 ('f"{ready}"', ['prefix', '"{ready}"']),
+                ('r"{ready}"', ['f', 'ready']),
                 ('F"{f\'{ready}\'}"', ['F', 'prefix', "'{ready}'"])):
             with self.subTest(source=source):
                 tokens = list(PythonReader.generate_tokens(source, token_class=replace_prefix))
