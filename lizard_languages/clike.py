@@ -2,10 +2,11 @@
 Language parser for C, C++ -like languages.
 '''
 
+from collections import deque
 import re
 import itertools
 from .code_reader import CodeStateMachine, CodeReader
-from .clike_states import CLikeStates
+from .clike_states import CLikeStates, CPP_CONDITIONAL_DIRECTIVES
 
 # Raw strings end only at the opening delimiter, which has at most 16 d-chars.
 _CPP_RAW_STRING_TOKEN = (
@@ -53,7 +54,10 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
 
     def preprocess(self, tokens):
         tilde = False
-        for token in tokens:
+        function_reader = next((state for state in self.parallel_states if isinstance(state, CLikeStates)), None)
+        tokens = iter(tokens)
+        pending = deque()
+        while (token := pending.popleft() if pending else next(tokens, None)) is not None:
             if token == '~':
                 tilde = True
             elif tilde:
@@ -62,15 +66,39 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             elif not token.isspace() or token == '\n':
                 macro = self.macro_pattern.match(token)
                 if macro:
-                    if macro.group(1) in ('if', 'ifdef', 'elif'):
+                    directive = macro.group(1)
+                    if directive in CPP_CONDITIONAL_DIRECTIVES and function_reader is not None:
+                        function_reader.read_preprocessor_branch(directive)
+                    if directive in ('if', 'ifdef', 'elif'):
                         self.context.add_condition()
-                    elif macro.group(1) == 'include':
+                    elif directive == 'include':
                         yield "#include"
                         yield macro.group(2) or "\"\""
                     for _ in macro.group(2).split('\n')[1:]:
                         yield '\n'
                 else:
+                    if token == "{" and function_reader is not None and function_reader.return_brace_needs_check():
+                        following, in_return_type = self._check_return_brace(tokens, pending)
+                        pending.extendleft(reversed(following))
+                        if not in_return_type:
+                            function_reader.clear_trailing_return_groups()
                     yield token
+
+    @staticmethod
+    def _check_return_brace(tokens, pending):
+        # A less-than comparison can leave an unmatched angle before the real body.
+        # A braced argument has no top-level statement and can continue the template.
+        following = []
+        depth = 1
+        while (token := pending.popleft() if pending else next(tokens, None)) is not None:
+            following.append(token)
+            if not depth and not token.isspace() and not token.startswith("#"):
+                return following, token in (">", ",", ".", "::", "==", "!=")
+            if token == ";" and depth == 1:
+                break
+            if depth:
+                depth += (token == "{") - (token == "}")
+        return following, False
 
 
 class CppRValueRefStates(CodeStateMachine):

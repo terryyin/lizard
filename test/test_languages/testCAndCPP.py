@@ -1017,6 +1017,41 @@ int update() {
         self.assertEqual(1, len(result))
         self.assertEqual("foo", result[0].name)
 
+    def test_braced_expression_in_trailing_return_type(self):
+        result = get_cpp_function_list("""struct Box {};
+auto declare_box() -> decltype(Box{});
+auto make_box(bool ready) -> decltype(Box{}) {
+    if (ready) { return {}; }
+    return {};
+}
+""")
+
+        self.assertEqual(
+            [("make_box", 3, 6, 2)],
+            [(fn.name, fn.start_line, fn.end_line, fn.cyclomatic_complexity) for fn in result])
+
+    def test_braced_template_argument_in_trailing_return_type(self):
+        source = """template<class T> struct Box { T value; };
+template<auto Value> struct Tag {};
+template<bool, class T> struct Select {};
+auto declare_tag() -> Tag<ARGUMENT>;
+auto make_tag(bool ready) -> Tag<ARGUMENT> {
+    if (ready) { return {}; }
+    return {};
+}
+template<int Size>
+auto compare() -> Select<Size < 4, int> { return {}; }
+int neighbor() { return 0; }
+"""
+        for argument in ("Box{1}", "Box<int>{1}", "Box{Box{1}.value}"):
+            with self.subTest(argument=argument):
+                result = get_cpp_function_list(source.replace("ARGUMENT", argument))
+
+                self.assertEqual(
+                    [("make_tag", 5, 8, 2), ("compare", 10, 10, 1), ("neighbor", 11, 11, 1)],
+                    [(fn.name, fn.start_line, fn.end_line, fn.cyclomatic_complexity) for fn in result],
+                )
+
     def test_ref_qualifiers(self):
         """C++11 ref qualifiers for member functions."""
         result = get_cpp_function_list("struct A { void foo() & {} };")
@@ -1116,6 +1151,30 @@ class Test_cpp11_Attributes(unittest.TestCase):
 
 
 class Test_Preprocessing(unittest.TestCase):
+
+    def test_alternative_groups_in_trailing_return_type(self):
+        source = """template<class T>
+auto lookup(T& value) BEFORE_ARROW
+#if THREADED
+    BRANCH_ARROW decltype(value.locked_lookup(
+#else
+    BRANCH_ARROW decltype(value.lookup(
+#endif
+        1))
+{
+    return value.lookup(1);
+}
+int neighbor() { return 0; }
+"""
+
+        for before, branch in (("->", ""), ("", "->")):
+            with self.subTest(arrow_inside_branch=bool(branch)):
+                result = get_cpp_function_list(
+                    source.replace("BEFORE_ARROW", before).replace("BRANCH_ARROW", branch))
+
+                self.assertEqual(
+                    [("lookup", 2, 11), ("neighbor", 12, 12)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result])
 
     def test_content_macro_should_be_ignored(self):
         result = get_cpp_function_list(r'''
