@@ -345,10 +345,11 @@ class CLikeNestingStackStates(CodeStateMachine):
 
     __namespace_separators = ['<', ":", "final", "[", "extends", 'implements']
     _TYPE_KEYWORDS = ("struct", "class", "namespace", "union")
+    _reads_cpp_templates = True
 
     def _state_global(self, token):
         """Dual-purpose state for global and structure bodies."""
-        if token == "template":
+        if token == "template" and self._reads_cpp_templates:
             self._state = self._template_declaration
         elif token == ".":
             self._state = self._dot

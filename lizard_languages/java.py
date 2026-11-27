@@ -61,13 +61,18 @@ class JavaReader(CLikeReader):
         super(JavaReader, self).__init__(context)
         self.parallel_states = [
                 JavaStates(context),
-                CLikeNestingStackStates(context)]
+                JavaNestingStackStates(context)]
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         if '"""' in source_code:
             addition = _JAVA_TEXT_BLOCK + addition
         return clike_tokens(source_code, addition, token_class)
+
+
+class JavaNestingStackStates(CLikeNestingStackStates):
+    # Java can use "template" as an identifier.
+    _reads_cpp_templates = False
 
 
 class JavaStates(CLikeStates):  # pylint: disable=R0903
