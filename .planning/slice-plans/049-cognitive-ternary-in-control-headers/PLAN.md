@@ -22,7 +22,7 @@ Key examples are the seed's. Today, through `analyze_source_code`, the `if` plus
 - **Pinned peer commas stay.** `test/test_extensions/testCognitivePeerCommaEndsTernary.py` promises that a real `,` at the ternary's bracket depth makes the next ternary a sibling, including `go(a ? \`${a}\` : b, b ? 1 : 2)` scoring 2. Those assertions stay.
 - **Files over 250 lines.** `wc -l`: `cognitive_brace.py` 252, `cognitive_counter.py` 337, `cognitive_actions.py` 178, `test/test_extensions/testCognitiveComplexity.py` 1575. Slice 2 edits the counter, so slice 1 moves per-function token holding out of it first. The behavior edits head advancement, so that move is in slice 1 as well. New tests go in `test/test_extensions/testCognitiveControlHeaders.py` and do not edit the 1575-line file. `cognitive_actions.py` may change and must stay at or under 250 lines. Do not leave either oversized file over 250 lines.
 - **No Accepted ADR covers this.** Cognitive-complexity scoring has no Accepted ADR. ADR 0001 defines nesting depth, which this story does not change. There is no North Star topic to follow.
-- **Local gate.** [AGENTS.md](../../../AGENTS.md) requires `nix develop -c python -m pytest` and `nix develop -c make` before the change is complete. Slice 2 runs both. Focused proof for both slices is `nix develop -c python -m pytest test/test_extensions/testCognitiveComplexity.py test/test_extensions/testCognitivePeerCommaEndsTernary.py test/test_extensions/testCognitiveDefaults.py test/test_extensions/testCognitiveComplexityDict.py`. Slice 2 adds `test/test_extensions/testCognitiveControlHeaders.py`.
+- **Local gate.** [AGENTS.md](../../../AGENTS.md) requires `nix develop -c python -m pytest` and `nix develop -c make` before the change is complete. Slice 2 runs both. Focused proof for both slices is `nix develop -c python -m pytest test/test_extensions/testCognitiveComplexity.py test/test_extensions/testCognitivePeerCommaEndsTernary.py test/testCognitiveDefaults.py test/test_extensions/testCognitiveComplexityDict.py`. Slice 2 adds `test/test_extensions/testCognitiveControlHeaders.py`.
 
 ## Decisive premises
 
@@ -41,13 +41,15 @@ Observed in this workspace on 2026-11-27 at `e5df1994`, with `nix develop -c pyt
 
 Type: Structure
 
-Status: planned
+Status: done
 
 Proof: `nix develop -c python -m pytest` on the cognitive files named above, except the new header file, which does not exist yet. Scores stay as they are. `wc -l lizard_ext/cognitive_brace.py lizard_ext/cognitive_counter.py` prints 250 or below for each. This enables slice 2 to change header recognition and the interpolation-end token in files that are under the line limit.
 
 Change: `cognitive_brace.py` is 252 lines. Move `_in_head`, `_start_body` and `_open_braced_body` into `lizard_ext/cognitive_heads.py`, a mixin `_BraceCounter` uses the way it already uses `_BraceActions`. Only `_BraceCounter` calls them.
 
 `cognitive_counter.py` is 337 lines. Move per-function token holding and state selection into `lizard_ext/cognitive_candidates.py`: `_Candidate`, `_settle`, `_keeps_tokens`, `_ended`, `_involved`, `_hold`, `_merge`, `_release`, `_switch_function` and `_in_body`. Bracket routing (`_route`) and the increment helpers stay, so slice 2 can distinguish a template end from a comma without editing a file over 250 lines. Callers are `_Counter.process` and `_Counter.finish`.
+
+Observed after extraction: 157 cognitive tests and 562 traced defaults, HTML output and language tests passed. `cognitive_brace.py` and `cognitive_counter.py` are 207 and 197 lines. The per-function state type moved with its selector, keeping state allocation in one module. The independent refactor review left the proof unchanged.
 
 ### 2. A header ternary adds its increment at the structure's level
 
@@ -73,3 +75,7 @@ Behavior: analyzing a function through `analyze_source_code` with the cognitive 
 ## Plan review
 
 Refinement was not needed. Slice 1 is the file-size split the behavior has to edit, and it keeps current scores. Slice 2 is one header-ternary rule, including the separators that make the #684 `.js` scores true, proved through `analyze_source_code`. The naive "let `?` through" result is already observed, so the nesting adjustment is part of this behavior rather than a later slice. This review found no remaining concern.
+
+## Execution context
+
+Story Branch Mode uses `origin/codex/count-ternaries-in-control-headers-for-all-brace` from the established claim `c0aaf6cea08dc3a300268191bfa763a058ee8034`. The Codex observer for GitHub Actions workflow `python-app.yml` uses coordinator `tsukasa-6999ea5c` and mailbox `/tmp/dough-ci-501/watch-zs4IMC`.
