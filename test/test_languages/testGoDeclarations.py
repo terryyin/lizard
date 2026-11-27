@@ -82,3 +82,68 @@ func reset() {}
 ''')
     assert [(f.name, f.start_line, f.end_line) for f in result] == [
         ('anonymous__0', 3, 5), ('valueReporter', 2, 6), ('reset', 7, 7)]
+
+
+def test_array_length_composite_literal_does_not_open_the_function_body():
+    result = get_go_function_list('''package wire
+
+import "encoding/binary"
+import "unsafe"
+
+type Header struct { Version, Flags uint32 }
+
+func encodeHeader(header Header) [unsafe.Sizeof(Header{})]byte {
+    var wire [unsafe.Sizeof(Header{})]byte
+    binary.BigEndian.PutUint32(wire[:4], header.Version)
+    if header.Flags != 0 {
+        binary.BigEndian.PutUint32(wire[4:], header.Flags)
+    }
+    return wire
+}
+
+func reset() {}
+''')
+    assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+            for f in result] == [('encodeHeader', 8, 15, 2), ('reset', 17, 17, 1)]
+
+
+def test_bodyless_array_result_keeps_the_following_function():
+    for terminator in ('', ';'):
+        result = get_go_function_list('''package wire
+
+import "unsafe"
+
+type Header struct{ Version, Flags uint32 }
+
+func encodeHeader(header Header) [unsafe.Sizeof(Header{})]byte''' + terminator + '''
+
+func reset(flags uint32) uint32 {
+    if flags == 0 {
+        return 1
+    }
+    return 0
+}
+''')
+        assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                for f in result] == [('encodeHeader', 7, 7, 1), ('reset', 9, 14, 2)]
+
+
+def test_bodyless_array_result_at_end_of_file():
+    source = '''package wire
+
+import "unsafe"
+
+type Header struct{ Version, Flags uint32 }
+
+func reset(flags uint32) uint32 {
+    if flags == 0 {
+        return 1
+    }
+    return 0
+}
+
+func encodeHeader(header Header) [unsafe.Sizeof(Header{})]byte'''
+    for suffix in ('', '\n', ' // implemented in assembly\n', ';'):
+        result = get_go_function_list(source + suffix)
+        assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                for f in result] == [('reset', 7, 12, 2), ('encodeHeader', 14, 14, 1)]
