@@ -219,6 +219,14 @@ Concrete defect. `AGENTS.md` and `.agents/agent-map.md` tell agents to prefix to
   - Open Dough release: 0.3.116
   - Evidence: the coordinator's first key-example run, `nix develop -c python …`, failed with `experimental Nix feature 'nix-command' is disabled`. The plan's premises already used the flag form.
   - Observed effect: one failed command, after which the flag form was used throughout
+- Execution: SEED-078#nd-without-logical-operators
+  - Timestamp: 2026-11-27T00:00:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: the coordinator's readiness command `nix develop -c python -m pytest -q test/testNestingDepth.py` failed with `experimental Nix feature 'nix-command' is disabled`. Plan 048's premises already used the flag form. First implementation commit `28f3ba58`.
+  - Observed effect: one failed readiness command. Every brief then carried the flag form, and no implementer run failed on it.
+  - Inference: the timestamp is approximate to the session start; only the date is certain
 
 ## DD-495 — Coordinator acceptance and paired timing caught two defects after green implementer proof
 
@@ -261,8 +269,22 @@ Other. The plan timed eight workloads with the paired runner's default settings 
   - Observed effect: about 2.5 hours from the first launch to the last pass, including about 50 minutes waiting for load to drop. Run 2 still missed four workloads because load rose during the runs after starting below 4.
   - Inference: on this host, start the gate with 4–8 s batches and a load threshold, and expect waits. Whether the runner's default should change remains a question for the runner's owner
 
+## DD-498 — An oversized-file edit reached delivery without a reorganization decision
+
+Concrete defect. The file-size check in the refactor checks needs a settled reorganization decision, or the developer's narrow exception, before an edit to a file over 250 lines. Execute-plan's delegation guidance says to carry that decision in the brief. Plan 048 named edits to `test/testNestingDepth.py` (707 lines), `lizard_languages/groovy.py` (672), `test/test_languages/testJavaScript.py` (632) and `CHANGELOG.md` (259) without such a decision. Sibling plan 049 settled its split as slice 1. The coordinator also delivered slice 1, a test-only edit to the 707-line file, under the refactor-pass skip without checking file size.
+
+### Occurrences
+- Execution: SEED-078#nd-without-logical-operators
+  - Timestamp: 2026-11-27T00:30:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: slice 1 `28f3ba58` was delivered with the refactor-pass skip recorded. Before slice 2's brief, `wc -l` and the file-size rule surfaced the gap. The developer chose to split the ND tests and to grant narrow exceptions for the other three files. Plan 048 gained Structure slice 2, `d1c0b23d`.
+  - Observed effect: one developer question, and an added slice of about 3.4 active minutes. Behavior delivery was not blocked.
+  - Inference: the gap starts in preparation, because the plan listed the files without their sizes. A file-size check at slice planning would catch it before any execution. The timestamp is approximate within the session
+
 ## Retention
 
-- Highest allocated local number: 497
+- Highest allocated local number: 498
 - Shared-feedback adoption and compaction recovery (2026-11-07): `7129516bc5bd9ba57f370a6353ffe0e10eb1c861:DearDough.md`; its rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.
