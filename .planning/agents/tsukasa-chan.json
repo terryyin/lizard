@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "agent": "Tsukasa-chan",
+  "email": "tsukasa-chan@example.org",
+  "identity": "SEED-079#ad-hoc-work",
+  "mode": "trunk",
+  "branch": "origin/master",
+  "host": "cursor"
+}
