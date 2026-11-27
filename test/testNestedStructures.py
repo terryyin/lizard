@@ -262,6 +262,32 @@ class TestCppNestedStructures(unittest.TestCase):
         self.assertEqual(2, result[0].max_nested_structures)
 
 
+class TestJavaNestedStructureScopes(unittest.TestCase):
+
+    def test_anonymous_method_does_not_include_callers_if(self):
+        source = """
+        class Dispatch {
+            void dispatch(boolean enabled, Runnable report) {
+                if (enabled) {
+                    Runnable task = new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!Thread.currentThread().isInterrupted()) {
+                                report.run();
+                            }
+                        }
+                    };
+                    task.run();
+                }
+            }
+        }
+        """
+        analyzer = FileAnalyzer(get_extensions([NestedStructure()]))
+        functions = analyzer.analyze_source_code('Dispatch.java', source).function_list
+        self.assertEqual([('(anonymous)::run', 1), ('Dispatch::dispatch', 1)],
+                         [(function.name, function.max_nested_structures)
+                          for function in functions])
+
 class TestNestedStructuresAcrossFiles(unittest.TestCase):
     """The CLI reads all files with one extension object, and a file can
     end anywhere: inside a block, or in the condition of a structure."""

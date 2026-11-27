@@ -52,6 +52,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
                       'do', 'try', 'catch', 'switch', 'finally',
                       'except', 'with'])
     matching_structures = set(['else', 'elif', 'catch', 'finally'])
+    _use_function_scope = False
 
     @staticmethod
     def set_args(parser):
@@ -77,6 +78,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         return super(LizardExtension, self).__call__(tokens, reader)
 
     def _start_file(self, reader):
+        self._use_function_scope = 'java' in getattr(reader, 'language_names', ())
         super(LizardExtension, self)._start_file(reader)
         self.structure_piles = [0]
         structures = getattr(reader, 'nested_structure_keywords', self.structures)
@@ -178,12 +180,18 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def pile_up_within_block(self):
         self._increment_current_scope()
-        cur_level = sum(self.structure_piles)
+        function = self.context.current_function
+        levels = self.structure_piles
+        # Java's nesting stack records the brace depth at the method
+        # declaration. Slot zero is the scope outside those braces.
+        if self._use_function_scope:
+            levels = levels[function.top_nesting_level + 1:]
+        cur_level = sum(levels)
         # Is there a path around _state_global?
-        if not hasattr(self.context.current_function, "max_nested_structures"):
-            self.context.current_function.max_nested_structures = 0
-        if self.context.current_function.max_nested_structures < cur_level:
-            self.context.current_function.max_nested_structures = cur_level
+        if not hasattr(function, "max_nested_structures"):
+            function.max_nested_structures = 0
+        if function.max_nested_structures < cur_level:
+            function.max_nested_structures = cur_level
 
     def _state_global(self, token):
         if token not in self._global_tokens:
