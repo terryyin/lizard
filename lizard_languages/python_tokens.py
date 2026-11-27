@@ -18,10 +18,6 @@ class FStringLiteralToken(str):
     the f-string expression, never a standalone string.'''
 
 
-class _PartialFString(str):
-    """A caller-selected quote token that ends inside the f-string."""
-
-
 # Triple-quoted string patterns for the common tokenizer, so a whole
 # triple-quoted string is matched as a single token.
 _PY_TRIPLE_QUOTE = (
@@ -113,11 +109,7 @@ def _source_hook_values(source, pattern, scanner, addition):
                     factory = _factory_with_original_matches(source, matches, original_factory)
                 start = end
                 break
-            # The caller kept this shorter match. Mark it for legacy expansion.
-            value = factory(quoted)
-            if quoted.end() < end and isinstance(value, str) and value[:1] in ('"', "'"):
-                value = _PartialFString(value)
-            yield value
+            yield factory(quoted)
         else:
             return
 
@@ -144,13 +136,8 @@ def _mark_prefixed_strings(tokens, scanner=None):
             if isinstance(token, str) and token[:1] in ('"', "'") and not isinstance(
                     token, (FStringExpressionToken, FStringLiteralToken, PrefixedStringToken)):
                 if scanner is not None and held.lower() in _INTERPOLATED_PREFIXES:
-                    if isinstance(token, _PartialFString) and held.lower() in _FSTRING_PREFIXES:
-                        yield from _legacy_fstring_body(PrefixedStringToken(token), scanner[1])
-                        continue
-                    string = _read_string(token, 0, held.lower(), scanner)
-                    if string is not None and string[0] == len(token):
-                        yield from string[1]
-                        continue
+                    yield from _expand_quoted_token(token, held.lower(), scanner)
+                    continue
                 yield PrefixedStringToken(token)
                 continue
         if (isinstance(token, str) and token.lower() in _STRING_PREFIXES and
@@ -164,6 +151,29 @@ def _mark_prefixed_strings(tokens, scanner=None):
 
 def _identity(token):
     return token
+
+
+def _expand_quoted_token(token, prefix, scanner):
+    string = _read_string(token, 0, prefix, scanner)
+    if string is not None and string[0] == len(token):
+        parts = string[1]
+        if scanner[1] is not None:
+            # Complete the field callbacks before yielding the first expansion token.
+            parts = list(_expand_factory_fields(parts, token, scanner))
+        yield from parts
+    elif prefix in _FSTRING_PREFIXES:
+        yield from _legacy_fstring_body(PrefixedStringToken(token), scanner[1])
+    else:
+        yield PrefixedStringToken(token)
+
+
+def _expand_factory_fields(parts, source, scanner):
+    for part in parts:
+        if isinstance(part, _FactoryField):
+            tokens = _field_parts(part.tokens, source, part.start, part.end, scanner)
+            yield from (FStringExpressionToken(token) for token in tokens)
+        else:
+            yield part
 
 
 def _read_string(source, start, prefix, scanner):
@@ -192,9 +202,10 @@ def _read_string(source, start, prefix, scanner):
                 return None
             _append_literal(parts, source, literal_start, pos, quote)
             pos, tokens = field
-            if scanner[1] is not None:
-                tokens = _field_parts(tokens, source, field_start, pos - 1, scanner)
-            parts.extend(FStringExpressionToken(token) for token in tokens)
+            if scanner[1] is None:
+                parts.extend(FStringExpressionToken(token) for token in tokens)
+            elif tokens:
+                parts.append(_FactoryField(field_start, pos - 1, tokens))
             literal_start = pos
         elif char == '\\':
             pos = _after_escape(source, pos, raw)
@@ -334,6 +345,15 @@ def _starts_factory_macro(token):
 
 class _FormatHash(str):
     """A raw format flag that does not start a comment."""
+
+
+class _FactoryField:
+    """A field whose factory waits for the enclosing token to be accepted."""
+
+    def __init__(self, start, end, tokens):
+        self.start = start
+        self.end = end
+        self.tokens = tokens
 
 
 class _NestedFactoryString:
