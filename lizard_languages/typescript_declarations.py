@@ -49,6 +49,7 @@ class TypeScriptDeclarationsMixin:
         # Skip type alias declarations: type Name = { ... }
         # These contain arrow signatures that are not runtime functions.
         if token == 'type' and not self.as_object:
+            self._pending_type_alias = self._expression_body
             phase = [0]        # 0=expect name, 1=expect =, 2=after =
             brace_count = [0]
             generic_depth = [0]
@@ -56,14 +57,19 @@ class TypeScriptDeclarationsMixin:
 
             def handle_type_alias(t):
                 if phase[0] == 0:
+                    self._pending_type_alias = False
                     if t and t[0].isalpha():
                         name[0] = t
                         phase[0] = 1
                     else:
                         self.last_tokens = 'type'
+                        runtime = t == '=>' or (
+                            t in ('(', '`') and 'type' in self.context.current_function.parameters)
+                        if runtime:
+                            self._prev_token = 'type'
                         self.next(self._state_global)
                         self._state_global(t)
-                        return True
+                        return not runtime
                 elif phase[0] == 1:
                     if t == '<':
                         generic_depth[0] = 1
