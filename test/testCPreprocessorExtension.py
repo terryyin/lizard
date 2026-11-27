@@ -101,6 +101,28 @@ def analyze_with_extension(code):
 
 class Test_end_2_end(unittest.TestCase):
 
+    def test_keeps_source_lines_after_skipping_conditional_alternatives(self):
+        for gap in ("", "  "):
+            with self.subTest(gap=gap):
+                result = analyze_with_extension(f"""#{gap}if THREADED
+#{gap}if SHARED
+int lookup_shared() {{ return 1; }}
+#{gap}else
+int lookup_locked() {{ return 2; }}
+#{gap}endif
+#{gap}elif SHARED
+int lookup_other() {{ return 3; }}
+#{gap}else
+int lookup_serial() {{ return 4; }}
+#{gap}endif
+int neighbor() {{ return 0; }}
+""")
+
+                self.assertEqual(
+                    [("lookup_shared", 3, 3), ("neighbor", 12, 12)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result],
+                )
+
     def test_extension_in_user(self):
         result = analyze_with_extension("#if\nxxaa#else\nint a(){}\n#endif")
         self.assertEqual(0, len(result))
