@@ -23,6 +23,10 @@ class _BraceCounter(_BraceActions, _BraceHeads, _Counter):  # pylint: disable=R0
         self.actions = self._keyword_actions(profile)
         if not profile.nesting:
             self._process = self._process_flat
+        self.expression_breakers = _EXPRESSION_BREAKERS
+        if reader.language_names[0] == 'scala':
+            # A question mark can be a Scala operator or a type wildcard.
+            self.expression_breakers = _EXPRESSION_BREAKERS - {'?'}
 
     def _process(self, token):  # pylint: disable=E0202
         if token is _ROUTED_ATTRIBUTE_END:
@@ -56,7 +60,7 @@ class _BraceCounter(_BraceActions, _BraceHeads, _Counter):  # pylint: disable=R0
                     state.pending_logical_word = False
                 return
             self._logical_operator(token)
-        elif token in _EXPRESSION_BREAKERS:
+        elif token in self.expression_breakers:
             state.logical.pop(state.pdepth, None)
         if token in ('(', '['):
             self._open_bracket()

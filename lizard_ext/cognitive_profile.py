@@ -115,7 +115,7 @@ _PROFILES = {
                       newline_ends_statement=True),
     'rust': _Profile(switches=('match',), do_likes=('loop',),
                      ternary=False, paren_heads=False),
-    'scala': _Profile(switches=('match',), newline_ends_statement=True),
+    'scala': _Profile(switches=('match',), ternary=False, newline_ends_statement=True),
     'groovy': _Profile(newline_ends_statement=True, **_C_LIKE),
     'perl': _Profile(catches=('catch',),         # Try::Tiny
                      gotos=('goto',), jumps=('last', 'next', 'redo')),
