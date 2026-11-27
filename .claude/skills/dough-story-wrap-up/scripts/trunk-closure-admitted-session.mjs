@@ -65,16 +65,9 @@ export async function adoptAdmittedSession({
   if (
     !isSessionId(context.reference) ||
     !identity ||
-    claim.identity !== identity ||
     context.identity !== identity ||
-    context.reference !== claim.reference ||
-    context.origin !== claim.origin ||
-    context.source !== claim.source ||
-    context.host !== claim.host ||
     context.remote !== remote ||
     context.target !== targetRef ||
-    claim.remote !== remote ||
-    claim.target !== targetRef ||
     claim.admission.workspace !== workspace ||
     claim.admission.branch !== branch ||
     claim.nativeWorkspace === workspace

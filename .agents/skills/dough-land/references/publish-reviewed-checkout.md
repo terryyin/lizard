@@ -61,14 +61,12 @@ Call the installed `publishSessionClose` API from
 `publishExecutionIncrement` request, the project's backlog path as
 `backlogPath`, and `session: { workflow, story }`. `workflow` is
 `dough-story-refinement` for a story preparation's landing and `ad-hoc`
-otherwise. `story` is the story identity bound to the session, such as a follow-up's
-Done story. Use the verified Dashboard launch context or retained preparation
-session to recover that identity when needed. If neither supplies its story,
-hold the close and preserve the work and context. The API
-publishes the work, then the session's record as its own commit along the same
-route. Report `work` as the publication result and `record.status`; accepted
-work stays in place whatever the record's status. Other publishers write no
-session record; for ordinary reviewed work, report that none was written.
+otherwise. `story` is the story identity bound to the session, such as a
+follow-up's Done story. The API publishes the work, then the session's record
+as its own commit along the same route. Report `work` as the publication
+result and `record.status`; accepted work stays in place whatever the record's
+status. Other publishers write no session record; for ordinary reviewed work,
+report that none was written.
 
 A `published` record settles the close. Otherwise, including after an
 interruption or an unanswered push such as `transport-timeout`, call

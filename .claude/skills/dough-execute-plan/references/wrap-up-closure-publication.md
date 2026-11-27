@@ -115,24 +115,18 @@ after all closure/retirement work and final wording settle.
 
 ## Finish a Dashboard admission from its owned claim checkout
 
-When the Dashboard's launch reporting directory has an `admitted-claim.json`
-beside its `landing-context.json`, the launch started in a borrowed checkout
-and published the Taken claim from a separate owned checkout. Read its
-`admission.workspace`, `admission.branch`, and `admission.publishedSha` once,
-and keep the same identity and publication target. Keep using the selected
-landing policy. Publish work from the native checkout through managed delivery
-with its landing context, as for other admitted work.
+An `admitted-claim.json` beside the launch's `landing-context.json` records a
+Taken claim published from an owned checkout while the session works in a
+borrowed one. Keep its identity, target and landing policy, and publish native
+work through managed delivery with the landing context.
 
-Use the claim checkout for wrap-up. Advance it to the accepted before-cleanup
-revision without rewriting local work, then complete the story and commit the
-final closure as usual. For a no-change conclusion, the published claim can
-serve as the before-cleanup revision. Run `finish` with the claim workspace
-and branch, `--identity`, and `--admitted-launch-context` naming this launch's
-`landing-context.json`. It verifies the claim, carries the accepted native
-session evidence into the claim checkout, publishes the usual closure and
-session record, and retires the claim checkout. It skips the borrowed checkout
-if supplied as the optional default checkout to refresh. Keep the reporting
-directory available for a retry of the same closure.
+Wrap up in the claim's `admission.workspace` on `admission.branch`. Advance it
+to the accepted before-cleanup revision without rewriting local work; for a
+no-change conclusion that is `admission.publishedSha`. Complete the story and
+commit the final closure, then run `finish` there with `--identity` and
+`--admitted-launch-context` naming that `landing-context.json`. It carries the
+accepted session evidence into the claim checkout, retires it, and leaves the
+borrowed checkout as it is. Keep the reporting directory for a retry.
 
 ## Complete current-branch closure
 

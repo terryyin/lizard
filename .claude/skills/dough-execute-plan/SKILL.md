@@ -62,7 +62,6 @@ work for review, and `--auto-land` selects its automatic landing.
 When the instruction carries an [established start](references/established-start.md),
 retain its identity and accepted publication. Use the named checkout and skip
 the start command. Continue at [checkout setup](#choose-the-execution-location).
-The matched Dashboard admission also skips startup and proceeds to that setup.
 
 Otherwise inspect the backlog before changing plan status, starting
 observation or delegating. For queued work, resolve its selected entry and

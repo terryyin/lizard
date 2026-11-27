@@ -75,7 +75,8 @@ distinct from shutdown facts:
   project's declared [integrated-state policy](runtime-setup.md#select-ci): the
   accepted revision had no successful run of its own (`accepted` keeps its own
   state; an ignored-only `not_required` revision also keeps its basis, whose
-  applicable attempt was replaced or is still pending), and a successful
+  applicable attempt was replaced, is still pending, or failed on another
+  writer's revision that this execution never registered), and a successful
   current attempt at a later same-target snapshot
   that contains it (`validated`: SHA, run, attempt, URL, check, context and
   any required jobs; `ancestry`) validated the integrated state. Retain both

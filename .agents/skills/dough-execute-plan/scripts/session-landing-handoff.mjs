@@ -8,7 +8,6 @@ import { managementContext } from "./publication-git.mjs";
 const identities = {
   claude: "CLAUDE_CODE_SESSION_ID",
   codex: "CODEX_THREAD_ID",
-  cursor: "CURSOR_CONVERSATION_ID",
 };
 
 function nativeShell() {

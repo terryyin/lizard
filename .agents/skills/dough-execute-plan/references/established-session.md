@@ -79,8 +79,7 @@ workflow's own guidance.
 
 ## Land under the session's landing intent
 
-For an admitted blank Start use [its managed delivery](#continue-the-published-dashboard-admission).
-Other tracked work uses its invocation's publication authority. Dough Land
+Tracked work uses its invocation's publication authority. Dough Land
 lands the block's checkout and branch on its remote target using the retained
 starting revision. For results covered by the block:
 
