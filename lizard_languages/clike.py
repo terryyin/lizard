@@ -5,7 +5,7 @@ Language parser for C, C++ -like languages.
 import re
 import itertools
 from .code_reader import CodeStateMachine, CodeReader
-from .clike_states import CLikeStates
+from .clike_states import CLikeStates, CPP_CONDITIONAL_DIRECTIVES
 
 # Raw strings end only at the opening delimiter, which has at most 16 d-chars.
 _CPP_RAW_STRING_TOKEN = (
@@ -62,9 +62,15 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             elif not token.isspace() or token == '\n':
                 macro = self.macro_pattern.match(token)
                 if macro:
-                    if macro.group(1) in ('if', 'ifdef', 'elif'):
+                    directive = macro.group(1)
+                    if directive in CPP_CONDITIONAL_DIRECTIVES:
+                        for state in self.parallel_states:
+                            if isinstance(state, CLikeStates):
+                                state.read_preprocessor_branch(directive)
+                                break
+                    if directive in ('if', 'ifdef', 'elif'):
                         self.context.add_condition()
-                    elif macro.group(1) == 'include':
+                    elif directive == 'include':
                         yield "#include"
                         yield macro.group(2) or "\"\""
                     for _ in macro.group(2).split('\n')[1:]:
