@@ -260,7 +260,7 @@ class _LambdaHeader:
         if self.in_capture_prefix:
             if token == "=":
                 self._capture_has_initializer = True
-            elif token.isidentifier() and (previous.isidentifier() or previous in (")", "}")):
+            elif token.isidentifier() and (previous.isidentifier() or previous in (")", "]", "}")):
                 # An Objective-C receiver and selector can appear next to each other.
                 return 0
         if token in (")", "]", "}") or (section == "(" and token == "="):
