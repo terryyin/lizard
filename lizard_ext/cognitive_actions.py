@@ -1,5 +1,7 @@
 """Tokens that increment cognitive complexity in brace languages."""
 
+from lizard_languages.typescript import TypeScriptReader
+
 from .cognitive_counter import BODY, BODY_PENDING, HEAD, _IF_LIKE
 from .cognitive_profile import (
     _EXPRESSION_BREAKERS, _NOT_TERNARY_NEXT, _NULLABLE_TYPE_FOLLOWERS,
@@ -74,6 +76,13 @@ class _BraceActions(object):
 
     def _resolve_pending_ternary(self, token):
         state = self.state
+        # A Java wildcard may use ``? super T``. In script readers,
+        # ``super`` can start the first branch of a conditional.
+        if (state.pending_ternary == 1 and token == 'super'
+                and not isinstance(self.reader, TypeScriptReader)):
+            state.pending_ternary = 0
+            return False
+
         if state.pending_ternary == 1:
             state.pending_ternary = 0
             if token in _NOT_TERNARY_NEXT:

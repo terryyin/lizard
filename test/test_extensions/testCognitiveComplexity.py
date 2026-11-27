@@ -579,6 +579,20 @@ class TestOtherBraceLanguages(unittest.TestCase):
               return self.isNew() ? 'create' : 'update';  // +1
             }"""))
 
+    def test_js_and_ts_ternary_branch_starts_with_super(self):
+        code = """
+            class Base {
+              supports() { return true; }
+            }
+            class Derived extends Base {
+              supports(useBase = true) {
+                return useBase ? super.supports() : false;
+              }
+            }"""
+        for filename in ("a.js", "a.ts"):
+            with self.subTest(filename=filename):
+                self.assertEqual([0, 1], cogc(filename, code))
+
     def test_javascript_optional_chaining_and_nullish_coalescing(self):
         self.assertEqual([0], cogc("a.js", "function f(a) { return a?.b ?? c; }"))
 
