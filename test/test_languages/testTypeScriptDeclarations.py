@@ -31,6 +31,79 @@ class Test_TypeScript_declaration_boundaries(unittest.TestCase):
         functions = get_ts_function_list(code)
         self.assertEqual(["local"], [f.name for f in functions])
 
+    def test_ambient_class_keeps_only_the_runtime_methods(self):
+        code = """declare abstract class Registry<T extends { key: string }> {
+  open(key: T): { label: `id-${string}` }
+  close(): void
+}
+class LocalRegistry {
+  open(key: string) { return key || "default" }
+}
+"""
+        analyzer = FileAnalyzer(get_extensions([]))
+        for filename in ('registry.ts', 'registry.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyzer.analyze_source_code(filename, code).function_list
+                self.assertEqual([('open', 6, 6, 2)], [
+                    (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                    for f in functions
+                ])
+
+    def test_class_in_a_declaration_file_has_no_runtime_methods(self):
+        code = """export class Registry {
+  open(key: string): object;
+}
+"""
+        analyzer = FileAnalyzer(get_extensions([]))
+        self.assertEqual([], analyzer.analyze_source_code('registry.d.ts', code).function_list)
+
+    def test_class_in_an_ambient_namespace_has_no_runtime_methods(self):
+        code = """declare namespace Ports {
+  class Registry {
+    open(key: string): object;
+  }
+}
+function local() { return "ready" }
+"""
+        self.assertEqual(['local'], [f.name for f in get_ts_function_list(code)])
+
+    def test_runtime_class_after_a_declare_identifier(self):
+        code = """const declare = true
+declare
+class Registry {
+  open(key: string) { return key || "default" }
+}
+"""
+        self.assertEqual(['open'], [f.name for f in get_ts_function_list(code)])
+
+    def test_runtime_function_after_a_shorthand_ambient_module(self):
+        code = """declare module "registry"
+function local() { return "ready" }
+"""
+        self.assertEqual(['local'], [f.name for f in get_ts_function_list(code)])
+
+    def test_ambient_variable_named_global_keeps_following_runtime_function(self):
+        code = """declare const global: boolean
+function local() { return global }
+"""
+        self.assertEqual(['local'], [f.name for f in get_ts_function_list(code)])
+
+    def test_declared_class_field_keeps_the_next_runtime_method(self):
+        analyzer = FileAnalyzer(get_extensions([]))
+        for name in ('class', 'module', 'namespace', 'global'):
+            for filename in ('registry.ts', 'registry.tsx'):
+                with self.subTest(name=name, filename=filename):
+                    code = f"""class Registry {{
+  declare {name}: string
+  open(key: string) {{ return key || "default" }}
+}}
+function local() {{ return new Registry() }}
+"""
+                    functions = analyzer.analyze_source_code(filename, code).function_list
+                    self.assertEqual([('open', 3, 3, 2), ('local', 5, 5, 1)], [
+                        (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                        for f in functions])
+
 
 class Test_TypeScript_type_alias_no_false_positives(unittest.TestCase):
     """Tests that type aliases with arrow signatures are NOT detected as functions (Fix 2)."""

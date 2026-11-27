@@ -14,11 +14,23 @@ DECLARATION_WORDS = frozenset((
 _EXPRESSION_PREFIXES = (
     _EXPRESSION_KEYWORDS | OPERAND_WORDS | {'default'}
 ) - {'as', 'satisfies', 'keyof'}
+_AMBIENT_BLOCKS = frozenset(('class', 'namespace', 'module', 'global'))
 
 
 class TypeScriptDeclarationsMixin:
     def _handle_type_declaration(self, token):
+        if (self._ts_declare and not self.as_class
+                and self.context.class_field_annotations and not self.context.newline):
+            if token == 'abstract':
+                return True
+            if token in _AMBIENT_BLOCKS:
+                self._skip_ambient_block(shorthand_module=token == 'module')
+                return True
+        if token == 'class' and self.context.fileinfo.filename.lower().endswith('.d.ts'):
+            self._skip_ambient_block()
+            return True
         if token in ('const', 'let', 'var'):
+            self._ts_declare = False
             self._declaration_binding = True
             self.last_tokens = self._prev_token = token
             return True
@@ -137,6 +149,28 @@ class TypeScriptDeclarationsMixin:
             self._in_abstract_context = True
             return True
         return False
+
+    def _skip_ambient_block(self, shorthand_module=False):
+        self._ts_declare = False
+        brackets = TypeScriptTypeAnnotationStates.BRACKETS
+        closers = []
+
+        def consume(token):
+            if token == '<' and closers and closers[-1] != '>':
+                # A heritage expression inside parentheses can compare values.
+                return
+            if token in brackets:
+                closers.append(brackets[token])
+            elif closers:
+                if token == closers[-1]:
+                    closers.pop()
+                    if not closers and token == '}':
+                        self.next(self._state_global)
+            elif (token in (';', '}') or shorthand_module and self.context.newline
+                  and self.last_token[:1] in ('"', "'")):
+                self.next(self._state_global, token)
+
+        self.next(consume)
 
     def _assertion_operand(self):
         """Assertions follow consumed operands, not expression/statement starts."""
