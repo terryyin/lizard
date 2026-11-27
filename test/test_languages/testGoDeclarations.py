@@ -69,3 +69,16 @@ class TestGoDeclarations(unittest.TestCase):
                          [f.name for f in result])
         self.assertEqual(2, result[0].cyclomatic_complexity)
         self.assertEqual(2, result[2].cyclomatic_complexity)
+
+
+def test_inline_result_struct_does_not_end_function_before_its_body():
+    result = get_go_function_list('''package p
+func valueReporter() func(int) struct{ Value int } {
+    return func(value int) struct{ Value int } {
+        return struct{ Value int }{value}
+    }
+}
+func reset() {}
+''')
+    assert [(f.name, f.start_line, f.end_line) for f in result] == [
+        ('anonymous__0', 3, 5), ('valueReporter', 2, 6), ('reset', 7, 7)]

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-077#process-prs-past-48h",
+  "title": "Process open PRs and issues from the past 48 hours",
+  "completedAt": "2026-11-26T13:47:07.808Z",
+  "developer": "Terry Yin",
+  "intentCoverage": {
+    "unavailable": "SEED-077 merged 61 contributor PRs with their tests. Existing-test changes were reviewed individually: #735 replaced a test that pinned the reported PHP naming defect; the PL/SQL quoted-formal CSV test now expects #691's preserved double quotes; #718's raw C string test was replaced with Rust 2021 semantics; #679's two Unicode-separator tests were removed with the dropped feature. No other test was removed, relocated except four PR test files moved into test/test_languages, or weakened."
+  }
+}

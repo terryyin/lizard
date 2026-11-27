@@ -15,6 +15,11 @@
       {
         "command": "node .agents/skills/dough-execute-plan/scripts/slice-clock-hook.mjs cursor",
         "timeout": 5
+      },
+      {
+        "command": "node .agents/skills/dough-execute-plan/scripts/session-landing-handoff.mjs --cursor-hook",
+        "timeout": 5,
+        "matcher": "Shell"
       }
     ],
     "stop": [

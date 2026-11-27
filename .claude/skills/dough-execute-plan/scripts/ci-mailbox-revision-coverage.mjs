@@ -139,6 +139,7 @@ export async function observeRevisionCoverage(
     ],
     readCurrentAttempt,
     signal,
+    registered: readRevisionCoverage(directory).map(({ sha }) => sha),
   });
 
   for (const revision of readRevisionCoverage(directory)) {

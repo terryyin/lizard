@@ -135,6 +135,8 @@ class RubyReader(RubylikeReader):
     @js_style_regex_expression(language='ruby')
     def generate_tokens(source_code, addition='', token_class=None):
         addition = (r"|\w+:|\$\w+|\.+|:?\@{0,2}\w+\??\!?"
+                    # Keep the colon in ?:, ?\: and $: separate from multiplication.
+                    r"|:(?<!\?:)(?<!\?\\:)(?<!\$:)\*\*?"
                     r"|" + _PERCENT_LITERAL + addition)
         bracket_stack = []
         source = source_code

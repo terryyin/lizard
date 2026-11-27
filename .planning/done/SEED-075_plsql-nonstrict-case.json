@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-075#plsql-nonstrict-case",
+  "title": "Keep PL/SQL Boolean operator casing equivalent in nonstrict mode",
+  "completedAt": "2026-11-26T14:34:24.106Z",
+  "developer": "Terry Yin",
+  "agent": "Yuma-chan",
+  "host": "claude"
+}

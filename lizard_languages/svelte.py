@@ -26,7 +26,7 @@ from .javascript_expression import end_before_line_token
 from .javascript_statements import ImpliedSemicolons
 from .javascript_templates import interpolation_code
 from .typescript import TypeScriptReader
-from .vue import VueReader, _attributes
+from .vue import VueReader, _attributes, _SCRIPT_END_LOWERCASE
 
 # In markup: a comment, a start or end tag, or a '{' that opens code.
 # Component names can start with a Unicode letter.
@@ -736,6 +736,7 @@ class SvelteReader(VueReader):
 
     ext = ['svelte']
     language_names = ['svelte']
+    _script_end_pattern = _SCRIPT_END_LOWERCASE
 
     def implied_semicolons(self, tokens):
         """As TypeScriptReader.implied_semicolons, with script ends ending
@@ -745,7 +746,10 @@ class SvelteReader(VueReader):
             tokens = self._implied_semicolons.read(tokens, self.context)
         return tokens, self._implied_semicolons
 
-    find_script_blocks = staticmethod(_svelte_script_blocks)
+    @classmethod
+    def _read_script_blocks(cls, source):
+        return vue._script_blocks(source, cls._script_end_pattern,
+                                  _svelte_script_blocks)
 
     @staticmethod
     def markup_tokens(source_code, start, end):

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "sessionId": "72c66db4-aedc-4d2a-9a59-54658eaab42d",
+  "workflow": "dough-story-refinement",
+  "closedAt": "2026-11-26T10:29:46.094Z",
+  "story": "SEED-075#plsql-formal-parameter-boundaries",
+  "ranges": [
+    {
+      "base": "2e85549c176fb8ab1b8a65ec8276395ed17ae871",
+      "candidate": "05b5f4eeac1879f393eb30c081cbcfa434f1f513"
+    }
+  ]
+}

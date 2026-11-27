@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "sessionId": "a1b2fa8d-5a4b-4413-936b-1a6665280b99",
+  "workflow": "dough-story-refinement",
+  "closedAt": "2026-11-26T07:57:00.585Z",
+  "story": "SEED-075#r-formal-parameter-boundaries",
+  "ranges": [
+    {
+      "base": "458b0d40fe43517c4cfd9d8776f80cb92bcbed39",
+      "candidate": "4117b092126c37a175c0c8f29cbc011169bdc99d"
+    }
+  ]
+}

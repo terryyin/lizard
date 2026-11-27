@@ -20,14 +20,16 @@ _MARKUP = re.compile(
     re.S)
 _ATTRIBUTE = re.compile(
     r'''([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]*)))?''')
-_SCRIPT_END = re.compile(r'</script(?=[\s/>]|\Z)')
+_SCRIPT_END_LOWERCASE = re.compile(r'</script(?=[\s/>]|\Z)')
+_SCRIPT_END = re.compile(r'</(?ai:script)(?=[\t\n\f\r >])')
 # In a script, a closing tag in a string, a comment or a template is text.
 _SCRIPT_TEXT_OR_END = re.compile(
     r'/\*.*?\*/|' + LINE_COMMENT
     + r'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|''' + REGEX_TOKEN
-    + r'|`|' + _SCRIPT_END.pattern, re.S)
+    + r'|`|' + _SCRIPT_END_LOWERCASE.pattern, re.S)
 # Elements of a template that hold only text, as in an HTML parser.
 _TEXT_ELEMENTS = frozenset(('script', 'style', 'textarea', 'title'))
+_SCRIPT_END_TAIL = re.compile(r'[\t\n\f\r ]*>')
 # The blocks of reused source objects (warmed analyzer batches): the same
 # code strings keep their memoized regex marks.
 _BLOCK_CACHE = {}
@@ -54,9 +56,13 @@ class _ScriptTag(str):
         return (_attribute(self, 'lang') or 'js').lower()
 
 
-def _script_blocks(source, find_blocks, end_pattern):
+def _script_blocks(source, end_pattern, find_blocks=None):
     """(tag start, tag, code, code end) of each top-level script block."""
-    key = (id(source), find_blocks, end_pattern)
+    key = (id(source), end_pattern)
+    if find_blocks is None:
+        find_blocks = _find_script_blocks
+    else:
+        key += (find_blocks,)
     cached = _BLOCK_CACHE.get(key)
     if cached is not None and cached[0] is source:
         return cached[1]
@@ -105,7 +111,10 @@ def _script_end(source, pos, end_pattern):
     end = end_pattern.search(source, pos)
     if end is None:
         return len(source)
-    stray = _SCRIPT_END.search(source, end.end())
+    # Keep the recovery scan on its original lowercase boundaries.
+    if not source.startswith('</script', end.start()):
+        return end.start()
+    stray = _SCRIPT_END_LOWERCASE.search(source, end.end())
     if stray is None or source.find('<script', end.end(), stray.start()) >= 0:
         return end.start()
     while True:
@@ -115,6 +124,11 @@ def _script_end(source, pos, end_pattern):
         token = match.group()
         if token.startswith('</'):
             return match.start()
+        if token.startswith('//') and '</script' in token:
+            # The markup end tag can close the script on the comment line.
+            for tag in re.finditer(r'</script', token):
+                if _SCRIPT_END_TAIL.match(source, match.start() + tag.end()):
+                    return match.start() + tag.start()
         if token == '`':
             pos, expressions = _template_end(source, match.start())
             if expressions is None:
@@ -156,7 +170,6 @@ class VueReader(TypeScriptReader):
     _scan_atomic_templates = True
     script_tokens = staticmethod(TypeScriptReader.generate_tokens)
     _script_end_pattern = _SCRIPT_END
-    find_script_blocks = staticmethod(_find_script_blocks)
 
     def __init__(self, context):
         super(VueReader, self).__init__(context)
@@ -166,7 +179,7 @@ class VueReader(TypeScriptReader):
         """The code of the script blocks, tokenized by their lang, and the
         tokens of the markup around them."""
         pos = 0
-        blocks = _script_blocks(source_code, cls.find_script_blocks, cls._script_end_pattern)
+        blocks = cls._read_script_blocks(source_code)
         for tag_start, tag, code, code_end in blocks:
             yield from cls.markup_tokens(source_code, pos, tag_start)
             yield from cls.tag_tokens(tag)
@@ -175,6 +188,10 @@ class VueReader(TypeScriptReader):
             yield from tokenizer(code, addition, token_class)
             pos = code_end
         yield from cls.markup_tokens(source_code, pos, len(source_code))
+
+    @classmethod
+    def _read_script_blocks(cls, source):
+        return _script_blocks(source, cls._script_end_pattern)
 
     @staticmethod
     def markup_tokens(source_code, start, end):

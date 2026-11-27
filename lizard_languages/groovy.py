@@ -312,7 +312,7 @@ class GroovyReader(CodeReader):
     _ternary_operators = {'?', '?:', '?='}
     # Nesting depth: the default without `def`, which declares here.
     loops = frozenset((
-        'if', 'for', 'while', 'catch', 'case', 'try', '&&', '||', '?', '?:'))
+        'if', 'for', 'while', 'catch', 'case', 'try', '?', '?:'))
 
     def __init__(self, context):
         super().__init__(context)

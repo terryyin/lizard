@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-078#cognitive-ternary-in-control-headers",
+  "title": "Count ternaries in control headers for all brace languages",
+  "completedAt": "2026-11-27T01:16:29.455Z",
+  "developer": "Terry Yin",
+  "agent": "Tsukasa-chan",
+  "host": "codex",
+  "model": "gpt-6.2-sol"
+}

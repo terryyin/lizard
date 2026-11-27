@@ -40,7 +40,7 @@ class TTCNStates(CLikeStates):  # pylint: disable=R0903
         if token == 'testcase':
             self._state = self._state_function
             self.context.restart_new_function('__testcase__')
-        elif token == 'function':
+        elif token in ('function', 'altstep'):
             self._state = self._state_function
             self.context.restart_new_function('')
         elif token == 'control':
