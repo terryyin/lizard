@@ -34,6 +34,12 @@ class JavaScriptFunctionsMixin:
                     group._empty_parenthesis or getattr(group, '_typed_parameters', False))
         return None
 
+    def pending_async_parameter(self):
+        state = active_js_state(self)
+        if state._state == state._after_possible_async_parameter:
+            return state
+        return None
+
     def _push_function_to_stack(self):
         if self._in_abstract_context:
             return
@@ -88,6 +94,12 @@ class JavaScriptFunctionsMixin:
         if token in ('=>', ':') or (
                 token == ';' and self.as_object and self._in_abstract_context):
             return      # for _expecting_func_opening_bracket
+        if self._state == self._after_possible_async_parameter:
+            if token == '?' and self.context.class_field_annotations:
+                return  # Preprocessing distinguishes a spaced optional marker.
+            if not self._follows_async_parameter(token):
+                self._begin_grouped_async_expression()
+            return
         self._discard_signature()
 
     def _discard_signature(self):
@@ -206,12 +218,11 @@ class JavaScriptFunctionsMixin:
             self.next(self._state_global)
             self._read_binding_candidate(')')
             return
-        if (token == 'async' and self._parameter_bindings.at_start
+        if (token == 'async' and not self._signature
+                and self._parameter_bindings.at_start
                 and self.last_token == '('):
-            # A grouped async arrow, `x = (async () => f())`, rather than
-            # parameters; keep the open "(" as for an arrow IIFE.
-            self._abandon_optimistic_parameter_group()
-            self.next(self._state_global, token)
+            self.next(self._after_possible_async_parameter)
+            self.context.ended_signatures.append(self)
             return
         if token == '@':
             self._decorated_parameters = True  # constructor(@Inject(T) x)
@@ -243,6 +254,26 @@ class JavaScriptFunctionsMixin:
         elif (not event.in_expression or event.root_separator) and token != '(':
             return
         self.context.add_to_long_function_name(" " + token)
+
+    def _after_possible_async_parameter(self, token):
+        if self._follows_async_parameter(token):
+            if getattr(token, 'is_optional', False):
+                # The default condition counter charged the spaced '?'.
+                self.context.add_condition(-1)
+            self._read_parameter_binding('async')
+            self.next(self._dec, token)
+        else:
+            self._begin_grouped_async_expression()
+            self._replay_token(token)
+
+    @staticmethod
+    def _follows_async_parameter(token):
+        return token in (')', ',', ':', '=') or getattr(token, 'is_optional', False)
+
+    def _begin_grouped_async_expression(self):
+        # An expression such as `(async () => f())` uses the outer group.
+        self._abandon_optimistic_parameter_group()
+        self.next(self._state_global, 'async')
 
     def _expression_operand(self, token):
         bindings = self._parameter_bindings

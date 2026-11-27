@@ -70,6 +70,47 @@ def test_bare_named_and_anonymous_arrows():
         ('(anonymous)', 1, ['$']), ('(anonymous)', 1, ['a$b'])]
 
 
+@pytest.mark.parametrize('extension', ['js', 'ts'])
+def test_async_can_name_a_parameter(extension):
+    source = '''function dispatch(async, request) { return async(request); }
+const invoke = async => async();
+const handle = (async, request) => async(request);
+const load = (async (request) => request.value);
+'''
+
+    result = functions(source, extension)
+
+    assert [(f.name, f.parameters) for f in result] == [
+        ('dispatch', ['async', 'request']), ('invoke', ['async']),
+        ('handle', ['async', 'request']), ('load', ['request']),
+    ]
+
+
+@pytest.mark.parametrize('extension', ['js', 'ts'])
+def test_async_in_grouped_ternary_keeps_both_arrows(extension):
+    source = '''function choose(fallback, async) {
+  const normalize = (async ? (value) => value.trim() : (value) => fallback(value));
+  return normalize;
+}
+'''
+    result = functions(source, extension)
+
+    assert [(f.name, f.parameters, f.cyclomatic_complexity) for f in result] == [
+        ('(anonymous)', ['value'], 1), ('(anonymous)', ['value'], 1),
+        ('choose', ['fallback', 'async'], 2),
+    ]
+
+
+@pytest.mark.parametrize('space', ('', ' '))
+def test_async_can_name_an_optional_typescript_parameter(space):
+    result = functions(
+        f'const use = (async{space}?: (name: string) => string) => async?.("job");',
+        'ts')
+    assert [(f.name, f.parameters, f.cyclomatic_complexity) for f in result] == [
+        ('use', ['async'], 1),
+    ]
+
+
 def test_defaults_and_wrapper_call():
     default, wrapped = functions(
         'list.map((a = flag ? 1 : 2, b = make(1, 2), ...rest) => '
