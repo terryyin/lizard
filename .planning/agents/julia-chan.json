@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "agent": "Julia-chan",
-  "email": "julia-chan@example.org",
-  "identity": "SEED-078#nd-without-logical-operators",
-  "mode": "story-branch",
-  "branch": "claude/measure-nd-from-control-structures-only",
-  "host": "claude"
-}

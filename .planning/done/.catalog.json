@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-078_nd-without-logical-operators.json",
+      "identity": "SEED-078#nd-without-logical-operators",
+      "completedAt": "2026-11-27T01:46:29.390Z",
+      "blob": "158d8c6f81705678072ac36053b7e6edbf96e1f2"
+    },
+    {
       "fileName": "SEED-078_cognitive-ternary-in-control-headers.json",
       "identity": "SEED-078#cognitive-ternary-in-control-headers",
       "completedAt": "2026-11-27T01:16:29.455Z",

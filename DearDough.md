@@ -279,7 +279,7 @@ Concrete defect. The file-size check in the refactor checks needs a settled reor
   - Tool: Claude Code
   - Model: claude-opus-5-5
   - Open Dough release: 0.3.116
-  - Evidence: slice 1 `28f3ba58` was delivered with the refactor-pass skip recorded. Before slice 2's brief, `wc -l` and the file-size rule surfaced the gap. The developer chose to split the ND tests and to grant narrow exceptions for the other three files. Plan 048 gained Structure slice 2, `d1c0b23d`.
+  - Evidence: slice 1 `28f3ba58` was delivered with the refactor-pass skip recorded. Before slice 2's brief, `wc -l` and the file-size rule surfaced the gap. The developer chose to split the ND tests and to grant narrow exceptions for the other three files. Plan 048 (recoverable at `aefed2b1:.planning/slice-plans/048-nd-without-logical-operators/PLAN.md`) gained Structure slice 2, `d1c0b23d`.
   - Observed effect: one developer question, and an added slice of about 3.4 active minutes. Behavior delivery was not blocked.
   - Inference: the gap starts in preparation, because the plan listed the files without their sizes. A file-size check at slice planning would catch it before any execution. The timestamp is approximate within the session
 
