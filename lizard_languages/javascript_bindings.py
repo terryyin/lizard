@@ -43,6 +43,13 @@ class JavaScriptBindings:
         self._generic_depth = 0
 
     @property
+    def in_type_literal(self):
+        """Check braces in a parameter annotation before its default value."""
+        return (self._in_parameter_type and not self._frames[0].initializing
+                and (any(frame.closing == '}' for frame in self._frames[1:])
+                     or '}' in self._expression_brackets))
+
+    @property
     def in_expression(self):
         return bool(self._frames) and (
             self._frames[-1].initializing or bool(self._expression_brackets))
