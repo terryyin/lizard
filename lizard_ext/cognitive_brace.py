@@ -17,8 +17,25 @@ class _BraceCounter(_BraceActions, _BraceHeads, _Counter):  # pylint: disable=R0
     ``finally`` and the ``while`` of a ``do`` bind to the right structure.
     """
 
+    _LINE_EXPRESSION_WORDS = frozenset((
+        'as', 'as?', 'as!', 'in', 'is', 'match', 'with', 'yield'))
+    _OPERAND_PREFIX_WORDS = _LINE_EXPRESSION_WORDS | {
+        'await', 'case', 'do', 'else', 'new', 'return', 'then', 'throw',
+        'try', 'try?', 'try!'}
+
     def __init__(self, reader, profile, gated):
         super(_BraceCounter, self).__init__(reader, profile, gated)
+        language = reader.language_names[0]
+        self.logical_statement_lines = language in ('kotlin', 'scala', 'swift')
+        self.named_infix = language in ('kotlin', 'scala')
+        self.kotlin_quoted_infix = language == 'kotlin'
+        if language == 'scala':
+            reader.track_leading_infix = True
+        self.comment_line_count = 0
+        self.last_counted_comment = None
+        if language == 'kotlin':
+            self.read_comment = reader.get_comment_from_token
+            reader.get_comment_from_token = self._count_kotlin_comment
         self.lambda_triggers = _LAMBDA_TRIGGERS[profile.lambda_style]
         self.actions = self._keyword_actions(profile)
         if not profile.nesting:
@@ -34,8 +51,15 @@ class _BraceCounter(_BraceActions, _BraceHeads, _Counter):  # pylint: disable=R0
             return
         state = self.state
         line = self.line
+        if self.kotlin_quoted_infix and token.startswith('`'):
+            self._remember_quoted_name(token == '`')
         if line != state.line:
             self._new_line(line)
+            if self.logical_statement_lines:
+                if (state.logical and not state.pdepth
+                        and line - self._previous_line > self.comment_line_count):
+                    self._reset_logical_at_line_start(token)
+                self.comment_line_count = 0
         if state.pending:
             self._resolve_pending(token)
         if _is_word(token):
@@ -84,6 +108,7 @@ class _BraceCounter(_BraceActions, _BraceHeads, _Counter):  # pylint: disable=R0
 
     def _new_line(self, line):
         state = self.state
+        self._previous_line = state.line
         state.line = line
         if not self.profile.newline_ends_statement or state.pdepth or \
                 state.prev == ',':
@@ -94,6 +119,53 @@ class _BraceCounter(_BraceActions, _BraceHeads, _Counter):  # pylint: disable=R0
                 if top.kind == 'ternary' and self._head_phase(BRACE_HEAD):
                     return
                 self._statement_end()
+
+    def _reset_logical_at_line_start(self, token):
+        state = self.state
+        if (not token or not (token[0].isalnum() or token[0] == '_')
+                or token in self._LINE_EXPRESSION_WORDS or getattr(token, 'is_leading_infix', False)):
+            return
+        previous = state.prev
+        if self.named_infix and self._needs_infix_operand():
+            return
+        if self._ends_line_operand(previous):
+            state.logical.pop(0, None)
+
+    def _needs_infix_operand(self):
+        state = self.state
+        previous = state.prev
+        if self.kotlin_quoted_infix and previous and previous.startswith('`'):
+            return (getattr(state, 'quoted_infix', False)
+                    and state.open_quote_line is None)
+        return _is_word(previous) and self._ends_line_operand(state.prev2)
+
+    def _remember_quoted_name(self, split):
+        state = self.state
+        line = self.line
+        # The Kotlin reader may split a spaced name into several tokens.
+        if split and getattr(state, 'open_quote_line', None) == line:
+            state.open_quote_line = None
+        else:
+            state.quoted_infix = (line == state.line
+                                  and self._ends_line_operand(state.prev)
+                                  and not self._needs_infix_operand())
+            state.open_quote_line = line if split else None
+
+    def _ends_line_operand(self, token):
+        return (token in (')', ']', '}', '++', '--', '!!')
+                or (token and (token[0].isalnum() or token[0] in "_\"'`")
+                    and token not in self._OPERAND_PREFIX_WORDS))
+
+    def _count_kotlin_comment(self, token):
+        comment = self.read_comment(token)
+        # The line counter keeps the lines of a block comment. Kotlin
+        # treats the whole comment as whitespace within the expression.
+        if comment and token.startswith('/*'):
+            line = self.context.current_line
+            if line != self.last_counted_comment:
+                self.comment_line_count += len(comment.splitlines()) - 1
+                self.last_counted_comment = line
+        return comment
 
     def _top_structure(self):
         for frame in reversed(self.state.frames):

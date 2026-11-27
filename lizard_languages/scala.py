@@ -34,6 +34,7 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
     _question_mark = code_reader.MemberName('?')
 
     def __init__(self, context):
+        self.track_leading_infix = False
         super(ScalaReader, self).__init__(context)
         self.parallel_states = [ScalaStates(context)]
 
@@ -46,6 +47,8 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
         """Drop spaces, and offer each line's first code token to the
         function body that it may end, before any counter charges it.
         A '\n' is consumed by line_counter before the states see it."""
+        if self.track_leading_infix:
+            tokens = _mark_line_leading_infix(tokens)
         open_bodies = self.parallel_states[0].open_bodies
         # 0: inside a line, 1: at a line start, 2: at a line start after a
         # blank line, 3: after a comment at a line start, which is no blank.
@@ -70,6 +73,53 @@ class ScalaReader(CodeReader, CCppCommentsMixin):
             elif token == '\n':
                 line_start = after_line_break[line_start]
                 yield token
+
+
+def _mark_line_leading_infix(tokens):
+    """Mark an identifier whose symbolic suffix touches it at a new line."""
+    from itertools import tee  # pylint: disable=import-outside-toplevel
+
+    tokens = iter(tokens)
+    after_line_break = (1, 2, 2, 1)
+    line_start = 0
+    while True:
+        for token in tokens:
+            if token == '\n':
+                line_start = after_line_break[line_start]
+            elif line_start and not token.isspace():
+                if token.startswith(('//', '/*')):
+                    if line_start == 1:
+                        line_start = 3
+                else:
+                    if line_start != 2 and token.endswith('_') and token.isidentifier():
+                        tokens, lookahead = tee(tokens)
+                        if _symbolic_suffix(next(lookahead, None)):
+                            token = _LeadingInfixName(token)
+                        del lookahead
+                        line_start = 0
+                        yield token
+                        break
+                    line_start = 0
+            elif token.startswith('/*') and '\n' in token:
+                line_start = 3
+            yield token
+        else:
+            return
+
+
+class _LeadingInfixName(str):
+    """The identifier part of a Scala 3 operator such as ``and_+``."""
+
+    is_leading_infix = True
+
+
+def _symbolic_suffix(token):
+    if not token or token.startswith(('//', '/*')):
+        return False
+    from unicodedata import category  # pylint: disable=import-outside-toplevel
+
+    first = token[0]
+    return first in '!#%&*+-/:<=>?@\\^|~' or category(first) in ('Sm', 'So')
 
 
 class ScalaStates(GoLikeStates):  # pylint: disable=R0903

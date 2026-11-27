@@ -564,6 +564,136 @@ def f(a):
 """))
 
 
+class TestLogicalStatementBoundaries(unittest.TestCase):
+
+    def test_kotlin_two_statements_with_a_multiline_and_sequence(self):
+        self.assertEqual([2], cogc("Permissions.kt", """
+            fun audit(enabled: Boolean, ready: Boolean, record: () -> Boolean) {
+                enabled && record()
+                    && ready
+                ready && record()
+            }"""))
+
+    def test_kotlin_block_comment_does_not_end_a_logical_sequence(self):
+        self.assertEqual([1], cogc("Permissions.kt", """
+            fun visible(enabled: Boolean, ready: Boolean, verified: Boolean, online: Boolean): Boolean =
+                enabled && ready /* The flag is combined with the test.
+                */ xor verified && online
+        """))
+
+    def test_swift_logical_sequence_before_if(self):
+        self.assertEqual([3], cogc("Permissions.swift", """
+            func visible(_ enabled: Bool, _ verified: Bool) -> Bool {
+                let ready = enabled && verified
+                if ready && enabled {
+                    return true
+                }
+                return false
+            }"""))
+
+    def test_scala_two_statements_with_a_multiline_and_sequence(self):
+        self.assertEqual([2], cogc("Permissions.scala", """
+            object Permissions {
+              def audit(enabled: Boolean, ready: Boolean, record: () => Boolean): Unit = {
+                enabled && record() &&
+                  ready
+                ready && record()
+              }
+            }"""))
+
+
+    def test_wrapped_named_infix_operator_continues_the_sequence(self):
+        cases = (
+            ("Permissions.kt", """
+                fun visible(a: Boolean, b: Boolean, c: Boolean, d: Boolean): Boolean =
+                    a && b xor
+                        c && d
+            """),
+            ("Permissions.scala", """
+                object Permissions {
+                  def visible(a: Boolean, b: Boolean, c: Boolean, d: Boolean): Boolean = {
+                    a && b equals
+                      c && d
+                  }
+                }
+            """),
+        )
+        for filename, code in cases:
+            with self.subTest(filename=filename):
+                self.assertEqual([1], cogc(filename, code))
+
+    def test_kotlin_wrapped_quoted_infix_operator_continues_the_sequence(self):
+        for operator in ('`same`', '`same value`'):
+            with self.subTest(operator=operator):
+                scores = cogc("Permissions.kt", f"""
+                    infix fun Boolean.{operator}(other: Boolean): Boolean = this == other
+
+                    fun wrapped(a: Boolean, b: Boolean, c: Boolean, d: Boolean) =
+                        a && b {operator}
+                          c && d
+
+                    fun single(a: Boolean, b: Boolean, c: Boolean, d: Boolean) =
+                        a && b {operator} c && d
+                """)
+                self.assertEqual([1, 1], scores[-2:])
+
+    def test_kotlin_quoted_operand_ends_the_sequence_before_a_new_statement(self):
+        scores = cogc("Permissions.kt", """
+            fun audit(enabled: Boolean, `server ready`: Boolean, allowed: Boolean) {
+                enabled && `server ready`
+                allowed && enabled
+            }
+
+            fun check(enabled: Boolean, `server ready`: Boolean, allowed: Boolean) {
+                enabled && allowed xor `server ready`
+                allowed && enabled
+            }
+        """)
+        self.assertEqual([2, 2], scores)
+
+    def test_second_statement_can_start_with_a_digit_or_underscore_name(self):
+        cases = (
+            ("Permissions.kt", """
+                fun audit(enabled: Boolean, ready: Boolean, allowed_: Boolean) {
+                    enabled && ready
+                    0 < 1 && enabled
+                    allowed_ && ready
+                }
+            """),
+            ("Permissions.scala", """
+                object Permissions {
+                  def audit(enabled: Boolean, ready: Boolean, allowed_ : Boolean): Unit = {
+                    enabled && ready
+                    0 < 1 && enabled
+                    allowed_ && ready
+                  }
+                }
+            """),
+            ("Permissions.swift", """
+                func audit(_ enabled: Bool, _ ready: Bool, _ allowed_: Bool) {
+                    enabled && ready
+                    0 < 1 && enabled
+                    allowed_ && ready
+                }
+            """),
+        )
+        for filename, code in cases:
+            with self.subTest(filename=filename):
+                self.assertEqual([3], cogc(filename, code))
+
+    def test_scala_leading_symbolic_name_can_continue_the_sequence(self):
+        self.assertEqual([1], cogc("Permissions.scala", """
+            object Permissions {
+              extension (flag: Boolean) infix def and_+(other: Boolean): Boolean = flag & other
+
+              def visible(a: Boolean, b: Boolean, c: Boolean, d: Boolean): Boolean = {
+                a && b
+                  and_+ c && d
+              }
+            }
+        """)[-1:])
+
+
 class TestOtherBraceLanguages(unittest.TestCase):
 
     def test_javascript(self):
