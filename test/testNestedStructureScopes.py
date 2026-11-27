@@ -1,5 +1,9 @@
 import unittest
 
+import pytest
+
+from lizard import FileAnalyzer, get_extensions
+
 from .testNestedStructures import process_cpp
 
 
@@ -187,3 +191,24 @@ class TestCppNestedStructureScopes(unittest.TestCase):
         }
         ''')
         self.assertEqual(2, result[0].max_nested_structures)
+
+
+@pytest.mark.parametrize('suffix', ('kt', 'scala'))
+@pytest.mark.parametrize('expression, depth', (
+    ('if (rush) 10 else 0', 1),
+    ('if (rush) 10 else if (pickup) 0 else (5 + (if (heavy) { if (insured) 4 else 3 } else 2))', 3),
+    ('if (if (pickup) heavy else insured) 4 else 2', 2),
+))
+def test_conditional_expression_else(suffix, expression, depth):
+    parameters = '(rush: Boolean, pickup: Boolean, heavy: Boolean, insured: Boolean)'
+    if suffix == 'kt':
+        source = f'fun shippingTier{parameters}: Int = {expression}'
+    else:
+        source = f'object Shipping {{ def shippingTier{parameters}: Int = {expression} }}'
+
+    analyzer = FileAnalyzer(get_extensions(['ns']))
+    functions = analyzer.analyze_source_code(f'shipping.{suffix}', source).function_list
+
+    assert [(function.name, function.max_nested_structures) for function in functions] == [
+        ('shippingTier', depth),
+    ]
