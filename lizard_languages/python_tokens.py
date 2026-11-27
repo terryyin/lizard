@@ -45,28 +45,55 @@ def generate_tokens(source_code, addition='', token_class=None, *, interpolate=T
         pattern = compiled_token_pattern(_PY_ADDITION + addition)
         return _mark_prefixed_strings(
             tokens_in_span(pattern, source_code, 0, len(source_code), token_class))
+    if token_class is not None:
+        pattern = compiled_token_pattern(_PY_ADDITION + addition)
+        return _mark_prefixed_strings(_source_factory_tokens(source_code, pattern, token_class))
     pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _CRLF_JOIN + addition)
-    return _mark_prefixed_strings(_source_tokens(source_code, pattern, token_class))
+    return _mark_prefixed_strings(_source_tokens(source_code, pattern))
 
 
-def _source_tokens(source, pattern, token_class):
+def _source_tokens(source, pattern):
     start = 0
-    scanner = (pattern, token_class)
-    read_string = _read_string if token_class is None else _read_factory_string
+    scanner = (pattern, None)
     while True:
         for match in pattern.finditer(source, start):
             token = match.group()
-            value = token if token_class is None else token_class(match)
             kind = match.lastgroup
-            if kind == 'interpolated' and isinstance(value, str):
-                string = read_string(source, match.end(), value.lower(), scanner)
+            if kind == 'interpolated':
+                string = _read_string(source, match.end(), token.lower(), scanner)
                 if string is not None:
                     start, parts = string
-                    yield value
+                    yield token
                     yield from parts
                     break
-            elif kind == 'crlf_join' and token_class is None:
-                value = '\\\n'
+            elif kind == 'crlf_join':
+                token = '\\\n'
+            yield token
+        else:
+            return
+
+
+def _source_factory_tokens(source, pattern, token_class):
+    field_pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _CRLF_JOIN)
+    start = 0
+    factory = token_class
+    while True:
+        matches = pattern.finditer(source, start)
+        for match in matches:
+            value = factory(match)
+            if isinstance(value, str) and source[match.end():match.end() + 1] in ('"', "'"):
+                string = _read_factory_string(
+                    source, match.end(), value.lower(), (field_pattern, factory), matches)
+                if string is not None:
+                    start, parts, matched_quote = string
+                    yield value
+                    yield from parts
+                    if matched_quote:
+                        continue
+                    # Only a corrected quote boundary needs a new scan.
+                    if factory is token_class:
+                        factory = _factory_with_original_matches(source, matches, token_class)
+                    break
             yield value
         else:
             return
@@ -92,7 +119,7 @@ def _mark_prefixed_strings(tokens):
         yield prefix
 
 
-def _read_factory_string(source, start, prefix, scanner):
+def _read_factory_string(source, start, prefix, scanner, matches=None):
     if prefix not in _FSTRING_PREFIXES and prefix not in ('t', 'tr', 'rt'):
         return None
     pattern, token_class = scanner
@@ -100,16 +127,17 @@ def _read_factory_string(source, start, prefix, scanner):
     if raw is None:
         return None
     end, _ = raw
-    match = pattern.match(source, start)
-    if match.end() != end:
-        return _read_string(source, start, prefix, scanner)
+    match = pattern.match(source, start) if matches is None else next(matches)
+    if match.start() != start or match.end() != end:
+        _, parts = _read_string(source, start, prefix, scanner)
+        return end, parts, False
     # The original factory also transformed the complete quoted token.
     text = token_class(match)
     if isinstance(text, str) and text[:1] in ('"', "'"):
         cooked = _read_string(text, 0, prefix, scanner)
         if cooked is not None and cooked[0] == len(text):
-            return end, cooked[1]
-    return end, [text]
+            return end, cooked[1], True
+    return end, [text], True
 
 
 def _read_string(source, start, prefix, scanner):
@@ -132,11 +160,14 @@ def _read_string(source, start, prefix, scanner):
         if source[pos:pos + 2] in ('{{', '}}'):
             pos += 2
         elif char == '{':
-            field = _read_field(source, pos + 1, quote, raw, scanner)
+            field_start = pos + 1
+            field = _read_field(source, field_start, quote, raw, scanner)
             if field is None:
                 return None
             _append_literal(parts, source, literal_start, pos, quote)
             pos, tokens = field
+            if scanner[1] is not None:
+                tokens = _field_parts(tokens, source, field_start, pos - 1, scanner)
             parts.extend(FStringExpressionToken(token) for token in tokens)
             literal_start = pos
         elif char == '\\':
@@ -156,7 +187,6 @@ def _append_literal(parts, source, start, end, quote):
 
 def _read_field(source, pos, quote, raw, scanner):
     pattern, token_class = scanner
-    start = pos
     parts = []
     closers = []
     while pos < len(source):
@@ -169,7 +199,7 @@ def _read_field(source, pos, quote, raw, scanner):
                 parts.append(token)
                 result = _read_string(source, pos, token.lower(), scanner)
             else:
-                result = _defer_nested_string(source, match, start, pattern)
+                result = _defer_nested_string(source, match, pattern)
             if result is None:
                 return None
             pos, tokens = result
@@ -177,15 +207,15 @@ def _read_field(source, pos, quote, raw, scanner):
             continue
         if not closers:
             if token == '}':
-                return pos, _field_parts(parts, source, start, pos - 1, scanner)
+                return pos, parts
             if token.startswith(':'):
-                result = _read_format(source, match.start() + 1, quote, raw, scanner)
+                result = _read_format(source, match, quote, raw, scanner)
                 if result is None:
                     return None
                 pos, tokens = result
-                parts.append(match if token_class is not None and token == ':' else ':')
+                parts.append(match if token_class is not None else ':')
                 parts.extend(tokens)
-                return pos, _field_parts(parts, source, start, pos - 1, scanner)
+                return pos, parts
         if token in _CLOSERS:
             closers.append(_CLOSERS[token])
         elif token in (')', ']', '}'):
@@ -197,29 +227,59 @@ def _read_field(source, pos, quote, raw, scanner):
     return None
 
 
-def _defer_nested_string(source, match, field_start, pattern):
+def _defer_nested_string(source, match, pattern):
     result = _read_string(source, match.end(), match.group().lower(), (pattern, None))
     if result is None:
         return None
     end, _ = result
-    return end, [_NestedFactoryString(match.start() - field_start, end - field_start)]
+    return end, [_NestedFactoryString(match.start(), end)]
 
 
 def _field_parts(parts, source, start, end, scanner):
     pattern, token_class = scanner
-    if token_class is None:
-        return parts
-    # Factories receive matches against the replacement field, as before.
+    # Replay nested format fields against the same source as the outer field.
     field = source[start:end]
-    tokens = []
+    original_pattern = compiled_token_pattern(_PY_ADDITION)
+    field_factory = _factory_with_original_matches(field, original_pattern.finditer(field), token_class)
+    field_scanner = pattern, field_factory
     for part in parts:
         if isinstance(part, Match):
-            tokens.append(token_class(pattern.match(field, part.start() - start)))
+            yield field_factory(pattern.match(field, part.start() - start))
         elif isinstance(part, _NestedFactoryString):
-            tokens.extend(part.render(field, scanner))
+            yield from part.render(field, start, field_scanner)
         else:
-            tokens.append(part)
-    return tokens
+            yield from _format_factory_tokens(field, part.start - start, part.stop - start, field_scanner)
+
+
+def _factory_with_original_matches(source, matches, token_class):
+    original = next(matches, None)
+
+    def factory(match):
+        nonlocal original
+        if match.string is source:
+            while original is not None and original.start() < match.start():
+                original = next(matches, None)
+            # Keep the original scan origin when the token boundaries agree.
+            if original is not None and original.span() == match.span():
+                match = original
+        return token_class(match)
+
+    return factory
+
+
+def _format_factory_tokens(field, start, end, scanner):
+    pattern, token_class = scanner
+    for match in pattern.finditer(field, start):
+        if match.start() >= end:
+            return
+        if match.end() > end:
+            # A format fill or flag cannot consume the following field.
+            for bounded in pattern.finditer(field, match.start(), end):
+                if bounded.start() == end:
+                    return
+                yield token_class(bounded)
+            return
+        yield token_class(match)
 
 
 class _NestedFactoryString:
@@ -229,37 +289,42 @@ class _NestedFactoryString:
         self.start = start
         self.end = end
 
-    def render(self, field, scanner):
+    def render(self, field, start, scanner):
         pattern, token_class = scanner
-        prefix_match = pattern.match(field, self.start)
+        end = self.end - start
+        prefix_match = pattern.match(field, self.start - start)
         prefix = token_class(prefix_match)
         yield prefix
         if isinstance(prefix, str):
             result = _read_factory_string(field, prefix_match.end(), prefix.lower(), scanner)
-            if result is not None and result[0] == self.end:
+            if result is not None and result[0] == end:
                 yield from result[1]
                 return
-        yield from tokens_in_span(pattern, field, prefix_match.end(), self.end, token_class)
+        yield from tokens_in_span(pattern, field, prefix_match.end(), end, token_class)
 
 
-def _read_format(source, pos, quote, raw, scanner):
+def _read_format(source, delimiter, quote, raw, scanner):
     # '#' and quotes are ordinary format text. Only '{' opens a field here.
-    literal_start = pos
+    token_class = scanner[1]
+    pos = delimiter.start() + 1
+    literal_start = pos if token_class is None else delimiter.end()
     parts = []
     while pos < len(source):
         char = source[pos]
-        if char == '}':
-            _append_literal(parts, source, literal_start, pos, quote)
-            return pos + 1, parts
-        if char == '{':
+        if char in '{}':
+            if token_class is None:
+                _append_literal(parts, source, literal_start, pos, quote)
+            elif literal_start < pos:
+                parts.append(slice(literal_start, pos))
+            if char == '}':
+                return pos + 1, parts
             field = _read_field(source, pos + 1, quote, raw, scanner)
             if field is None:
                 return None
-            _append_literal(parts, source, literal_start, pos, quote)
+            parts.append('{' if token_class is None else slice(pos, pos + 1))
             pos, tokens = field
-            parts.append('{')
             parts.extend(tokens)
-            parts.append('}')
+            parts.append('}' if token_class is None else slice(pos - 1, pos))
             literal_start = pos
         elif char == '\\':
             pos = _after_escape(source, pos, raw)
