@@ -16,6 +16,8 @@ class PHPReader(CodeReader, CCppCommentsMixin):
 
     ext = ['php']
     language_names = ['php']
+    nested_structure_keywords = frozenset((
+        'if', 'else', 'for', 'foreach', 'while', 'do', 'try', 'catch', 'switch', 'finally'))
 
     # Separated condition categories
     _control_flow_keywords = {'if', 'elseif', 'for', 'foreach', 'while', 'catch', 'match'}
@@ -28,7 +30,10 @@ class PHPReader(CodeReader, CCppCommentsMixin):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         addition += r"|(?:\$\w+)"
-        addition += r"|(?:\<{3}(?P<quote>\w+).*?(?P=quote))"
+        addition += (
+            r"|<<<[ \t]*(?P<heredoc_quote>['\"]?)(?P<heredoc_label>\w+)"
+            r"(?P=heredoc_quote)[ \t]*\r?\n.*?"
+            r"^[ \t]*(?P=heredoc_label)(?!\w)")
         addition += PHPReader._non_ternary_question_operators
         # PHP comparisons must not use the shared generic angle-bracket rule.
         addition += r"|<<=|<=|<"

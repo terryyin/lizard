@@ -81,12 +81,15 @@ export async function currentLandingInput(contextFile) {
     ),
   ).pending;
 }
+export async function readLandingInput(pending) {
+  return JSON.parse(await readFile(pending, "utf8"));
+}
 export async function submitLandingInput(
   pending,
   expected = {},
   prepare = false,
 ) {
-  const submission = JSON.parse(await readFile(pending, "utf8"));
+  const submission = await readLandingInput(pending);
   validate(submission);
   for (const name of [
     "origin",

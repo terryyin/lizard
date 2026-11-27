@@ -25,3 +25,19 @@ class SolidityReader(CodeReader, CCppCommentsMixin):
 
 class SolidityStates(GoLikeStates):  # pylint: disable=R0903
     FUNC_KEYWORD = 'function'
+
+    SPECIAL_FUNCTIONS = frozenset(('constructor', 'receive', 'fallback'))
+
+    def _special_function_start(self, token):
+        if self.context.current_function is self.context.global_pseudo_function:
+            self._special_name = token
+            self._state = self._special_function
+
+    def _special_function(self, token):
+        # Only a contract member declaration `receive(...)` is an entry
+        # point; `receive` is otherwise an ordinary identifier.
+        if token == '(':
+            self.context.push_new_function(self._special_name)
+            self.next(self._function_dec, token)
+        else:
+            self.next(self._state_global, token)

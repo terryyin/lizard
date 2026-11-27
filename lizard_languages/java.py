@@ -2,8 +2,12 @@
 Language parser for Java
 '''
 
+from lizard_core.function_info import FunctionInfo, Namespace
 from lizard_languages.code_reader import CodeStateMachine
 from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
+
+# A backslash escapes the next character. An unescaped triple quote ends the block.
+_JAVA_TEXT_BLOCK = r'|"""[ \t\f]*(?:\r\n?|\n)[^"\\]*(?:(?:\\.|"(?!""))[^"\\]*)*"""'
 
 # "record" is a keyword for type declarations, but a valid method/field name.
 # Treat as keyword only when it cannot be the name in "Type name" (field/method/parameter).
@@ -50,6 +54,8 @@ class JavaReader(CLikeReader):
 
     ext = ['java']
     language_names = ['java']
+    nested_structure_keywords = frozenset((
+        'if', 'else', 'for', 'while', 'do', 'try', 'catch', 'switch', 'finally'))
 
     def __init__(self, context):
         super(JavaReader, self).__init__(context)
@@ -59,6 +65,8 @@ class JavaReader(CLikeReader):
 
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
+        if '"""' in source_code:
+            addition = _JAVA_TEXT_BLOCK + addition
         return clike_tokens(source_code, addition, token_class)
 
 
@@ -95,6 +103,8 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
     def _state_old_c_params(self, token):
         if token == '{':
             self._state_dec_to_imp(token)
+        elif token == ';':
+            self.next(self._state_global, token)
 
     def _state_dec_to_imp(self, token):
         if token == 'default':
@@ -108,6 +118,9 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
         self._state = self._state_global
 
     def _state_imp(self, token):
+        function = self.context.current_function
+        if "." in function.long_name:
+            self._qualify_nested_signature(function)
         # When entering a function implementation, set the flag
         self.in_method_body = True
 
@@ -116,6 +129,24 @@ class JavaStates(CLikeStates):  # pylint: disable=R0903
             self.in_method_body = False
             self.next(self._state_global)
         self.sub_state(JavaFunctionBodyStates(self.context, True), callback, token)
+
+    def _qualify_nested_signature(self, function):
+        # An enclosing method's name includes its class. That class may
+        # already have its own entry on the nesting stack.
+        names = []
+        namespace = ''
+        prefix_length = len(self.context.with_namespace(''))
+        for scope in self.context.nesting_stack:
+            name = scope.name_in_space
+            if not name:
+                continue
+            if namespace and isinstance(scope, FunctionInfo) and name.startswith(namespace):
+                name = name[len(namespace):]
+            names.append(name)
+            namespace = name if isinstance(scope, Namespace) else ''
+        prefix = ''.join(names)
+        if prefix != function.long_name[:prefix_length]:
+            function.long_name = prefix + function.long_name[prefix_length:]
 
     def try_new_function(self, name):
         # Don't create a function for record compact constructor

@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "sessionId": "f64ab3b7-a954-4fb1-bf83-fd6c405513ec",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-26T18:04:36.727Z",
+  "story": "SEED-078#c-family-pr-timing",
+  "ranges": [
+    {
+      "base": "00302efe32d1651f6fdfe16cfa6a5777059f1b94",
+      "candidate": "fc328199dc72e76b4037006162d9d910c39667c9"
+    },
+    {
+      "base": "fc328199dc72e76b4037006162d9d910c39667c9",
+      "candidate": "e89e537da9cd03d7dbfcad88d045f96d9f10c67a"
+    },
+    {
+      "base": "e89e537da9cd03d7dbfcad88d045f96d9f10c67a",
+      "candidate": "6ee1ea0086d041a166d933632519881e4ea3697c"
+    },
+    {
+      "base": "6ee1ea0086d041a166d933632519881e4ea3697c",
+      "candidate": "e220cf6e84488df1a1548ea26fc9cc4115f39f8f"
+    }
+  ]
+}

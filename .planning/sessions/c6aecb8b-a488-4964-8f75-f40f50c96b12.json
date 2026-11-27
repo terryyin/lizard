@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "sessionId": "c6aecb8b-a488-4964-8f75-f40f50c96b12",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-26T10:03:13.670Z",
+  "story": "SEED-075#plsql-national-literals",
+  "ranges": [
+    {
+      "base": "c39c6908522dfe376ff397942f6d52381c622eed",
+      "candidate": "bcfcf39def5ae7af143c9056abed14f5a1d366e8"
+    },
+    {
+      "base": "bcfcf39def5ae7af143c9056abed14f5a1d366e8",
+      "candidate": "2a3f79a160a9709b293f8a7ae138a30d9ca89b35"
+    },
+    {
+      "base": "2a3f79a160a9709b293f8a7ae138a30d9ca89b35",
+      "candidate": "fb82b870c29628256eaa5f08f3d129568710222a"
+    }
+  ]
+}

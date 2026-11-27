@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: Python application
 
 on:
@@ -8,9 +5,19 @@ on:
     branches:
       - '**'
   pull_request:
-      branches:
+    branches:
       - master
       - 'feature/**'
+    types: [opened, synchronize, reopened, labeled]
+
+# PR comparisons cover the full change from the base branch. Each push has
+# its own comparison range, so keep push runs independent.
+concurrency:
+  group: >-
+    ${{ github.workflow }}-${{ github.event_name == 'pull_request'
+    && (github.event.action != 'labeled' || github.event.label.name == 'ci:windows')
+    && github.ref || github.run_id }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -20,25 +27,24 @@ env:
 
 jobs:
   build:
+    needs: changes
+    if: ${{ !cancelled() && needs.changes.result != 'skipped' && needs.changes.outputs.duplicate != 'true' }}
     strategy:
       matrix:
-        os:
-          # Pinned for Python 3.8/3.9 interpreter availability.
-          - ubuntu-24.04
-          - windows-latest
-        python-version:
-          - "3.8"
-          - "3.9"
-          - "3.10"
-          - "3.11"
-          - "3.12"
-          - "3.13"
-          - "3.14"
+        # Keep 3.13 on Ubuntu for the analyzer proof, and exercise the
+        # oldest and newest advertised Python versions on the default branch.
+        os: >-
+          ${{ fromJSON((github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
+          || contains(github.event.pull_request.labels.*.name, 'ci:windows'))
+          && '["ubuntu-24.04", "windows-latest"]' || '["ubuntu-24.04"]') }}
+        python-version: >-
+          ${{ fromJSON((github.event_name == 'push' && github.ref_name == github.event.repository.default_branch)
+          && '["3.8", "3.13", "3.14"]' || '["3.13"]') }}
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -82,15 +88,37 @@ jobs:
         retention-days: 1
 
   changes:
+    if: github.event.action != 'labeled' || github.event.label.name == 'ci:windows'
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
+      duplicate: ${{ steps.pull-request.outputs.duplicate }}
       web: ${{ steps.detect.outputs.web }}
     steps:
+    - name: Check for a pull request covering this push
+      id: pull-request
+      if: github.event_name == 'push' && github.ref_name != github.event.repository.default_branch
+      continue-on-error: true
+      env:
+        GH_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        pull_requests=$(gh api --paginate --method GET "repos/${GITHUB_REPOSITORY}/pulls" \
+          -f state=open -f head="${GITHUB_REPOSITORY_OWNER}:${GITHUB_REF_NAME}" -F per_page=100)
+        duplicate=$(jq -cs --arg sha "$GITHUB_SHA" '
+          any(.[][]; .head.sha == $sha and
+            (.base.ref == "master" or (.base.ref | startswith("feature/"))))
+        ' <<< "$pull_requests")
+        echo "duplicate=$duplicate" >> "$GITHUB_OUTPUT"
     - uses: actions/checkout@v4
+      if: steps.pull-request.outputs.duplicate != 'true'
       with:
         fetch-depth: 0
     - name: Detect web changes
       id: detect
+      if: steps.pull-request.outputs.duplicate != 'true'
       env:
         EVENT: ${{ github.event_name }}
         BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -149,8 +177,8 @@ jobs:
         retention-days: 1
 
   ci-proof:
-    needs: [build, web]
-    if: ${{ !cancelled() }}
+    needs: [changes, build, web]
+    if: ${{ !cancelled() && needs.changes.result != 'skipped' && needs.changes.outputs.duplicate != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -36,9 +36,10 @@ These are not one-shot, even when selected:
 ## Start in an owned workspace
 
 A carried [established one-shot start](established-start.md#continue-an-established-one-shot-start)
-continues there instead of running the start command below. In an
-[established session](established-session.md), the start below is given that
-session's workspace and branch, and its `landing` is the landing selection.
+continues there instead of running the start command below. When the first
+message supplies an [Established session](established-session.md), give the
+start below that session's workspace and branch, and use its `landing` unless
+the invocation explicitly chose policy.
 
 Resolve the same execution context as any Story Branch or Trunk Mode start:
 mode, the owned workspace, and the actual remote and trunk branch it starts

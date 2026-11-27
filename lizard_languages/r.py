@@ -3,6 +3,7 @@ Language parser for R
 '''
 
 from .code_reader import CodeReader, CodeStateMachine
+from .r_declaration import RDeclarationMixin, is_r_identifier_token
 from .script_language import ScriptLanguageMixIn
 
 
@@ -34,8 +35,11 @@ class RReader(CodeReader, ScriptLanguageMixIn):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         """Generate tokens for R code with R-specific patterns."""
-        # R-specific token patterns
+        # R-specific token patterns. The raw-string alternative is one token
+        # and must precede generic strings, which stop at the first quote.
         r_patterns = (
+            r"""|[rR](?P<rq>["'])(?P<rd>-*)(?:\(.*?\)|\[.*?\]|\{.*?\}|\|.*?\|)(?P=rd)(?P=rq)"""
+            r"|`(?:\\.|[^`\\])*`"  # Backtick-quoted identifiers
             r"|<-"          # Assignment operator <-
             r"|->"          # Assignment operator ->
             r"|%[a-zA-Z_*/>]+%"  # Special operators like %in%, %*%, %>%, %/%, etc.
@@ -51,7 +55,7 @@ class RReader(CodeReader, ScriptLanguageMixIn):
         )
 
 
-class RStates(CodeStateMachine):
+class RStates(RDeclarationMixin, CodeStateMachine):
     """State machine for parsing R function definitions and complexity."""
 
     def __init__(self, context):
@@ -60,108 +64,21 @@ class RStates(CodeStateMachine):
         self.brace_count = 0  # Track brace nesting for function bodies
         self.in_braced_function = False  # Track if current function uses braces
         self.additional_function_names = []  # Store additional names for multiple assignment
+        self._parameter_depth = 0
+        self._parameter_tokens = []
 
     def _state_global(self, token):
         """Global state - looking for function definitions."""
-        # Track recent non-whitespace tokens
-        if not token.isspace() and token != '\n':
-            self.recent_tokens.append(token)
-            if len(self.recent_tokens) > 10:  # Keep only last 10 tokens
-                self.recent_tokens.pop(0)
+        self._record_recent_token(token)
 
-        # Look for function keyword after assignment operators
-        if token == 'function':
-            # Check if we have recent tokens: [name, assignment_op, 'function']
-            if len(self.recent_tokens) >= 2:
-                # recent_tokens now contains [..., assignment_op, 'function']
-                assignment_op = self.recent_tokens[-2]  # The token before 'function'
-                if assignment_op in ['<-', '=']:
-                    # Handle multiple assignments by creating separate functions
-                    func_names = self._extract_function_names()
+        if token in ('function', '\\'):
+            self._start_declaration(allow_anonymous=True)
 
-                    # Create the first function (this will be the main one with the function body)
-                    self._start_function(func_names[0])
-                    self._state = self._function_params
-
-                    # Store additional names for later processing
-                    self.additional_function_names = func_names[1:] if len(func_names) > 1 else []
-                    return
-
-            # If we get here, it's an anonymous function or not a proper assignment
-            self._start_function("(anonymous)")
-            self._state = self._function_params
-
-    def _extract_function_names(self):
-        """Extract all function names from recent tokens, handling multiple assignments."""
-        if len(self.recent_tokens) < 3:
-            return ["(anonymous)"]
-
-        # Look backwards from the assignment operator to find all function names
-        # For multiple assignment like: a <- b <- c <- function(...)
-        # recent_tokens ends with [..., 'a', '<-', 'b', '<-', 'c', '<-', 'function']
-        assignment_index = len(self.recent_tokens) - 2  # Position of assignment operator
-
-        function_names = []
-        i = assignment_index - 1  # Start from token before assignment operator
-        current_name_tokens = []
-
-        while i >= 0:
-            token = self.recent_tokens[i]
-
-            # If we hit an assignment operator, we've found a complete variable name
-            if token in ['<-', '=']:
-                if current_name_tokens:
-                    function_names.append(''.join(reversed(current_name_tokens)))
-                    current_name_tokens = []
-                i -= 1
-                continue
-
-            # Stop if we hit keywords or operators that shouldn't be part of function names
-            if token in ['function', '(', ')', '{', '}', '\n']:
-                break
-
-            # Valid R identifier characters and dots
-            if token.replace('_', 'a').replace('.', 'a').isalnum() or token == '.':
-                current_name_tokens.append(token)
-                i -= 1
-            else:
-                break
-
-        # Add the last name if we have one
-        if current_name_tokens:
-            function_names.append(''.join(reversed(current_name_tokens)))
-
-        # Return names in the correct order (left to right as they appear in code)
-        return list(reversed(function_names)) if function_names else ["(anonymous)"]
-
-    def _extract_function_name(self):
-        """Extract the first function name (for backward compatibility)."""
-        names = self._extract_function_names()
-        return names[0] if names else "(anonymous)"
-
-    def _start_function(self, name):
-        """Start tracking a new function."""
-        self.context.restart_new_function(name)
-
-    def _function_params(self, token):
-        """Expecting function parameters."""
-        if token == '(':
-            self.context.add_to_long_function_name("(")
-            self._state = self._read_params
-        else:
-            # Single expression function without parentheses - rare in R
-            self._state = self._function_body
-            self._function_body(token)
-
-    def _read_params(self, token):
-        """Read function parameters until closing parenthesis."""
-        if token == ')':
-            self.context.add_to_long_function_name(")")
-            self._state = self._function_body
-        elif token not in ['\n'] and not token.isspace():
-            self.context.parameter(token)
-            if token != '(':
-                self.context.add_to_long_function_name(" " + token)
+    def _end_enclosing_for_nested_declaration(self):
+        """Close the enclosing function before entering a nested declaration."""
+        self.context.end_of_function()
+        self.brace_count = 0
+        self.in_braced_function = False
 
     def _function_body(self, token):
         """In function body - track complexity and nested functions."""
@@ -169,10 +86,7 @@ class RStates(CodeStateMachine):
         # based on reader.conditions, so we don't need to manually count them here
 
         # Continue tracking tokens even in function body for nested function detection
-        if not token.isspace() and token != '\n':
-            self.recent_tokens.append(token)
-            if len(self.recent_tokens) > 10:  # Keep only last 10 tokens
-                self.recent_tokens.pop(0)
+        self._record_recent_token(token)
 
         # Track braces
         if token == '{':
@@ -187,27 +101,12 @@ class RStates(CodeStateMachine):
                 return
 
         # Handle nested functions - treat them as separate functions
-        if token == 'function':
-            # Check if this is a nested function assignment
-            if len(self.recent_tokens) >= 2:
-                assignment_op = self.recent_tokens[-2]  # The token before 'function'
-                if assignment_op in ['<-', '=']:
-                    # End current function first
-                    self.context.end_of_function()
-
-                    # Handle multiple assignments for nested functions too
-                    func_names = self._extract_function_names()
-
-                    # Start a new function for the nested function
-                    self._start_function(func_names[0])
-                    self._state = self._function_params
-                    # Reset brace counting for the new function
-                    self.brace_count = 0
-                    self.in_braced_function = False
-
-                    # Store additional names for later processing
-                    self.additional_function_names = func_names[1:] if len(func_names) > 1 else []
-                    return
+        if token in ('function', '\\'):
+            if self._start_declaration(
+                allow_anonymous=False,
+                before_start=self._end_enclosing_for_nested_declaration,
+            ):
+                return
 
         # For single-line functions without braces, end at newline
         elif token == '\n' and not self.in_braced_function:
@@ -270,7 +169,7 @@ class RStates(CodeStateMachine):
             return
 
         # This should be the function name
-        if token.replace('_', 'a').replace('.', 'a').isalnum() or token == '.':
+        if is_r_identifier_token(token):
             # Update the current function's name
             if self.context.current_function:
                 self.context.current_function.name = token

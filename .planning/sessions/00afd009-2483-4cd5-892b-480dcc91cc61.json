@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "sessionId": "00afd009-2483-4cd5-892b-480dcc91cc61",
+  "workflow": "dough-story-refinement",
+  "closedAt": "2026-11-26T14:45:06.026Z",
+  "story": "SEED-078#multiline-token-long-names",
+  "ranges": [
+    {
+      "base": "51e0668429f658fae82450f9aaf074ce7bd7ee98",
+      "candidate": "b589b8be202a81dc21fa7a16056eac790836628a"
+    }
+  ]
+}

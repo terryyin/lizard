@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "sessionId": "89026ebf-f812-401d-93de-6adf8f9924ce",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-26T13:32:41.871Z",
+  "story": "SEED-075#plsql-formal-parameter-boundaries",
+  "ranges": [
+    {
+      "base": "79b4d85cebad5920581573eb38f1808aca074298",
+      "candidate": "4daa34fe841851f1497098d5b59415f141e90972"
+    },
+    {
+      "base": "4daa34fe841851f1497098d5b59415f141e90972",
+      "candidate": "2e8dd96624b145e2f6aad46987e9502a0f251887"
+    },
+    {
+      "base": "2e8dd96624b145e2f6aad46987e9502a0f251887",
+      "candidate": "8976460ae04c3526acf57de94d2fa20f29c70b65"
+    },
+    {
+      "base": "8976460ae04c3526acf57de94d2fa20f29c70b65",
+      "candidate": "8db4f33d8f49a67e3738f56a0b56b6097f781b9a"
+    }
+  ]
+}

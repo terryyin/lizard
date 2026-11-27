@@ -47,7 +47,8 @@ class LizardExtension(object):  # pylint: disable=R0903
     FUNCTION_INFO = {
         "cognitive_complexity": {
             "caption": " CogC ",
-            "average_caption": " Avg.CogC "}}
+            "average_caption": " Avg.CogC ",
+            "default": 0}}
 
     @staticmethod
     def set_args(parser):

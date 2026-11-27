@@ -6,6 +6,10 @@ from .code_reader import CodeStateMachine
 
 MEMBER_ACCESS = frozenset(('->', '?->', '::'))
 _SKIPPED = frozenset(('fn', 'public', 'private', 'protected', 'static'))
+_CLOSURE_EXPRESSION_CONTINUATION = frozenset((
+    '(', '[', '->', '?->', '::', 'instanceof', '?', '?:', '??', '&&', '||',
+    '==', '===', '!=', '!==', '<', '>', '<=', '>=', '%', '*', '**', '/', '+', '-', '.', '&', '|', '^',
+))
 
 
 class PHPLanguageStates(CodeStateMachine):
@@ -28,7 +32,9 @@ class PHPLanguageStates(CodeStateMachine):
         self.last_token = ''
         self.last_tokens = ''
         self.is_function_declaration = False
-        self.assignments = []
+        self.assignment_name = ''
+        self.assignment_parens = 0
+        self.assigned_closure = None
         self.in_match = False
         self.match_case_count = 0
 
@@ -67,9 +73,9 @@ class PHPLanguageStates(CodeStateMachine):
                     self.context.add_condition()
             self.match_case_count = 0
         elif token == '=':
-            # Handle function assignment
-            self.function_name = self.last_tokens.strip()
-            self.assignments.append(self.function_name)
+            self.assignment_name = self.last_tokens
+            self.assignment_parens = 0
+            self._state = self._assignment_value
         elif token == '{':
             self.brace_level += 1
         elif token == '}':
@@ -87,11 +93,19 @@ class PHPLanguageStates(CodeStateMachine):
         if token not in [' ', '\t', '\n']:
             if token not in ['=', ';', '{', '}', '(', ')', ',']:
                 self.last_tokens = token
-            elif token == '=' and self.last_tokens:
-                # Keep the last tokens for assignment
-                pass
             else:
                 self.last_tokens = ''
+
+    def _assignment_value(self, token):
+        if token == '\n' or token.startswith('#') or token.lower() == 'static':
+            return
+        if token == '(':
+            self.assignment_parens += 1
+            return
+        if token != 'function':
+            self.assignment_name = ''
+        self._state = self._state_global
+        self._state_global(token)
 
     def _state_use(self, token):
         """Handle use statements (use function, use const, etc.)"""
@@ -119,8 +133,9 @@ class PHPLanguageStates(CodeStateMachine):
             self._state = self._state_global
 
     def _function_name(self, token):
-        if token and not token.isspace() and token != '(':
+        if token not in {'', '(', '&'} and not token.isspace():
             method_name = token
+            self.assignment_name = ''
             if self.in_class and self.class_name:
                 # In class, use ClassName::methodName format
                 long_name = f"{self.class_name}::{method_name}"
@@ -143,14 +158,13 @@ class PHPLanguageStates(CodeStateMachine):
             elif self.in_trait:
                 self.function_name = f"{self.trait_name}::(anonymous)"
             else:
-                if self.assignments and self.assignments[-1]:
-                    self.function_name = self.assignments[-1]
-                    self.assignments.pop()
-                else:
-                    self.function_name = "(anonymous)"
+                self.function_name = self.assignment_name or "(anonymous)"
             self.bracket_level = 1
             self._state = self._function_args_continue
             self.context.push_new_function(self.function_name)
+            if self.assignment_name == self.function_name:
+                self.assigned_closure = self.context.current_function
+            self.assignment_name = ''
             self.started_function = True
 
     def _function_args(self, token):
@@ -174,8 +188,6 @@ class PHPLanguageStates(CodeStateMachine):
         elif token.startswith('$'):
             # Found a parameter (PHP parameters start with $)
             if self.started_function:
-                # Make sure we count each parameter uniquely
-                self.context.add_to_long_function_name(" " + token)
                 self.context.parameter(token)
 
     def _function_return_type_or_body(self, token):
@@ -210,7 +222,25 @@ class PHPLanguageStates(CodeStateMachine):
                 if self.started_function:
                     self.context.end_of_function()
                     self.started_function = False
-                self._state = self._state_global
+                self._state = self._finish_closure_assignment if self.assigned_closure else self._state_global
+
+    def _finish_closure_assignment(self, token):
+        if token == '\n' or token.startswith('#'):
+            return
+        if self.assignment_parens and token == ')':
+            self.assignment_parens -= 1
+            return
+        # "and", "or" and "xor" have lower precedence than assignment.
+        continues = (not getattr(token, 'is_word_operator', False)
+                     and token.lower() in _CLOSURE_EXPRESSION_CONTINUATION)
+        if self.assignment_parens or continues:
+            # The assignment receives the expression result.
+            closure = self.assigned_closure
+            closure.long_name = '(anonymous)' + closure.long_name[len(closure.name):]
+            closure.name = '(anonymous)'
+        self.assigned_closure = None
+        self._state = self._state_global
+        self._state_global(token)
 
     def _condition_expected(self, token):
         if token == '(':
