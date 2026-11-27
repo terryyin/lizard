@@ -50,6 +50,9 @@ class JavaClassBodyStates(JavaStates):
         super(JavaClassBodyStates, self).__init__(context)
         self.class_name = self._own_class_name = class_name
         self.is_record = self._own_is_record = is_record
+        self._enclosing_function = context.last_function
+        self._pending_member = False
+        self._pending_counts = (0, 0, 0)
         self._after_static_keyword = False
         # { } that reach this state machine, plus 1 for static/instance blocks whose
         # bodies are a sub_state (} not seen at this level, balanced in callback).
@@ -69,7 +72,40 @@ class JavaClassBodyStates(JavaStates):
             return
         super().try_new_function(name)
 
+    def _start_function(self, name):
+        super()._start_function(name)
+        self._pending_member = self._enclosing_function is not None
+
+    def _state_entering_imp(self, token):
+        self._pending_member = False
+        self._pending_counts = (0, 0, 0)
+        super()._state_entering_imp(token)
+
     def _state_global(self, token):
+        if not self._pending_member:
+            self._read_member(token)
+            return
+
+        candidate = self.context.current_function
+        enclosing = self._enclosing_function
+        self.context.current_function = enclosing
+        self._pending_member = False
+        # The name token and its line were counted before each candidate.
+        tokens, lines, conditions = self._pending_counts
+        tokens += candidate.token_count - 1
+        lines += candidate.nloc - 1
+        conditions += candidate.cyclomatic_complexity - 1
+        self._pending_counts = (tokens, lines, conditions)
+
+        self._read_member(token)
+        if not self._pending_member:
+            enclosing.token_count += tokens
+            enclosing.nloc += lines
+            enclosing.cyclomatic_complexity += conditions
+            enclosing.end_line = candidate.end_line
+            self._pending_counts = (0, 0, 0)
+
+    def _read_member(self, token):
         if self._after_static_keyword:
             self._after_static_keyword = False
             if token == '{':

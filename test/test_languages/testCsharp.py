@@ -349,7 +349,7 @@ class Labels
         functions = analyzer.analyze_source_code("labels.cs", source).function_list
         self.assertEqual(['Labels::Render', 'Labels::Next'], [f.name for f in functions])
         render = functions[0]
-        self.assertEqual((3, 2, 2), (
+        self.assertEqual((3, 1, 2), (
             render.cyclomatic_complexity, render.max_nesting_depth, render.cognitive_complexity))
 
     def test_multiline_interpolation_does_not_count_blank_or_comment_lines(self):

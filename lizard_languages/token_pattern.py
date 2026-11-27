@@ -46,6 +46,8 @@ _NESTED_LIST = _nested_list(_NESTING - 1)
 _OWN_QUESTION_MARK = r"(?=" + _TYPE_TEXT + r"\?|" + \
     _TYPE_TEXT + _NESTED_LIST + _TYPE_TEXT + r"(?:" + _NESTED_LIST + _TYPE_TEXT + r")*\?)"
 _WILDCARD_ARGUMENTS = _type_arguments(_NESTING, _OWN_QUESTION_MARK)
+# Readers can enable case-insensitive tokenization through their pattern addition.
+_WILDCARD_ARGUMENT_TOKEN = re.compile(_WILDCARD_ARGUMENTS, re.I)
 
 _FLAG_PATTERN = re.compile(r'\(\?[aiLmsux]+\)')
 _FLAG_VALUES = {
@@ -57,6 +59,11 @@ _FLAG_VALUES = {
     'u': re.U,  # Unicode matching
     'x': re.X   # Verbose
 }
+
+
+def is_grouped_type_argument_token(token):
+    return (token.startswith("<") and token.endswith(">")
+            and _WILDCARD_ARGUMENT_TOKEN.fullmatch(token) is not None)
 
 
 def _addition_key(addition):

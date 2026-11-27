@@ -85,6 +85,17 @@ class TestJavaScriptNestedStructures(unittest.TestCase):
         self.assertEqual(
             [('chain', 1)], self.nested_structures("a.js", code))
 
+    def test_function_declaration_as_a_braceless_if_body(self):
+        code = """
+        function configure(custom, jobs) {
+          if (custom) function handle() {}
+          else for (const job of jobs) run(job)
+        }
+        """
+        self.assertEqual(
+            [('handle', 0), ('configure', 2)],
+            self.nested_structures("a.cjs", code))
+
 
 class TestJavaScriptNestedStructuresWithoutSemicolons(unittest.TestCase):
     """A statement that ends at a line break closes its structures,

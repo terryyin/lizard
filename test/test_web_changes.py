@@ -1,13 +1,13 @@
 """Observe the CI web change selector on real Git histories."""
 
 import os
-import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "scripts" / "web_changes.py"
@@ -144,10 +144,11 @@ def test_unresolvable_comparison_fails_visibly(repo):
 
 def test_workflow_runs_web_job_from_selector_output_and_python_independently():
     workflow = (ROOT / ".github" / "workflows" / "python-app.yml").read_text()
-    jobs = dict(re.findall(r"^  (\w+):\n((?:    .*\n|\n)*)", workflow, re.M))
-    assert "scripts/web_changes.py" in jobs["changes"]
-    step = re.search(r"id: (\w+)", jobs["changes"]).group(1)
-    assert "web: ${{ steps.%s.outputs.web }}" % step in jobs["changes"]
-    assert "needs: changes" in jobs["web"]
-    assert "if: needs.changes.outputs.web == 'true'" in jobs["web"]
-    assert "needs:" not in jobs["build"]
+    jobs = yaml.safe_load(workflow)["jobs"]
+    changes = jobs["changes"]
+    selector = next(step for step in changes["steps"]
+                    if "scripts/web_changes.py" in step.get("run", ""))
+    assert changes["outputs"]["web"] == "${{ steps.%s.outputs.web }}" % selector["id"]
+    assert jobs["web"]["needs"] == jobs["build"]["needs"] == "changes"
+    assert jobs["web"]["if"] == "needs.changes.outputs.web == 'true'"
+    assert "outputs.web" not in jobs["build"]["if"]

@@ -113,6 +113,21 @@ to the final response, then use the supplied launch context for the
 [final dashboard operation](../../dough-land/references/dashboard-completion.md)
 after all closure/retirement work and final wording settle.
 
+## Finish a Dashboard admission from its owned claim checkout
+
+An `admitted-claim.json` beside the launch's `landing-context.json` records a
+Taken claim published from an owned checkout while the session works in a
+borrowed one. Keep its identity, target and landing policy, and publish native
+work through managed delivery with the landing context.
+
+Wrap up in the claim's `admission.workspace` on `admission.branch`. Advance it
+to the accepted before-cleanup revision without rewriting local work; for a
+no-change conclusion that is `admission.publishedSha`. Complete the story and
+commit the final closure, then run `finish` there with `--identity` and
+`--admitted-launch-context` naming that `landing-context.json`. It carries the
+accepted session evidence into the claim checkout, retires it, and leaves the
+borrowed checkout as it is. Keep the reporting directory for a retry.
+
 ## Complete current-branch closure
 
 After the last wrap-up publication this invocation will perform, invoke

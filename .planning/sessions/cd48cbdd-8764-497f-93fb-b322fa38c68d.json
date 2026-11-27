@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "sessionId": "cd48cbdd-8764-497f-93fb-b322fa38c68d",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-26T13:46:39.371Z",
+  "story": "SEED-075#r-formal-parameter-boundaries",
+  "ranges": [
+    {
+      "base": "04c397fa73925bb92f74b2b123578fd7e11e1846",
+      "candidate": "313eafabd4af73a270b3e44bd9c04afead5a33c8"
+    },
+    {
+      "base": "313eafabd4af73a270b3e44bd9c04afead5a33c8",
+      "candidate": "5a5d8e7300b84621cdc3b0ba4d4f49f607e708ff"
+    },
+    {
+      "base": "5a5d8e7300b84621cdc3b0ba4d4f49f607e708ff",
+      "candidate": "551eca8397f86bf46346336a1e7c50fab20edf6c"
+    },
+    {
+      "base": "a35b0e941c357906a8d066ce12316403866d2bab",
+      "candidate": "319b269e0fe0cbc5c716079abd26ecfeb8920005"
+    }
+  ]
+}

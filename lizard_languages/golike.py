@@ -9,6 +9,7 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
 
     FUNC_KEYWORD = 'func'
     TYPE_KEYWORD = 'type'
+    SPECIAL_FUNCTIONS = frozenset()
 
     def _state_global(self, token):
         if token == self.FUNC_KEYWORD:
@@ -20,6 +21,11 @@ class GoLikeStates(CodeStateMachine):  # pylint: disable=R0903
             self.sub_state(self.statemachine_clone())
         elif token in '}':
             self.statemachine_return()
+        elif token in self.SPECIAL_FUNCTIONS:
+            self._special_function_start(token)
+
+    def _special_function_start(self, token):
+        pass
 
     def _type_definition(self, token):
         self._state = self._after_type_name

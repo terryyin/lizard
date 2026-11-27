@@ -21,15 +21,21 @@ import { isFullGitRevision } from "./ci-revisions.mjs";
 
 // B's own exact states this evidence may complete: no attempt of B was
 // observed, or B's attempt was cancelled (for example, replaced while
-// waiting). An ignored-only (`not_required`) B qualifies only while its
-// applicable ancestor's attempt has no verdict (cancelled or still pending).
-// Pending, success, failure, and a `not_required` B with a proved or
-// unresolved basis keep their own rules.
+// waiting). An ignored-only (`not_required`) B qualifies while its applicable
+// ancestor's attempt has no verdict (cancelled or still pending), and when
+// that ancestor failed as another writer's revision, none of the execution's
+// `registered` revisions: a green descendant shows its owner's repair.
+// Pending, success, failure, and a `not_required` B with a successful,
+// unresolved or own failed basis keep their own rules.
 const integratedEligibleStates = new Set(["undiscovered", "incomplete"]);
 const integratedEligibleBasisStates = new Set(["incomplete", "pending"]);
-const integratedEligible = ({ state, basis }) =>
+const otherWritersFailure = (basis, registered) =>
+  basis?.state === "failure" && !registered.has(basis.sha);
+const integratedEligible = ({ state, basis }, registered) =>
   integratedEligibleStates.has(state) ||
-  (state === "not_required" && integratedEligibleBasisStates.has(basis?.state));
+  (state === "not_required" &&
+    (integratedEligibleBasisStates.has(basis?.state) ||
+      otherWritersFailure(basis, registered)));
 
 // Authoritative current-attempt reads per revision per poll.
 const verificationBound = 3;
@@ -61,14 +67,16 @@ export const candidateLookupUnavailable = (policy, error) =>
 // only under a declared `policy` for an eligible own state. `listCandidates()`
 // lists this poll's candidate runs; `readCurrentAttempt(run, { jobs })` reads
 // one listed run's current facts with its `check` and `context`, once per poll.
-// `signal` is the observation's own.
+// `registered` holds the execution's registered revisions. `signal` is the
+// observation's own.
 export function integratedStateJudge(policy, poll) {
   const reads = new Map();
   const ancestryOf = candidateAncestry(poll);
+  const registered = new Set(poll.registered ?? []);
   return async (revision) => {
     const judged = { ...revision };
     delete judged.integrated;
-    if (policy && integratedEligible(judged))
+    if (policy && integratedEligible(judged, registered))
       judged.integrated = await observeIntegratedState({
         ...poll,
         policy,

@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "sessionId": "2d27a160-3282-442d-9611-c0d9d3186b2b",
+  "workflow": "dough-story-refinement",
+  "closedAt": "2026-11-26T12:51:20.445Z",
+  "story": "SEED-076#ruby-reader-test-topics",
+  "ranges": [
+    {
+      "base": "3d73019f9618459cf02375401cd3736f537cb238",
+      "candidate": "9ea4bcd403b5bd50c309bb9c7257ca6077405335"
+    }
+  ]
+}

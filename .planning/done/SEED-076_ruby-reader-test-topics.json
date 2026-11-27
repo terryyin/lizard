@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-076#ruby-reader-test-topics",
+  "title": "Split the Ruby reader tests by topic",
+  "completedAt": "2026-11-26T14:06:07.734Z",
+  "developer": "Terry Yin",
+  "agent": "Sola-chan",
+  "host": "codex",
+  "model": "gpt-6.2-sol",
+  "intentCoverage": {
+    "report": "**Caught.** The relocated percent-literal test still catches a regression in Ruby `%s` symbol-literal tokenization.\n\nFor SEED-076#ruby-reader-test-topics at `67f2264fa2b4e0d93f7ea6a2b9710e0022ddcd2e`, the selected promise was that moving Ruby reader tests preserves their assertions. The probe used the existing `%s(a)` case in `test/test_languages/testRubyPercentLiterals.py:112`. It ran `nix develop -c python -m pytest -q test/test_languages/testRubyPercentLiterals.py::Test_Ruby_percent_literal::test_every_percent_form` in a clean, detached scratch checkout.\n\nThe maintained test passed before the probe. In the scratch checkout, removing `s` from the typed percent-literal form set in `lizard_languages/ruby.py:70` made an independent call to `RubyReader.generate_tokens(\"%s(a)\")` return `['%', 's', '(', 'a', ')']`. The same focused test reached the `%s(a)` fixture and failed at the `check_tokens` assertion on line 17, which expects `['%s(a)']`. After the original file bytes and clean Git status were verified, the same test passed and the scratch worktree was removed.\n\n**Next proof action.** Retain the existing assertion for this path. The scratch fault adds no repair requirement.\n\n- **Test runtime.** 0.49 seconds total (measured from pytest summaries). The baseline, faulted, and restored runs reported 0.25, 0.15, and 0.09 seconds respectively.\n- **Human effort.** Unavailable. No separate human time was recorded.\n- **Agent effort.** Unavailable. No separate active-effort measure was recorded.\n- **Invocation-to-report elapsed.** 63509 ms (measured), from 1795701868182 to 1795701931691 in Unix epoch ms. The end clock was sampled after writing the prepared report body.\n\n**Wrap-up disposition.** Caught at `67f2264fa2b4e0d93f7ea6a2b9710e0022ddcd2e`. The existing assertion protects the probed path, so no follow-up is needed.\n"
+  }
+}

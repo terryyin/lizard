@@ -30,7 +30,8 @@ class _Profile(object):  # pylint: disable=R0902,R0903
                  paren_heads=True, newline_ends_statement=False,
                  nullable_types=False, rvalue_refs=False, lambda_style=None,
                  case_insensitive=False, nesting=True,
-                 nested_functions=False, reserved_structures=False):
+                 nested_functions=False, reserved_structures=False,
+                 optional_chaining=False):
         # Structures the reader does not list; completed in ``for_reader``.
         self.ifs = frozenset(ifs)
         self.else_ifs = frozenset(else_ifs)
@@ -64,6 +65,7 @@ class _Profile(object):  # pylint: disable=R0902,R0903
         # A structure word is never a call, even in a function of that name:
         # `catch (e)` in a JavaScript method named `catch`.
         self.reserved_structures = reserved_structures
+        self.optional_chaining = optional_chaining
 
     def for_reader(self, reader):
         """A copy with the roles of the reader's control-flow keywords added."""
@@ -86,7 +88,7 @@ _FLAT = {'nesting': False, 'ternary': False, 'jumps': ()}
 # names like catch are not control-flow structures.
 _JS_LIKE = {'switches': ('switch',), 'do_likes': ('do',),
             'newline_ends_statement': True, 'nested_functions': True,
-            'reserved_structures': True}
+            'reserved_structures': True, 'optional_chaining': True}
 
 _PROFILES = {
     'cpp': _Profile(loops=('foreach',),         # Qt
