@@ -214,6 +214,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 and not self._binding_candidate._frames):
             self._empty_parenthesis = self.last_token is None
             self.statemachine_return()
+        elif self.as_class and self._in_prop_value and token in ('+', '-'):
+            # These operators can continue the field after a line break.
+            pass
         elif token == ';' or (
                 # A binding/object/call reader owns an arrow's enclosing comma.
                 # Global expression arrows retain commas in generic calls.
