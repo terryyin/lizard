@@ -187,6 +187,9 @@ class ImpliedSemicolons:
                 last_line = line
             before_previous = previous
             previous = token
+            if token == 'let' and before_previous == 'return' and not found:
+                # A sloppy-mode `return let` ends with an identifier.
+                previous = '_'
             yield token
 
 
