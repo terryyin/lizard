@@ -12,6 +12,17 @@ class PythonIndents:  # pylint: disable=R0902
     def __init__(self, context):
         self.indents = [0]
         self.context = context
+        self.deferred_function_indent = None
+
+    def defer_function_indent(self, spaces):
+        if self.deferred_function_indent is None and spaces > self.indents[-1] and \
+                self.context.pending_function is self.context.current_function:
+            self.deferred_function_indent = spaces
+
+    def restore_function_indent(self):
+        if self.deferred_function_indent is not None:
+            self.set_nesting(self.deferred_function_indent)
+            self.deferred_function_indent = None
 
     def set_nesting(self, spaces, token=""):
         while self.indents[-1] > spaces and (not token.startswith(")")):
@@ -26,9 +37,15 @@ class PythonIndents:  # pylint: disable=R0902
 
 
 class PythonStates(CodeStateMachine):  # pylint: disable=R0903
+    read_return_annotations = True
+    reading_return_annotation = False
+
     def __init__(self, context, reader):
         super(PythonStates, self).__init__(context)
         self.reader = reader
+        self.lambda_heads = 0
+        self.indents = None
+        self.annotation_colon_line = 0
 
     def _state_global(self, token):
         if token == 'def':
@@ -112,13 +129,50 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
     def _state_colon(self, token):
         if token == ':':
             self.next(self._state_first_line)
+        elif self.read_return_annotations and token == '->':
+            self.reading_return_annotation = True
+            self.indents.deferred_function_indent = None
+            self.br_count = 0
+            self.lambda_heads = 0
+            self.next(self._state_return_annotation)
+        elif self.read_return_annotations and token == '\\\n':
+            return
         else:
             self.next(self._state_global)
 
+    def _state_return_annotation(self, token):
+        if isinstance(token, FStringExpressionToken):
+            return
+        if token in ('def', 'class'):
+            self.reading_return_annotation = False
+            self.next(self._state_global, token)
+        elif token in ('(', '[', '{'):
+            self.br_count += 1
+        elif token in (')', ']', '}'):
+            self.br_count -= 1
+        elif self.br_count == 0:
+            if token == 'lambda':
+                self.lambda_heads += 1
+            elif token == ':':
+                if self.lambda_heads:
+                    self.lambda_heads -= 1
+                else:
+                    self.reading_return_annotation = False
+                    if self.indents.deferred_function_indent is not None:
+                        self.annotation_colon_line = self.context.current_line
+                    self.next(self._state_first_line)
+
     def _state_first_line(self, token):
         self._state = self._state_global
+        inline = False
+        if self.annotation_colon_line:
+            inline = self.annotation_colon_line == self.context.current_line - token.count('\n')
+            if inline:
+                # Preserve the indent that used to attach this inline function.
+                self.indents.restore_function_indent()
+            self.annotation_colon_line = 0
         if token.startswith('"""') or token.startswith("'''"):
-            self.context.add_nloc(-token.count('\n') - 1)
+            self.context.add_nloc(-token.count('\n') - (not inline))
         self._state_global(token)
 
     def _state_parameterized_type_annotation(self, token):

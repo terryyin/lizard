@@ -75,7 +75,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
             self.context.add_condition()
 
         # --- Triple-quoted string comment suppression ---
-        if (token.startswith('"""') or token.startswith("'''")) and len(token) >= 6:
+        if (token.startswith('"""') or token.startswith("'''")) and len(token) >= 6 \
+                and not isinstance(token, FStringExpressionToken):
             # Check if this is likely a standalone comment (not a docstring)
             # Docstrings are handled separately in _state_first_line
             current_state = self.parallel_states[0]._state
@@ -210,7 +211,8 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                 yield token
 
     def preprocess(self, tokens):
-        indents = PythonIndents(self.context)
+        states = self.parallel_states[0]
+        indents = states.indents = PythonIndents(self.context)
         current_leading_spaces = 0
         reading_leading_space = True
         for token in self._soft_keyword_lookahead(tokens):
@@ -223,7 +225,10 @@ class PythonReader(CodeReader, ScriptLanguageMixIn):
                             current_function = self.context.current_function
                             if (current_function.name == '*global*' or
                                     current_function.long_name.endswith(')')):
-                                indents.set_nesting(current_leading_spaces, token)
+                                if states.reading_return_annotation:
+                                    indents.defer_function_indent(current_leading_spaces)
+                                else:
+                                    indents.set_nesting(current_leading_spaces, token)
                         reading_leading_space = False
             else:
                 reading_leading_space = True

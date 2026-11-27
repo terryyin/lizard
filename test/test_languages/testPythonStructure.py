@@ -80,6 +80,73 @@ class Test_Python_function_structure(unittest.TestCase):
         self.assertEqual(5, functions[0].nloc)
         self.assertEqual(5, functions[0].end_line)
 
+    def test_multiline_return_annotation_keeps_function_body(self):
+        source = """\
+class Parser:
+    def parse_call_args(
+        self,
+    ) -> tuple[
+        list[Expr],
+        list[Keyword],
+    ]:
+        if self.has_args():
+            return self.read_args(), []
+        return [], []
+"""
+        functions = get_python_function_list(source)
+        self.assertEqual([(2, 10, 2)], [
+            (f.start_line, f.end_line, f.cyclomatic_complexity)
+            for f in functions
+        ])
+
+    def test_multiline_return_annotation_keeps_inline_suite(self):
+        source = """\
+class Parser:
+    def read(self, enabled) -> (
+        int
+    ): return 1 if enabled else 0
+    def fallback(self):
+        return 2
+"""
+        functions = get_python_function_list(source)
+        self.assertEqual([("read", 4, 2), ("fallback", 6, 1)], [
+            (f.name, f.end_line, f.cyclomatic_complexity) for f in functions
+        ])
+
+    def test_inline_annotation_keeps_bounds_with_reused_fstring_quotes(self):
+        source = """\
+class Parser:
+    def read(self, table) -> (
+        str
+    ): return f"{table["["]}"
+    def fallback(self):
+        return "empty"
+"""
+        functions = get_python_function_list(source)
+        self.assertEqual([("read", 4), ("fallback", 6)], [
+            (f.name, f.end_line) for f in functions
+        ])
+
+    def test_interpolated_return_annotation_preserves_function_bounds(self):
+        source = """\
+class Parser:
+    def read(self, value) -> (
+        PREFIX"{types["["]}"
+    ):
+        if value:
+            return 1
+        return 0
+    def fallback(self):
+        return 2
+"""
+        for prefix in ("f", "t"):
+            with self.subTest(prefix=prefix):
+                functions = get_python_function_list(source.replace("PREFIX", prefix))
+                self.assertEqual([("read", 7, 2), ("fallback", 9, 1)], [
+                    (f.name, f.end_line, f.cyclomatic_complexity)
+                    for f in functions
+                ])
+
     def test_function_surrounded_by_global_statements(self):
         source = """
         s1 = 'global statement'
@@ -244,3 +311,24 @@ def normalize_message(prefix):
         functions = get_python_function_list(code)
         self.assertEqual(9, functions[0].cyclomatic_complexity)
         self.assertEqual(8, functions[0].max_nesting_depth)
+
+    def test_return_annotation_interpolations_keep_the_whole_function(self):
+        for annotation in (
+                'f"{version}"',
+                'f"{metadata["["]}"',
+                'f"""Schema {metadata["tag"]}"""',
+                't"{metadata["["]}"'):
+            with self.subTest(annotation=annotation):
+                source = (
+                    'class Parser:\n'
+                    '    def read(self, value) -> Annotated[int, ' + annotation + ',\n'
+                    '        "payload",\n'
+                    '    ]:\n'
+                    '        if value:\n'
+                    '            return 1\n'
+                    '        return 0\n')
+                functions = get_python_function_list(source)
+                self.assertEqual([('read', 2, 7, 2)], [
+                    (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                    for f in functions
+                ])
