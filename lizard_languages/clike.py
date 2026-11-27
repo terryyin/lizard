@@ -4,6 +4,7 @@ Language parser for C, C++ -like languages.
 
 import re
 import itertools
+from .token_pattern import compiled_token_pattern, tokens_in_span
 from .code_reader import CodeStateMachine, CodeReader
 from .clike_states import CLikeStates
 
@@ -25,11 +26,16 @@ class CCppCommentsMixin(object):  # pylint: disable=R0903
 
 def clike_tokens(source_code, addition='', token_class=None):
     """The tokens of a C-like language, in which a // comment ends at its line."""
+    return tokens_in_span(clike_token_pattern(addition), source_code, 0, len(source_code), token_class)
+
+
+def clike_token_pattern(addition):
+    """Build the common pattern for readers that tokenize bounded spans."""
     addition = _CPP_RAW_STRING_TOKEN + \
         r"|(?:\d*\.\d+(?:[eE][-+]?\d+)?)" + \
         r"|(?:\d+\.(?:\d+)?(?:[eE][-+]?\d+)?)" + \
         addition
-    return CodeReader.generate_tokens(source_code, addition, token_class)
+    return compiled_token_pattern(addition)
 
 
 # pylint: disable=R0903

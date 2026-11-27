@@ -2,7 +2,10 @@
 Language parser for C Sharp
 '''
 
-from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_tokens
+import re
+
+from .clike import CLikeReader, CLikeStates, CLikeNestingStackStates, clike_token_pattern, clike_tokens
+from .token_pattern import tokens_in_span
 
 
 # The reserved words of C#, and `record`, which this reader also reads as
@@ -20,6 +23,14 @@ _KEYWORDS = (
     'true', 'try', 'typeof', 'uint', 'ulong', 'unchecked', 'unsafe',
     'ushort', 'using', 'virtual', 'void', 'volatile', 'while')
 _VERBATIM_KEYWORD = r"|@(?:" + "|".join(_KEYWORDS) + r")\b"
+_NEWLINE_CHARS = '\r\n\x85\u2028\u2029'
+_LINE_ENDING = re.compile(r'\r\n|[' + _NEWLINE_CHARS + ']')
+_NON_LF_LINE_BREAK = re.compile(r'\r(?!\n)|[\x85\u2028\u2029]')
+_LINE_COMMENT = r'//[^' + _NEWLINE_CHARS + ']*'
+_DIRECTIVE_TEXT = r'\#[^' + _NEWLINE_CHARS + ']*'
+_DIRECTIVE_START = r'(?<![^' + _NEWLINE_CHARS + r'])[^\S' + _NEWLINE_CHARS + r']*'
+_LINE_TOKENS = '|' + '|'.join((
+    _LINE_COMMENT, _DIRECTIVE_TEXT, _LINE_ENDING.pattern, r'[^\S' + _NEWLINE_CHARS + ']+'))
 
 
 class CSharpReader(CLikeReader):
@@ -44,13 +55,41 @@ class CSharpReader(CLikeReader):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         # A verbatim identifier, `@if`, is one name and never a keyword.
-        # Verbatim strings double quotes; raw strings match their quote count.
         # // comments end on the same line (not C/C++ line continuation).
-        return clike_tokens(
-            source_code,
-            r'|@"(?:""|[^"])*"'
-            r'|(?P<csharp_quotes>"{3,})(?!").*?(?P=csharp_quotes)(?!")'
-            r"|(?:\?\?)" + _VERBATIM_KEYWORD, token_class)
+        patterns = r"|(?:\?\?)" + _VERBATIM_KEYWORD
+        needs_csharp_lines = ((not source_code.isascii() or '\r' in source_code) and
+                              _NON_LF_LINE_BREAK.search(source_code))
+        if needs_csharp_lines:
+            patterns += _LINE_TOKENS
+        if any(prefix in source_code for prefix in ('$"', '@"', '"""')):
+            tokens = _literal_tokens(source_code, patterns, token_class)
+        else:
+            tokens = clike_tokens(source_code, patterns, token_class)
+        if token_class is None and needs_csharp_lines:
+            tokens = _line_tokens_as_lf(tokens)
+        if token_class is None and '?' in source_code:
+            tokens = _mark_questions(tokens)
+        return tokens
+
+    @staticmethod
+    def count_token_newlines(token):
+        if token.isascii() and '\r' not in token:
+            return token.count('\n')
+        return len(_LINE_ENDING.findall(token))
+
+    def __call__(self, tokens, reader):
+        # Interpolation code belongs to metrics, but cannot start or end
+        # a function or class in the surrounding source.
+        for token in tokens:
+            if token == '?' and getattr(token, 'is_optional', False):
+                self.context.add_condition(-1)
+            if not isinstance(token, _InterpolationPart):
+                for state in self.parallel_states:
+                    state(token)
+            yield token
+        for state in self.parallel_states:
+            state.statemachine_before_return()
+        self.eof()
 
 
 def _name(token):
@@ -125,3 +164,288 @@ class CSharpStates(CLikeStates):
     def _state_primary_constructor(self, _):
         """Skip primary constructor parameters without counting them as a function"""
         self.in_primary_constructor = False
+
+
+_OPEN_LITERAL = r'(?P<literal>\$*"{3,}|\$@"|@\$?"|\$")'
+_CODE_UNITS = (
+    _DIRECTIVE_START + _DIRECTIVE_TEXT + '|' + _LINE_COMMENT + r'|/\*.*?\*/|'
+    + _OPEN_LITERAL
+    + r'|"(?:\\.|[^"\\])*"|\'(?:\\.|[^\'\\])*\''
+)
+_LITERAL = re.compile(_CODE_UNITS, re.S)
+_HOLE = re.compile(_CODE_UNITS + r'|::|[()\[\]{}:]', re.S)
+_REGULAR_TEXT = re.compile(r'\\.|\{\{|\}\}|["{]', re.S)
+_VERBATIM_TEXT = re.compile(r'""|\{\{|\}\}|["{]')
+_RAW_TEXT = re.compile(r'"+|\{+')
+_FORMAT_END = re.compile(r'\\.|}', re.S)
+_WHOLE_TOKEN = re.compile(r'.*', re.S)
+
+
+class _InterpolationPart(str):
+    """Part of a literal after its first token, visible only to metrics."""
+
+
+def _line_tokens_as_lf(tokens):
+    """Normalize standalone line endings and preserve the text inside tokens."""
+    for token in tokens:
+        is_line_ending = token == '\r\n' or (len(token) == 1 and token in _NEWLINE_CHARS)
+        yield '\n' if is_line_ending else token
+
+
+def _literal_tokens(source, addition, token_class):
+    """Tokenize literals and ordinary code at their original source positions."""
+    pattern = clike_token_pattern(addition)
+    pos = 0
+    while True:
+        opening = _LITERAL.search(source, pos)
+        while opening and opening.group('literal') is None:
+            opening = _LITERAL.search(source, opening.end())
+        if opening is None:
+            break
+        start = opening.start()
+        yield from tokens_in_span(pattern, source, pos, start, token_class)
+        parts = []
+        end = _read_literal(source, opening, parts)
+        if end is None:
+            end = opening.end()
+            yield from tokens_in_span(pattern, source, start, end, token_class)
+        else:
+            yield from _emit_literal(source, pattern, opening, end, parts, token_class)
+        pos = end
+    yield from tokens_in_span(pattern, source, pos, len(source), token_class)
+
+
+def _emit_literal(source, pattern, opening, end, parts, token_class):
+    start = opening.start()
+    # Keep the separate dollar token for regular interpolation.
+    if opening.group() == '$"':
+        yield from tokens_in_span(pattern, source, start, start + 1, token_class)
+        start += 1
+    if token_class is not None:
+        yield token_class(_WHOLE_TOKEN.match(source, start, end))
+        return
+    first = True
+    for begin, stop in (*parts, (end, end)):
+        if start < begin:
+            fragment = source[start:begin]
+            yield fragment if first else _InterpolationPart(fragment)
+            first = False
+        for token in tokens_in_span(pattern, source, begin, stop):
+            yield _InterpolationPart(token)
+        start = stop
+
+
+def _read_literal(source, opening, parts):
+    """Find a literal end and collect disjoint spans inside its holes."""
+    opener = opening.group()
+    prefix = opener.rstrip('"')
+    quotes = len(opener) - len(prefix)
+    dollars = prefix.count('$')
+    verbatim = '@' in prefix
+    if quotes >= 3:
+        special = _RAW_TEXT
+        open_braces = dollars
+    else:
+        special = _VERBATIM_TEXT if verbatim else _REGULAR_TEXT
+        open_braces = 1 if dollars else 0
+    pos = opening.end()
+    while True:
+        match = special.search(source, pos)
+        if match is None:
+            return None
+        token = match.group()
+        pos = match.end()
+        if token[0] == '"' and len(token) == quotes:
+            return pos
+        if open_braces and token[0] == '{' and (
+                len(token) >= open_braces if quotes >= 3 else token == '{'):
+            pos = _read_hole(source, pos, open_braces, verbatim, quotes >= 3, parts)
+            if pos is None:
+                return None
+
+
+def _read_hole(source, pos, braces, verbatim, raw, parts):
+    start = pos
+    depth = 0
+    while True:
+        match = _HOLE.search(source, pos)
+        if match is None:
+            return None
+        token = match.group()
+        pos = match.end()
+        if match.group('literal') is not None:
+            parts.append((start, match.start()))
+            pos = _read_literal(source, match, parts)
+            if pos is None:
+                return None
+            start = pos
+        elif token in ('(', '[', '{'):
+            depth += 1
+        elif depth and token in (')', ']', '}'):
+            depth -= 1
+        elif not depth and token == ':':
+            parts.append((start, match.start()))
+            return _read_format(source, pos, braces, verbatim or raw)
+        elif not depth and token == '}' and source.startswith('}' * braces, match.start()):
+            parts.append((start, match.start()))
+            return match.start() + braces
+
+
+def _read_format(source, pos, braces, unescaped):
+    close = '}' * braces
+    if unescaped:
+        end = source.find(close, pos)
+        return end + braces if end != -1 else None
+    for match in _FORMAT_END.finditer(source, pos):
+        if match.group() == close:
+            return match.end()
+    return None
+
+
+class _OptionalQuestion(str):
+    """A nullable type or conditional access marker."""
+
+    is_optional = True
+
+
+class _OptionalHoleQuestion(_InterpolationPart):
+    is_optional = True
+
+
+_TYPE_WORDS = frozenset({
+    'bool', 'byte', 'char', 'class', 'decimal', 'double', 'float',
+    'int', 'long', 'object', 'sbyte', 'short', 'string', 'uint', 'ulong', 'ushort',
+})
+_DECLARATION_MODIFIERS = frozenset({
+    'abstract', 'const', 'extern', 'internal', 'override', 'private', 'protected',
+    'public', 'readonly', 'sealed', 'static', 'virtual', 'volatile',
+})
+_TYPE_END = frozenset(('(', '[', '{', ')', ']', '}', ';', '=', '=>'))
+_PATTERN_END = frozenset(('?', '??', '&&', '||', '=', '=>', ':', ';', ',', ')', ']', '}'))
+_PATTERN_OPERATORS = frozenset(('is', 'not', 'and', 'or'))
+_NOT_A_TERNARY_ARM = frozenset(('.', ',', ':', ';', ')', ']', '}', '>', '='))
+_OPEN_GROUP = frozenset(('(', '[', '{'))
+_CLOSE_GROUP = frozenset((')', ']', '}'))
+
+
+def _mark_questions(tokens):
+    """Leave ternaries as ordinary '?' tokens for all metric consumers."""
+    groups = [([], [])]
+    buffered = []
+    pending = 0
+    question = None
+    previous = before_previous = None
+    reading_type = False
+    pattern = None
+    type_brackets = constraint = 0
+    for token in tokens:
+        if buffered or token == '?':
+            buffered.append(token)
+        else:
+            yield token
+
+        if token.isspace() or token.startswith(('//', '/*', '#')):
+            continue
+        if buffered:
+            if question is not None and token not in _NOT_A_TERNARY_ARM:
+                # Before '[', the mark can be an index access or a ternary
+                # with a collection expression. A direct ternary has priority.
+                groups[-1][token == '['].append(question)
+                pending += 1
+            question = None
+            if token == '?':
+                index = len(buffered) - 1
+                empty_rank = previous == ']' and before_previous in ('[', ',')
+                if pattern is None:
+                    can_end_condition = not (empty_rank or previous in _TYPE_WORDS)
+                else:
+                    can_end_condition = not pattern.type_arguments
+                if not reading_type and can_end_condition:
+                    question = index
+                mark = _OptionalHoleQuestion if isinstance(token, _InterpolationPart) else _OptionalQuestion
+                buffered[index] = mark(token)
+            elif token == ':':
+                # A named argument starts after the comma. Its colon does
+                # not pair with a question mark in the previous argument.
+                if constraint == 1 or (before_previous == ',' and previous.lstrip('@').isidentifier()):
+                    pending -= _clear_questions(groups[-1])
+                else:
+                    pending -= _resolve_ternary(groups[-1], buffered)
+            elif token in _OPEN_GROUP:
+                groups.append(([], []))
+            elif token in _CLOSE_GROUP:
+                group = groups.pop() if len(groups) > 1 else groups[0]
+                pending -= _clear_questions(group)
+            elif token == ';':
+                pending -= _clear_questions(groups[-1])
+            if token == 'where' and previous == ')':
+                constraint = 2
+            elif constraint:
+                constraint -= 1
+            if question is None and not pending:
+                yield from buffered
+                buffered.clear()
+                groups = [([], [])]
+
+        if token == 'new' or token in _DECLARATION_MODIFIERS:
+            reading_type = True
+        elif reading_type:
+            if token == '<' or (token == '(' and (type_brackets or previous in _DECLARATION_MODIFIERS)):
+                type_brackets += 1
+            elif token in ('>', ')') and type_brackets:
+                type_brackets -= 1
+            elif not type_brackets and token in _TYPE_END:
+                reading_type = False
+        if pattern is not None:
+            if pattern.ends_at(token, previous):
+                pattern = None
+        elif token == 'is':
+            pattern = _IsPattern()
+        if token != '@':
+            before_previous, previous = previous, token
+    yield from buffered
+
+
+class _IsPattern:
+    """Track nested punctuation after an `is` operator."""
+
+    def __init__(self):
+        self._groups = 0
+        self.type_arguments = 0
+
+    def ends_at(self, token, previous):
+        if token in _OPEN_GROUP:
+            self._groups += 1
+        elif self._groups and token in _CLOSE_GROUP:
+            self._groups -= 1
+        elif token == '<' and self._opens_type_arguments(previous):
+            self.type_arguments += 1
+        elif token == '>' and self.type_arguments:
+            self.type_arguments -= 1
+        else:
+            return not (self._groups or self.type_arguments) and token in _PATTERN_END
+        return False
+
+    def _opens_type_arguments(self, previous):
+        # Inside a grouped constant pattern, `<` can be a comparison.
+        return ((self.type_arguments or not self._groups) and previous not in _PATTERN_OPERATORS
+                and previous.lstrip('@').isidentifier())
+
+
+def _clear_questions(group):
+    direct, indexed = group
+    count = len(direct) + len(indexed)
+    direct.clear()
+    indexed.clear()
+    return count
+
+
+def _resolve_ternary(group, buffered):
+    direct, indexed = group
+    candidates = direct or indexed
+    if candidates:
+        index = candidates.pop()
+        mark = buffered[index]
+        buffered[index] = _InterpolationPart(mark) if isinstance(mark, _InterpolationPart) else '?'
+        return 1
+    return 0
