@@ -1,5 +1,6 @@
 import inspect
 import unittest
+from textwrap import dedent
 
 from .testPython import get_python_function_list
 
@@ -118,8 +119,7 @@ class Test_Python_function_structure(unittest.TestCase):
         self.assertEqual("function1", functions[1].name)
         self.assertEqual(5, functions[1].end_line)
         self.assertEqual(2, functions[1].cyclomatic_complexity)
-        self.assertEqual(2, functions[1].max_nesting_depth)
-        # will be fixed, should be equal to 1
+        self.assertEqual(1, functions[1].max_nesting_depth)
 
     def test_deeply_nested_function_uses_each_enclosing_name_once(self):
         functions = get_python_function_list("""
@@ -223,6 +223,145 @@ def normalize_message(prefix):
                 "         pass\n"
         functions = get_python_function_list(code)
         self.assertEqual(4, functions[0].end_line)
+
+    def test_nesting_depth_closes_suites_at_dedent(self):
+        code = dedent("""
+            def collect_ready(rows):
+                if rows is None:
+                    return []
+                ready = []
+                for row in rows:
+                    if row.ready:
+                        ready.append(row)
+                return ready if ready else rows
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
+
+    def test_nesting_depth_counts_context_manager_and_sibling_handlers(self):
+        code = dedent("""
+            async def read_all(client):
+                try:
+                    async with client.session() as session:
+                        return await session.read()
+                except OSError:
+                    if client.closed:
+                        return b''
+                    raise
+                finally:
+                    client.flush()
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
+
+    def test_nesting_depth_counts_with_suite(self):
+        code = dedent("""
+            async def read_buffer(client):
+                async with client.session() as session:
+                    if session.ready:
+                        return await session.read()
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
+
+    def test_nesting_depth_counts_alternative_branch_body(self):
+        code = dedent("""
+            def emit(record, write):
+                if record.skip:
+                    if record.log:
+                        write("skipped")
+                elif record.urgent:
+                    write(record)
+                else:
+                    while record.has_data():
+                        write(record.read())
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
+
+    def test_nesting_depth_keeps_inline_suite_through_semicolon(self):
+        code = dedent("""
+            def render(record, write):
+                if record.visible: write(record); write(record.text if record.loud else "")
+                if record.done: write("done")
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
+
+    def test_nesting_depth_keeps_multiline_expression_in_its_suite(self):
+        code = dedent("""
+            def available(primary, backup, use_primary):
+                if primary is None: return backup
+                if (primary
+                        if use_primary else backup):
+                    return primary
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(2, function.max_nesting_depth)
+
+    def test_nesting_depth_separates_sibling_ternaries(self):
+        code = """
+        def pack(ready, cached):
+            return (1 if ready else 0, 2 if cached else 0)
+
+        def choose(enabled, ready, cached):
+            return (1 if ready else 0, 2 if cached else 0) if enabled else ()
+        """
+        functions = get_python_function_list(code)
+        self.assertEqual([('pack', 1), ('choose', 2)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_nesting_depth_counts_defaults_with_the_enclosing_function(self):
+        code = """
+        def create(ready, value):
+            def save(item=value if ready else None):
+                return item
+            return save
+        """
+        functions = get_python_function_list(code)
+        self.assertEqual([('create.save', 0), ('create', 1)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
+
+    def test_nesting_depth_counts_one_word_operator_level_in_a_condition(self):
+        code = dedent(r"""
+            def eligible(account, policy, override):
+                if account.active \
+                        and (policy.permits(account) or override):
+                    if account.verified:
+                        return True
+                return False
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(3, function.max_nesting_depth)
+
+    def test_nesting_depth_counts_word_operators_in_separate_statements(self):
+        code = dedent("""
+            def choose(account, backup, default):
+                enabled = account and account.enabled
+                return (account or backup) and enabled or default
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(1, function.max_nesting_depth)
+
+    def test_nesting_depth_resets_word_operators_at_an_inline_suite(self):
+        code = dedent("""
+            def resolve(account, backup, default):
+                if account and account.enabled: return backup or default
+                return default
+            """)
+        function, = get_python_function_list(code)
+        self.assertEqual(3, function.max_nesting_depth)
+
+    def test_nesting_depth_counts_default_logic_with_its_outer_scope(self):
+        code = dedent("""
+            def create(ready, value, enabled):
+                def save(item=(ready and value) if enabled else False):
+                    return item
+                return save
+            """)
+        functions = get_python_function_list(code)
+        self.assertEqual([('create.save', 0), ('create', 2)],
+                         [(f.name, f.max_nesting_depth) for f in functions])
 
     def test_odd_line_with_comment(self):
         code = "class c:\n" + \
