@@ -37,3 +37,19 @@ class Test_JavaScript_member_modifier_after_a_field(unittest.TestCase):
         )
         self.assertEqual(['handler'],
                          [f.name for f in get_js_function_list(code)])
+
+    def test_class_field_ternary_keeps_the_call_in_the_enclosing_function(self):
+        code = '''function run(remaining) {
+  if (remaining === 0) return 7;
+  return new class {
+    value = remaining > 0
+      ? run(remaining - 1)
+      : 1
+  }().value;
+}
+'''
+        functions = get_js_function_list(code)
+        self.assertEqual([('run', 1, 8, 3, ['remaining'])], [
+            (f.name, f.start_line, f.end_line, f.cyclomatic_complexity, f.parameters)
+            for f in functions
+        ])
