@@ -82,8 +82,8 @@ class JavaScriptObjectsMixin:
             # A member named "get" or "set": get(key) {}, {get: f}, {get, set}
             self.last_tokens = prefix
         if token == '[':
-            if self._in_prop_value:
-                # An array value, {list: [[1], 2]}, not a computed name.
+            if self._in_prop_value or self._default_value:
+                # Read arrays in property values and binding defaults.
                 self._read_binding_candidate(']')
             else:
                 self._collect_computed_name()

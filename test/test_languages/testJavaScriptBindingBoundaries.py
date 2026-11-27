@@ -189,3 +189,23 @@ def test_http_api_exposes_complete_callback_and_following_metrics(suffix):
              f['start_line'], f['end_line'])
             for f in response.get_json()['function_list']] == [
                 ('(anonymous)', 2, 0, 1, 4), ('after', 2, 1, 5, 5)]
+
+
+@pytest.mark.parametrize('suffix', ('js', 'ts'))
+def test_destructuring_default_array_keeps_contained_functions(suffix):
+    source = """const {
+  transforms = [function trim(value) { return value.trim(); }],
+  filters = [value => value || ''],
+  handlers = [{ reset(state) { state.clear(); } }],
+} = options;
+function prepare(input) { return transforms[0](input); }
+"""
+
+    result = functions(source, suffix)
+
+    assert summaries(result) == [
+        ('trim', 1, 2, 2, ['value']),
+        ('(anonymous)', 2, 3, 3, ['value']),
+        ('reset', 1, 4, 4, ['state']),
+        ('prepare', 1, 6, 6, ['input']),
+    ]
