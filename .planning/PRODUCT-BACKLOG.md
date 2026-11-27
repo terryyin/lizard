@@ -6,7 +6,5 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Taken
 
-- [Do the lizard process issue and the proc…](seeds/SEED-079-ad-hoc-work.md#ad-hoc-work) — SEED-079#ad-hoc-work
-
 ## Backlog list
 

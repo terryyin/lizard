@@ -2,6 +2,12 @@
   "schemaVersion": 1,
   "records": [
     {
+      "fileName": "SEED-079_ad-hoc-work.json",
+      "identity": "SEED-079#ad-hoc-work",
+      "completedAt": "2026-11-27T05:55:38.247Z",
+      "blob": "9b130e149dda3943656b585a1ce8fbc2ea8c4879"
+    },
+    {
       "fileName": "SEED-078_nd-without-logical-operators.json",
       "identity": "SEED-078#nd-without-logical-operators",
       "completedAt": "2026-11-27T01:46:29.390Z",
@@ -486,12 +492,6 @@
       "identity": "SEED-010#review-lexical-js-prs",
       "completedAt": "2026-10-28T07:30:49.798Z",
       "blob": "d12601acff1d7c491d245c7db8a9f9dc27ce7a6e"
-    },
-    {
-      "fileName": "SEED-010_review-structural-js-prs.json",
-      "identity": "SEED-010#review-structural-js-prs",
-      "completedAt": "2026-10-28T03:25:30.991Z",
-      "blob": "84d1017001089c0612911578e29ecab208c899f3"
     }
   ],
   "unreadable": []
