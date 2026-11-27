@@ -5,7 +5,7 @@ Language parser for C, C++ -like languages.
 import re
 import itertools
 from .code_reader import CodeStateMachine, CodeReader
-from .clike_states import CLikeStates
+from .clike_states import CLikeStates, CPP_CONDITIONAL_DIRECTIVES
 
 # Raw strings end only at the opening delimiter, which has at most 16 d-chars.
 _CPP_RAW_STRING_TOKEN = (
@@ -13,6 +13,78 @@ _CPP_RAW_STRING_TOKEN = (
     r'\(.*?\)(?P=cpp_raw_delimiter)"')
 # In C and C++, a backslash at the end of a line continues a // comment on the next line.
 _C_LINE_COMMENT = r"|\/\/(?:\\\n|[^\n])*"
+
+
+_ANGLE_CHANGE = {"<": 1, ">": -1}
+# The preprocessor can join a tilde to the following delimiter.
+_GROUP_CHANGE = {"(": 1, ")": -1, "~(": 1, "~)": -1, "[": 1, "]": -1, "~[": 1, "~]": -1}
+_EXPRESSION_OPERATORS = frozenset((
+    "+", "-", "*", "/", "%", "&", "|", "^", "&&", "||", "?", ":",
+    "==", "!=", "<=", ">=", "!", "and", "or", "bitand", "bitor", "xor", "not", "not_eq",
+))
+
+
+class _CppTemplateAngles:
+    _template_group_depth = 0
+    _at_template_argument = False
+    _after_template_group = False
+    _in_grouped_expression = False
+    _in_comparison_operand = False
+    _template_braces = 0
+    _grouped_angle = False
+
+    def _read_template_angle(self, token):
+        if self._after_template_group:
+            if token == "<":
+                # A parenthesized left operand cannot introduce another angle list.
+                self._at_template_argument = True
+                self._in_grouped_expression = True
+                self._in_comparison_operand = True
+                return False
+            self._after_template_group = False
+            if token in _EXPRESSION_OPERATORS:
+                self._in_grouped_expression = True
+                self._at_template_argument = True
+                return False
+        if self._template_group_depth:
+            self._template_group_depth += _GROUP_CHANGE.get(token, 0)
+            if token in _ANGLE_CHANGE:
+                self._grouped_angle = True
+            if not self._template_group_depth:
+                self._after_template_group = True
+        elif ((self._at_template_argument and token in ("(", "~(")) or
+              (self._in_comparison_operand and token in ("[", "~["))):
+            self._template_group_depth = 1
+            self._at_template_argument = False
+        elif token == "{":
+            self._template_braces += 1
+        elif token == "}" and self._template_braces:
+            self._template_braces -= 1
+        elif token in (";", "}") and self._grouped_angle and not self._template_braces:
+            # A comparison such as width < (height > 0) can resemble a template.
+            self.br_count = 0
+            self._reset_template_angles()
+            return True
+        else:
+            self.br_count += _ANGLE_CHANGE.get(token, 0)
+            if self.br_count == 1 and token == ",":
+                self._in_comparison_operand = False
+                self._in_grouped_expression = False
+            # A second '<' could be part of an ungrouped comparison.
+            self._at_template_argument = (
+                (token in ("<", "=", ",") and (self.br_count == 1 or self._in_comparison_operand))
+                or (self._in_grouped_expression and self.br_count == 1 and token in _EXPRESSION_OPERATORS))
+        if not self.br_count:
+            self._reset_template_angles()
+        return False
+
+    def _reset_template_angles(self):
+        self._at_template_argument = False
+        self._after_template_group = False
+        self._in_grouped_expression = False
+        self._in_comparison_operand = False
+        self._template_braces = 0
+        self._grouped_angle = False
 
 
 class CCppCommentsMixin(object):  # pylint: disable=R0903
@@ -43,7 +115,7 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super(CLikeReader, self).__init__(context)
         self.parallel_states = (
-                CLikeStates(context),
+                CppStates(context),
                 CLikeNestingStackStates(context),
                 CppRValueRefStates(context, self.conditions))
 
@@ -62,15 +134,83 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
             elif not token.isspace() or token == '\n':
                 macro = self.macro_pattern.match(token)
                 if macro:
-                    if macro.group(1) in ('if', 'ifdef', 'elif'):
+                    directive = macro.group(1)
+                    if directive in CPP_CONDITIONAL_DIRECTIVES:
+                        for state in self.parallel_states:
+                            if isinstance(state, CLikeStates):
+                                state.read_preprocessor_branch(directive)
+                                break
+                    if directive in ('if', 'ifdef', 'elif'):
                         self.context.add_condition()
-                    elif macro.group(1) == 'include':
+                    elif directive == 'include':
                         yield "#include"
                         yield macro.group(2) or "\"\""
                     for _ in macro.group(2).split('\n')[1:]:
                         yield '\n'
                 else:
                     yield token
+
+
+class CppStates(CLikeStates, _CppTemplateAngles):  # pylint: disable=R0903
+    _initializer_type = None
+
+    def _state_function(self, token):
+        if token == "=":
+            self._state = self._state_initializer_start
+        else:
+            super()._state_function(token)
+
+    def _state_initializer_start(self, token):
+        self._state = self._state_global
+        self._state(token)
+        if token in ("sizeof", "decltype"):
+            self._initializer_type = self.context.current_function
+
+    def _state_dec_to_imp(self, token):
+        if token == "{" and self.context.current_function is self._initializer_type:
+            # An operand in an initializer can resemble a function declaration.
+            self._initializer_type = None
+            self.br_count = 1
+            self._state = self._state_initializer
+        else:
+            super()._state_dec_to_imp(token)
+
+    def _state_template_in_name(self, token):
+        if token == "<" and not self.br_count:
+            self._state = self._state_template_start
+        if self._read_template_angle(token):
+            self._state = self._state_global
+            return
+        self.context.add_to_function_name(token)
+        if not self.br_count:
+            self._state = self._state_function
+
+    def _state_template_start(self, token):
+        self._state = self._state_shift_or_digraph if token == "<" else self._state_template_in_name
+        self._state_template_in_name(token)
+
+    def _state_shift_or_digraph(self, token):
+        if token == "::":
+            # This can qualify the shift operand or be part of '<::>'.
+            self.context.add_to_function_name(token)
+            return
+        # The tokenizer joins ':=' when the capture starts with '<:='.
+        if token in (":", ":=") or (token == ">" and self.context.current_function.name.endswith("::")):
+            self._state = self._state_template_in_name
+        else:
+            self.br_count = 0
+            self._reset_template_angles()
+            self._state = self._state_initializer
+        self._state(token)
+
+    def _state_initializer(self, token):
+        # A braced operand can contain semicolons, as in a lambda body.
+        if token in (";", "}") and not self.br_count:
+            self._state = self._state_global
+        elif token == "{":
+            self.br_count += 1
+        elif token == "}":
+            self.br_count -= 1
 
 
 class CppRValueRefStates(CodeStateMachine):
@@ -328,7 +468,7 @@ class _LambdaHeader:
 
 
 # pylint: disable=R0903
-class CLikeNestingStackStates(CodeStateMachine):
+class CLikeNestingStackStates(CodeStateMachine, _CppTemplateAngles):
     """Machinery to track nesting levels of tokens.
 
     The main indicators of nesting are braces: '{' and '}'.
@@ -378,10 +518,20 @@ class CLikeNestingStackStates(CodeStateMachine):
             self.context.add_namespace(''.join(itertools.takewhile(
                 lambda x: x not in self.__namespace_separators, saved)))
 
-    @CodeStateMachine.read_inside_brackets_then("<>", "_state_global")
-    def _template_declaration(self, _):
-        """Ignores template parameters."""
-        pass
+    def _template_declaration(self, token):
+        # A template parameter list can only start outside a function.
+        if token == "<" and self.context.last_function is None:
+            self._state = self._read_template_parameters
+        else:
+            self._state = self._state_global
+        self._state(token)
+
+    def _read_template_parameters(self, token):
+        if self._read_template_angle(token):
+            self._state = self._state_global
+            self._state_global(token)
+        elif not self.br_count:
+            self._state = self._state_global
 
     @CodeStateMachine.read_inside_brackets_then("[]", "_read_namespace")
     def _read_attribute(self, _):

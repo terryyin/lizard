@@ -20,6 +20,27 @@ class Test_objc_lizard(unittest.TestCase):
         result = self.create_objc_lizard("int fun(int a, int b) {}")
         self.assertEqual("fun", result[0].name)
 
+    def test_template_identifier_in_method_comparison(self):
+        source = """__attribute__((objc_root_class))
+@interface Renderer
+@end
+@implementation Renderer
+- (int)render:(int)template {
+    if (template < 4) {
+        return 4;
+    }
+    return template;
+}
+- (int)minimumWidth { return 4; }
+@end
+"""
+
+        result = self.create_objc_lizard(source)
+
+        self.assertEqual(
+            [("render:", 5, 10), ("minimumWidth", 11, 11)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
     def test_one_objc_function(self):
         result = self.create_objc_lizard("-(void) foo {}")
         self.assertEqual("foo", result[0].name)

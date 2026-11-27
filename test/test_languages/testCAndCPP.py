@@ -11,6 +11,38 @@ class Test_C_Token_extension(unittest.TestCase):
 
 class Test_c_cpp_lizard(unittest.TestCase):
 
+    def test_c_template_identifier_at_end_of_initializer(self):
+        source = """int pattern_length(int pattern, int template) {
+    int lengths[] = {pattern, template};
+    return lengths[0] + lengths[1];
+}
+int header_length(void) { return 2; }
+"""
+
+        for filename in ("pattern.c", "pattern.h"):
+            with self.subTest(filename=filename):
+                result = analyze_file.analyze_source_code(filename, source).function_list
+
+                self.assertEqual(
+                    [("pattern_length", 1, 4), ("header_length", 5, 5)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_cpp_template_in_c_or_objective_c_source(self):
+        source = """namespace render {
+template<class Value> struct Cache {
+    unsigned width() { return sizeof(Value); }
+};
+}
+"""
+
+        for filename in ("cache.c", "cache.m"):
+            with self.subTest(filename=filename):
+                result = analyze_file.analyze_source_code(filename, source).function_list
+
+                self.assertEqual(
+                    [("render::Cache::width", 3, 3)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
     def test_empty(self):
         result = get_cpp_function_list("")
         self.assertEqual(0, len(result))
@@ -818,6 +850,98 @@ int update() {
         self.assertEqual(1, len(result))
         self.assertEqual("ns::f<double>", result[0].name)
 
+    def test_comparison_in_template_parameter_default(self):
+        result = get_cpp_function_list("""template <int Size, bool Inline = (Size < 64)>
+struct Buffer {
+    int capacity() const { return Size; }
+};
+
+int default_capacity() { return Buffer<32>{}.capacity(); }
+""")
+
+        self.assertEqual(
+            [("Buffer::capacity", 3, 3), ("default_capacity", 6, 6)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_comparison_in_template_argument(self):
+        result = get_cpp_function_list("""#include <type_traits>
+
+template <typename T>
+using IsSmall = std::bool_constant<(sizeof(T) < 16)>;
+
+bool small_ints() { return IsSmall<int>::value; }
+""")
+
+        self.assertEqual(
+            [("small_ints", 6, 6)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_shift_in_qualified_template_name(self):
+        result = get_cpp_function_list("""template <int Capacity>
+struct Buffer {
+    int capacity() const { return Capacity; }
+};
+
+template <>
+int Buffer<(1024 >> 2)>::capacity() const {
+    return 256;
+}
+""")
+
+        self.assertEqual(
+            [("Buffer::capacity", 3, 3), ("Buffer<(1024>>2)>::capacity", 7, 9)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_function_after_comparison_with_grouped_right_operand(self):
+        result = get_cpp_function_list("""constexpr int width = 4, height = 2;
+constexpr bool fits = width < (height > 0);
+int capacity(int count) { return fits ? count : 0; }
+""")
+
+        self.assertEqual([("capacity", 1)], [(fn.name, fn.parameter_count) for fn in result])
+
+    def test_template_comparison_after_grouped_left_operand(self):
+        result = get_cpp_function_list("""template<bool Fits> struct Buffer { unsigned capacity() const; };
+template<int N> struct Size { static constexpr int value = N; };
+template<> unsigned Buffer<(4 > 2) < (1 << 1)>::capacity() const { return 64; }
+template<> unsigned Buffer<(4 > 2) < Size<(sizeof(int) < 8)>::value>::capacity() const { return 32; }
+unsigned capacity() { return Buffer<true>{}.capacity(); }
+""")
+
+        self.assertEqual(
+            ["Buffer<(4>2)<(1<<1)>::capacity",
+             "Buffer<(4>2)<Size<(sizeof(int)<8)>::value>::capacity", "capacity"],
+            [fn.name for fn in result])
+
+    def test_joined_comparisons_in_template_argument(self):
+        result = get_cpp_function_list("""template<bool Fits> struct Buffer { unsigned capacity() const; };
+template<> unsigned Buffer<(sizeof(int) > 1) && (sizeof(int) < 16)>::capacity() const { return 64; }
+unsigned capacity() { return Buffer<true>{}.capacity(); }
+""")
+
+        self.assertEqual(
+            ["Buffer<(sizeof(int)>1)&&(sizeof(int)<16)>::capacity", "capacity"],
+            [fn.name for fn in result])
+
+    def test_following_grouped_operands_in_template_specialization(self):
+        source = """template<bool Fits> struct Buffer { int capacity(int count) const; };
+template<> int Buffer<CONDITION>::capacity(int count) const {
+    return count;
+}
+int neighbor() { return 0; }
+"""
+        for condition in (
+                "(sizeof(int) < 64) ? (alignof(int) > 1) : false",
+                "(sizeof(int) < 64) ? false : (alignof(int) > 1)",
+                "(sizeof(int) < 64) & (alignof(int) > 1)"):
+            with self.subTest(condition=condition):
+                result = get_cpp_function_list(source.replace("CONDITION", condition))
+                qualified_name = "Buffer<" + condition.replace(" ", "") + ">::capacity"
+
+                self.assertEqual(
+                    [(qualified_name, 2, 4, 1), ("neighbor", 5, 5, 0)],
+                    [(fn.name, fn.start_line, fn.end_line, fn.parameter_count) for fn in result])
+
     def test_nested_template_function(self):
         result = get_cpp_function_list("template<typename T> class c { "
                                        "template<typename S> void f() {} };")
@@ -882,6 +1006,126 @@ int update() {
     def test_template_with_reference_as_reference(self):
         result = get_cpp_function_list("void fun(t<const int&>&b){} ")
         self.assertEqual(1, len(result))
+
+    def test_function_after_left_shift_in_global_initializer(self):
+        result = get_cpp_function_list("""namespace table {
+constexpr unsigned index_bits = 4;
+constexpr unsigned mask = index_bits << 3;
+
+unsigned capacity_mask() { return mask; }
+}
+""")
+
+        self.assertEqual(
+            [("table::capacity_mask", 5, 5)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_parameters_after_shift_operand_comparison(self):
+        cpp = """constexpr unsigned bits = 4;
+constexpr unsigned shift(bool small) { return small ? 1 : 2; }
+constexpr bool fits = ((bits << shift(bits < 8)) >> 1) > 7;
+int result(int yes, int no) { return fits ? yes : no; }
+int later(int value) { return value; }
+"""
+        c = """enum { bits = 4, fits = ((bits << sizeof(bits < 8)) >> 1) > 7 };
+int result(int yes, int no) { return fits ? yes : no; }
+int later(int value) { return value; }
+"""
+        for filename, source, expected in (
+                ("table.cpp", cpp, [("shift", 1), ("result", 2), ("later", 1)]),
+                ("table.c", c, [("result", 2), ("later", 1)])):
+            with self.subTest(filename=filename):
+                result = analyze_file.analyze_source_code(filename, source)
+                self.assertEqual(expected, [(fn.name, fn.parameter_count) for fn in result.function_list])
+
+    def test_no_function_for_braced_shift_operand(self):
+        cpp = """constexpr unsigned width = 4;
+constexpr auto mask = (width << decltype(width){2}) >> 1;
+unsigned capacity() { return mask; }
+"""
+        c = """enum { BASE = 2, MASK = (BASE << sizeof (char[]){ 'a', 'b' }) >> 1 };
+int mask(void) { return MASK; }
+"""
+        for filename, source, expected in (
+                ("table.cpp", cpp, [("capacity", 3, 3)]),
+                ("table.c", c, [("mask", 2, 2)])):
+            with self.subTest(filename=filename):
+                result = analyze_file.analyze_source_code(filename, source)
+                self.assertEqual(
+                    expected, [(fn.name, fn.start_line, fn.end_line) for fn in result.function_list])
+
+    def test_parameters_after_parenthesized_shift_operand(self):
+        source = """constexpr unsigned width = 4;
+constexpr unsigned mask = width << (1 + 2), guard = 7;
+unsigned capacity(unsigned count) { return count & mask & guard; }
+"""
+
+        result = get_cpp_function_list(source)
+
+        self.assertEqual([("capacity", 1)], [(fn.name, fn.parameter_count) for fn in result])
+
+    def test_no_function_for_braced_initializer_after_shift(self):
+        cpp = """constexpr unsigned width = 4, mask = width << 3;
+constexpr unsigned count = decltype(width){2} + (16 >> 1);
+unsigned capacity() { return mask + count; }
+"""
+        c = """enum { WIDTH = 4, MASK = WIDTH << 3 };
+unsigned count = sizeof (char[]){ 'a', 'b' } + (16 >> 1);
+unsigned capacity(void) { return MASK + count; }
+"""
+        for filename, source in (("table.cpp", cpp), ("table.c", c)):
+            with self.subTest(filename=filename):
+                result = analyze_file.analyze_source_code(filename, source).function_list
+
+                self.assertEqual(
+                    [("capacity", 3, 3)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_nested_template_return_after_leading_requires(self):
+        source = """template<class T> struct ParseError {};
+template<class T, class Error> struct Result {};
+template<class T> requires(true)
+Result<T, ParseError<T>> parse(T value) { return {}; }
+"""
+
+        result = get_cpp_function_list(source)
+
+        self.assertEqual([("parse", 1)], [(fn.name, fn.parameter_count) for fn in result])
+
+    def test_template_argument_starting_with_lambda_digraph(self):
+        source = """template <auto F>
+int compute() { return F(); }
+
+template <>
+int compute< CAPTURE { return 7; } >() { return 8; }
+
+int after() { return 9; }
+"""
+        for capture in ("<: :>", "<::>"):
+            with self.subTest(capture=capture):
+                result = get_cpp_function_list(source.replace("CAPTURE", capture))
+                self.assertEqual(
+                    [("compute", 2, 2), ("compute<<::>{return7;}>", 5, 5), ("after", 7, 7)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result])
+
+    def test_template_argument_starting_with_digraph_capture_default(self):
+        result = get_cpp_function_list("""template <auto N>
+constexpr unsigned value() { return N; }
+
+struct Slot {
+    unsigned capacity = value< <:=:> {
+        if (sizeof(int) >= 4) { return 32; }
+        return 16;
+    }() >();
+    unsigned get() const { return capacity; }
+};
+
+unsigned after() { return Slot{}.get(); }
+""")
+
+        self.assertEqual(
+            [("value", 2, 2), ("Slot::get", 9, 9), ("after", 12, 12)],
+            [(fn.name, fn.start_line, fn.end_line) for fn in result])
 
     def test_template_as_part_of_function_name(self):
         result = get_cpp_function_list("void fun<a,b<c>>(){} ")
@@ -1017,6 +1261,19 @@ int update() {
         self.assertEqual(1, len(result))
         self.assertEqual("foo", result[0].name)
 
+    def test_braced_expression_in_trailing_return_type(self):
+        result = get_cpp_function_list("""struct Box {};
+auto declare_box() -> decltype(Box{});
+auto make_box(bool ready) -> decltype(Box{}) {
+    if (ready) { return {}; }
+    return {};
+}
+""")
+
+        self.assertEqual(
+            [("make_box", 3, 6, 2)],
+            [(fn.name, fn.start_line, fn.end_line, fn.cyclomatic_complexity) for fn in result])
+
     def test_ref_qualifiers(self):
         """C++11 ref qualifiers for member functions."""
         result = get_cpp_function_list("struct A { void foo() & {} };")
@@ -1116,6 +1373,30 @@ class Test_cpp11_Attributes(unittest.TestCase):
 
 
 class Test_Preprocessing(unittest.TestCase):
+
+    def test_alternative_groups_in_trailing_return_type(self):
+        source = """template<class T>
+auto lookup(T& value) BEFORE_ARROW
+#if THREADED
+    BRANCH_ARROW decltype(value.locked_lookup(
+#else
+    BRANCH_ARROW decltype(value.lookup(
+#endif
+        1))
+{
+    return value.lookup(1);
+}
+int neighbor() { return 0; }
+"""
+
+        for before, branch in (("->", ""), ("", "->")):
+            with self.subTest(arrow_inside_branch=bool(branch)):
+                result = get_cpp_function_list(
+                    source.replace("BEFORE_ARROW", before).replace("BRANCH_ARROW", branch))
+
+                self.assertEqual(
+                    [("lookup", 2, 11), ("neighbor", 12, 12)],
+                    [(fn.name, fn.start_line, fn.end_line) for fn in result])
 
     def test_content_macro_should_be_ignored(self):
         result = get_cpp_function_list(r'''
