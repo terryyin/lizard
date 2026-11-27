@@ -8,7 +8,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
 
     FUNC_KEYWORD = 'fun'
     _ACCESSORS = {'get', 'set'}
-    _BEFORE_ACCESSOR_IDENTIFIER = {'.', '::', '@', ':', '=', 'typealias'}
+    _BEFORE_ACCESSOR_IDENTIFIER = {'.', '::', '@', ':', '=', 'typealias', '(', '[', '?:'}
     _ACCESSOR_MODIFIERS = {'public', 'protected', 'internal', 'private', 'inline', 'external'}
     _EXPRESSION_BODY_ENDERS = {
         'fun', 'class', 'interface', 'val', 'var',
@@ -41,7 +41,7 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
             self._start_header()
             self._accessor_name = token
             self.context.push_new_function(token)
-            self._state = self._expect_function_impl
+            self._state = self._after_accessor_name
         elif (token in ('class', 'object') and self.last_token != '::'
               and self.context.current_function is not self.context.global_pseudo_function):
             self._state = self._local_class_header
@@ -50,8 +50,11 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                 self.context.add_condition()
             else:
                 self._state = self._function_type_result
-        elif token in ('val', 'var', ',', 'interface'):
-            self._state = self._expect_declaration_name
+        elif token in ('val', 'var', ',', 'interface', '['):
+            if token != '[':
+                self._state = self._expect_declaration_name
+            elif self.last_token in ('@', ':'):
+                self.next(self._annotation_group, token)
         elif token == 'when':
             self._start_when(self._state_global)
         else:
@@ -59,6 +62,11 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
                 self._start_header()
                 self._accessor_name = None
             super(KotlinStates, self)._state_global(token)
+
+    @CodeStateMachine.read_inside_brackets_then("[]", "_state_global")
+    def _annotation_group(self, token):
+        # Names in `@get:[Trace set("count")]` cannot be accessors.
+        pass
 
     def _local_class_header(self, token):
         if token == '(':
@@ -102,6 +110,25 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         else:
             self.next(self._state_global, token)
 
+    def _after_accessor_name(self, token):
+        # A custom accessor needs parentheses before its body. Without them,
+        # `get { ... }` calls a function with a trailing lambda.
+        if token == '{':
+            self._discard_pending_declaration(token)
+        elif token == '(' and self._accessor_name == 'get':
+            self._track_type(token)
+            self._state = self._after_getter_opening
+        else:
+            self.next(self._expect_function_impl, token)
+
+    def _after_getter_opening(self, token):
+        # A getter has no parameters. A quoted route such as `get("/")`
+        # calls a function.
+        if token[0] in '"\'':
+            self._discard_pending_declaration(token)
+        else:
+            self.next(self._expect_function_impl, token)
+
     def _expect_function_impl(self, token):
         if token == '=':
             self._expr_nesting = 0
@@ -109,12 +136,14 @@ class KotlinStates(GoLikeStates):  # pylint: disable=R0902,R0903
         elif token == '{':
             self.next(self._function_impl, token)
         elif self._ends_declaration(token):
-            # `abstract fun f(): Int` or `private set` has no body. Its first
-            # line and token were already counted in the enclosing scope.
-            self.fold_into_enclosing_function()
-            self.context.current_function.nloc -= 1
-            self.context.current_function.token_count -= 1
-            self.next(self._state_global, token)
+            self._discard_pending_declaration(token)
+
+    def _discard_pending_declaration(self, token):
+        # The first line and token already count in the enclosing scope.
+        self.fold_into_enclosing_function()
+        self.context.current_function.nloc -= 1
+        self.context.current_function.token_count -= 1
+        self.next(self._state_global, token)
 
     def _ends_declaration(self, token):
         # Kotlin semicolons are optional, so a declaration without a body

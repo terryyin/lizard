@@ -108,6 +108,68 @@ class CounterWithAnnotation(@get:set val value: Int) {
             [(f.name, f.start_line, f.end_line) for f in result],
         )
 
+    def test_calls_in_property_initializers_do_not_start_accessors(self):
+        result = get_kotlin_function_list('''\
+fun get(load: () -> Int): Int { return load() }
+val size = checkNotNull(get { 1 })
+val index = listOf(0)[get { 0 }]
+val capacity = System.getProperty("capacity")?.toInt() ?: get { 2 }
+val remaining: Int
+    get() { return capacity - size }
+        ''')
+        self.assertEqual(
+            [("get", 1, 1), ("get", 6, 6)],
+            [(f.name, f.start_line, f.end_line) for f in result],
+        )
+
+    def test_delegate_with_a_trailing_lambda_does_not_start_an_accessor(self):
+        result = get_kotlin_function_list('''\
+typealias get = Int
+fun <T> get(initializer: () -> T): Lazy<T> { return lazy(initializer) }
+class Memoized(private val enabled: Boolean) {
+    val count by get { if (enabled) 1 else 0 }
+    val doubled: get
+        get(): get { return count * 2 }
+}
+        ''')
+        self.assertEqual(
+            [("get", 2, 2, 1), ("get", 6, 6, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity) for f in result],
+        )
+
+    def test_annotation_groups_do_not_start_accessors(self):
+        result = get_kotlin_function_list('''\
+@Target(AnnotationTarget.PROPERTY_GETTER)
+annotation class Trace
+@Target(AnnotationTarget.PROPERTY_GETTER)
+annotation class set(val name: String)
+class Counter(@get:[Trace set("count")] val count: Int) {
+    val doubled: Int
+        get() { return count * 2 }
+}
+        ''')
+        self.assertEqual(
+            [("get", 7, 7)],
+            [(f.name, f.start_line, f.end_line) for f in result],
+        )
+
+    def test_get_with_arguments_in_a_route_does_not_start_a_getter(self):
+        result = get_kotlin_function_list('''\
+class Routes {
+    fun get(path: String, handle: () -> String) { println(path + handle()) }
+}
+fun routes(configure: Routes.() -> Unit) { Routes().configure() }
+val diagnostics = routes {
+    get("/health") { "ready" }
+}
+val status: String
+    get() { return "ready" }
+        ''')
+        self.assertEqual(
+            [("get", 2, 2), ("routes", 4, 4), ("get", 9, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result],
+        )
+
     def test_getter_setter(self):
         result = get_kotlin_function_list('''
             class Time
