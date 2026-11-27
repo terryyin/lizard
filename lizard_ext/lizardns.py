@@ -12,6 +12,7 @@ originally written by Mehrdad Meh and Terry Yin.
 from lizard import FunctionInfo
 from lizard_ext.lizardnd import patch_append_method
 from lizard_languages.code_reader import CodeStateMachine
+from lizard_languages.javascript_statements import ImpliedSemicolons
 from .extension_base import ExtensionBase
 
 
@@ -66,6 +67,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def __init__(self):
         super(LizardExtension, self).__init__(None)
+        self._open_ifs = None
+        self._if_head = False
         self.structure_piles = [0]  # Invariant: must always have at least one element
         self._set_structure_keywords(self.structures)
 
@@ -78,6 +81,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def _start_file(self, reader):
         super(LizardExtension, self)._start_file(reader)
+        self._open_ifs = None
+        self._if_head = False
         self.structure_piles = [0]
         structures = getattr(reader, 'nested_structure_keywords', self.structures)
         if structures is not self._structure_keywords:
@@ -95,6 +100,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         where the reader finds such an end."""
         self._start_file(reader)
         tokens, implied_semicolons = reader.implied_semicolons(tokens)
+        if isinstance(implied_semicolons, ImpliedSemicolons):
+            self._open_ifs = []
         return self._read_with_implied_semicolons(tokens, implied_semicolons)
 
     def _read_with_implied_semicolons(self, tokens, implied_semicolons):
@@ -158,6 +165,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def _pop_scope(self):
         """Pop a scope level. Maintains invariant of at least one element."""
         if len(self.structure_piles) > 1:
+            if self._open_ifs:
+                self._close_ifs(len(self.structure_piles))
             self.structure_piles.pop()
 
     def _increment_current_scope(self):
@@ -203,6 +212,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             elif token == 'else':
                 self._state = self._after_else
             else:
+                self._if_head = token == 'if'
                 self._state = self._in_structure_head
         elif token in ('.', '?.'):
             self._state = self._member_name
@@ -215,6 +225,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def _after_else(self, token):
         """An `else if` continues its chain as one structure."""
+        self._if_head = token == 'if'
         self._state = self._in_structure_head
         if token != 'if':
             self._state(token)
@@ -222,6 +233,8 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     @CodeStateMachine.read_inside_brackets_then("()")
     def _in_structure_head(self, token):
         self.pile_up_within_block()
+        if self._open_ifs is not None and self._if_head:
+            self._open_ifs.append((len(self.structure_piles), self.structure_piles[-1]))
         self._state = self._state_global
         self._state(token)
 
@@ -229,9 +242,28 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         # `} finally(e) {` in a class starts a method, not a clause.
         decrement = (token in self._matching_structure_keywords
                      and not getattr(token, 'is_member_name', False))
-        self._reset_or_decrement_current_scope(decrement=decrement)
+        if self._open_ifs is None or not self._end_javascript_body(token, decrement):
+            self._reset_or_decrement_current_scope(decrement=decrement)
         self._state = self._state_global
         self._state(token)
+
+    def _end_javascript_body(self, token, matching_clause):
+        """An else continues at its if, after any child structures end."""
+        if token == ';':
+            # A semicolon after an expression's closing brace can precede else.
+            return True
+        scope = len(self.structure_piles)
+        if (matching_clause and token == 'else' and self._open_ifs
+                and self._open_ifs[-1][0] == scope):
+            self.structure_piles[-1] = self._open_ifs.pop()[1] - 1
+            return True
+        if not matching_clause:
+            self._close_ifs(scope)
+        return False
+
+    def _close_ifs(self, scope):
+        while self._open_ifs and self._open_ifs[-1][0] >= scope:
+            self._open_ifs.pop()
 
 
 def _init_nested_structure_data(self, *_):
