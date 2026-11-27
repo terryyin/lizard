@@ -56,16 +56,20 @@ class _ScriptTag(str):
         return (_attribute(self, 'lang') or 'js').lower()
 
 
-def _script_blocks(source, end_pattern):
+def _script_blocks(source, end_pattern, find_blocks=None):
     """(tag start, tag, code, code end) of each top-level script block."""
     key = (id(source), end_pattern)
+    if find_blocks is None:
+        find_blocks = _find_script_blocks
+    else:
+        key += (find_blocks,)
     cached = _BLOCK_CACHE.get(key)
     if cached is not None and cached[0] is source:
         return cached[1]
     blocks = [
         (tag_start, _ScriptTag(source[tag_start:code_start]),
          source[code_start:code_end], code_end)
-        for tag_start, code_start, code_end in _find_script_blocks(source, end_pattern)]
+        for tag_start, code_start, code_end in find_blocks(source, end_pattern)]
     _BLOCK_CACHE[key] = (source, blocks)
     return blocks
 
@@ -175,7 +179,7 @@ class VueReader(TypeScriptReader):
         """The code of the script blocks, tokenized by their lang, and the
         tokens of the markup around them."""
         pos = 0
-        blocks = _script_blocks(source_code, cls._script_end_pattern)
+        blocks = cls._read_script_blocks(source_code)
         for tag_start, tag, code, code_end in blocks:
             yield from cls.markup_tokens(source_code, pos, tag_start)
             yield from cls.tag_tokens(tag)
@@ -184,6 +188,10 @@ class VueReader(TypeScriptReader):
             yield from tokenizer(code, addition, token_class)
             pos = code_end
         yield from cls.markup_tokens(source_code, pos, len(source_code))
+
+    @classmethod
+    def _read_script_blocks(cls, source):
+        return _script_blocks(source, cls._script_end_pattern)
 
     @staticmethod
     def markup_tokens(source_code, start, end):

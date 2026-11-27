@@ -19,6 +19,7 @@ from html import unescape
 from itertools import repeat
 
 from lizard_core.function_info import FunctionInfo
+from . import vue
 from .js_style_regex_context import _MARK_CACHE, REGEX_START_MARKER
 from .js_style_regex_forward_scan import mark_forward
 from .javascript_expression import end_before_line_token
@@ -28,10 +29,40 @@ from .typescript import TypeScriptReader
 from .vue import VueReader, _attributes, _SCRIPT_END_LOWERCASE
 
 # In markup: a comment, a start or end tag, or a '{' that opens code.
-_MARKUP_ITEM = re.compile(r'<!--|<(/?)([A-Za-z][^\s/>{]*)|\{')
+# Component names can start with a Unicode letter.
+_MARKUP_ITEM = re.compile(r'<!--|<(/?)([^\W\d_][^\s/>{]*)|\{')
 # In a start tag: an expression, a quoted value, or the end of the tag.
 _TAG_ITEM = re.compile(r'''\{|=\s*(["'])|>''')
 _QUOTED_VALUE_ITEM = {'"': re.compile(r'\{|"'), "'": re.compile(r"\{|'")}
+# Textareas allow expressions, but treat tag and comment starts as text.
+_TEXTAREA_ITEM = re.compile(r'\{|</textarea(?:\s[^>]*)?>', re.I)
+_VOID_ELEMENTS = frozenset((
+    'area', 'base', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input',
+    'keygen', 'link', 'meta', 'param', 'source', 'track', 'wbr',
+))
+# The Svelte parser closes the current HTML element when one of these opens.
+_IMPLICIT_CLOSE = {
+    'li': ('li',),
+    'dt': ('dt', 'dd'),
+    'dd': ('dt', 'dd'),
+    'p': ('address', 'article', 'aside', 'blockquote', 'div', 'dl', 'fieldset',
+          'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header',
+          'hgroup', 'hr', 'main', 'menu', 'nav', 'ol', 'p', 'pre', 'section',
+          'table', 'ul'),
+    'rt': ('rt', 'rp'),
+    'rp': ('rt', 'rp'),
+    'optgroup': ('optgroup',),
+    'option': ('option', 'optgroup'),
+    'thead': ('tbody', 'tfoot'),
+    'tbody': ('tbody', 'tfoot'),
+    'tfoot': ('tbody', 'tfoot'),
+    'tr': ('tr', 'tbody'),
+    'td': ('td', 'th', 'tr'),
+    'th': ('td', 'th', 'tr'),
+}
+# The attributes of root script and style tags contain only text.
+_STATIC_TAG_ITEM = re.compile(r"""=\s*(?:"[^"]*"|'[^']*')|>""")
+_RAW_TAG_WITH_ATTRIBUTES = re.compile(r'<(?:script|style)\s')
 # The head of a block tag. `{/* note */ a}` and `{// note` start code.
 _TAG_HEAD = re.compile(r'\s*([#:@]|/(?![/*]))(else\s+if\b|[\w$]*)')
 # Elements whose content is text, and the tags that end it.
@@ -260,6 +291,96 @@ def _split_at_last(tokens, words):
     return found
 
 
+def _static_tag_end(source, pos, end):
+    for match in _STATIC_TAG_ITEM.finditer(source, pos, end):
+        if match.group() == '>':
+            return match.end()
+    return None
+
+
+def _step_markup_block(parents, head):
+    if not head:
+        return
+    role = head.group(1)
+    if role == '#':
+        parents.append(None)
+    elif role in ':/':
+        while parents and parents[-1] is not None:
+            parents.pop()
+        if role == '/' and parents:
+            parents.pop()
+
+
+def _close_markup_element(parents, name):
+    if parents and (parents[-1] == name or name in parents):
+        while parents.pop() != name:
+            pass
+
+
+def _is_root_element(parents, name):
+    if parents and name in _IMPLICIT_CLOSE.get(parents[-1], ()):
+        parents.pop()
+    return not parents
+
+
+def _svelte_script_blocks(source, end_pattern):
+    """Find scripts in the root fragment, outside elements and blocks."""
+    # pylint: disable=R0912
+    last_script = source.rfind('<script')
+    if last_script < 0:
+        return
+    markup = _MarkupTokens(source, 0, len(source))
+    # A None entry is a Svelte block. A name is a markup element.
+    parents = []
+    pos = 0
+    while True:
+        match = _MARKUP_ITEM.search(source, pos)
+        if match is None or match.start() > last_script:
+            return
+        pos = match.end()
+        name = match.group(2)
+        if match.group() == '<!--':
+            close = source.find('-->', pos)
+            pos = len(source) if close < 0 else close + 3
+        elif name is None:
+            _step_markup_block(parents, _TAG_HEAD.match(source, pos))
+            pos = yield from markup._tag(pos, measure=False)
+            if pos is None:
+                break
+        elif match.group(1):
+            close = source.find('>', pos)
+            pos = len(source) if close < 0 else close + 1
+            _close_markup_element(parents, name)
+        else:
+            root = _is_root_element(parents, name)
+            if root and name in _RAW_TEXT_END:
+                pos = _static_tag_end(source, pos, len(source))
+            else:
+                pos = yield from markup._start_tag(pos, measure=False)
+            if pos is None:
+                break
+            if source[pos - 2:pos] == '/>' or name in _VOID_ELEMENTS:
+                continue
+            if name == 'script' and root:
+                end = vue._script_end(source, pos, end_pattern)
+                yield match.start(), pos, end
+                pos = end
+            elif name in _RAW_TEXT_END:
+                close = _RAW_TEXT_END[name].search(source, pos)
+                pos = len(source) if close is None else close.end()
+            elif name == 'textarea':
+                pos = yield from markup._sequence(pos, _TEXTAREA_ITEM, measure=False)
+                if pos is None:
+                    break
+            else:
+                parents.append(name)
+
+    # An unfinished expression must not hide later script blocks.
+    start = match.start()
+    for tag_start, code_start, end in vue._find_script_blocks(source[start:], end_pattern):
+        yield start + tag_start, start + code_start, start + end
+
+
 class _MarkupTokens:
     """The tokens of the markup between two script blocks."""
     # pylint: disable=R0902,R0903
@@ -280,6 +401,7 @@ class _MarkupTokens:
     def __iter__(self):
         source, end = self.source, self.end
         pos = self.start
+        parents = [] if _RAW_TAG_WITH_ATTRIBUTES.search(source, pos, end) else None
         while True:
             match = _MARKUP_ITEM.search(source, pos, end)
             if match is None:
@@ -290,45 +412,66 @@ class _MarkupTokens:
                 close = source.find('-->', pos, end)
                 pos = end if close < 0 else close + 3
             elif name is None:
+                if parents is not None:
+                    _step_markup_block(parents, _TAG_HEAD.match(source, pos, end))
                 pos = yield from self._tag(pos)
             elif match.group(1):
                 close = source.find('>', pos, end)
                 pos = end if close < 0 else close + 1
+                if parents is not None:
+                    _close_markup_element(parents, name)
             else:
-                pos = yield from self._start_tag(pos)
-                if (name in _RAW_TEXT_END
-                        and source[pos - 2:pos] != '/>'):
+                root = parents is not None and _is_root_element(parents, name)
+                if root and name in _RAW_TEXT_END:
+                    pos = _static_tag_end(source, pos, end) or end
+                else:
+                    pos = yield from self._start_tag(pos)
+                if source[pos - 2:pos] == '/>':
+                    continue
+                if name in _RAW_TEXT_END:
                     close = _RAW_TEXT_END[name].search(source, pos, end)
-                    pos = end if close is None else close.start()
+                    pos = end if close is None else close.end()
+                elif name == 'textarea':
+                    pos = yield from self._sequence(pos, _TEXTAREA_ITEM, measure=True)
+                elif parents is not None and name not in _VOID_ELEMENTS:
+                    parents.append(name)
         yield from self._newlines(end)
         for block in reversed(self.blocks):
             if block != 'key':
                 yield '}'
 
-    def _start_tag(self, pos):
+    def _start_tag(self, pos, measure=True):
         """Reads the expressions of a start tag; returns where it ends."""
         source, end = self.source, self.end
         while True:
             match = _TAG_ITEM.search(source, pos, end)
             if match is None:
-                return end
+                return end if measure else None
             pos = match.end()
             if match.group() == '>':
                 return pos
             if match.group(1):
-                value_item = _QUOTED_VALUE_ITEM[match.group(1)]
-                while True:
-                    match = value_item.search(source, pos, end)
-                    if match is None:
-                        return end
-                    pos = match.end()
-                    if match.group() != '{':
-                        break
-                    pos = yield from self._tag(pos, in_start_tag=True)
+                pattern = _QUOTED_VALUE_ITEM[match.group(1)]
+                pos = yield from self._sequence(pos, pattern, measure)
             else:
-                pos = yield from self._tag(pos, in_start_tag=True)
+                pos = yield from self._tag(pos, in_start_tag=True, measure=measure)
+            if pos is None:
+                return None
 
-    def _tag(self, pos, in_start_tag=False):
+    def _sequence(self, pos, pattern, measure):
+        """Scan text and expressions in one attribute or textarea body."""
+        while True:
+            match = pattern.search(self.source, pos, self.end)
+            if match is None:
+                return self.end if measure else None
+            pos = match.end()
+            if match.group() != '{':
+                return pos
+            pos = yield from self._tag(pos, in_start_tag=True, measure=measure)
+            if pos is None:
+                return None
+
+    def _tag(self, pos, in_start_tag=False, measure=True):
         """Reads the tag in braces that starts before pos; returns where
         it ends. As in the Svelte compiler, a brace that does not close
         holds the rest of the markup."""
@@ -336,10 +479,13 @@ class _MarkupTokens:
         if in_start_tag and head and head.group(1) != '@':
             # An attribute value is an expression: `{/x/.test(a)}`.
             head = None
-        found = self._code_end(head.end() if head else pos)
+        found = self.code_end(head.end() if head else pos)
         if found is None:
-            return self.end
-        close, self.code = found
+            return self.end if measure else None
+        close, code = found
+        if not measure:
+            return close + 1
+        self.code = code
         yield from self._newlines(pos)
         self.tail = []
         if head is None:
@@ -351,7 +497,7 @@ class _MarkupTokens:
         yield from self.tail
         return close + 1
 
-    def _code_end(self, pos):
+    def code_end(self, pos):
         """The '}' that ends the code at pos and the tokens of the code, or
         None. The tokenizer reads up to the guessed end, and then twice as
         much up to the next '}' until a '}' in the text closes the code."""
@@ -599,6 +745,11 @@ class SvelteReader(VueReader):
             self._implied_semicolons = _Statements()
             tokens = self._implied_semicolons.read(tokens, self.context)
         return tokens, self._implied_semicolons
+
+    @classmethod
+    def _read_script_blocks(cls, source):
+        return vue._script_blocks(source, cls._script_end_pattern,
+                                  _svelte_script_blocks)
 
     @staticmethod
     def markup_tokens(source_code, start, end):
