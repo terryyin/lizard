@@ -238,6 +238,55 @@ class Test_Python_fstring_complexity(unittest.TestCase):
         self.assertEqual(['f', 'record', '[', '"value"', ']', ' ', '+', ' ', 'unit'], tokens)
         self.assertEqual([((23, len(source)), source, 0, len(source))], calls)
 
+    def test_custom_token_pattern_keeps_precedence_and_capture_groups(self):
+        from lizard_languages.python import PythonReader
+
+        for source, addition, expected in (
+                ('f"{value}"', r'|f"[^"]*"', ['f"{value}"']),
+                ('cache.cache', r'|(\w+)\.\1', ['cache.cache']),
+                ('kind = "text"', r'|(?P<interpolated>kind)', ['kind', ' ', '=', ' ', '"text"'])):
+            with self.subTest(addition=addition):
+                self.assertEqual(expected, list(PythonReader.generate_tokens(source, addition)))
+
+    def test_token_factory_folds_hash_values_in_source_and_expressions(self):
+        from lizard_languages.python import PythonReader
+
+        def comment_out_debug(match):
+            return '#' if match[0] == 'debug' else match[0]
+
+        for source, expected in (
+                ('debug = 1\nvalue = 2', ['# = 1', '\n', 'value', ' ', '=', ' ', '2']),
+                ('f"{debug + 1}"', ['f', '# + 1'])):
+            with self.subTest(source=source):
+                tokens = list(PythonReader.generate_tokens(source, token_class=comment_out_debug))
+                self.assertEqual(expected, tokens)
+
+    def test_format_hash_flag_leaves_width_visible_to_the_factory(self):
+        from lizard_languages.python import PythonReader
+
+        def rename_width(match):
+            return 'columns' if match[0] == 'width' else match[0]
+
+        tokens = list(PythonReader.generate_tokens('f"{value:#{width}x}"', token_class=rename_width))
+
+        self.assertEqual(['f', 'value', ':', '#', '{', 'columns', '}', 'x'], tokens)
+
+    def test_field_factory_waits_until_the_consumer_advances_past_the_prefix(self):
+        from lizard_languages.python import PythonReader
+
+        calls = []
+
+        def record_value(match):
+            calls.append(match[0])
+            return match[0]
+
+        tokens = iter(PythonReader.generate_tokens('f"{value}"', token_class=record_value))
+
+        self.assertEqual('f', next(tokens))
+        self.assertEqual(['f', '"{value}"'], calls)
+        self.assertEqual(['value'], list(tokens))
+        self.assertEqual(['f', '"{value}"', 'value'], calls)
+
     def test_token_factory_uses_custom_patterns_only_in_the_source_scan(self):
         from lizard_languages.python import PythonReader
 
