@@ -356,6 +356,26 @@ export function* afterInstantiation() {
 '''
         self.assert_functions(source, [('afterInstantiation', 4, 7, 1)], extensions=('ts',))
 
+    def test_call_division_does_not_hide_a_later_commented_regex(self):
+        for operand in ('total()', 'total(value) /* recorded above */'):
+            with self.subTest(operand=operand):
+                source = f'''
+function normalize(value, text) {{
+  return {operand} / 2 + (/* alternate spelling */ /colou?r/.test(text) ? 1 : 0);
+}}
+'''
+                self.assert_functions(source, [('normalize', 2, 4, 2)],
+                                      extensions=('js', 'ts'))
+
+    def test_regex_statement_after_a_control_header(self):
+        source = '''
+function report(text) {
+  if (ready(text)) /colou?r/.test(text) && print(text);
+  return text;
+}
+'''
+        self.assert_functions(source, [('report', 2, 5, 3)], extensions=('js', 'ts'))
+
     def test_delegated_yield_in_a_nested_block_keeps_following_functions(self):
         source = '''\
 function* matches(enabled) {

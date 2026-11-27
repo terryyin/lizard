@@ -35,6 +35,11 @@ _CONTROL_HEADS = frozenset(('if', 'while', 'for', 'with', 'switch', 'catch'))
 _AMBIGUOUS_YIELD = re.compile(rf'(?:\byield\s*\*\s*|>\s*[{_LINE_TERMINATORS}]\s*)yield\b')
 
 
+_AFTER_PAREN = re.compile(r'\)\s*(?:(?:' + _COMMENT.pattern + r')\s*)*/(?![/*])', re.S)
+_PAREN_EVENTS = re.compile(r"""[/()`"']""")
+_CONTROL_HEADERS = frozenset(('if', 'while', 'for', 'with'))
+
+
 class _FunctionScopes:
     """Track yield's function scope while the slash scan skips opaque text."""
 
@@ -119,19 +124,22 @@ def mark_keyword_slashes(source, *, jsx=False):
     # The JSX tokenizer identifies element text after this scan has run.
     comments = None if jsx else {}
     literal_ends = None if jsx else set()
-    generator_events = _GENERATOR_EVENT.search if (
-        not jsx and _AMBIGUOUS_YIELD.search(source) is not None) else None
-    scopes = _FunctionScopes(source) if generator_events else None
+    scan_generators = not jsx and _AMBIGUOUS_YIELD.search(source) is not None
+    scan_parens = not jsx and _AFTER_PAREN.search(source) is not None
+    events = _GENERATOR_EVENT if scan_generators else _PAREN_EVENTS if scan_parens else None
+    scopes = _FunctionScopes(source) if scan_generators else None
+    roles = []
+    closing = None
     n = len(source)
     i = 0
     find = source.find
     while i < n:
-        if generator_events:
-            event = generator_events(source, i)
+        if events:
+            event = events.search(source, i)
             if event is None:
                 break
             i = event.start()
-            if scopes.read(event, comments):
+            if scopes is not None and scopes.read(event, comments):
                 i = event.end()
                 continue
         else:
@@ -144,6 +152,21 @@ def mark_keyword_slashes(source, *, jsx=False):
                 break
             i = min(candidates)
         ch = source[i]
+        if scan_parens and ch == '(':
+            prev, _ = _before_comments(source, _skip_ws_back(source, i - 1), comments)
+            word, before = _word_before(source, prev)
+            control = word in _CONTROL_HEADERS
+            if control:
+                receiver, _ = _before_comments(source, _skip_ws_back(source, before), comments)
+                control = receiver < 0 or source[receiver] not in '.#'
+            roles.append(control)
+            i += 1
+            continue
+        if scan_parens and ch == ')':
+            if roles:
+                closing = i, roles.pop()
+            i += 1
+            continue
         if ch in '(){}[],;':
             i += 1
             continue
@@ -169,7 +192,8 @@ def mark_keyword_slashes(source, *, jsx=False):
             i = _read_comment(source, i, comments)
             continue
         in_generator = scopes is not None and scopes.in_generator()
-        i = _consider_slash(source, i, marks, comments, literal_ends, in_generator=in_generator)
+        i = _consider_slash(
+            source, i, marks, comments, literal_ends, closing, in_generator=in_generator)
     return _apply_marks(source, marks)
 
 
@@ -189,7 +213,7 @@ def _before_comments(source, i, comments):
     return i, line_comment
 
 
-def _consider_slash(source, i, marks, comments, literal_ends, *, in_generator=False):
+def _consider_slash(source, i, marks, comments, literal_ends, closing=None, *, in_generator=False):
     matched = _REGEX_LITERAL_RE.match(source, i)
     if matched is None:
         return i + 1
@@ -207,6 +231,13 @@ def _consider_slash(source, i, marks, comments, literal_ends, *, in_generator=Fa
     if prev < 0 or source[prev] in _EXPRESSION_PUNCTUATION:
         if commented:
             marks.append(i)
+        literal_ends.add(matched.end() - 1)
+        return matched.end()
+    if closing is not None and prev == closing[0]:
+        # A control header starts a statement. A call or group ends an operand.
+        if not closing[1]:
+            return i + 1
+        marks.append(i)
         literal_ends.add(matched.end() - 1)
         return matched.end()
     if prev >= 1 and source[prev] == '>' and source[prev - 1] == '=':
