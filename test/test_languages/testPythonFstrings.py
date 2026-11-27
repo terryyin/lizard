@@ -260,6 +260,23 @@ class Test_Python_fstring_complexity(unittest.TestCase):
             ('value', 'metric', (13, 18), source, 0, len(source)),
         ], calls)
 
+    def test_token_factory_keeps_explicit_quote_pattern(self):
+        from lizard_languages.python import PythonReader
+
+        source = 'f"{value}"'
+        matches = []
+
+        def mark_quote(match):
+            if match.lastgroup == 'quote':
+                matches.append((match.span(), match.string, match.pos, match.endpos))
+                return 'quote'
+            return match.group()
+
+        tokens = list(PythonReader.generate_tokens(source, r'|(?P<quote>")', mark_quote))
+
+        self.assertEqual(['f', 'quote', '{', 'value', '}', 'quote'], tokens)
+        self.assertEqual([((1, 2), source, 0, 10), ((9, 10), source, 0, 10)], matches)
+
     def test_token_factory_transforms_fstring_literal_text(self):
         from lizard_languages.python import PythonReader
 
@@ -296,6 +313,7 @@ class Test_Python_fstring_complexity(unittest.TestCase):
         for source, expected in (
                 ('f"{ready}"', ['prefix', '"{ready}"']),
                 ('r"{ready}"', ['f', 'ready']),
+                ('F"{r\'{ready}\'}"', ['F', 'f', 'ready']),
                 ('F"{f\'{ready}\'}"', ['F', 'prefix', "'{ready}'"])):
             with self.subTest(source=source):
                 tokens = list(PythonReader.generate_tokens(source, token_class=replace_prefix))
