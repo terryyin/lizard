@@ -18,6 +18,28 @@ class TestFunctionExitCount(unittest.TestCase):
         result = get_cpp_function_list_with_extension("int fun(){return 0;return 1;}", ExitCounter())
         self.assertEqual(2, result[0].exit_count)
 
+    def test_iterator_return_members_do_not_count_as_exits(self):
+        examples = [
+            ("cleanup.js", """
+function closeIterator(iterator) {
+    iterator./* Close the iterator. */return();
+    return true;
+}
+"""),
+            ("cleanup.ts", """
+async function closeIterator(iterator?: AsyncIterator<string>) {
+    if (iterator?.return) {
+        await iterator.return?.();
+    }
+}
+"""),
+        ]
+        for filename, source in examples:
+            with self.subTest(filename=filename):
+                analyzer = FileAnalyzer(get_extensions([ExitCounter()]))
+                functions = analyzer.analyze_source_code(filename, source).function_list
+                self.assertEqual([("closeIterator", 1)], [(f.name, f.exit_count) for f in functions])
+
     def test_three_returns_should_count_as_3(self):
         # Using the example from: https://ator1699.home.xs4all.nl/Work/GBS/Doc_and_download/doc/metrics.html#STM19
         code = """
@@ -57,3 +79,24 @@ void f( int a )
     def test_global_code_of_an_empty_file_counts_as_1(self):
         result = FileAnalyzer(get_extensions([ExitCounter(), OutsideCounter()])).analyze_source_code("a.js", "").function_list
         self.assertEqual([("*global*", 1)], [(f.name, f.exit_count) for f in result])
+
+    def test_nested_returns_do_not_change_the_enclosing_return_count(self):
+        code = """
+        function IDs(items) {
+            const pick = (item) => {
+                return item.id;
+            };
+            return items.map(pick);
+        }
+        function displayName(item) {
+            if (!item) {
+                return "Unknown";
+            }
+            const normalize = (name) => name.trim();
+            return normalize(item.name);
+        }
+        """
+        result = get_js_function_list_with_extension(code, ExitCounter())
+        self.assertEqual(
+            [("pick", 1), ("IDs", 1), ("normalize", 1), ("displayName", 2)],
+            [(function.name, function.exit_count) for function in result])
