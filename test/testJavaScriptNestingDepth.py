@@ -111,7 +111,7 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
         """, "rows"))
 
     def test_logical_operators_in_parentheses_after_a_member(self):
-        self.assertEqual(1, self.nesting_depth("""
+        self.assertEqual(0, self.nesting_depth("""
         function ready(config, user, flag) {
           const enabled = (config.on && user && flag);
           return enabled;

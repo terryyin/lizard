@@ -76,7 +76,7 @@ Delivered: `test/testNestingDepth.py` (180 lines: helpers and C++ structure test
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 Proof: see the table. Run the full `pytest` suite and `make`.
 
@@ -90,6 +90,10 @@ Behavior: a function with `&&`/`||` in a condition or in a plain expression, in 
 | Groovy follows the same rule | A Groovy test asserts that `if (a && b)` in a loop has the same ND as `if (a)`. |
 | NS is unchanged | A CLI test with `-END -ENS` on the #693 functions asserts NS 2 for both. Existing NS tests pass unchanged. |
 | Release note | `CHANGELOG.md` has the `## Unreleased` entry. `python setup.py --version` still prints `1.26.1`. |
+
+Delivered: `lizardnd.py` lost the `&&`/`||` branch and its `in_condition`/`logical_operator_added` state. `&&`/`||` left the default `loops` and `GroovyReader.loops`. In the refactor pass, `close_condition` absorbed `decrement_condition_depth`, and the unused `increment_condition_depth` was removed. Five new tests in `test/testNestingDepthLogicalOperators.py` cover #693, the operator outside a condition, mixed operators, Groovy, and CLI NS. They failed before the change (#693 gave 3). After the change, the four counting tests and the three tests from slice 1's learning moved to the depth of their structures alone. Proof on the final candidate: `make` exited 0 with 4099 passed and 7 skipped. pycodestyle was clean, and pylint reported nothing new. `setup.py --version` gave 1.26.1.
+
+Known gap: no end-to-end `-N` warning test with `&&`. The threshold reads `max_nesting_depth`, which the new tests prove.
 
 ## Plan review
 
