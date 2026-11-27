@@ -2,7 +2,7 @@
 
 from re import Match
 
-from .token_pattern import compiled_token_pattern, tokens_in_span
+from .token_pattern import compiled_token_pattern, fold_token_stream, tokens_in_span
 
 
 class FStringExpressionToken(str):
@@ -29,8 +29,8 @@ _PY_TRIPLE_QUOTE = (
 # str/bytes f-string prefixes (any case). Excludes bare b/rb (not f-strings).
 _FSTRING_PREFIXES = frozenset(('f', 'rf', 'fr', 'bf', 'fb'))
 # All string prefixes (any case), which the tokenizer emits apart from the string.
-_STRING_PREFIXES = _FSTRING_PREFIXES | frozenset((
-    'r', 'u', 'b', 't', 'br', 'rb', 'tr', 'rt'))
+_INTERPOLATED_PREFIXES = _FSTRING_PREFIXES | frozenset(('t', 'tr', 'rt'))
+_STRING_PREFIXES = _INTERPOLATED_PREFIXES | frozenset(('r', 'u', 'b', 'br', 'rb'))
 
 
 # Match at the start of a word token, before the common pattern reads \w+.
@@ -41,15 +41,19 @@ _CLOSERS = {'(': ')', '[': ']', '{': '}'}
 
 
 def generate_tokens(source_code, addition='', token_class=None, *, interpolate=True):
+    if interpolate and not addition and token_class is None:
+        pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _CRLF_JOIN)
+        return _mark_prefixed_strings(_source_tokens(source_code, pattern))
+
+    pattern = compiled_token_pattern(_PY_ADDITION + addition)
     if not interpolate:
-        pattern = compiled_token_pattern(_PY_ADDITION + addition)
         return _mark_prefixed_strings(
             tokens_in_span(pattern, source_code, 0, len(source_code), token_class))
-    if token_class is not None:
-        pattern = compiled_token_pattern(_PY_ADDITION + addition)
-        return _mark_prefixed_strings(_source_factory_tokens(source_code, pattern, token_class))
-    pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _CRLF_JOIN + addition)
-    return _mark_prefixed_strings(_source_tokens(source_code, pattern))
+
+    field_pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _CRLF_JOIN)
+    scanner = (field_pattern, token_class)
+    values = _source_hook_values(source_code, pattern, scanner)
+    return _mark_prefixed_strings(fold_token_stream(values, _identity), scanner)
 
 
 def _source_tokens(source, pattern):
@@ -73,41 +77,55 @@ def _source_tokens(source, pattern):
             return
 
 
-def _source_factory_tokens(source, pattern, token_class):
-    field_pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _CRLF_JOIN)
+def _source_hook_values(source, pattern, scanner):
+    field_pattern, token_class = scanner
+    original_factory = Match.group if token_class is None else token_class
+    factory = original_factory
     start = 0
-    factory = token_class
     while True:
         matches = pattern.finditer(source, start)
         for match in matches:
             value = factory(match)
-            if isinstance(value, str) and source[match.end():match.end() + 1] in ('"', "'"):
-                string = _read_factory_string(
-                    source, match.end(), value.lower(), (field_pattern, factory), matches)
-                if string is not None:
-                    start, parts, matched_quote = string
-                    yield value
-                    yield from parts
-                    if matched_quote:
-                        continue
-                    # Only a corrected quote boundary needs a new scan.
-                    if factory is token_class:
-                        factory = _factory_with_original_matches(source, matches, token_class)
-                    break
             yield value
+            prefix = value.lower() if isinstance(value, str) else None
+            if prefix not in _INTERPOLATED_PREFIXES:
+                continue
+            quote_start = match.end()
+            if source[quote_start:quote_start + 1] not in ('"', "'"):
+                continue
+            raw = _read_string(source, quote_start, prefix, (field_pattern, None))
+            if raw is None:
+                continue
+
+            end, _ = raw
+            quoted = next(matches)
+            if (quoted.span() != (quote_start, end) and
+                    field_pattern.match(source, quote_start).end() != end):
+                # Resume the regex scan only when the lexer corrects a quote boundary.
+                yield source[quote_start:end]
+                if factory is original_factory:
+                    factory = _factory_with_original_matches(source, matches, original_factory)
+                start = end
+                break
+            yield factory(quoted)
         else:
             return
 
 
-def _mark_prefixed_strings(tokens):
+def _mark_prefixed_strings(tokens, scanner=None):
     """Keep the prefix and the string as separate tokens."""
     prefix = None
     for token in tokens:
         if prefix is not None:
-            yield prefix
-            prefix = None
+            held, prefix = prefix, None
+            yield held
             if isinstance(token, str) and token[:1] in ('"', "'") and not isinstance(
                     token, (FStringExpressionToken, FStringLiteralToken, PrefixedStringToken)):
+                if scanner is not None and held.lower() in _INTERPOLATED_PREFIXES:
+                    string = _read_string(token, 0, held.lower(), scanner)
+                    if string is not None and string[0] == len(token):
+                        yield from string[1]
+                        continue
                 yield PrefixedStringToken(token)
                 continue
         if (isinstance(token, str) and token.lower() in _STRING_PREFIXES and
@@ -119,28 +137,8 @@ def _mark_prefixed_strings(tokens):
         yield prefix
 
 
-def _read_factory_string(source, start, prefix, scanner, matches=None):
-    if prefix not in _FSTRING_PREFIXES and prefix not in ('t', 'tr', 'rt'):
-        return None
-    pattern, token_class = scanner
-    raw = _read_string(source, start, prefix, (pattern, None))
-    if raw is None:
-        return None
-    end, _ = raw
-    match = pattern.match(source, start) if matches is None else next(matches)
-    if match.span() != (start, end):
-        # Keep an explicit addition's match when the built-in regex agrees with the lexer.
-        if matches is None or pattern.match(source, start).end() != end:
-            _, parts = _read_string(source, start, prefix, scanner)
-            return end, parts, False
-        end = match.end()
-    # The original factory also transformed the complete quoted token.
-    text = token_class(match)
-    if isinstance(text, str) and text[:1] in ('"', "'"):
-        cooked = _read_string(text, 0, prefix, scanner)
-        if cooked is not None and cooked[0] == len(text):
-            return end, cooked[1], True
-    return end, [text], True
+def _identity(token):
+    return token
 
 
 def _read_string(source, start, prefix, scanner):
@@ -251,14 +249,20 @@ def _field_parts(parts, source, start, end, scanner):
     field = source[start:end]
     original_pattern = compiled_token_pattern(_PY_ADDITION)
     field_factory = _factory_with_original_matches(field, original_pattern.finditer(field), token_class)
-    field_scanner = pattern, field_factory
+    values = _field_factory_values(parts, field, start, (pattern, field_factory))
+    tokens = fold_token_stream(values, _identity, is_macro_hash=_starts_factory_macro)
+    return _mark_prefixed_strings(tokens, scanner)
+
+
+def _field_factory_values(parts, field, start, scanner):
+    pattern, token_class = scanner
     for part in parts:
         if isinstance(part, Match):
-            yield field_factory(pattern.match(field, part.start() - start))
+            yield token_class(pattern.match(field, part.start() - start))
         elif isinstance(part, _NestedFactoryString):
-            yield from part.render(field, start, field_scanner)
+            yield from part.render(field, start, scanner)
         else:
-            yield from _format_factory_tokens(field, part.start - start, part.stop - start, field_scanner)
+            yield from _format_factory_tokens(field, part.start - start, part.stop - start, scanner)
 
 
 def _factory_with_original_matches(source, matches, token_class):
@@ -287,9 +291,24 @@ def _format_factory_tokens(field, start, end, scanner):
             for bounded in pattern.finditer(field, match.start(), end):
                 if bounded.start() == end:
                     return
-                yield token_class(bounded)
+                yield _format_factory_value(bounded, token_class)
             return
-        yield token_class(match)
+        yield _format_factory_value(match, token_class)
+
+
+def _format_factory_value(match, token_class):
+    token = token_class(match)
+    if token == '#' and match.group().startswith('#'):
+        return _FormatHash(token)
+    return token
+
+
+def _starts_factory_macro(token):
+    return not isinstance(token, _FormatHash)
+
+
+class _FormatHash(str):
+    """A raw format flag that does not start a comment."""
 
 
 class _NestedFactoryString:
@@ -302,15 +321,13 @@ class _NestedFactoryString:
     def render(self, field, start, scanner):
         pattern, token_class = scanner
         end = self.end - start
-        prefix_match = pattern.match(field, self.start - start)
-        prefix = token_class(prefix_match)
-        yield prefix
-        if isinstance(prefix, str):
-            result = _read_factory_string(field, prefix_match.end(), prefix.lower(), scanner)
-            if result is not None and result[0] == end:
-                yield from result[1]
-                return
-        yield from tokens_in_span(pattern, field, prefix_match.end(), end, token_class)
+        prefix = pattern.match(field, self.start - start)
+        yield token_class(prefix)
+        quoted = pattern.match(field, prefix.end())
+        if quoted.end() == end:
+            yield token_class(quoted)
+        else:
+            yield field[prefix.end():end]
 
 
 def _read_format(source, delimiter, quote, raw, scanner):
