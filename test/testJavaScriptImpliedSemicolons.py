@@ -29,6 +29,48 @@ class TestImpliedSemicolonsOfOneFile(unittest.TestCase):
         self.assertEqual(ends, first.ends)
         self.assertEqual(ends, second.ends)
 
+    def test_class_expression_can_end_a_braceless_body(self):
+        source = """\
+function setup(config, install, start) {
+  if (install) config.factory = () => class Session {}
+  if (start) config.run()
+}
+function choose(config, install, start) {
+  if (install) config.Entry = class Session {}
+  if (start) config.run()
+}
+function declaration(config) {
+  class Session {}
+  if (config.open) config.open()
+}
+function continueExpression(config) {
+  if (config.install) config.Entry = class Session {}
+    .prototype
+  if (config.open) config.open()
+}
+"""
+        for filename in ('session.js', 'session.ts'):
+            with self.subTest(filename=filename):
+                boundary = StatementEnds()
+                analyzer = FileAnalyzer(get_extensions([boundary, 'nd']))
+                functions = analyzer.analyze_source_code(filename, source).function_list
+                self.assertEqual([3, 7, 16],
+                                 [line for token, line in boundary.ends if token == 'if'])
+                self.assertEqual(1, next(f.max_nesting_depth for f in functions
+                                         if f.name == 'setup'))
+
+    def test_base_class_brace_does_not_end_the_derived_class_expression(self):
+        source = """\
+function setup(config, install, start) {
+  if (install) config.factory = () => class Session extends class Parent {}
+  {}
+  if (start) config.run()
+}
+"""
+        boundary = StatementEnds()
+        FileAnalyzer(get_extensions([boundary])).analyze_source_code('session.js', source)
+        self.assertNotIn(('{', 3), boundary.ends)
+
     def test_nesting_depth_and_nested_structures_together(self):
         for extensions in (['nd', 'ns'], ['ns', 'nd']):
             functions = FileAnalyzer(get_extensions(extensions)) \
@@ -142,7 +184,7 @@ class TestImpliedSemicolonsOfOneFile(unittest.TestCase):
                 extension = StatementEnds()
                 FileAnalyzer(get_extensions([extension])).analyze_source_code(
                     filename, code)
-                self.assertNotIn(('if', 4), extension.ends)
+                self.assertIn(('if', 4), extension.ends)
 
     def test_each_file_gets_its_own_finder(self):
         extension = StatementEnds()

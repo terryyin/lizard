@@ -136,6 +136,8 @@ class TypeScriptDeclarationsMixin:
         if token == 'abstract' and self.as_object:
             self._in_abstract_context = True
             return True
+        if token == 'class' and self._class_body_pending:
+            self._remember_class_role()
         return False
 
     def _assertion_operand(self):
