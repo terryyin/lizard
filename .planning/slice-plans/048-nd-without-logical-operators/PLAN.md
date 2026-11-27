@@ -42,11 +42,18 @@ Observed in this preparation workspace on 2026-11-27 at `bc4ebc01`, under `nix -
 
 Type: Structure
 
-Status: planned
+Status: done
 
 Proof: on current code, the rewritten tests pass with their original expected ND. With the scratch `pass` edit from the premises applied, none of them fails. Revert the scratch edit before committing.
 
 Change: among the 20 consumers, find each test whose promise is a statement or structure boundary, a member name, or an arrow body rather than logical-operator counting. Replace its `&&`/`||` probe with a ternary `?` or a control structure that gives the same depth. Do not change the expected value. This enables slice 2: after slice 1, the only tests that slice 2 changes are tests about logical-operator counting.
+
+Delivered: 12 tests now probe with a ternary (11 in `test/testNestingDepth.py`, with `test_statements_with_logical_operators` renamed `test_statements_with_conditional_expressions`, plus `test_js_yaml_handle_yaml_directive_shape`). Proof: with the scratch `pass` edit, 8 failed and 4086 passed, and none of the 8 was rewritten. Without it, the full suite passed (4094 passed, 7 skipped).
+
+Learning for slice 2: 8 consumers remain, not 5. Besides the five C++ counting tests, these change only their ND, from 1 to 0, and keep their other promise:
+
+- `test_logical_operators_in_parentheses_after_a_member`: its promise is operator counting inside one parenthesis. At ND 0 it still shows the parenthesis after a member opens nothing.
+- `testJavaScript.py::test_key_named_like_a_keyword_is_no_structure` and `testPHPMemberNames.py::test_comparison_after_a_member_named_function`: each asserts a full tuple, including a `&&` complex tag, so swapping the probe would change other values.
 
 ### 2. `&&` and `||` add no nesting depth
 

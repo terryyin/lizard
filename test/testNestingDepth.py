@@ -71,14 +71,14 @@ class TestCppNestingDepth(unittest.TestCase):
     def test_one_function_nd_with_nested_loop_statement_plus_curly_brackets(self):
         result = get_cpp_with_nestdepth("""
         x c() {
-          if (a && b) {
+          if (a ? b : c) {
             if( a != 0 ){
                 a = b;
             }
           }
         }
         x a() {
-          if (a && b){
+          if (a ? b : c){
             if( a != 0 )
                 a = b;
           }
@@ -89,14 +89,14 @@ class TestCppNestingDepth(unittest.TestCase):
     def test_one_function_nd_with_nested_loop_statement_minus_curly_brackets(self):
         result = get_cpp_with_nestdepth("""
         x c() {
-          if (a && b) {
+          if (a ? b : c) {
             if( a != 0 ){
                 a = b;
             }
           }
         }
         x a() {
-          if (a && b){
+          if (a ? b : c){
             if( a != 0 )
                 a = b;
           }
@@ -107,12 +107,12 @@ class TestCppNestingDepth(unittest.TestCase):
     def test_one_function_nd_with_nested_loop_statement_mixed_curly_brackets(self):
         result = get_cpp_with_nestdepth("""
         x c() {
-          if (a && b) {
+          if (a ? b : c) {
             if(a != 0){
                 a = b;
             }
           }
-          if (a && b){
+          if (a ? b : c){
             if(a != 0)
                 a = b;
           }
@@ -350,7 +350,7 @@ class TestJavaScriptNestingDepth(unittest.TestCase):
         result = FileAnalyzer(get_extensions([NestDepth()])).analyze_source_code(
             "a.js", """
         function bind(model, ready) {
-          const set = value => model.value = (value) && ready(value);
+          const set = value => model.value = (value) ? ready(value) : null;
           return set;
         }
         """).function_list
@@ -411,12 +411,12 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         }
         """))
 
-    def test_statements_with_logical_operators(self):
+    def test_statements_with_conditional_expressions(self):
         self.assertEqual(1, self.nesting_depth("""
         function settings(user, team) {
-          const theme = user.theme || team.theme
-          const locale = user.locale || team.locale
-          const admin = user.admin && team.active
+          const theme = user.theme ? user.theme : team.theme
+          const locale = user.locale ? user.locale : team.locale
+          const admin = user.admin ? team.active : false
           return { theme, locale, admin }
         }
         """))
@@ -490,7 +490,7 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         self.assertEqual(2, self.nesting_depth("""
         function price(order, member) {
           if (order.paid) var
-            discount = member && order.coupon;
+            discount = member ? order.coupon : 0;
           return discount;
         }
         """))
@@ -552,7 +552,7 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         self.assertEqual(2, self.nesting_depth("""
         function hidden(item, user) {
           if (item.draft) return !
-            user.admin && item.locked;
+            user.admin ? item.locked : false;
           return false;
         }
         """))
@@ -584,7 +584,7 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
     def test_object_literals_stay_in_their_statement(self):
         self.assertEqual(2, self.nesting_depth("""
         function flags(user, post) {
-          return [{ ok: user.admin && user.active }, { ok: post.open && post.shared }];
+          return [{ ok: user.admin ? user.active : false }, { ok: post.open ? post.shared : false }];
         }
         """))
 
@@ -607,8 +607,8 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
     def test_member_access_continues_a_function_expression(self):
         self.assertEqual(2, self.nesting_depth("""
         function configure(options) {
-          const resolve = options.resolve || function () { return this.ready }
-            .bind(options) || options.defaultResolve
+          const resolve = options.resolve ? function () { return this.ready }
+            .bind(options) : options.fallback ? options.defaultResolve : null
           if (options.debug) log(resolve)
         }
         """, function_index=-1))
@@ -634,7 +634,7 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
         self.assertEqual(2, self.nesting_depth("""
         function above(value: unknown, limit: number, strict: boolean) {
           if (strict) return value as number >
-            limit && strict;
+            limit ? strict : false;
           return false;
         }
         """, "a.ts"))
@@ -697,7 +697,7 @@ class TestJavaScriptNestingDepthWithoutSemicolons(unittest.TestCase):
     def test_object_in_an_optional_computed_member_stays_an_object(self):
         self.assertEqual(2, self.nesting_depth("""
         function label(user) {
-          return user?.[{ id: user && 1 }, user && 'name']
+          return user?.[{ id: user ? 1 : 0 }, user ? 'name' : 'id']
         }
         """))
 
