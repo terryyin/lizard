@@ -2,11 +2,13 @@
 
 from .cognitive_actions import _BraceActions
 from .cognitive_counter import (
-    BODY, BODY_PENDING, BRACE_HEAD, HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE)
+    BODY, BODY_PENDING, BRACE_HEAD, PAREN_HEAD, _Counter, _Frame, _IF_LIKE,
+    _ROUTED_ATTRIBUTE_END)
+from .cognitive_heads import _BraceHeads
 from .cognitive_profile import _EXPRESSION_BREAKERS, _LAMBDA_TRIGGERS, _is_word
 
 
-class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
+class _BraceCounter(_BraceActions, _BraceHeads, _Counter):  # pylint: disable=R0904
     """Nesting from braces, parentheses and semicolons (C-like languages).
 
     A structure is a frame: its *head* (``if (...)``) is followed by a body
@@ -23,6 +25,11 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             self._process = self._process_flat
 
     def _process(self, token):  # pylint: disable=E0202
+        if token is _ROUTED_ATTRIBUTE_END:
+            top = self._top_structure()
+            if top is not None and top.phase in (PAREN_HEAD, BRACE_HEAD):
+                self._in_head_expression(top, token)
+            return
         if token == '?' and getattr(token, 'is_optional', False):
             return
         state = self.state
@@ -51,8 +58,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             self._logical_operator(token)
         elif token in _EXPRESSION_BREAKERS:
             state.logical.pop(state.pdepth, None)
-            if token == ',':
-                self._pop_expression_frames(peer_comma=True)
         if token in ('(', '['):
             self._open_bracket()
         elif token in (')', ']'):
@@ -68,6 +73,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
             if top is not None and top.phase != BODY and \
                     self._in_head(top, token):
                 return
+        if token == ',':
+            self._pop_expression_frames(peer_separator=True)
         action = self.actions.get(token)
         if action is not None and \
                 not getattr(token, 'is_member_name', False):
@@ -84,6 +91,8 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         if state.frames and not state.frames[-1].closing:
             top = state.frames[-1]
             if top.phase == BODY and not top.braced:
+                if top.kind == 'ternary' and self._head_phase(BRACE_HEAD):
+                    return
                 self._statement_end()
 
     def _top_structure(self):
@@ -92,27 +101,42 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
                 return frame
         return None
 
-    def _pop_expression_frames(self, peer_comma=False):
-        """Ternary operators end with their enclosing brackets or a peer comma.
+    def _head_phase(self, *phases):
+        top = self._top_structure()
+        return top is not None and top.phase in phases
 
-        A ``,`` at the same bracket depth as an open ternary ends that
-        ternary so the next one in the list is a sibling, not nested.
-        """
-        frames = self.state.frames
-        pdepth = self.state.pdepth
+    def _start_ternary(self):
+        if self._head_phase(PAREN_HEAD, BRACE_HEAD):
+            # The header's structure only adds to nesting once its body begins.
+            self._add(len(self.state.frames))
+        else:
+            self._structural()
+        self._push('ternary', BODY)
+
+    def _pop_expression_frames(self, peer_separator=False, same_brace=False):
+        """End ternaries at a closing bracket or a separator at their depth."""
+        state = self.state
+        frames = state.frames
         while frames and frames[-1].kind == 'ternary':
-            open_depth = frames[-1].pdepth
-            if open_depth > pdepth or (peer_comma and open_depth == pdepth):
+            frame = frames[-1]
+            if same_brace and frame.depth != state.depth:
+                break
+            if frame.pdepth > state.pdepth or (
+                    peer_separator and frame.pdepth == state.pdepth):
                 frames.pop()
             else:
                 break
 
-    def _statement_end(self):
-        """A ';' at bracket depth 0 finishes the braceless bodies around it."""
-        state = self.state
-        frames = state.frames
+    def _pop_ternaries(self):
+        frames = self.state.frames
         while frames and frames[-1].kind == 'ternary':
             frames.pop()
+
+    def _statement_end(self):
+        """A ';' at bracket depth 0 finishes the braceless bodies around it."""
+        self._pop_ternaries()
+        state = self.state
+        frames = state.frames
         for frame in reversed(frames):
             if frame.braced or frame.depth != state.depth or \
                     frame.phase not in (BODY_PENDING, BODY):
@@ -188,51 +212,6 @@ class _BraceCounter(_BraceActions, _Counter):  # pylint: disable=R0904
         top = self._top_structure()
         return (top is not None and top.kind == 'switch' and
                 top.phase == BODY and top.depth == self.state.depth)
-
-    # -- structure heads and bodies ---------------------------------------------
-
-    def _in_head(self, top, token):
-        """Advance the head of the innermost structure; True if consumed."""
-        state = self.state
-        if top.phase == BODY_PENDING:
-            return self._start_body(top, token)
-        if top.phase == HEAD:
-            if token == '(':
-                top.phase = PAREN_HEAD
-                top.pdepth = state.pdepth - 1
-            elif token == '{' and state.pdepth == top.pdepth:
-                self._open_braced_body(top)
-            elif not self.profile.paren_heads:
-                top.phase = BRACE_HEAD
-            return True
-        if top.phase == PAREN_HEAD:
-            if token == ')' and state.pdepth == top.pdepth:
-                top.phase = BODY_PENDING
-            return True
-        # BRACE_HEAD: Go / Rust / Swift ``if a && b {``
-        if token == '{' and state.pdepth == top.pdepth:
-            self._open_braced_body(top)
-        return True
-
-    def _start_body(self, top, token):
-        if token == '{':
-            self._open_braced_body(top)
-            return True
-        if top.kind == 'else' and token in self.profile.ifs:
-            top.kind = 'else if'        # hybrid: already counted, no penalty
-            top.phase = HEAD
-            top.pdepth = self.state.pdepth
-            return True
-        top.phase = BODY
-        top.braced = False
-        top.depth = self.state.depth
-        return False
-
-    def _open_braced_body(self, frame):
-        self.state.depth += 1
-        frame.phase = BODY
-        frame.braced = True
-        frame.depth = self.state.depth
 
     def _push(self, kind, phase):
         state = self.state

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-075#kotlin-adjacent-nested-comments",
+  "title": "Resume Kotlin tokenization after each complete block comment",
+  "completedAt": "2026-11-26T10:04:47.535Z",
+  "developer": "Terry Yin",
+  "agent": "Nana-chan",
+  "host": "codex",
+  "model": "gpt-6.2-sol"
+}

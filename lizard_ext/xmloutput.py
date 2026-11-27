@@ -46,13 +46,13 @@ def _create_function_measure(doc, result, verbose):
                     _create_function_item(
                         doc, number, file_name, func, verbose))
 
-            if number != 0:
-                measure.appendChild(
-                    _create_labeled_value_item(
-                        doc, 'average', "NCSS", str(total_func_ncss / number)))
-                measure.appendChild(
-                    _create_labeled_value_item(
-                        doc, 'average', "CCN", str(total_func_ccn / number)))
+    if number != 0:
+        measure.appendChild(
+            _create_labeled_value_item(
+                doc, 'average', "NCSS", str(total_func_ncss / number)))
+        measure.appendChild(
+            _create_labeled_value_item(
+                doc, 'average', "CCN", str(total_func_ccn / number)))
     return measure
 
 

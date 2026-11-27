@@ -2,6 +2,8 @@ __author__ = 'David Baum'
 
 import unittest
 from lizard import analyze_file, FileAnalyzer, get_extensions
+from lizard_core.file_info_builder import FileInfoBuilder
+from lizard_languages.scala import ScalaReader
 
 
 def get_scala_function_list(source_code):
@@ -65,6 +67,54 @@ class TestScala(unittest.TestCase):
             }''')
         self.assertEqual(1, result[0].parameter_count)
         self.assertEqual(5, result[0].cyclomatic_complexity)
+
+    def test_question_marks_do_not_count_as_conditions(self):
+        analyzer = FileAnalyzer(get_extensions(['ND', 'cognitive']))
+        result = analyzer.analyze_source_code("requests.scala", '''
+            object Requests {
+              final class Worker {
+                def ?(message: String): String = message
+              }
+              def ask(worker: Worker, message: String): String = worker ? message
+              def planned(): String = ???
+              def size(items: List[?]): Int = items.size
+            }
+            ''').function_list
+        self.assertEqual([('?', 1, 0, 0), ('ask', 1, 0, 0),
+                          ('planned', 1, 0, 0), ('size', 1, 0, 0)],
+                         [(f.name, f.cyclomatic_complexity,
+                           f.max_nesting_depth, f.cognitive_complexity) for f in result])
+
+    def test_preprocessing_preserves_positioned_tokens(self):
+        class PositionedToken(str):
+            def __new__(cls, match):
+                token = super().__new__(cls, match.group())
+                token.offset = match.start()
+                return token
+
+        source = "def ask(worker: Worker) = worker ? 42"
+        reader = ScalaReader(FileInfoBuilder("requests.scala"))
+        tokens = list(reader.generate_tokens(source, token_class=PositionedToken))
+        positioned_question = next(token for token in tokens if token == '?')
+
+        result = list(reader.preprocess(iter(tokens)))
+        question = next(token for token in result if token == '?')
+
+        self.assertIs(question, positioned_question)
+        self.assertEqual(source.index('?'), question.offset)
+
+    def test_placeholder_is_the_body_of_an_if(self):
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        result = analyzer.analyze_source_code("guard.scala", '''
+            object Guard {
+              def check(requireSetup: Boolean, notify: Boolean): Unit = {
+                if (requireSetup) ???
+                if (notify) println("ready")
+              }
+            }
+            ''').function_list
+        self.assertEqual([('check', 3, 2)],
+                         [(f.name, f.cyclomatic_complexity, f.cognitive_complexity) for f in result])
 
     def test_comments(self):
         result = get_scala_function_list('''

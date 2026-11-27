@@ -48,7 +48,6 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     FUNCTION_INFO = {"max_nested_structures": {"caption": "  NS  "}}
 
-    # TODO: Delegate this to language readers  # pylint: disable=fixme
     structures = set(['if', 'else', 'elif', 'for', 'foreach', 'while',
                       'do', 'try', 'catch', 'switch', 'finally',
                       'except', 'with'])
@@ -68,9 +67,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def __init__(self):
         super(LizardExtension, self).__init__(None)
         self.structure_piles = [0]  # Invariant: must always have at least one element
-        # The tokens that _state_global reads; it skips the others.
-        self._global_tokens = frozenset(self.structures) | frozenset((
-            '{', ';', '}', 'else', '.', '?.'))
+        self._set_structure_keywords(self.structures)
 
     def __call__(self, tokens, reader=None):
         if 'python' in getattr(reader, 'language_names', ()):
@@ -82,6 +79,16 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def _start_file(self, reader):
         super(LizardExtension, self)._start_file(reader)
         self.structure_piles = [0]
+        structures = getattr(reader, 'nested_structure_keywords', self.structures)
+        if structures is not self._structure_keywords:
+            self._set_structure_keywords(structures)
+
+    def _set_structure_keywords(self, structures):
+        self._structure_keywords = structures
+        self._matching_structure_keywords = self.matching_structures & structures
+        # The tokens that _state_global reads; it skips the others.
+        self._global_tokens = frozenset(structures) | frozenset((
+            '{', ';', '}', 'else', '.', '?.'))
 
     def _unterminated_statements(self, tokens, reader):
         """JavaScript ends a statement without a ';' too: read a ';'
@@ -190,7 +197,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
             if token == '}':
                 self._pop_scope()
             self._state = self._block_ending
-        elif token in self.structures:
+        elif token in self._structure_keywords:
             if getattr(token, 'is_member_name', False):
                 pass                    # member/method name like catch or if
             elif token == 'else':
@@ -203,7 +210,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
     def _member_name(self, token):
         """A member named like a structure, promise.catch(f), is not one."""
         self._state = self._state_global
-        if token not in self.structures:
+        if token not in self._structure_keywords:
             self._state(token)
 
     def _after_else(self, token):
@@ -220,7 +227,7 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
 
     def _block_ending(self, token):
         # `} finally(e) {` in a class starts a method, not a clause.
-        decrement = (token in self.matching_structures
+        decrement = (token in self._matching_structure_keywords
                      and not getattr(token, 'is_member_name', False))
         self._reset_or_decrement_current_scope(decrement=decrement)
         self._state = self._state_global

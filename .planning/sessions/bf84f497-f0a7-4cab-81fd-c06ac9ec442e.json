@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "sessionId": "bf84f497-f0a7-4cab-81fd-c06ac9ec442e",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-26T14:39:46.939Z",
+  "story": "SEED-075#plsql-nonstrict-case",
+  "ranges": [
+    {
+      "base": "aec8a87d1af09b0f255c704927e5434b97e945ae",
+      "candidate": "3eb7f65df7edd69520bcf9c35751cb261eeebd20"
+    },
+    {
+      "base": "3eb7f65df7edd69520bcf9c35751cb261eeebd20",
+      "candidate": "34a6d19581b5654b46875babb72169cf1e808899"
+    },
+    {
+      "base": "34a6d19581b5654b46875babb72169cf1e808899",
+      "candidate": "bab071272f1f0b6565c8adf9e9a2bc2a6d6cc6a3"
+    },
+    {
+      "base": "bab071272f1f0b6565c8adf9e9a2bc2a6d6cc6a3",
+      "candidate": "9c2b6587908802c9c9136abc9e72d30d1a5db1f2"
+    }
+  ]
+}

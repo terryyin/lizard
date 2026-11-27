@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-075#r-raw-literal-delimiters",
+  "title": "Keep valid R raw-string delimiter forms opaque",
+  "completedAt": "2026-11-26T11:05:38.066Z",
+  "developer": "Terry Yin",
+  "agent": "Anri-chan",
+  "host": "cursor",
+  "model": "grok-4.7"
+}

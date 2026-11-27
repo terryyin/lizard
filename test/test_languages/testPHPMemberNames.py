@@ -77,7 +77,7 @@ class Promise {
 
     def test_comparison_after_a_member_named_function(self):
         self.assertEqual(
-            [('limit', 3, 2, 1, 0, [['&&', 3], ['match', 3]])],
+            [('limit', 3, 2, 0, 0, [['&&', 3], ['match', 3]])],
             php_metrics("""<?php
 function limit($options, $x) {
     return $options->/* legacy */function < 1 && $x > match ($x) {

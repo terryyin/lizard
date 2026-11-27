@@ -121,6 +121,37 @@ class Test_Python_function_structure(unittest.TestCase):
         self.assertEqual(2, functions[1].max_nesting_depth)
         # will be fixed, should be equal to 1
 
+    def test_deeply_nested_function_uses_each_enclosing_name_once(self):
+        functions = get_python_function_list("""
+def recursive_repr(fillvalue='...'):
+    def decorating_function(user_function):
+        def wrapper(self):
+            return user_function(self)
+        return wrapper
+    return decorating_function
+""")
+        self.assertEqual(
+            ['recursive_repr.decorating_function.wrapper',
+             'recursive_repr.decorating_function', 'recursive_repr'],
+            [f.name for f in functions])
+        self.assertEqual('recursive_repr.decorating_function.wrapper( self )',
+                         functions[0].long_name)
+
+    def test_nested_function_name_after_explicit_line_join(self):
+        functions = get_python_function_list(r"""
+def normalize_message(prefix):
+    def with_suffix(suffix):
+        def \
+            normalize(value):
+            return prefix + value + suffix
+        return normalize
+    return with_suffix
+""")
+        self.assertEqual(
+            ['normalize_message.with_suffix.normalize',
+             'normalize_message.with_suffix', 'normalize_message'],
+            [f.name for f in functions])
+
     def test_nested_functions_ended_at_eof(self):
         class namespace6:
             def function1(a, b):

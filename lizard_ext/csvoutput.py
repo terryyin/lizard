@@ -17,6 +17,11 @@ due to the nature of CSV outputs. The differences are:
 """
 
 
+def _quoted(text):
+    """A CSV text field: quoted, with each embedded quote doubled."""
+    return '"' + text.replace('"', '""') + '"'
+
+
 def _extension_columns(extensions):
     """Collect FUNCTION_INFO field names and captions, in extension order."""
     variables = []
@@ -47,19 +52,18 @@ def csv_output(result, options):
         for source_function in source_file.function_list:
             if not source_function:
                 continue
-            name = source_function.name.replace('"', "'")
-            long_name = source_function.long_name.replace('"', "'")
+            name = source_function.name
             fields = [
                 source_function.nloc,
                 source_function.cyclomatic_complexity,
                 source_function.token_count,
                 source_function.parameter_count,
                 source_function.length,
-                f'"{name}@{source_function.start_line}-'
-                f'{source_function.end_line}@{source_file.filename}"',
-                f'"{source_file.filename}"',
-                f'"{name}"',
-                f'"{long_name}"',
+                _quoted(f'{name}@{source_function.start_line}-'
+                        f'{source_function.end_line}@{source_file.filename}'),
+                _quoted(source_file.filename),
+                _quoted(name),
+                _quoted(source_function.long_name),
                 source_function.start_line,
                 source_function.end_line,
             ]

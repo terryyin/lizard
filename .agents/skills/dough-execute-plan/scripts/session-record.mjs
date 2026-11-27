@@ -34,6 +34,10 @@ export function isSessionId(value) {
   );
 }
 
+export function hasSessionStory(story) {
+  return typeof story === "string" && story.trim() !== "";
+}
+
 // The file name (within the session-record directory) the record of `sessionId`
 // takes. The same UUID always names the same file.
 function sessionRecordFileName(sessionId) {
