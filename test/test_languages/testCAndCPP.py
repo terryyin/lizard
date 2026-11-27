@@ -336,6 +336,34 @@ static inline int check_result(id<Provider> provider, int active, int ready) {
         self.assertEqual(
             [("check", 2), ("check_result", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
+    def test_logical_and_after_block_pointer_member_in_objective_cpp_header(self):
+        result = analyze_file.analyze_source_code("validation.h", """struct Result { bool ready; };
+typedef Result* (^ResultCallback)(int);
+@protocol Provider
+- (ResultCallback)result;
+@end
+struct Flag {
+    bool ready;
+    explicit operator bool() const { return ready; }
+};
+static inline bool check_result(id<Provider> provider, int input, bool enabled) {
+    return [provider result](input)->ready && Flag{enabled};
+}
+template<class T>
+bool has_result(id<Provider> provider, int input) {
+    return [provider result](input)->ready && requires { typename T::result_type; };
+}
+template<class T>
+bool has_result_with_parameter(id<Provider> provider, int input) {
+    return [provider result](input)->ready && requires(T value) { value.result(); };
+}
+""").function_list
+
+        names = ("check_result", "has_result", "has_result_with_parameter")
+        self.assertEqual(
+            [(name, 2) for name in names],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result if fn.name in names])
+
     def test_named_lambda_references_in_callback_argument_in_cpp_header(self):
         result = analyze_file.analyze_source_code("jobs.h", """struct Job { int weight; };
 
@@ -348,6 +376,58 @@ int run_jobs() {
 """).function_list
 
         self.assertEqual([("run_jobs", 1)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_lambda_reference_return_keeps_body_decisions(self):
+        result = get_cpp_function_list("""struct Job {};
+Job&& relay(Job& job, bool ready, bool enabled) {
+    auto forward = [](Job& pending, bool ready, bool enabled) -> Job&& {
+        if (ready && enabled) return static_cast<Job&&>(pending);
+        return static_cast<Job&&>(pending);
+    };
+    return forward(job, ready, enabled);
+}
+""")
+
+        self.assertEqual([("relay", 3)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_compact_lambda_reference_return_keeps_body_decisions(self):
+        source = """struct Job {};
+void dispatch(Job& job, bool ready, bool enabled) {
+    auto run = LAMBDA_HEAD -> Job&& {
+        if (ready && enabled) return static_cast<Job&&>(job);
+        return static_cast<Job&&>(job);
+    };
+    run();
+}
+"""
+        for head in ("[&]", "[&] noexcept", "[&] mutable", "[&]<typename = void>",
+                     "[&job = (&job)[0], &ready, &enabled]"):
+            with self.subTest(head=head):
+                result = get_cpp_function_list(source.replace("LAMBDA_HEAD", head))
+
+                self.assertEqual(
+                    [("dispatch", 2, 8, 3)],
+                    [(fn.name, fn.start_line, fn.end_line, fn.cyclomatic_complexity) for fn in result],
+                )
+
+    def test_objective_c_receivers_before_logical_and(self):
+        source = """struct Result { bool ready; };
+@interface NSString
+- (Result*)result;
+@end
+
+template<class T>
+bool check(NSString *const *items) {
+    return [RECEIVER result]->ready && requires(T value) { value.valid(); };
+}
+"""
+
+        for receiver in ('@"ready"', "items[0]"):
+            with self.subTest(receiver=receiver):
+                result = analyze_file.analyze_source_code(
+                    "check.h", source.replace("RECEIVER", receiver)).function_list
+
+                self.assertEqual([("check", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
     def test_named_lambda_references_with_declarator_suffixes(self):
         result = get_cpp_function_list("""#include <vector>

@@ -217,10 +217,14 @@ class CppRValueRefStates(CodeStateMachine):
         # Keep the reference scan active in captures and parameter types.
         header = self._lambda
         adjustment = None
-        if not header.in_group or token in self._LAMBDA_GROUP_TOKENS:
+        if header.in_capture_prefix or not header.in_group or token in self._LAMBDA_GROUP_TOKENS:
             adjustment = header.advance(token, self.last_token)
         self._state, self._events = header.resume
-        if self._events is None or token in self._events:
+        if token == "&&" and header.in_return_type and self._counts_and(token):
+            header.return_reference_pending = True
+            self._initializer_deduction = False
+            self._set_state(self._r_value_ref, self._REFERENCE_SCAN_TOKENS)
+        elif self._events is None or token in self._events:
             self._state(token)
         if adjustment is None:
             self._track_lambda(header)
@@ -232,7 +236,7 @@ class CppRValueRefStates(CodeStateMachine):
     def _track_lambda(self, header):
         header.resume = self._state, self._events
         events = None
-        if header.in_group:
+        if header.in_group and not header.in_capture_prefix:
             if self._events is self._IDLE_TOKENS:
                 events = self._LAMBDA_IDLE_TOKENS
             elif self._events is self._REFERENCE_SCAN_TOKENS:
@@ -262,12 +266,22 @@ class _LambdaHeader:
     def __init__(self):
         self.resume = None
         self.references = 0
+        self.return_reference_pending = False
+        self._capture_has_initializer = False
         self._section = "["
         self._groups = ["]"]
 
     @property
     def in_parameter(self):
         return self._section == "(" and len(self._groups) == 1
+
+    @property
+    def in_return_type(self):
+        return self._section == "->" and not self._groups
+
+    @property
+    def in_capture_prefix(self):
+        return self._section == "[" and len(self._groups) == 1 and not self._capture_has_initializer
 
     @property
     def in_group(self):
@@ -285,11 +299,16 @@ class _LambdaHeader:
                 self._section = ")"
             return None
         at_outer_group = len(groups) == 1
+        if self.in_capture_prefix:
+            if token == "=":
+                self._capture_has_initializer = True
+            elif token in ("@", "[") or (
+                    token.isidentifier() and (previous.isidentifier() or previous in (")", "}"))):
+                # Objective-C receivers can contain literals or subscripts.
+                return 0
         if token in (")", "]", "}") or (section == "(" and token == "="):
             return 0
         if at_outer_group and token == ";" and groups[-1] != "}":
-            return 0
-        if section == "[" and token == "[" and previous == "[" and at_outer_group:
             return 0
         if token in self._GROUPS:
             if token != "<" or groups[-1] == ">" or (section == "(" and at_outer_group):
@@ -303,10 +322,21 @@ class _LambdaHeader:
             self._section = token
             self._groups.append(self._GROUPS[token])
             return None
+        if token == "->" or token in self._MODIFIERS:
+            # C++23 permits these specifiers without a parameter list.
+            self._section = ")"
+            return self._after_parameters(token, previous)
         return 0
 
     def _after_parameters(self, token, previous):
+        if self.return_reference_pending:
+            # A block call followed by pointer member access can look like a lambda.
+            self.return_reference_pending = False
+            if token in ("{", "requires"):
+                self.references += 1
         if token == "{":
+            if self._section == "requires" and previous == "requires":
+                return 0  # A trailing requires clause needs a constraint before the body.
             if self._section != "requires-expression":
                 return self.references
             self._section = "requires"
