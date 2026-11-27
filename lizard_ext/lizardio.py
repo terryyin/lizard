@@ -65,7 +65,7 @@ class LizardExtension(ExtensionBase):
                              fileinfo.function_list}
                 self.all_methods.update(new_funcs)
                 self._add_to_fan_outs(new_funcs.keys())
-                self._add_to_general_fan_out()
+                self._add_to_general_fan_out(fileinfo.function_list)
                 self._add_to_fan_ins(fileinfo.function_list)
             except (AttributeError, TypeError, ValueError):
                 pass
@@ -76,18 +76,18 @@ class LizardExtension(ExtensionBase):
             intersect = Counter(keys) & Counter(other_func.tokens)
             other_func.fan_out += len(list(intersect.elements()))
 
-    def _add_to_general_fan_out(self):
+    @staticmethod
+    def _add_to_general_fan_out(functions):
         structures = set(['if', 'else', 'elif', 'for', 'foreach', 'while',
                           'do', 'try', 'catch', 'switch', 'finally',
                           'except', 'with'])
         punctuations = set(['(', ')', '{', '}'])
-        for other_func in self.all_methods.values():
-            bracket_indexes = get_all_indices('(', other_func.tokens)
+        for function in functions:
+            bracket_indexes = get_all_indices('(', function.tokens)
             for idx in bracket_indexes[1:]:
                 # Suggestion ?
-                if other_func.tokens[idx - 1] not in (structures |
-                                                      punctuations):
-                    other_func.general_fan_out += 1
+                if function.tokens[idx - 1] not in (structures | punctuations):
+                    function.general_fan_out += 1
 
     def _add_to_fan_ins(self, new_funcs):
         for func in new_funcs:
