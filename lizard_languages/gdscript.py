@@ -2,6 +2,7 @@
 Language parser for GDSCript
 '''
 from .python import PythonReader, PythonStates
+from .python_tokens import generate_tokens
 
 
 class GDScriptReader(PythonReader):
@@ -16,12 +17,19 @@ class GDScriptReader(PythonReader):
     _case_keywords = {'case'}
     _ternary_operators = {'?'}
 
+    @staticmethod
+    def generate_tokens(source_code, addition='', token_class=None):
+        return generate_tokens(source_code, addition, token_class, interpolate=False)
+
     def __init__(self, context):
         super(GDScriptReader, self).__init__(context)
         self.parallel_states = [GDScriptStates(context, self)]
 
 
 class GDScriptStates(PythonStates):  # pylint: disable=R0903
+    read_return_annotations = False
+    supports_inline_suites = False
+
     def _state_global(self, token):
         if token == 'func':
             self._state = self._function

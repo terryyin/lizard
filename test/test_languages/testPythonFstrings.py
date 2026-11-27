@@ -86,3 +86,109 @@ class Test_Python_fstring_complexity(unittest.TestCase):
         functions = get_python_function_list(
             'def f(items):\n    return bf"{b\'x\' if items else b\'\'}"\n')
         self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_reused_quotes_keep_nested_fstring_decision(self):
+        functions = get_python_function_list(
+            "def render(decorator):\n"
+            "    return f'{f'@{decorator}\\n' if decorator else ''}def run()'\n"
+            "\n"
+            "def next_step():\n"
+            "    return 1\n")
+        self.assertEqual(
+            [('render', 2, 2), ('next_step', 5, 1)],
+            [(f.name, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_hash_flag_before_dynamic_width_keeps_decision(self):
+        functions = get_python_function_list(
+            'def render(value, padded):\n'
+            '    return f"{value:#{8 if padded else 4}x}"\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_comment_inside_dynamic_width_hides_braces(self):
+        functions = get_python_function_list(
+            'def render(value, padded):\n'
+            '    return f"""{value:#{(8 if padded else 4)  # } if ignored\n'
+            '    }x}"""\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_quote_fill_before_dynamic_width_keeps_decision(self):
+        functions = get_python_function_list(
+            'def render(value, padded):\n'
+            '    return f"{value:\'>{8 if padded else 4}x}"\n')
+        self.assertEqual(2, functions[0].cyclomatic_complexity)
+
+    def test_triple_quoted_format_text_counts_its_code_line(self):
+        functions = get_python_function_list(
+            'def message(value):\n'
+            '    return f"""The value is\n'
+            '    {value:x}\n'
+            '    """\n')
+        self.assertEqual(4, functions[0].nloc)
+
+    def test_fstring_fields_use_the_custom_token_factory(self):
+        from lizard_languages.python import PythonReader
+
+        positions = {}
+
+        def uppercase(match):
+            text = match.group()
+            positions[text] = match.span()
+            return text if text.startswith('"') else text.upper()
+
+        tokens = list(PythonReader.generate_tokens(
+            'f"{ready if enabled else fallback}"', token_class=uppercase))
+
+        self.assertEqual(
+            ['F', 'READY', ' ', 'IF', ' ', 'ENABLED', ' ', 'ELSE', ' ', 'FALLBACK'],
+            tokens)
+        self.assertEqual((0, 1), positions['f'])
+        self.assertEqual((0, 5), positions['ready'])
+        self.assertEqual((6, 8), positions['if'])
+
+    def test_explicit_crlf_join_is_a_single_python_token(self):
+        from lizard_languages.python import PythonReader
+
+        source = 'return 1 + \\\r\n    2\r\n'
+        tokens = list(PythonReader.generate_tokens(source))
+        self.assertIn('\\\n', tokens)
+        self.assertNotIn('\\', tokens)
+
+    def test_token_factory_transforms_fstring_literal_text(self):
+        from lizard_languages.python import PythonReader
+
+        tokens = list(PythonReader.generate_tokens(
+            'f"status: {value}"', token_class=lambda match: match.group().upper()))
+        self.assertEqual(['F', '"STATUS: "', 'VALUE'], tokens)
+
+    def test_token_factory_transforms_nested_quoted_tokens_in_order(self):
+        from lizard_languages.python import PythonReader
+
+        calls = []
+
+        def rename_label(match):
+            text = match.group()
+            calls.append((text, match.span()))
+            return text.replace('ready', 'available') if text.startswith("'") else text
+
+        tokens = list(PythonReader.generate_tokens(
+            'f"{f\'{ready}\'}"', token_class=rename_label))
+
+        self.assertEqual(['f', 'f', 'available'], tokens)
+        self.assertEqual([
+            ('f', (0, 1)), ('"{f\'{ready}\'}"', (1, 15)),
+            ('f', (0, 1)), ("'{ready}'", (1, 10)), ('available', (0, 9)),
+        ], calls)
+
+    def test_token_factory_can_replace_an_fstring_prefix(self):
+        from lizard_languages.python import PythonReader
+
+        def replace_prefix(match):
+            text = match.group()
+            return 'prefix' if text == 'f' else text
+
+        for source, expected in (
+                ('f"{ready}"', ['prefix', '"{ready}"']),
+                ('F"{f\'{ready}\'}"', ['F', 'prefix', "'{ready}'"])):
+            with self.subTest(source=source):
+                tokens = list(PythonReader.generate_tokens(source, token_class=replace_prefix))
+                self.assertEqual(expected, tokens)

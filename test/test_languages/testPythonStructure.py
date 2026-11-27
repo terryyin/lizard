@@ -80,6 +80,73 @@ class Test_Python_function_structure(unittest.TestCase):
         self.assertEqual(5, functions[0].nloc)
         self.assertEqual(5, functions[0].end_line)
 
+    def test_multiline_return_annotation_keeps_function_body(self):
+        source = """\
+class Parser:
+    def parse_call_args(
+        self,
+    ) -> tuple[
+        list[Expr],
+        list[Keyword],
+    ]:
+        if self.has_args():
+            return self.read_args(), []
+        return [], []
+"""
+        functions = get_python_function_list(source)
+        self.assertEqual([(2, 10, 2)], [
+            (f.start_line, f.end_line, f.cyclomatic_complexity)
+            for f in functions
+        ])
+
+    def test_multiline_return_annotation_keeps_inline_suite(self):
+        source = """\
+class Parser:
+    def read(self, enabled) -> (
+        int
+    ): return 1 if enabled else 0
+    def fallback(self):
+        return 2
+"""
+        functions = get_python_function_list(source)
+        self.assertEqual([("read", 4, 2), ("fallback", 6, 1)], [
+            (f.name, f.end_line, f.cyclomatic_complexity) for f in functions
+        ])
+
+    def test_inline_annotation_keeps_bounds_with_reused_fstring_quotes(self):
+        source = """\
+class Parser:
+    def read(self, table) -> (
+        str
+    ): return f"{table["["]}"
+    def fallback(self):
+        return "empty"
+"""
+        functions = get_python_function_list(source)
+        self.assertEqual([("read", 4), ("fallback", 6)], [
+            (f.name, f.end_line) for f in functions
+        ])
+
+    def test_interpolated_return_annotation_preserves_function_bounds(self):
+        source = """\
+class Parser:
+    def read(self, value) -> (
+        PREFIX"{types["["]}"
+    ):
+        if value:
+            return 1
+        return 0
+    def fallback(self):
+        return 2
+"""
+        for prefix in ("f", "t"):
+            with self.subTest(prefix=prefix):
+                functions = get_python_function_list(source.replace("PREFIX", prefix))
+                self.assertEqual([("read", 7, 2), ("fallback", 9, 1)], [
+                    (f.name, f.end_line, f.cyclomatic_complexity)
+                    for f in functions
+                ])
+
     def test_function_surrounded_by_global_statements(self):
         source = """
         s1 = 'global statement'
@@ -179,14 +246,35 @@ def normalize_message(prefix):
         self.assertEqual("function1", functions[1].name)
         self.assertEqual(4, functions[1].end_line)
 
-    def xtest_one_line_functions(self):
-        class namespace8:
-            def a(): pass
+    def test_inline_methods_are_reported_before_next_definition_and_eof(self):
+        source = """\
+class Stream:
+    def read(self) -> str: ...
+    async def close(self) -> None: ..."""
+        functions = get_python_function_list(source)
+        self.assertEqual([("read", 2, 2), ("close", 3, 3)], [
+            (f.name, f.start_line, f.end_line) for f in functions
+        ])
 
-            def b(): pass
-        functions = get_python_function_list(inspect.getsource(namespace8))
-        self.assertEqual("a", functions[0].name)
-        self.assertEqual("b", functions[1].name)
+    def test_nested_inline_suite_keeps_its_continuation_and_enclosing_function(self):
+        source = """\
+def reader_factory():
+    def read(items): return (
+        items[0] if items else None
+    )
+    if cached:
+        return cached
+    return read
+"""
+        functions = get_python_function_list(source)
+        self.assertEqual([("reader_factory.read", 4, 2), ("reader_factory", 7, 2)], [
+            (f.name, f.end_line, f.cyclomatic_complexity) for f in functions
+        ])
+
+    def test_inline_docstring_shares_a_source_line_with_code(self):
+        source = 'def value(): """Return the value."""; return 1'
+        functions = get_python_function_list(source)
+        self.assertEqual([("value", 1)], [(f.name, f.nloc) for f in functions])
 
     def test_nested_depth_metric_multiple_continuous_loop_statements(self):
         class namespace9:
@@ -244,3 +332,37 @@ def normalize_message(prefix):
         functions = get_python_function_list(code)
         self.assertEqual(9, functions[0].cyclomatic_complexity)
         self.assertEqual(8, functions[0].max_nesting_depth)
+
+    def test_return_annotation_interpolations_keep_the_whole_function(self):
+        for annotation in (
+                'f"{version}"',
+                'f"{metadata["["]}"',
+                'f"""Schema {metadata["tag"]}"""',
+                't"{metadata["["]}"'):
+            with self.subTest(annotation=annotation):
+                source = (
+                    'class Parser:\n'
+                    '    def read(self, value) -> Annotated[int, ' + annotation + ',\n'
+                    '        "payload",\n'
+                    '    ]:\n'
+                    '        if value:\n'
+                    '            return 1\n'
+                    '        return 0\n')
+                functions = get_python_function_list(source)
+                self.assertEqual([('read', 2, 7, 2)], [
+                    (f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+                    for f in functions
+                ])
+
+    def test_inline_suite_keeps_explicit_crlf_continuation(self):
+        source = (
+            "def isxdigit(c): return isdigit(c) or \\\r\n"
+            "    'a' <= c <= 'f' or 'A' <= c <= 'F'\r\n")
+        function, = get_python_function_list(source)
+        self.assertEqual((2, 3, 2),
+                         (function.end_line, function.cyclomatic_complexity, function.nloc))
+
+    def test_multiline_inline_docstring_keeps_code_on_its_closing_line(self):
+        source = 'def value(): """Return the\nvalue."""; return 1\n'
+        function, = get_python_function_list(source)
+        self.assertEqual((2, 2), (function.end_line, function.nloc))
