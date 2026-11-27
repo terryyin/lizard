@@ -77,3 +77,41 @@ class Test_conditions_in_template_interpolations(unittest.TestCase):
                 self.assertEqual([('a', 1)],
                                  [(f.name, f.cyclomatic_complexity)
                                   for f in functions])
+
+    def test_regex_with_braces_and_comment_keeps_interpolation_conditions(self):
+        for comment in ('/* closing tag example */ ', '// closing tag example\n    '):
+            for filename in ('preview.js', 'preview.ts', 'preview.jsx', 'preview.tsx'):
+                with self.subTest(comment=comment, filename=filename):
+                    code = (
+                        'function preview(text, enabled) {\n'
+                        '  return `Preview: ${(' + comment + '/} ?/.test(text) && enabled)}`;\n'
+                        '}\n'
+                        'function label(text) { return text.trim(); }\n'
+                    )
+                    end = 4 if comment.startswith('//') else 3
+                    functions = analyze_file.analyze_source_code(filename, code).function_list
+                    self.assertEqual([('preview', end, 2), ('label', end + 1, 1)], [
+                        (f.name, f.end_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_separate_comments_preserve_division_inside_an_interpolation(self):
+        code = '''
+function preview(total, count, fallback) {
+  return `Ratio: ${(/* units */ total /* normalize */ / (count || fallback) / 100)}`;
+}
+'''
+        for filename in ('preview.js', 'preview.ts', 'preview.jsx', 'preview.tsx'):
+            with self.subTest(filename=filename):
+                function, = analyze_file.analyze_source_code(filename, code).function_list
+                self.assertEqual(2, function.cyclomatic_complexity)
+
+    def test_regex_spelling_inside_a_line_comment_stays_in_the_comment(self):
+        code = '''
+function preview(total, fallback) {
+  return `Ratio: ${(// Example: /x/ } ?
+    total || fallback)}`;
+}
+'''
+        for filename in ('preview.js', 'preview.ts', 'preview.jsx', 'preview.tsx'):
+            with self.subTest(filename=filename):
+                function, = analyze_file.analyze_source_code(filename, code).function_list
+                self.assertEqual(2, function.cyclomatic_complexity)
