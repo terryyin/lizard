@@ -357,9 +357,13 @@ template<class T>
 bool has_result_with_parameter(id<Provider> provider, int input) {
     return [provider result](input)->ready && requires(T value) { value.result(); };
 }
+template<class T>
+bool has_indexed_result(id<Provider>* providers, int input) {
+    return [providers[0] result](input)->ready && requires(T value) { value.result(); };
+}
 """).function_list
 
-        names = ("check_result", "has_result", "has_result_with_parameter")
+        names = ("check_result", "has_result", "has_result_with_parameter", "has_indexed_result")
         self.assertEqual(
             [(name, 2) for name in names],
             [(fn.name, fn.cyclomatic_complexity) for fn in result if fn.name in names])
