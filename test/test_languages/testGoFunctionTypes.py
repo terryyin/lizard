@@ -134,3 +134,34 @@ func run(fs ...func()) {
 }
 ''')
     assert [f.name for f in result] == ['anonymous__0', 'run']
+
+
+@pytest.mark.parametrize('signature', [
+    'func combine(operation func(int, int) int, value int)',
+    'var combine = func(operation func(int, int) int, value int)',
+    'func combine(operation func() func(int, int) int, value int)',
+])
+def test_only_top_level_commas_split_function_parameters(signature):
+    result = get_go_function_list('package p\n' + signature + ''' {
+    _ = operation
+    _ = value
+}
+func after() {}
+''')
+    assert [(fn.name, fn.parameter_count) for fn in result] == [
+        ('combine', 2), ('after', 0)]
+
+
+@pytest.mark.parametrize('declaration', [
+    'func consume(operation func(Pair[int, string]))',
+    'var consume = func(operation func(int, int) Pair[int, string])',
+    'func consume(operation func() struct{ Value int })',
+])
+def test_parameter_types_that_end_in_brackets_keep_their_slot(declaration):
+    result = get_go_function_list('''package p
+type Pair[A, B any] struct { First A; Second B }
+''' + declaration + ''' {
+    _ = operation
+}
+''')
+    assert [(fn.name, fn.parameter_count) for fn in result] == [('consume', 1)]

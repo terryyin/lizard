@@ -67,11 +67,15 @@ class FunctionInfo(Nesting):  # pylint: disable=R0902
     location = property(lambda self:
                         f" {self.name}@{self.start_line}-{self.end_line}@{self.filename}")
 
+    explicit_parameter_slots = False
+
     @property
     def parameter_count(self):
         if self._parameter_names is not None:
             return len(self._parameter_names)
         # Binding patterns can occupy formal slots without introducing names.
+        if self.explicit_parameter_slots:
+            return sum(map(bool, self.full_parameters))
         return sum(
             bool(_PARAMETER_NAME.search(parameter))
             or parameter.strip() in ('{}', '[]', '()')

@@ -52,6 +52,8 @@ class GoReader(CodeReader, CCppCommentsMixin):
 class GoStates(GoLikeStates):  # pylint: disable=R0903
     """Distinguish declarations, literals and function types before opening one."""
 
+    _PARAMETER_BRACKETS = {'(': 1, ')': -1, '[': 1, ']': -1, '{': 1, '}': -1}
+
     def _state_global(self, token):
         if token == 'func':
             self._start_function(token)
@@ -96,11 +98,26 @@ class GoStates(GoLikeStates):  # pylint: disable=R0903
         if not self._signature_tokens:
             self._state = self._state_global
 
+    def _function_dec(self, token):
+        self._go_parameter(token)
+        if not self.br_count:
+            self.next(self._expect_function_impl)
+
+    def _go_parameter(self, token):
+        self.br_count += self._PARAMETER_BRACKETS.get(token, 0)
+        if token == ',' and self.br_count > 1:
+            function = self.context.current_function
+            function.add_to_long_name(' ,')
+            function.full_parameters[-1] += ' ,'
+        elif token == ')' and not self.br_count:
+            self.context.current_function.explicit_parameter_slots = True
+        elif token not in '()':
+            self.context.parameter(token)
+
     def _literal_signature(self, token):
         if self._parameter_tokens:
             self._parameter_tokens -= 1
-            if token not in '()':
-                self.context.parameter(token)
+            self._go_parameter(token)
         self._signature_tokens -= 1
         if not self._signature_tokens:
             self._state = self._expect_function_impl
