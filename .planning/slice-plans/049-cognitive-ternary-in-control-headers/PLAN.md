@@ -49,13 +49,13 @@ Change: `cognitive_brace.py` is 252 lines. Move `_in_head`, `_start_body` and `_
 
 `cognitive_counter.py` is 337 lines. Move per-function token holding and state selection into `lizard_ext/cognitive_candidates.py`: `_Candidate`, `_settle`, `_keeps_tokens`, `_ended`, `_involved`, `_hold`, `_merge`, `_release`, `_switch_function` and `_in_body`. Bracket routing (`_route`) and the increment helpers stay, so slice 2 can distinguish a template end from a comma without editing a file over 250 lines. Callers are `_Counter.process` and `_Counter.finish`.
 
-Observed after extraction: 157 cognitive tests and 562 traced defaults, HTML output and language tests passed. `cognitive_brace.py` and `cognitive_counter.py` are 207 and 197 lines. The per-function state type moved with its selector, keeping state allocation in one module. The independent refactor review left the proof unchanged.
+After extraction, 157 cognitive tests and 562 traced defaults, HTML output and language tests passed. `cognitive_brace.py` and `cognitive_counter.py` are 207 and 197 lines. The per-function state type moved with its selector, keeping state allocation in one module. The independent refactor review left the proof unchanged.
 
 ### 2. A header ternary adds its increment at the structure's level
 
 Type: Behavior
 
-Status: planned
+Status: done
 
 Proof: the new tests below, then the focused cognitive files, then `nix develop -c python -m pytest` and `nix develop -c make`. The new tests fail before this slice's production change and pass after it. `cognitive_brace.py`, `cognitive_counter.py` and `cognitive_actions.py` stay at or under 250 lines.
 
@@ -63,7 +63,7 @@ Behavior: analyzing a function through `analyze_source_code` with the cognitive 
 
 | Promise | Proof owned by this slice |
 | --- | --- |
-| `if` plus a `for`-header ternary scores 4, not 2 | One test, parameterized by `.js`, `.ts`, `.jsx`, `.vue`, `.c`, `.java` and `.cs`, asserts 4 for `if (a ? b : 0) {}` followed by one ternary in a `for` header. |
+| `if` plus a `for`-header ternary scores 4, not 2 | One test, parameterized by `.js`, `.ts`, `.jsx`, `.vue`, `.c`, `.java` and `.cs`, asserts 4 for a ternary in an `if` followed by one ternary in a `for` header. Java and C# use Boolean conditions. C# uses `a ? (b) : false` because its existing lookahead treats a bare middle word before the colon as nullable syntax. On the baseline, the grouped form scored 1 in a return and the header pair scored 2. |
 | Nesting follows the structure, and a nested ternary still nests | The nested `if (b ? 1 : 0)` asserts 5. `if (options ? (options.exact ? options.enabled : fallback) : fallback)` asserts 4. |
 | `for`-clause semicolons make siblings; nested separators do not | The two-clause `for` asserts 3. The `.js` cases from #684 keep their scores: class-field semicolon in a `for` header 4, object comma 4, template interpolation 4, class-field initializers 5, object-property ternaries 6, `while` header 2. |
 | JSX attribute syntax does not hide the ternary | The `<Card title={title} />` `if` in `.jsx` asserts 4. |
@@ -71,6 +71,10 @@ Behavior: analyzing a function through `analyze_source_code` with the cognitive 
 | A `?` that is not a new kind of ternary | `if (a?.b)` asserts 1. The conditional-type `if` asserts 2. The conditional-type `return` stays 1. |
 | Real peer commas stay siblings | `testCognitivePeerCommaEndsTernary.py` passes unchanged, including the template-then-comma case at 2. |
 | Body nesting stays | `test_ternary_nests_and_is_nested` stays 3 for `if (a) x = b ? c : d`. |
+
+The final header tests produced 25 distinguishing failures and three preservation passes on slice 1. After the change all 28 passed. The 188 focused and 655 traced consumer tests passed. The independent refactor consolidated JSX attribute opener detection, and all 284 affected cognitive and JSX tests passed again.
+
+Both `nix develop -c python -m pytest` and `nix develop -c make` passed with 4,122 tests passing and seven skipped. The edited production modules and new test file are between 74 and 233 lines.
 
 ## Plan review
 

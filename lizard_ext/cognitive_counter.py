@@ -10,11 +10,32 @@ _IF_LIKE = ('if', 'else if')
 _CLOSER_OF = {'(': ')', '[': ']', '{': '}', '${': '}'}
 _BRACKETS = frozenset(_CLOSER_OF) | frozenset(_CLOSER_OF.values())
 _EXPRESSION_FRAMES = ('ternary', 'lambda')
+_JSX_ATTRIBUTE = 'jsx attribute'
+
+
+class _InterpolationEnd(str):
+    """A template close that still acts as a logical separator."""
+
+
+_INTERPOLATION_END = _InterpolationEnd(',')
+
+
+class _AttributeEnd(str):
+    """The synthetic semicolon that the reader uses to end a JSX attribute."""
+
+
+_ATTRIBUTE_END = _AttributeEnd(';')
+_ROUTED_ATTRIBUTE_END = _AttributeEnd(';')
 
 
 def _is_markup(token):
     """JSX text is no code: ``<p>{name}({count})</p>``."""
     return getattr(token, 'is_jsx_markup', False)
+
+
+def _markup_opens_jsx_attribute(markup):
+    """The reader includes an attribute's opening brace in its tag text."""
+    return markup.endswith('{')
 
 
 class _Frame(object):  # pylint: disable=R0903
@@ -60,8 +81,17 @@ class _Counter(_FunctionCandidates):
                 in_brackets = (candidates and
                                len(self.openers) >= candidates[-1].depth)
                 read = token
-                if token in _BRACKETS:
+                if token in _BRACKETS or token == ';' or _is_markup(token):
                     function, token = self._route(function, token)
+                if token is _ATTRIBUTE_END and \
+                        function is not context.current_function:
+                    # The semicolon still belongs to the expression arrow.
+                    # Its attribute boundary also belongs to the outer head.
+                    if candidates and self._involved(function):
+                        self._hold(function, _ROUTED_ATTRIBUTE_END)
+                    else:
+                        self.process(_ROUTED_ATTRIBUTE_END, line, function)
+                    function, token = context.current_function, read
                 held = candidates and self._involved(function)
                 if held:
                     self._hold(function, token)
@@ -84,7 +114,8 @@ class _Counter(_FunctionCandidates):
         if self.profile.case_insensitive:
             token = token.lower()
         self._process(token)
-        state.prev2, state.prev = state.prev, token
+        if token is not _ROUTED_ATTRIBUTE_END:
+            state.prev2, state.prev = state.prev, token
 
     def finish(self):
         """The end of the file: count what is still held."""
@@ -101,17 +132,22 @@ class _Counter(_FunctionCandidates):
         two (``if (list.some(item => item.ok))``); the enclosing function
         would otherwise never see its bracket close.
 
-        The ``}`` of a template interpolation ends no block.  It ends the
-        sequence of logical operators before it, so it counts as ``,``."""
+        The ``}`` of a template interpolation acts like a comma outside a
+        control header. Inside a header it closes just that interpolation."""
         openers = self.openers
-        if token in _CLOSER_OF:
-            if not _is_markup(token):
-                openers.append((token, function))
-        elif openers and _CLOSER_OF[openers[-1][0]] == token and \
-                not _is_markup(token):
+        if _is_markup(token):
+            if _markup_opens_jsx_attribute(token):
+                openers.append((_JSX_ATTRIBUTE, function))
+        elif token in _CLOSER_OF:
+            openers.append((token, function))
+        elif openers and openers[-1][0] == _JSX_ATTRIBUTE:
+            if token == ';':
+                _, function = openers.pop()
+                token = _ATTRIBUTE_END
+        elif openers and _CLOSER_OF[openers[-1][0]] == token:
             opener, function = openers.pop()
             if opener == '${':
-                token = ','
+                token = _INTERPOLATION_END
         return function, token
 
     def _process(self, token):
