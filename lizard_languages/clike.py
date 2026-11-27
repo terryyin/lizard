@@ -51,6 +51,12 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
     def generate_tokens(source_code, addition='', token_class=None):
         return clike_tokens(source_code, addition + _C_LINE_COMMENT, token_class)
 
+    def _read_macro_directive(self, directive, definition):
+        for state in self.parallel_states:
+            if isinstance(state, CppRValueRefStates):
+                state.read_macro_directive(directive, definition)
+                break
+
     def preprocess(self, tokens):
         tilde = False
         for token in tokens:
@@ -69,6 +75,8 @@ class CLikeReader(CodeReader, CCppCommentsMixin):
                         yield macro.group(2) or "\"\""
                     for _ in macro.group(2).split('\n')[1:]:
                         yield '\n'
+                    if macro.group(1) in _MacroPrefixDefinitions.DIRECTIVES:
+                        self._read_macro_directive(macro.group(1), macro.group(2))
                 else:
                     yield token
 
@@ -102,12 +110,34 @@ class CppRValueRefStates(CodeStateMachine):
         self._type_before_paren = False
         self._lambda = None
         self._events = self._IDLE_TOKENS
+        self._macro_definitions = _MacroPrefixDefinitions()
+        self._prefix_macros = set()
+        self._macro_candidate = False
+        self._macro_prefix_depth = 0
+
+    def read_macro_directive(self, directive, definition):
+        if self._recognize_references:
+            self._prefix_macros = self._macro_definitions.read(directive, definition)
 
     def __call__(self, token, reader=None):
         events = self._events
         if events is None or token in events:
             self._state(token)
+        if self._prefix_macros:
+            self._track_macro_prefix(token)
         self.last_token = token
+
+    def _track_macro_prefix(self, token):
+        if self._macro_prefix_depth:
+            if token == "," and self._macro_prefix_depth == 1:
+                self._macro_prefix_depth = 0
+            elif token == "(":
+                self._macro_prefix_depth += 1
+            elif token == ")":
+                self._macro_prefix_depth -= 1
+        elif token == "(" and self._macro_candidate:
+            self._macro_prefix_depth = 1
+        self._macro_candidate = token in self._prefix_macros and self.last_token in self._LAMBDA_BEFORE
 
     def _set_state(self, state, events=None):
         self._state = state
@@ -156,12 +186,22 @@ class CppRValueRefStates(CodeStateMachine):
     def _read_reference_end(self, token):
         if token == "...":
             return
+        if token == "," and self._macro_prefix_depth == 1:
+            self._set_state(self._read_macro_prefix_suffix)
+            return
         # The ellipsis before a closing parenthesis can belong to a logical fold.
         if token in self._REFERENCE_END and (self.last_token != "..." or token in (">", ",")):
             self.context.add_condition(-1)
             self._initializer_deduction = False
         elif self._lambda is not None and self._lambda.in_parameter and token.isidentifier():
             self._lambda.references += 1
+        self._continue_reference(token)
+
+    def _read_macro_prefix_suffix(self, token):
+        # With an empty suffix, the first argument can be a cast type.
+        if token == ")":
+            self.context.add_condition(-1)
+        self._initializer_deduction = False
         self._continue_reference(token)
 
     def _continue_reference(self, token):
@@ -251,6 +291,174 @@ class CppRValueRefStates(CodeStateMachine):
         # Plain tokens have no extension metadata.
         return token.__class__ is str or not (
             getattr(token, 'is_ignored_condition', False) or getattr(token, 'is_member_name', False))
+
+
+def _guard_tests(path):
+    while path is not None:
+        guard, path = path
+        yield guard
+
+
+class _MacroConditional:
+    """Keep the guard paths and macro writes of one conditional."""
+
+    def __init__(self, guard, parent):
+        # Every path links one guard to the tests it shares with other arms.
+        self.arms = [(guard, parent)]
+        self.names = set()
+        self.has_else = False
+
+    def next_arm(self, guard):
+        if self.has_else:
+            return
+        previous_tests = self._otherwise()
+        self.has_else = guard is None
+        self.arms.append(previous_tests if self.has_else else (guard, previous_tests))
+
+    def paths(self):
+        yield from self.arms
+        if not self.has_else:
+            yield self._otherwise()
+
+    def _otherwise(self):
+        (key, sense), parent = self.arms[-1]
+        return (key, not sense), parent
+
+
+class _MacroPrefixDefinitions:
+    """Find local prefix macros whose definitions agree with the current guards."""
+
+    _START = {"if", "ifdef", "ifndef"}
+    _ELIF = {"elif", "elifdef", "elifndef"}
+    _ALTERNATIVES = _ELIF | {"else"}
+    DIRECTIVES = _START | _ALTERNATIVES | {"endif", "define", "undef", "include"}
+
+    _PREFIX_MACRO = re.compile(
+        r"(?P<name>\w+)\(\s*(?P<left>\w+)\s*,\s*(?P<right>\w+)\s*\)"
+        r"\s*\(\s*(?P=left)\s+(?P=right)\s*\)\s*(?://[^\n]*)?\Z")
+
+    _DEFINED = re.compile(
+        r"(?P<negated>!\s*)?defined(?:\s*\(\s*(?P<parenthesized>\w+)\s*\)|\s+(?P<name>\w+))\Z")
+
+    def __init__(self):
+        self._branches = []
+        self._definitions = {}
+        self._prefix_names = set()
+        self._active_prefixes = set()
+        self._macro_versions = {}
+        self._include_version = None
+
+    def read(self, directive, definition):
+        if directive in self._START:
+            self._branches.append(_MacroConditional(self._guard(directive, definition), self._current_path()))
+        elif self._branches and directive in self._ALTERNATIVES:
+            guard = self._guard("if" + directive[4:], definition) if directive in self._ELIF else None
+            self._branches[-1].next_arm(guard)
+        elif self._branches and directive == "endif":
+            self._join_conditional()
+        elif directive == "include":
+            self._include_version = object()
+
+        updating_definition = directive in ("define", "undef")
+        if not updating_definition and not self._prefix_names:
+            return self._active_prefixes
+        guards = self._current_guards()
+        if guards is None:
+            self._active_prefixes.clear()
+            return self._active_prefixes
+        if updating_definition:
+            name = self._record_definition(directive, definition, self._current_path())
+            if name in self._prefix_names and self._is_prefix(name, guards):
+                self._active_prefixes.add(name)
+            else:
+                self._active_prefixes.discard(name)
+        else:
+            self._active_prefixes = {name for name in self._prefix_names if self._is_prefix(name, guards)}
+        return self._active_prefixes
+
+    def _join_conditional(self):
+        branch = self._branches.pop()
+        if self._branches:
+            self._branches[-1].names.update(branch.names)
+        names = branch.names & self._prefix_names
+        if not names:
+            return
+        reachable = False
+        for path in branch.paths():
+            guards = self._compatible_guards(path)
+            if guards is None:
+                continue
+            reachable = True
+            names = {name for name in names if self._is_prefix(name, guards)}
+            if not names:
+                return
+        if reachable:
+            # After the join, every reachable arm establishes the same role.
+            outer = self._current_path()
+            for name in names:
+                self._definitions[name].append((outer, True))
+
+    def _current_path(self):
+        return self._branches[-1].arms[-1] if self._branches else None
+
+    def _current_guards(self):
+        return self._compatible_guards(self._current_path())
+
+    @staticmethod
+    def _compatible_guards(path):
+        guards = {}
+        for key, sense in _guard_tests(path):
+            if guards.setdefault(key, sense) != sense:
+                return None
+        return guards
+
+    def _guard(self, directive, definition):
+        definition = definition.strip()
+        kind = "value" if directive == "if" else "defined"
+        sense = directive != "ifndef"
+        defined = self._DEFINED.fullmatch(definition) if directive == "if" else None
+        if defined:
+            definition = defined["parenthesized"] or defined["name"]
+            kind = "defined"
+            sense = not defined["negated"]
+        if not definition.isidentifier():
+            # For other compound conditions, use only this conditional's own arms.
+            return object(), True
+        key = kind, definition, self._macro_versions.get(definition), self._include_version
+        return key, sense
+
+    def _record_definition(self, directive, definition, path):
+        word = re.match(r"\w+", definition)
+        if not word:
+            return
+        name = word[0]
+        if self._branches:
+            self._branches[-1].names.add(name)
+        self._macro_versions[name] = object()
+        is_prefix = directive == "define" and bool(self._PREFIX_MACRO.match(definition))
+        if is_prefix:
+            self._prefix_names.add(name)
+        if path is None:
+            self._definitions.pop(name, None)
+            if not is_prefix:
+                self._prefix_names.discard(name)
+                return name
+        self._definitions.setdefault(name, []).append((path, is_prefix))
+        return name
+
+    def _is_prefix(self, name, guards):
+        for path, is_prefix in reversed(self._definitions[name]):
+            known = True
+            for key, sense in _guard_tests(path):
+                active = guards.get(key)
+                if active is None:
+                    known = False
+                elif active != sense:
+                    break
+            else:
+                # A possibly active definition cannot prove an expression role.
+                return is_prefix and known
+        return False
 
 
 class _LambdaHeader:
