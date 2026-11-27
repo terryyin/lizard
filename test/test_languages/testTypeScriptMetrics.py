@@ -1,5 +1,9 @@
 import unittest
 
+import pytest
+
+from lizard import FileAnalyzer, get_extensions
+
 from .testTypeScript import get_ts_function_list
 
 
@@ -118,3 +122,22 @@ class Test_ts_ternary_between_comparisons(unittest.TestCase):
     def test_nullable_type_argument_is_no_branch(self):
         code = 'function f(m: Map<string, number?>) { return m.size; }'
         self.assertEqual(1, get_ts_function_list(code)[0].cyclomatic_complexity)
+
+
+@pytest.mark.parametrize('suffix', ['ts', 'tsx'])
+@pytest.mark.parametrize('modifier', ['?', '+?', '-?'])
+def test_mapped_type_optional_modifier_does_not_add_a_decision(suffix, modifier):
+    source = """function copyOptions<T>(options: {
+  [Key in keyof T]%s /* modifier */ : T[Key]
+}) {
+  return { ...options }
+}
+function display(options: { compact?: boolean }) {
+  return options["compact"] ? "short" : "full"
+}
+""" % modifier
+    analyzer = FileAnalyzer(get_extensions(['nd', 'ns', 'cognitive']))
+    functions = analyzer.analyze_source_code('options.' + suffix, source).function_list
+    assert [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity,
+             f.max_nesting_depth, f.max_nested_structures, f.cognitive_complexity) for f in functions] == [
+                 ('copyOptions', 1, 5, 1, 0, 0, 0), ('display', 6, 8, 2, 1, 0, 1)]
