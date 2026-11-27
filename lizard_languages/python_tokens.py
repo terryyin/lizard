@@ -37,6 +37,7 @@ _STRING_PREFIXES = _INTERPOLATED_PREFIXES | frozenset(('r', 'u', 'b', 'br', 'rb'
 _INTERPOLATED_START = r"""|(?P<interpolated>(?i:fr|rf|bf|fb|f|tr|rt|t))(?=['"])"""
 _CRLF_JOIN = r"|(?P<crlf_join>\\\r\n)"
 _PY_ADDITION = r"|\#[^\n]*|//=?" + _PY_TRIPLE_QUOTE
+_QUOTE_FALLBACK_PROBE = r"""|(['"])"""
 _CLOSERS = {'(': ')', '[': ']', '{': '}'}
 
 
@@ -52,7 +53,7 @@ def generate_tokens(source_code, addition='', token_class=None, *, interpolate=T
 
     field_pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _CRLF_JOIN)
     scanner = (field_pattern, token_class)
-    values = _source_hook_values(source_code, pattern, scanner)
+    values = _source_hook_values(source_code, pattern, scanner, addition)
     return _mark_prefixed_strings(fold_token_stream(values, _identity), scanner)
 
 
@@ -77,7 +78,7 @@ def _source_tokens(source, pattern):
             return
 
 
-def _source_hook_values(source, pattern, scanner):
+def _source_hook_values(source, pattern, scanner, addition):
     field_pattern, token_class = scanner
     original_factory = Match.group if token_class is None else token_class
     factory = original_factory
@@ -91,7 +92,7 @@ def _source_hook_values(source, pattern, scanner):
             if prefix not in _INTERPOLATED_PREFIXES:
                 continue
             quote_start = match.end()
-            if source[quote_start:quote_start + 1] not in ('"', "'"):
+            if quote_start == match.start() or source[quote_start:quote_start + 1] not in ('"', "'"):
                 continue
             raw = _read_string(source, quote_start, prefix, (field_pattern, None))
             if raw is None:
@@ -100,7 +101,8 @@ def _source_hook_values(source, pattern, scanner):
             end, _ = raw
             quoted = next(matches)
             if (quoted.span() != (quote_start, end) and
-                    field_pattern.match(source, quote_start).end() != end):
+                    field_pattern.match(source, quote_start).end() != end and
+                    not _caller_matches_quote(source, quote_start, addition)):
                 # Resume the regex scan only when the lexer corrects a quote boundary.
                 yield source[quote_start:end]
                 if factory is original_factory:
@@ -110,6 +112,18 @@ def _source_hook_values(source, pattern, scanner):
             yield factory(quoted)
         else:
             return
+
+
+def _caller_matches_quote(source, start, addition):
+    if not addition:
+        return False
+    # Built-in Python alternatives before the caller have first choice.
+    before_caller = compiled_token_pattern(_PY_ADDITION + _QUOTE_FALLBACK_PROBE)
+    if before_caller.match(source, start).lastindex is None:
+        return False
+    # Mark the fallback after the caller's groups, leaving their numbering intact.
+    after_caller = compiled_token_pattern(_PY_ADDITION + addition + _QUOTE_FALLBACK_PROBE)
+    return after_caller.match(source, start).lastindex != after_caller.groups
 
 
 def _mark_prefixed_strings(tokens, scanner=None):
