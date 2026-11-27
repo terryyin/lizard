@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "sessionId": "6999ea5c-f02d-4a77-aabc-aa688e2b3233",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-27T01:29:47.198Z",
+  "story": "SEED-078#cognitive-ternary-in-control-headers",
+  "ranges": [
+    {
+      "base": "c0aaf6cea08dc3a300268191bfa763a058ee8034",
+      "candidate": "713128aa702e717e8b0e75f0a509b7338ab1fd45"
+    },
+    {
+      "base": "713128aa702e717e8b0e75f0a509b7338ab1fd45",
+      "candidate": "5826a6548a4ebca3c6dd022b8f6803c084fb03f5"
+    },
+    {
+      "base": "5826a6548a4ebca3c6dd022b8f6803c084fb03f5",
+      "candidate": "12628aafcc3e08f5b7ff719584f31eac6965de12"
+    },
+    {
+      "base": "12628aafcc3e08f5b7ff719584f31eac6965de12",
+      "candidate": "8d55916b5725348e538c9a351a192dabf3f3f3bc"
+    }
+  ]
+}

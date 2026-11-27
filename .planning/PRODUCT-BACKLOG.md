@@ -10,4 +10,3 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 
 ## Backlog list
 
-- [Count ternaries in control headers for all brace languages](seeds/SEED-078-pr-batch-follow-ups.md#cognitive-ternary-in-control-headers) — SEED-078#cognitive-ternary-in-control-headers

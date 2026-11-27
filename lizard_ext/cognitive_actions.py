@@ -36,9 +36,8 @@ class _BraceActions(object):
     def _else(self):
         if self._in_switch_body():
             return                      # Kotlin ``when { else -> }``
+        self._pop_ternaries()
         frames = self.state.frames
-        while frames and frames[-1].kind == 'ternary':
-            frames.pop()
         # ``if (a) b else c`` without ';' (Kotlin, Scala, R ...)
         if frames and frames[-1].kind in _IF_LIKE and \
                 frames[-1].phase == BODY and not frames[-1].braced:
@@ -89,8 +88,7 @@ class _BraceActions(object):
             state.pending_ternary = 0
             if token in _NULLABLE_TYPE_FOLLOWERS:
                 return
-        self._structural()
-        self._push('ternary', BODY)
+        self._start_ternary()
 
     def _resolve_pending_logical(self, token):
         """C++: ``T&& x = ...`` and ``auto&& x : v`` are not logical ands."""
