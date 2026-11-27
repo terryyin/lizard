@@ -75,6 +75,8 @@ class _Counter(_FunctionCandidates):
             context = self.context
             line, function = context.current_line, context.current_function
             if self.profile.nested_functions:
+                if token == ';' and getattr(token, 'ends_class_arrow_field', False):
+                    function = context.stacked_functions[-1]
                 candidates = self.candidates
                 if candidates or self.previous == '(':
                     self._settle()

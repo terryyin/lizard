@@ -7,6 +7,8 @@ from itertools import tee
 from .code_reader import CodeReader, CodeStateMachine, MemberName
 from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
+from .javascript_expression import (
+    awaiting_class_field, mark_class_field_semicolon, mark_class_field_start)
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
 from .typescript_states import TypeScriptStates
@@ -268,6 +270,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         yield keyword
                         keyword = None
                     if line_start and not token.startswith(_COMMENT_STARTS):
+                        token = mark_class_field_start(state, token)
                         line_start = False
                         end_before_line_token(state, arrows, token)
                     if signatures and not token.startswith(('//', '/*')):
@@ -300,6 +303,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         elif member_access:
                             before_dot = token == '.' and state.last_token
                     else:
+                        if token == ';':
+                            token = mark_class_field_semicolon(state, token)
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
                             member_access = False
@@ -315,7 +320,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                         # `1.` before a line break ends a number. On one
                         # line, `1 .if` and `1.5.if` name a member.
                         member_access = False
-                    if arrows or awaiting_function_body(state):
+                    if arrows or awaiting_function_body(state) or awaiting_class_field(state):
                         line_start = True
                     yield token
             else:

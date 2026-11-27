@@ -1228,6 +1228,76 @@ class TestJavaScriptFunctionsInGroupedExpressions(unittest.TestCase):
             }"""))
 
 
+class TestJavaScriptClassFieldTernaries(unittest.TestCase):
+
+    def test_semicolon_ends_a_conditional_that_continues_across_lines(self):
+        source = """
+            function inspect(add, ready, fallback) {
+                return add(class {
+                    static read = ready ? 1 : 0
+                        ? 2 : 3;
+                    static write = fallback ? 1 : 0
+                });
+            }
+        """
+        self.assertEqual([4], cogc("register.js", source))
+
+    def test_same_line_semicolon_preserves_the_enclosing_conditional(self):
+        source = """
+            function inspect(add, enabled, ready, fallback) {
+                return enabled ? add(class {
+                    static read = ready ? 1 : 0; static write = ready ? 1 : 0;
+                }) : fallback ? 2 : 3;
+            }
+        """
+        self.assertEqual([7], cogc("register.js", source))
+
+    def test_field_after_semicolon_follows_an_expression_arrow(self):
+        source = """
+            function inspect(add, ready, fallback) {
+                return add(class {
+                    static format = ready ? String : value => value ? 1 : 0;
+                    static write = fallback ? 1 : 0;
+                });
+            }
+        """
+        self.assertEqual([1, 2], cogc("register.js", source))
+
+    def test_implicit_field_separator_ends_conditional_inside_call(self):
+        source = """
+            function register(add, ready) {
+                return add(class {
+                    static read = ready ? 1 : 0
+                    static write = ready ? 1 : 0
+                });
+            }
+        """
+        self.assertEqual([2], cogc("register.js", source))
+
+    def test_field_separator_keeps_the_conditional_around_the_class(self):
+        source = """
+            function register(add, enabled, ready, fallback) {
+                return enabled ? add(class {
+                    read = ready ? 1 : 0
+                    write = ready ? 1 : 0
+                }) : fallback ? 2 : 3;
+            }
+        """
+        self.assertEqual([7], cogc("register.js", source))
+
+    def test_next_line_can_continue_the_field_conditional(self):
+        source = """
+            function register(add, ready, fallback) {
+                return add(class {
+                    static read = ready ? 1 : 0
+                        ? 2 : 3
+                    static write = fallback ? 1 : 0
+                });
+            }
+        """
+        self.assertEqual([4], cogc("register.js", source))
+
+
 class TestTypeScriptSignatures(unittest.TestCase):
     """The reader also discards the function of an overload signature.  That
     is no expression, so its tokens do not count for the function around

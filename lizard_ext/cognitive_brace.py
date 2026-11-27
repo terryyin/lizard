@@ -32,6 +32,9 @@ class _BraceCounter(_BraceActions, _BraceHeads, _Counter):  # pylint: disable=R0
             return
         if token == '?' and getattr(token, 'is_optional', False):
             return
+        if (getattr(token, 'is_class_field_boundary', False)
+                and (self.line != self.state.line or token == ';')):
+            self._end_class_field()
         state = self.state
         line = self.line
         if line != state.line:
@@ -207,6 +210,15 @@ class _BraceCounter(_BraceActions, _BraceHeads, _Counter):  # pylint: disable=R0
                 del frames[index:]
                 return True
         return False
+
+    def _end_class_field(self):
+        state = self.state
+        state.logical.pop(state.pdepth, None)
+        frames = state.frames
+        while (frames and frames[-1].kind == 'ternary'
+               and frames[-1].depth == state.depth
+               and frames[-1].pdepth == state.pdepth):
+            frames.pop()
 
     def _in_switch_body(self):
         top = self._top_structure()
