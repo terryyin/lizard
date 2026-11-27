@@ -6,6 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import lizard
+from lizard_languages.dart import DartReader
 
 from .dart_helpers import get_dart_function_list
 
@@ -134,6 +135,50 @@ int f() {
         self.assertEqual(1, len(result))
         self.assertEqual(1, result[0].cyclomatic_complexity)
 
+    def test_nullable_generic_parameters_add_no_decisions(self):
+        result = lizard.FileAnalyzer(lizard.get_extensions(['nd', 'cognitive'])).analyze_source_code(
+            'counts.dart', """
+int? countItems(List<int>? items) => items?.length;
+
+bool hasCachedRows({Map<String, List<int?>?> /* cached */ ? rows}) {
+  return rows?.isNotEmpty == true;
+}
+
+bool hasDefaultItems([List<int>? items = const [1]]) {
+  return items?.isNotEmpty ?? false;
+}
+""")
+        self.assertEqual(
+            [('countItems', 1, 0, 0), ('hasCachedRows', 1, 0, 0), ('hasDefaultItems', 2, 0, 0)],
+            [(f.name, f.cyclomatic_complexity, f.max_nesting_depth, f.cognitive_complexity)
+             for f in result.function_list])
+
+    def test_nullable_generic_local_does_not_increase_cyclomatic_complexity(self):
+        result = get_dart_function_list("""
+int cachedCount(Map<String, List<int>> cache, String key) {
+  final List<int>? items = cache[key];
+  return items?.length ?? 0;
+}
+""")
+        function, = result
+        self.assertEqual(2, function.cyclomatic_complexity)
+
+    def test_ternaries_after_a_generic_type_still_count(self):
+        result = lizard.FileAnalyzer(lizard.get_extensions(['nd'])).analyze_source_code(
+            'counts.dart', """
+int chooseCount(Object value, int cached, int fallback) {
+  return value is List<int>? cached : fallback;
+}
+
+int chooseAndCache(Object value, int cached, int fallback) {
+  return value is! List<List<int?>?> ? cached = fallback : cached;
+}
+""")
+        self.assertEqual(
+            [('chooseCount', 2, 1), ('chooseAndCache', 2, 1)],
+            [(f.name, f.cyclomatic_complexity, f.max_nesting_depth)
+             for f in result.function_list])
+
     def test_spaced_ternary_still_counts(self):
         result = get_dart_function_list('''
 int f(x, y, z, w) {
@@ -154,6 +199,33 @@ int f(int? x, [int fallback = 0]) {
         self.assertEqual('f', result[0].name)
         self.assertEqual(2, result[0].cyclomatic_complexity)
         self.assertEqual(2, result[0].parameter_count)
+
+
+class TestDartTokenFactory(unittest.TestCase):
+
+    def test_nullable_question_keeps_caller_class_and_span(self):
+        class LocatedToken(str):
+            def __new__(cls, match):
+                token = super().__new__(cls, match.group())
+                token.span = match.span()
+                return token
+
+        source = 'List<int>? items;'
+        tokens = list(DartReader.generate_tokens(source, token_class=LocatedToken))
+
+        self.assertTrue(all(type(token) is LocatedToken for token in tokens))
+        self.assertEqual((9, 10), next(token.span for token in tokens if token == '?'))
+
+    def test_nullable_declaration_accepts_non_string_factory(self):
+        source = 'List<int> /* cached */ ? items;'
+
+        def located_token(match):
+            return match.group(), match.span()
+
+        tokens = list(DartReader.generate_tokens(source, token_class=located_token))
+
+        self.assertEqual(source, ''.join(token for token, _ in tokens))
+        self.assertIn(('?', (23, 24)), tokens)
 
 
 class TestDartStringsAndCommentsInert(unittest.TestCase):
