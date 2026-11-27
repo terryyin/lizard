@@ -95,6 +95,10 @@ Delivered: `lizardnd.py` lost the `&&`/`||` branch and its `in_condition`/`logic
 
 Known gap: no end-to-end `-N` warning test with `&&`. The threshold reads `max_nesting_depth`, which the new tests prove.
 
+## Execution complete
+
+Product advice: no change to the queue. ND now matches ADR 0001's definition. The CHANGELOG `## Unreleased` entry warns users that ND values and `-N` results drop; when this is released, reply on #693 with the new behavior. `CHANGELOG.md` is now 264 lines. `docs/changelog-archive.md` already exists as the place to move older releases if a later change needs the file back under the size limit. The overlapping logical-operator unit tests (`..._with_and`, multiple, mixed, `..._bug_426`, and the new mixed-in-a-loop test) are cheap, so pruning them would save little.
+
 ## Plan review
 
 Slice 1 is a preparatory Structure slice that keeps the boundary promises green before slice 3 changes the metric. Slice 2 was added during execution, after the developer's file-size decision, so the behavior's test edits land in files within the limit. Slice 3 is one cohesive Behavior slice.
