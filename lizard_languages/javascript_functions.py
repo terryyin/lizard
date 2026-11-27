@@ -216,9 +216,8 @@ class JavaScriptFunctionsMixin:
         if token == '@':
             self._decorated_parameters = True  # constructor(@Inject(T) x)
         elif self._expression_operand(token):
-            # `x = (items.map(f))`, `x = (g(y))`: a call or member access at
-            # the root of the group, so an expression; read it as one so the
-            # arrows in it are found. Re-read the name before this token.
+            # A call, member access or logical object operand at the group
+            # root makes this an expression. Replay the preceding token.
             name = self.last_token
             self._abandon_optimistic_parameter_group()
             self.next(self._state_global, name)
@@ -245,12 +244,17 @@ class JavaScriptFunctionsMixin:
         self.context.add_to_long_function_name(" " + token)
 
     def _expression_operand(self, token):
+        if token not in ('.', '?.', '(', '{'):
+            return False
         bindings = self._parameter_bindings
         name = self.last_token
-        return (token in ('.', '?.', '(') and not self._decorated_parameters
-                and bindings.at_root and not bindings.in_expression
-                and not bindings._in_parameter_type
-                and name == bindings.previous and name not in ('this', 'new')
+        if (self._decorated_parameters or not bindings.at_root
+                or bindings.in_expression or bindings._in_parameter_type
+                or name != bindings.previous):
+            return False
+        if token == '{':
+            return name in ('&&', '||') and not self._expression_body
+        return (name not in ('this', 'new')
                 and (name[0].isalpha() or name[0] in ('_', '$')))
 
     def _expecting_func_opening_bracket(self, token):
