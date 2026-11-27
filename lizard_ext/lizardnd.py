@@ -2,6 +2,7 @@
 This is an extension of lizard, that counts the 'Nesting Depth'
 in every function.
 """
+from lizard_ext.nd_python import python_depth
 from lizard import FileInfoBuilder, FunctionInfo
 
 DEFAULT_ND_THRESHOLD = 7
@@ -27,6 +28,8 @@ class LizardExtension(object):  # pylint: disable=R0903
             default=DEFAULT_ND_THRESHOLD)
 
     def __call__(self, tokens, reader, l_depth=0):
+        if 'python' in getattr(reader, 'language_names', ()):
+            return python_depth(tokens, reader)
         implied_semicolons = None
         if hasattr(reader, "implied_semicolons"):
             tokens, implied_semicolons = reader.implied_semicolons(tokens)
