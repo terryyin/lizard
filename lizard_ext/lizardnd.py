@@ -4,6 +4,8 @@ in every function.
 """
 from lizard import FileInfoBuilder, FunctionInfo
 
+from .nd_conditions import ConditionHeaders
+
 DEFAULT_ND_THRESHOLD = 7
 
 
@@ -46,6 +48,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         else:
             indent_indicator = ';'
         # Most tokens cannot change the depth: one lookup skips them.
+        headers = ConditionHeaders.for_reader(reader)
         depth_tokens = frozenset(
             (indent_indicator, 'else', 'if', '(', ')')
         ).union(block_ends, block_starts, loops)
@@ -56,7 +59,7 @@ class LizardExtension(object):  # pylint: disable=R0903
                 context.clear_prev_was_else()
                 if context.get_condition_depth() == 0:
                     l_depth = context.end_statement()
-            if token in depth_tokens:
+            if (headers is None or not headers.advance(token)) and token in depth_tokens:
                 if token in block_ends:
                     l_depth = context.close_block()
                 if token in block_starts or token == indent_indicator:
