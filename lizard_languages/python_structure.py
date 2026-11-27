@@ -26,9 +26,16 @@ class PythonIndents:  # pylint: disable=R0902
 
 
 class PythonStates(CodeStateMachine):  # pylint: disable=R0903
+    read_return_annotations = True
+
+    supports_inline_suites = True
+    ignore_indentation = False
+    inline_suite = False
+
     def __init__(self, context, reader):
         super(PythonStates, self).__init__(context)
         self.reader = reader
+        self.lambda_heads = 0
 
     def _state_global(self, token):
         if token == 'def':
@@ -112,14 +119,63 @@ class PythonStates(CodeStateMachine):  # pylint: disable=R0903
     def _state_colon(self, token):
         if token == ':':
             self.next(self._state_first_line)
+        elif self.read_return_annotations and token == '->':
+            self.ignore_indentation = True
+            self.br_count = 0
+            self.lambda_heads = 0
+            self.next(self._state_return_annotation)
+        elif self.read_return_annotations and token == '\\\n':
+            return
         else:
             self.next(self._state_global)
 
+    def _state_return_annotation(self, token):
+        if isinstance(token, FStringExpressionToken):
+            return
+        if token in ('def', 'class'):
+            self.ignore_indentation = False
+            self.next(self._state_global, token)
+        elif token in ('(', '[', '{'):
+            self.br_count += 1
+        elif token in (')', ']', '}'):
+            self.br_count -= 1
+        elif self.br_count == 0:
+            if token == 'lambda':
+                self.lambda_heads += 1
+            elif token == ':':
+                if self.lambda_heads:
+                    self.lambda_heads -= 1
+                else:
+                    self.ignore_indentation = False
+                    self.next(self._state_first_line)
+
     def _state_first_line(self, token):
-        self._state = self._state_global
-        if token.startswith('"""') or token.startswith("'''"):
-            self.context.add_nloc(-token.count('\n') - 1)
-        self._state_global(token)
+        self.inline_suite = (
+            self.supports_inline_suites and token != '\n' and
+            self.context.pending_function is self.context.current_function)
+        if token.startswith('"""') or token.startswith("'" * 3):
+            newlines = token.count('\n')
+            self.context.add_nloc(-newlines - (not self.inline_suite))
+            if self.inline_suite and newlines:
+                self.next(self._state_global)
+                self.sub_state(self._state_after_inline_docstring)
+                return
+        self.next(self._state_global, token)
+
+    def _state_after_inline_docstring(self, token):
+        if token == ';':
+            return
+        if token not in ('\n', '\\\n'):
+            # The docstring excluded this line, which also contains code.
+            self.context.add_nloc(1)
+        self.next(self.saved_state, token)
+
+    def end_inline_line(self):
+        # Inline suites have no body indentation to attach the function.
+        self.context.add_bare_nesting()
+        self.context.pop_nesting()
+        self.inline_suite = False
+        self.next(self._state_global)
 
     def _state_parameterized_type_annotation(self, token):
         # Up to the "]" that closes the first "[": Callable[[int, str], int]
