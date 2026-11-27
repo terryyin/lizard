@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-078#c-family-pr-timing",
+  "title": "Qualify and merge the held C-family PRs",
+  "completedAt": "2026-11-26T18:00:54.696Z",
+  "developer": "Terry Yin",
+  "agent": "Mana-chan",
+  "host": "claude"
+}

@@ -5,9 +5,20 @@ analyzer that reads one source file and drives its language reader.
 import re
 import sys
 from lizard_languages import get_reader_for, CLikeReader
+from lizard_languages.token_pattern import is_grouped_type_argument_token
 from lizard_ext import auto_read
 from lizard_core.function_info import FileInformation
 from lizard_core.file_info_builder import FileInfoBuilder
+
+
+def _fold_wrapped_type_argument(token):
+    lines = [line for line in map(str.strip, token.split('\n')) if line]
+    parts = [lines[0]]
+    for previous, line in zip(lines, lines[1:]):
+        if not (previous.endswith('<') or line.startswith('>')):
+            parts.append(' ')
+        parts.append(line)
+    return ''.join(parts), len(lines) - 1
 
 
 def preprocessing(tokens, reader):
@@ -46,7 +57,11 @@ def line_counter(tokens, reader):
         if token != "\n":
             count = token.count('\n')
             context.current_line += count
-            context.add_nloc(count + newline)
+            nloc = count + newline
+            if count and is_grouped_type_argument_token(token):
+                token, continuation_lines = _fold_wrapped_type_argument(token)
+                nloc = continuation_lines + newline
+            context.add_nloc(nloc)
             newline = 0
             yield token
         else:
@@ -120,8 +135,9 @@ def _add_default_values(functions, defaults):
     """An extension sets its value on the function that is current when
     a token passes. A reader can start and end a function between two
     tokens, such as a last arrow function argument before a line break,
-    and the extension never sees that function."""
+    and the extension never sees that function.  A class-level fallback,
+    such as the cognitive complexity one, is not a value of the function."""
     for name, value in defaults:
         for function in functions:
-            if not hasattr(function, name):
+            if name not in vars(function):
                 setattr(function, name, value)

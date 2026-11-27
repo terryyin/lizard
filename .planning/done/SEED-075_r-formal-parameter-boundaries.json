@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "identity": "SEED-075#r-formal-parameter-boundaries",
+  "title": "Count R variadic and quoted formals with nested defaults",
+  "completedAt": "2026-11-26T13:34:42.421Z",
+  "developer": "Terry Yin",
+  "agent": "Akiho-chan",
+  "host": "cursor",
+  "model": "auto"
+}

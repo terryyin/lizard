@@ -86,10 +86,12 @@ class DartReader(CLikeReader):
         # Closing ?> generics stay the existing <…?> token.
         return clike_tokens(
             source_code,
-            r"|(?:r)?'''[\s\S]*?'''" +
-            r'|(?:r)?"""[\s\S]*?"""' +
-            r"|r'(?:\\.|[^'\\])*?'" +
-            r'|r"(?:\\.|[^"\\])*"' +
+            r"|r'''[\s\S]*?'''" +
+            r'|r"""[\s\S]*?"""' +
+            r"|'''(?:\\.|(?!''')[^\\])*'''" +
+            r'|"""(?:\\.|(?!""")[^\\])*"""' +
+            r"|r'[^'\r\n]*'" +
+            r'|r"[^"\r\n]*"' +
             r"|\w+\?(?!\.)" +
             r"|\?\?=" +
             r"|\?\?" +

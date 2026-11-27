@@ -56,7 +56,7 @@ class TestParenthesizedAssignmentAsiNestingDepth(unittest.TestCase):
           if (name !== "YAML") return
           minor = args[0]
           state.checkLineBreaks = (minor < 2)
-          if (minor !== 1 && minor !== 2) {
+          if (minor !== 1 ? minor !== 2 : false) {
             return
           }
         }

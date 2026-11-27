@@ -10,6 +10,8 @@ import {
   openLaunches,
 } from "./first-landing-expectation.mjs";
 import { managementContext } from "./publication-git.mjs";
+import { readSharedCheckoutNote } from "./read-shared-checkout-note.mjs";
+import { rangeUncertainty } from "./shared-checkout-note.mjs";
 
 // The expectation keys for a checkout's launches, or undefined outside a
 // Git checkout, where no launch can be open.
@@ -70,8 +72,17 @@ export async function resolvePublicationLandingContext({
 // execution-session-evidence.mjs so execution start never needs landing.
 export async function resolveLaunchLanding(request) {
   const landingContext = await resolvePublicationLandingContext(request);
-  const reference = landingContext
-    ? JSON.parse(await readFile(landingContext, "utf8")).reference
-    : undefined;
-  return { landingContext, reference };
+  if (!landingContext) return {};
+  const { reference, identity: story } = JSON.parse(
+    await readFile(landingContext, "utf8"),
+  );
+  return {
+    landingContext,
+    reference,
+    story,
+    uncertainty: rangeUncertainty(
+      await readSharedCheckoutNote(landingContext),
+      new Date().toISOString(),
+    ),
+  };
 }

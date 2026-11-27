@@ -9,6 +9,18 @@ from .clike import CCppCommentsMixin
 from .golike import GoLikeStates
 
 
+# Rust punctuation is ASCII. U+200E and U+200F are whitespace in Rust.
+_NON_ASCII_IDENTIFIER_CHAR = r'[^\x00-\x7f\s\u200e\u200f]'
+_RAW_STRING_TOKEN = (
+    # Raw text, byte and C strings. Reject prefixes within names and suffixes.
+    r'''|(?=[bcr])(?<![A-Za-z0-9_'"#])(?<!''' + _NON_ASCII_IDENTIFIER_CHAR + r')'
+    r'[bc]?r(?P<rust_raw_hashes>#{0,255})"[^"]*'
+    r'(?:"(?!(?P=rust_raw_hashes))[^"]*)*"(?P=rust_raw_hashes)'
+    r'(?:(?:[A-Za-z_]|' + _NON_ASCII_IDENTIFIER_CHAR +
+    r')(?:[A-Za-z_0-9]|' + _NON_ASCII_IDENTIFIER_CHAR + r')*)?'
+)
+
+
 class RustReader(CodeReader, CCppCommentsMixin):
     # pylint: disable=R0903
 
@@ -33,9 +45,14 @@ class RustReader(CodeReader, CCppCommentsMixin):
     @staticmethod
     def generate_tokens(source_code, addition='', token_class=None):
         addition = (
+            r"|(?:r#\w+)"  # raw identifiers, before '#' can start a macro
             # char literals, before lifetimes, which also start with `'`
             r"|(?:'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])')"
             r"|(?:'\w+\b)")  # lifetimes, labels
+        if 'r"' in source_code or 'r#' in source_code:
+            addition += _RAW_STRING_TOKEN
+            if token_class is None:
+                token_class = _rust_token_text
         return CodeReader.generate_tokens(
             _flatten_nested_comments(source_code), addition, token_class)
 
@@ -56,11 +73,21 @@ class RustReader(CodeReader, CCppCommentsMixin):
                 last = token
 
 
+def _rust_token_text(match):
+    token = match.group(0)
+    if match.lastgroup == 'rust_raw_hashes':
+        # Extensions identify string tokens by the first quote.
+        return '"' + token
+    return token
+
+
 class RustStates(GoLikeStates):  # pylint: disable=R0903
     FUNC_KEYWORD = 'fn'
 
     def __init__(self, context, in_match_arms=False):
         super().__init__(context)
+        self._forgive_enclosing = (context.forgive
+                                   and context.current_function is not context.global_pseudo_function)
         self._in_match_arms = in_match_arms
         self._seen_match_arm = False
         self._match_subject_nesting = 0
@@ -83,6 +110,40 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
         if self._count_let_else(token):
             return
         super()._state_global(token)
+
+    def _function_name(self, token):
+        if token == '(':
+            # A bare function type has no name between `fn` and `(`.
+            self._fold_signature()
+            self.next(self._state_global, token)
+        else:
+            super()._function_name(token)
+
+    def _expect_function_impl(self, token):
+        if token == '{':
+            # Bracket depth guards semicolons. A brace still starts the body.
+            self.br_count = 0
+            super()._expect_function_impl(token)
+        elif token in ('[', '('):
+            self.br_count += 1
+        elif token in (']', ')') and self.br_count:
+            self.br_count -= 1
+        elif token == ';' and not self.br_count:
+            self._fold_signature()
+            if not self._forgive_enclosing:
+                self.context.forgive = False
+            self.next(self._state_global)
+
+    def _fold_signature(self):
+        self.fold_into_enclosing_function()
+        # The enclosing scope already counted the opening `fn` token.
+        self.context.current_function.nloc -= 1
+        self.context.current_function.token_count -= 1
+
+    def _function_impl(self, token):
+        # A full function body consumes the pending forgiveness.
+        self._forgive_enclosing = False
+        super()._function_impl(token)
 
     def _count_let_else(self, token):
         """Count `let ... else`. The `else` of an `if` is not another condition.
@@ -135,7 +196,7 @@ class RustStates(GoLikeStates):  # pylint: disable=R0903
 
 _CHAR_LITERAL = re.compile(
     r"'(?:\\(?:x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)|[^'\\\n])'")
-_RAW_STRING = re.compile(r'b?r(#*)"')
+_RAW_STRING = re.compile(r'[bc]?r(#*)"')
 
 
 def _flatten_nested_comments(source):
@@ -171,7 +232,7 @@ def _flatten_nested_comments(source):
             i = j
             continue
         elif source[i] == '"' or (
-                source[i] in 'br' and (i == 0 or not (
+                source[i] in 'bcr' and (i == 0 or not (
                     source[i - 1].isalnum() or source[i - 1] == '_'))
                 and _RAW_STRING.match(source, i)):
             raw = _RAW_STRING.match(source, i) if source[i] != '"' else None
