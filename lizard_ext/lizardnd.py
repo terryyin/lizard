@@ -5,6 +5,7 @@ in every function.
 from lizard import FileInfoBuilder, FunctionInfo
 
 DEFAULT_ND_THRESHOLD = 7
+_DEF_KEYWORD_LANGUAGES = frozenset(('python', 'ruby', 'scala'))
 
 
 class LizardExtension(object):  # pylint: disable=R0903
@@ -40,6 +41,9 @@ class LizardExtension(object):  # pylint: disable=R0903
             loops = set(['if', 'foreach', 'for', 'while',
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
+        if (not hasattr(reader, "loops") and
+                _DEF_KEYWORD_LANGUAGES.isdisjoint(getattr(reader, 'language_names', ()))):
+            loops.discard('def')
         block_starts = getattr(reader, "block_starts", ('{',))
         if hasattr(reader, "indent_indicator"):
             indent_indicator = reader.indent_indicator

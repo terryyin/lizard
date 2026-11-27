@@ -40,6 +40,14 @@ class TestCppNestingDepth(unittest.TestCase):
         result = get_cpp_with_nestdepth("int fun(){return (a)?b:c;}")
         self.assertEqual(1, result[0].max_nesting_depth)
 
+    def test_default_parameter_short_name_is_not_a_structure(self):
+        functions = get_cpp_with_nestdepth("""
+        int resolvePort(int supplied, int def) {
+            return supplied > 0 ? supplied : def;
+        }
+        """)
+        self.assertEqual(1, functions[0].max_nesting_depth)
+
     def test_one_function_nd_with_forever_loop(self):
         result = get_cpp_with_nestdepth("int fun(){for(;;){dosomething();}}")
         self.assertEqual(1, result[0].max_nesting_depth)
