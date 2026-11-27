@@ -1175,9 +1175,7 @@ class TestJavaScriptCallsInCaseBlocks(unittest.TestCase):
 
 
 class TestJavaScriptFunctionsInGroupedExpressions(unittest.TestCase):
-    """The reader does not list a function that it meets in the parameters of
-    a possible arrow function.  The function around the expression does not
-    get its score."""
+    """Nested function decisions stay separate from the enclosing function."""
 
     def test_arrow_function(self):
         self.assertEqual([0], cogc("a.js", """
@@ -1192,31 +1190,31 @@ class TestJavaScriptFunctionsInGroupedExpressions(unittest.TestCase):
             }"""))
 
     def test_method(self):
-        self.assertEqual([0], cogc("a.js", """
+        self.assertEqual([1, 0], cogc("a.js", """
             function outer() {
               const obj = ({ m() { if (v) go(); } });
             }"""))
 
     def test_typescript_method_with_return_type(self):
-        self.assertEqual([0], cogc("a.ts", """
+        self.assertEqual([1, 0], cogc("a.ts", """
             function outer() {
               const obj = ({ m(): void { if (v) go(); } });
             }"""))
 
     def test_typescript_method_with_literal_return_type(self):
-        self.assertEqual([0], cogc("a.ts", """
+        self.assertEqual([1, 0], cogc("a.ts", """
             function label(v) {
               const obj = ({ m(): 'a' | 'b' { return v ? 'a' : 'b'; } });
             }"""))
 
     def test_typescript_method_with_generic_return_type(self):
-        self.assertEqual([0], cogc("a.ts", """
+        self.assertEqual([1, 0], cogc("a.ts", """
             function outer() {
               const obj = ({ m(): Promise<void> { if (v) go(); } });
             }"""))
 
     def test_tsx_method_with_generic_return_type(self):
-        self.assertEqual([0], cogc("a.tsx", """
+        self.assertEqual([1, 0], cogc("a.tsx", """
             function outer() {
               const obj = ({ m(): Array<number> { return v ? [1] : []; } });
             }"""))

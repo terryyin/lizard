@@ -55,6 +55,11 @@ class JavaScriptBindings:
     def at_root(self):
         return len(self._frames) == 1 and not self._expression_brackets
 
+    @property
+    def in_object_pattern(self):
+        return (self._frames[-1].closing == '}' and not self._in_parameter_type
+                and not self.in_expression)
+
     def read_token(self, token, report=True):
         if not self._frames:
             return (BindingEvent(True, False, False, False, False)

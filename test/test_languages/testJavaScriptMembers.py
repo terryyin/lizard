@@ -94,6 +94,19 @@ class Test_JavaScript_members(unittest.TestCase):
         for method in expected_methods:
             self.assertIn(method, found_methods, f"Method '{method}' should be detected. Found: {found_methods}")
 
+    def test_method_in_grouped_object_keeps_its_own_function(self):
+        functions = get_js_function_list('''function run() {
+  const result = ({ run(ready) { if (ready) return startTask(); } });
+  return result;
+}
+const active = ({ ready = true }) => ready;
+''')
+        self.assertEqual(
+            [('run', 2, 2, ['ready']), ('run', 1, 1, []),
+             ('active', 5, 2, ['ready'])],
+            [(f.name, f.start_line, f.cyclomatic_complexity, f.parameters)
+             for f in functions])
+
     def test_class_with_template_literal_bug(self):
         # Template literals with ${} interpolation seem to break class method detection
         code = '''

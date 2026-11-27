@@ -67,6 +67,25 @@ def test_callback_keeps_decisions_and_following_formals(suffix, call):
         ('(anonymous)', 2, 1, 4, []), ('after', 2, 5, 5, ['y'])]
 
 
+@pytest.mark.parametrize('suffix', ('js', 'ts'))
+def test_first_keyword_method_in_grouped_object_keeps_its_role(suffix):
+    source = """function makeFakePromise() {
+  const handle = ({
+    catch(error) { return error; },
+    then() { return this; },
+  });
+  return handle;
+}
+"""
+    result = functions(source, suffix, 'NS')
+
+    assert [(f.name, f.parameters, f.cyclomatic_complexity,
+             f.max_nested_structures) for f in result] == [
+        ('catch', ['error'], 1, 0), ('then', [], 1, 0),
+        ('makeFakePromise', [], 1, 0),
+    ]
+
+
 @pytest.mark.parametrize('suffix', SUFFIXES)
 def test_object_array_keeps_decisions_and_following_formals(suffix):
     source = ('function f(x) {\n return {w: [m[x ? 1 : 0]]};\n}\n'
