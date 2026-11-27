@@ -128,9 +128,12 @@ def _read_factory_string(source, start, prefix, scanner, matches=None):
         return None
     end, _ = raw
     match = pattern.match(source, start) if matches is None else next(matches)
-    if match.start() != start or match.end() != end:
-        _, parts = _read_string(source, start, prefix, scanner)
-        return end, parts, False
+    if match.span() != (start, end):
+        # Keep an explicit addition's match when the built-in regex agrees with the lexer.
+        if matches is None or pattern.match(source, start).end() != end:
+            _, parts = _read_string(source, start, prefix, scanner)
+            return end, parts, False
+        end = match.end()
     # The original factory also transformed the complete quoted token.
     text = token_class(match)
     if isinstance(text, str) and text[:1] in ('"', "'"):
@@ -205,6 +208,13 @@ def _read_field(source, pos, quote, raw, scanner):
             pos, tokens = result
             parts.extend(tokens)
             continue
+        if (token_class is not None and token.lower() in _STRING_PREFIXES and
+                source[pos:pos + 1] in ('"', "'")):
+            quoted = pattern.match(source, pos)
+            if quoted.end() > pos + 1:
+                parts.append(_NestedFactoryString(match.start(), quoted.end()))
+                pos = quoted.end()
+                continue
         if not closers:
             if token == '}':
                 return pos, parts
