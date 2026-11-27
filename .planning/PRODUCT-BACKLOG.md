@@ -7,7 +7,6 @@ Maintenance, bug fixing, and PR reviews. We accept PRs and issues that fix or im
 ## Taken
 
 - [Measure ND from control structures only](seeds/SEED-078-pr-batch-follow-ups.md#nd-without-logical-operators) — SEED-078#nd-without-logical-operators ([plan](slice-plans/048-nd-without-logical-operators/PLAN.md))
-- [Count ternaries in control headers for all brace languages](seeds/SEED-078-pr-batch-follow-ups.md#cognitive-ternary-in-control-headers) — SEED-078#cognitive-ternary-in-control-headers ([plan](slice-plans/049-cognitive-ternary-in-control-headers/PLAN.md))
 
 ## Backlog list
 
