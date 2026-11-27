@@ -302,6 +302,8 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
                     else:
                         if member_access and not token.startswith(
                                 _COMMENT_STARTS):   # `p./* note */catch`
+                            if token == 'return':
+                                token = _MemberName(token)
                             member_access = False
                         if token in name_keywords:
                             keyword = token
