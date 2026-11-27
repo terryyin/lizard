@@ -18,6 +18,10 @@ class FStringLiteralToken(str):
     the f-string expression, never a standalone string.'''
 
 
+class _PartialFString(str):
+    """A caller-selected quote token that ends inside the f-string."""
+
+
 # Triple-quoted string patterns for the common tokenizer, so a whole
 # triple-quoted string is matched as a single token.
 _PY_TRIPLE_QUOTE = (
@@ -109,7 +113,11 @@ def _source_hook_values(source, pattern, scanner, addition):
                     factory = _factory_with_original_matches(source, matches, original_factory)
                 start = end
                 break
-            yield factory(quoted)
+            # The caller kept this shorter match. Mark it for legacy expansion.
+            value = factory(quoted)
+            if quoted.end() < end and isinstance(value, str) and value[:1] in ('"', "'"):
+                value = _PartialFString(value)
+            yield value
         else:
             return
 
@@ -136,6 +144,9 @@ def _mark_prefixed_strings(tokens, scanner=None):
             if isinstance(token, str) and token[:1] in ('"', "'") and not isinstance(
                     token, (FStringExpressionToken, FStringLiteralToken, PrefixedStringToken)):
                 if scanner is not None and held.lower() in _INTERPOLATED_PREFIXES:
+                    if isinstance(token, _PartialFString) and held.lower() in _FSTRING_PREFIXES:
+                        yield from _legacy_fstring_body(PrefixedStringToken(token), scanner[1])
+                        continue
                     string = _read_string(token, 0, held.lower(), scanner)
                     if string is not None and string[0] == len(token):
                         yield from string[1]
@@ -385,3 +396,117 @@ def _after_escape(source, pos, raw):
         return pos + 2
     # A backslash does not escape a replacement field's opening brace.
     return pos + 1
+
+
+# The caller owns this token boundary. Keep the original expansion of its partial text.
+def _legacy_fstring_body(token, token_class):
+    """Split an f-string body into literal chunks (kept as string tokens)
+    and interpolation expressions (re-tokenized so inner keywords count).
+
+    '{{' and '}}' are literal braces, not interpolations. Brace matching
+    inside an interpolation skips string literals so a '}' nested in quotes
+    does not end the expression early. If the body has no interpolation,
+    the original token is yielded unchanged.
+    """
+    quote = token[:3] if token[:3] in ('"""', "'''") else token[:1]
+    body = token[len(quote):len(token) - len(quote)]
+    literal = []
+    produced = []
+    i, n = 0, len(body)
+    while i < n:
+        if body[i:i + 2] in ('{{', '}}'):
+            literal.append(body[i])
+            i += 2
+            continue
+        if body[i] == '{':
+            j = _find_interpolation_end(body, i)
+            if literal:
+                produced.append(FStringLiteralToken(quote + ''.join(literal) + quote))
+                literal = []
+            # The interpolation is Python code: tokenize it as such, which
+            # also expands any nested f-string (recursion terminates on the
+            # ever-shorter interpolation body).
+            produced.extend(
+                FStringExpressionToken(tok)
+                for tok in _legacy_field_tokens(body[i + 1:j - 1], token_class))
+            i = j
+            continue
+        literal.append(body[i])
+        i += 1
+    if not produced:
+        yield token
+        return
+    if literal:
+        produced.append(FStringLiteralToken(quote + ''.join(literal) + quote))
+    for tok in produced:
+        yield tok
+
+
+def _legacy_field_tokens(source, token_class):
+    pattern = compiled_token_pattern(_PY_ADDITION)
+    tokens = tokens_in_span(pattern, source, 0, len(source), token_class)
+    prefix = None
+    for token in tokens:
+        if prefix is not None:
+            held, prefix = prefix, None
+            if isinstance(token, str) and token[:1] in ('"', "'"):
+                yield held
+                string = PrefixedStringToken(token)
+                if held.lower() in _FSTRING_PREFIXES:
+                    yield from _legacy_fstring_body(string, token_class)
+                else:
+                    yield string
+                continue
+            yield held
+            # Classify the current token normally.
+        if isinstance(token, str) and token.lower() in _STRING_PREFIXES:
+            prefix = token
+            continue
+        yield token
+    if prefix is not None:
+        yield prefix
+
+
+def _find_interpolation_end(body, start):
+    """Return index after the closing '}' of an interpolation opened at start."""
+    depth = 1
+    j = start + 1
+    n = len(body)
+    while j < n and depth:
+        if body[j] in '"\'':
+            j = _skip_quoted_literal(body, j)
+            continue
+        if body[j] == '{':
+            depth += 1
+        elif body[j] == '}':
+            depth -= 1
+        j += 1
+    return j
+
+
+def _skip_quoted_literal(body, pos):
+    """Advance past a Python string literal in body; return new position."""
+    n = len(body)
+    if pos + 2 < n and body[pos:pos + 3] in ('"""', "'''"):
+        quote = body[pos:pos + 3]
+        pos += 3
+        while pos < n:
+            if body[pos:pos + 3] == quote:
+                return pos + 3
+            if body[pos] == '\\':
+                pos += 2
+                continue
+            pos += 1
+        return n
+    if pos < n and body[pos] in '"\'':
+        quote = body[pos]
+        pos += 1
+        while pos < n:
+            if body[pos] == '\\':
+                pos += 2
+                continue
+            if body[pos] == quote:
+                return pos + 1
+            pos += 1
+        return n
+    return pos
