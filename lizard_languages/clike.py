@@ -82,7 +82,8 @@ class CppRValueRefStates(CodeStateMachine):
     }
     _REFERENCE_END = {">", ")", ",", ";"}
     _IDLE_TOKENS = {"&&", "typedef", "(", "["}
-    _REFERENCE_SCAN_TOKENS = {"=", ";", "{", "}", ")", "&&", "[", "("}
+    _REFERENCE_SCAN_TOKENS = {"=", ";", "{", "}", ")", "&&", "[", "(", "!", "not", ".", "->"}
+    _CALL_ASSIGNMENT_TOKENS = {"(", ")", "[", "{", "}", ";", "&&", "typedef"}
     _LAMBDA_BEFORE = {"=", "(", "return", "co_return", "?", "&&", "||", "!", "+", "{", ",", ":"}
     _LAMBDA_GROUP_TOKENS = set("[](){}<>;=")
     _LAMBDA_IDLE_TOKENS = _LAMBDA_GROUP_TOKENS | _IDLE_TOKENS
@@ -100,6 +101,7 @@ class CppRValueRefStates(CodeStateMachine):
         # Track whether a counted && can still be deducted at an initializer.
         self._initializer_deduction = None
         self._type_before_paren = False
+        self._call_depth = 0
         self._lambda = None
         self._events = self._IDLE_TOKENS
 
@@ -131,6 +133,9 @@ class CppRValueRefStates(CodeStateMachine):
         if not self._counts_and(token):
             return
         previous = self.last_token
+        if previous and previous[0].isdigit():
+            self._end_reference_scan()
+            return
         if self._initializer_deduction is None:
             self._initializer_deduction = True
         if (self._initializer_deduction is not False and
@@ -173,6 +178,14 @@ class CppRValueRefStates(CodeStateMachine):
         if token == "&&":
             self._read_reference(token)
             return
+        if token in ("!", "not"):
+            if self.last_token == "&&" and self._initializer_deduction is True:
+                self._end_reference_scan()
+            return
+        if token in (".", "->"):
+            if self._initializer_deduction == self._GROUPED_SUBSCRIPT and self.last_token == "]":
+                self._initializer_deduction = self._GROUPED_OPERAND
+            return
         if token in ("[", "("):
             if token == "(":
                 if self.last_token == "&&" and self._initializer_deduction is True:
@@ -180,6 +193,8 @@ class CppRValueRefStates(CodeStateMachine):
                 elif (self._initializer_deduction == self._GROUPED_OPERAND and
                       self._recognize_references and self.last_token not in ("&&", "(")):
                     self._set_state(self._read_grouped_argument)
+                elif self._initializer_deduction is True and self.last_token.isidentifier():
+                    self._set_state(self._read_call_start)
             elif self._initializer_deduction == self._GROUPED_OPERAND and self._recognize_references:
                 self._initializer_deduction = self._GROUPED_SUBSCRIPT
             self._state_global(token)
@@ -189,9 +204,45 @@ class CppRValueRefStates(CodeStateMachine):
                 self._set_state(self._read_grouped_assignment_rhs)
                 return
             self.context.add_condition(-1)
-        self._set_state(self._state_global, self._IDLE_TOKENS)
+        self._end_reference_scan()
+
+    def _read_call_start(self, token):
+        if token[0].isdigit():
+            self._end_reference_scan()
+        elif token.isidentifier() and token not in self._PARAMETER_TYPE_KEYWORDS:
+            self._set_state(self._read_call_argument)
+        else:
+            self._continue_reference(token)
+
+    def _read_call_argument(self, token):
+        if token == "=":
+            self._call_depth = 1
+            self._set_state(self._read_call_assignment, self._CALL_ASSIGNMENT_TOKENS)
+        else:
+            self._continue_reference(token)
+
+    def _read_call_assignment(self, token):
+        if token == "(":
+            self._call_depth += 1
+            self._state_global(token)
+        elif token == ")":
+            self._call_depth -= 1
+            if not self._call_depth:
+                self._set_state(self._read_call_boundary)
+        else:
+            self._read_call_boundary(token)
+
+    def _read_call_boundary(self, token):
+        # A second closing parenthesis can end the enclosing condition.
+        if token != ")":
+            self.context.add_condition(-1)
+        self._end_reference_scan()
+        self._state_global(token)
 
     def _read_grouped_argument(self, token):
+        if self.last_token == "(" and token[0].isdigit():
+            self._end_reference_scan()
+            return
         # A default argument includes a parameter declaration before '='.
         if self.last_token == "(" and token.isidentifier() and token not in self._PARAMETER_TYPE_KEYWORDS:
             return
@@ -205,13 +256,16 @@ class CppRValueRefStates(CodeStateMachine):
         return self._initializer_deduction == self._GROUPED_OPERAND and self.last_token != "operator"
 
     def _read_grouped_assignment_rhs(self, token):
-        self._set_state(self._state_global, self._IDLE_TOKENS)
+        self._end_reference_scan()
         if token == "&&":
             # GNU C and C++ use unary && to take a label's address.
             if self._counts_and(token):
                 self.context.add_condition(-1)
         else:
             self._state_global(token)
+
+    def _end_reference_scan(self):
+        self._set_state(self._state_global, self._IDLE_TOKENS)
 
     def _lambda_head(self, token):
         # Keep the reference scan active in captures and parameter types.

@@ -428,6 +428,72 @@ bool read_if_ready(bool ready, int input) {
 
         self.assertEqual([("read_if_ready", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
 
+    def test_logical_and_with_indexed_member_assignment(self):
+        result = get_cpp_function_list("""struct Slot { int value; };
+bool save(bool ready, Slot* slots, int index, int input) {
+    return ready && (slots[index].value = input);
+}
+""")
+
+        self.assertEqual([("save", 2)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_with_negated_assignment(self):
+        result = get_cpp_function_list("""int find_index();
+bool missing(bool normal) {
+    int index;
+    return normal && !((index = find_index()) >= 0 && (index & 1));
+}
+""")
+
+        self.assertEqual([("missing", 3)], [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_before_call_with_assignment_in_later_argument(self):
+        result = get_cpp_function_list("""struct Node { Node* lower; };
+bool ranked(int key, Node* node);
+Node* previous(Node* node, int height, int key) {
+    Node* lower = nullptr;
+    for (; height > 0 && ranked(key, lower = node->lower); --height) {
+        node = lower;
+    }
+    return node;
+}
+
+bool ready_for_top(bool ready, Node* node) {
+    Node* lower = nullptr;
+    return ready && ranked(0, lower = node->lower);
+}
+
+bool ready_for_level(bool ready, Node* node) {
+    Node* lower = nullptr;
+    return ready && (ranked(1, lower = node->lower));
+}
+""")
+
+        self.assertEqual(
+            [("previous", 3), ("ready_for_top", 2), ("ready_for_level", 2)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
+    def test_logical_and_before_call_assignment_in_condition(self):
+        result = get_cpp_function_list("""int read(int value);
+int next_value(const int* cursor, bool active) {
+    int value = 0;
+    if (active && read(value = *cursor)) {
+        return value;
+    }
+    return 0;
+}
+
+struct Value {};
+Value fallback();
+void declare_reader() {
+    Value&& read(Value = fallback());
+}
+""")
+
+        self.assertEqual(
+            [("next_value", 3), ("declare_reader", 1)],
+            [(fn.name, fn.cyclomatic_complexity) for fn in result])
+
     def test_operator_and_call_with_assignment_argument(self):
         result = get_cpp_function_list("""struct Flag { bool operator&&(int) const; };
 int fetch();
