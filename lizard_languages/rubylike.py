@@ -244,6 +244,8 @@ class RubylikeStateMachine(CodeStateMachine):
 class RubylikeReader(CodeReader, ScriptLanguageMixIn):
     # pylint: disable=R0903
 
+    STATE_MACHINE = RubylikeStateMachine
+
     # Separated condition categories
     _control_flow_keywords = {'if', 'elsif', 'elseif', 'until', 'for', 'while',
                               'rescue', 'ensure', 'when'}
@@ -253,4 +255,4 @@ class RubylikeReader(CodeReader, ScriptLanguageMixIn):
 
     def __init__(self, context):
         super(RubylikeReader, self).__init__(context)
-        self.parallel_states = [RubylikeStateMachine(context)]
+        self.parallel_states = [self.STATE_MACHINE(context)]
