@@ -332,6 +332,20 @@ end
             [('visit', 2, 6), ('sample', 7, 9)],
             [(f.name, f.start_line, f.end_line) for f in result])
 
+    def test_assigned_lua_method_uses_the_qualified_target_name(self):
+        source = '''
+local function install(routes, handler)
+  routes.main.handler = function(request)
+    return handler(request)
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        result = analyzer.analyze_source_code('routes.lua', source)
+        self.assertEqual(
+            [('routes.main.handler', 0), ('install', 0)],
+            [(f.name, f.cognitive_complexity) for f in result.function_list])
+
     def test_callback_call_to_an_outer_parameter_does_not_count_as_recursion(self):
         analyzer = FileAnalyzer(get_extensions(['cognitive']))
         result = analyzer.analyze_source_code('routes.lua', '''
@@ -503,3 +517,144 @@ end
         self.assertEqual(
             [('f', 2, 6), ('g', 7, 9)],
             [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_if_and_while_can_follow_a_statement_on_the_same_line(self):
+        source = '''
+local function enable(account)
+  account:refresh() if account.active
+  then
+    account:enable()
+  end
+end
+
+local function drain(queue)
+  queue:refresh() while queue.pending
+  do
+    queue:drain()
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['nd', 'ns']))
+        result = analyzer.analyze_source_code('state.lua', source)
+        self.assertEqual(
+            [('enable', 2, 7, 1, 1), ('drain', 9, 14, 1, 1)],
+            [(f.name, f.start_line, f.end_line, f.max_nesting_depth, f.max_nested_structures)
+             for f in result.function_list])
+
+    def test_nesting_across_lua_conditional_branches(self):
+        source = '''
+local function nested(cache)
+  if cache.ready then
+    return cache
+  else
+    local fallback = cache:load()
+    if fallback then
+      return fallback
+    end
+  end
+end
+
+local function siblings(cache)
+  if cache.ready then
+    cache:touch()
+  elseif cache.expired then
+    cache:renew()
+  end
+  if cache.dirty then
+    cache:save()
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['nd', 'ns']))
+        result = analyzer.analyze_source_code('cache.lua', source)
+        self.assertEqual(
+            [('nested', 2, 2), ('siblings', 1, 1)],
+            [(f.name, f.max_nesting_depth, f.max_nested_structures)
+             for f in result.function_list])
+
+    def test_nesting_in_loop_bodies_and_table_constructors(self):
+        source = '''
+local function build_grid(size)
+  local grid = {}
+  for row = 1, size do
+    grid[#grid + 1] = {}
+    for col = 1, size do
+      grid[row][col] = row + col
+    end
+  end
+  return grid
+end
+
+local function visit(items, task)
+  for i = 1, #items do
+    task:catch(items[i].try)
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['nd', 'ns']))
+        result = analyzer.analyze_source_code('grid.lua', source)
+        self.assertEqual(
+            [('build_grid', 2, 2), ('visit', 1, 1)],
+            [(f.name, f.max_nesting_depth, f.max_nested_structures)
+             for f in result.function_list])
+
+    def test_repeat_loops_end_at_until(self):
+        source = '''
+local function send(socket)
+  repeat
+    if socket.ready then
+      socket:send()
+    end
+  until not socket.retry
+end
+
+local function save(socket)
+  repeat
+    socket:send()
+  until not socket.retry
+  if socket.closed then
+    socket:save()
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['nd', 'ns']))
+        result = analyzer.analyze_source_code('socket.lua', source)
+        self.assertEqual(
+            [('send', 2, 8, 2, 2), ('save', 10, 17, 1, 1)],
+            [(f.name, f.start_line, f.end_line, f.max_nesting_depth, f.max_nested_structures)
+             for f in result.function_list])
+
+    def test_standalone_do_and_inner_functions_have_their_own_scopes(self):
+        source = '''
+local function register(queue)
+  if queue.ready then
+    do
+      local function handle(item)
+        if item.valid then
+          queue:accept(item)
+        end
+      end
+      queue:subscribe(handle)
+    end
+  end
+  while queue.pending do
+    queue:drain()
+  end
+end
+'''
+        analyzer = FileAnalyzer(get_extensions(['nd', 'ns']))
+        result = analyzer.analyze_source_code('queue.lua', source)
+        self.assertEqual(
+            [('handle', 1, 1), ('register', 1, 2)],
+            [(f.name, f.max_nesting_depth, f.max_nested_structures)
+             for f in result.function_list])
+
+    def test_lua_method_names_do_not_add_nesting_depth(self):
+        analyzer = FileAnalyzer(get_extensions(['nd']))
+        result = analyzer.analyze_source_code('schedule.lua', '''
+local function schedule(task, report_error)
+  task.try(1)
+  task:catch(report_error)
+end
+''')
+        self.assertEqual([0], [f.max_nesting_depth for f in result.function_list])

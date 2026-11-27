@@ -7,6 +7,25 @@ from lizard import FileInfoBuilder, FunctionInfo
 DEFAULT_ND_THRESHOLD = 7
 
 
+def _reader_owned_nesting(extension):
+    """Let a reader supply nesting before preprocessing and generic counting."""
+    from functools import wraps
+
+    count_depth = extension.__call__
+
+    @wraps(count_depth)
+    def dispatch(self, tokens, reader, l_depth=0):
+        use_reader_nesting = getattr(reader, "use_reader_nesting", None)
+        if use_reader_nesting is not None:
+            use_reader_nesting("max_nesting_depth")
+            return tokens
+        return count_depth(self, tokens, reader, l_depth)
+
+    extension.__call__ = dispatch
+    return extension
+
+
+@_reader_owned_nesting
 class LizardExtension(object):  # pylint: disable=R0903
 
     FUNCTION_INFO = {

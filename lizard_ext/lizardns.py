@@ -70,6 +70,10 @@ class LizardExtension(ExtensionBase):  # pylint: disable=R0903
         self._set_structure_keywords(self.structures)
 
     def __call__(self, tokens, reader=None):
+        use_reader_nesting = getattr(reader, "use_reader_nesting", None)
+        if use_reader_nesting is not None:
+            use_reader_nesting("max_nested_structures")
+            return tokens
         if 'python' in getattr(reader, 'language_names', ()):
             return self._indented_structures(tokens, reader)
         if hasattr(reader, 'implied_semicolons'):
