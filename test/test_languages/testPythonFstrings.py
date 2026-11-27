@@ -355,6 +355,37 @@ class Test_Python_fstring_complexity(unittest.TestCase):
                 ], calls)
                 self.assertEqual(rest + tail, list(tokens))
 
+    def test_caller_partial_quotes_keep_the_legacy_identity_factory_trace(self):
+        from lizard_languages.python import PythonReader
+
+        source = 'f"{record["value"]}" + tail'
+        calls = []
+
+        def identity(match):
+            calls.append((match[0], match.span(), match.string, match.pos, match.endpos, match.lastgroup))
+            return match[0]
+
+        tokens = iter(PythonReader.generate_tokens(source, r'|(?P<quote>"[^"]*")', identity))
+
+        self.assertEqual([], calls)
+        self.assertEqual('f', next(tokens))
+        self.assertEqual([
+            ('f', (0, 1), source, 0, len(source), None),
+            ('"{record["', (1, 11), source, 0, len(source), 'quote'),
+        ], calls)
+        self.assertEqual('record', next(tokens))
+        self.assertEqual([('record', (0, 6), 'record', 0, 6, None)], calls[2:])
+
+        for token, start, end, name in (
+                ('value', 11, 16, None), ('"]}"', 16, 20, 'quote'),
+                (' ', 20, 21, None), ('+', 21, 22, None),
+                (' ', 22, 23, None), ('tail', 23, 27, None)):
+            call_count = len(calls)
+            self.assertEqual(token, next(tokens))
+            self.assertEqual([(token, (start, end), source, 0, len(source), name)], calls[call_count:])
+        self.assertEqual([], list(tokens))
+        self.assertEqual(9, len(calls))
+
     def test_token_factory_transforms_fstring_literal_text(self):
         from lizard_languages.python import PythonReader
 
