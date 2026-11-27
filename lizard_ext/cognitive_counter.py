@@ -204,7 +204,10 @@ class _Counter(_FunctionCandidates):
                 calls = getattr(token, 'is_member_name', False) or not (
                     self.profile.reserved_structures
                     and self._is_structure(token))
-            if calls:
+            # Bare `new` is the JavaScript constructor operator.
+            if calls and not (
+                    token == 'new' and self.profile.reserved_structures
+                    and state.prev not in _MEMBER_ACCESS and state.prev != '?.'):
                 state.pending_call = True
                 state.pending += 1
         if token in self.profile.jumps and \

@@ -17,13 +17,15 @@ _EXPRESSION_PREFIXES = (
 
 
 class TypeScriptDeclarationsMixin:
+    _annotating_class_field = False
+
     def _handle_type_declaration(self, token):
         if token in ('const', 'let', 'var'):
             self._declaration_binding = True
             self.last_tokens = self._prev_token = token
             return True
         elif token == 'class' and (not self.as_object or self._in_prop_value):
-            self._class_body_pending = True
+            self._class_body_pending += 1
         elif (token in ('as', 'satisfies')
               and (not self.as_object or self._in_prop_value)
               and self._assertion_operand()):
@@ -179,8 +181,22 @@ class TypeScriptDeclarationsMixin:
         typeStates = TypeScriptTypeAnnotationStates(self.context)
 
         def callback():
-            if typeStates.saved_token:
-                self._replay_token(typeStates.saved_token)
+            class_field = self._annotating_class_field
+            self._annotating_class_field = False
+            token = typeStates.saved_token
+            if token == 'new' and self.context.newline:
+                if (self.as_class and self.last_token == 'abstract'
+                        and typeStates.abstract_constructor_prefix):
+                    # Keep the constructor operator when a type can continue
+                    # with "abstract new" across a line break.
+                    self.next(self._state_global)
+                    self._prev_token = token
+                    return
+                if class_field or self.as_class and self._in_prop_value:
+                    self._read_class_new(token, after_field_type=True)
+                    return
+            if token:
+                self._replay_token(token)
         self.sub_state(typeStates, callback)
 
     def _read_runtime_colon(self):

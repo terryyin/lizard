@@ -5,6 +5,122 @@ from .testTypeScript import get_ts_function_list
 
 
 class Test_TypeScript_declared_functions(unittest.TestCase):
+    def test_ambient_and_overload_signatures_for_new_methods(self):
+        code = '''
+declare class ExistingRegistry {
+  new(key: string): object;
+}
+
+class Registry {
+  static new(key: string): Registry;
+  static new(key: string, fresh: boolean): Registry;
+  static new(key: string, fresh = false): Registry {
+    return key || fresh ? new Registry() : new Registry();
+  }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('new', 9, 4)],
+                         [(f.name, f.start_line, f.cyclomatic_complexity) for f in functions])
+
+    def test_generic_field_type_before_a_method_named_new(self):
+        code = '''
+class Registry {
+  cache!: Map<string, number>
+  new(ready: boolean) { return ready && this.cache }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('new', 2)], [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_type_checked_field_value_before_a_method_named_new(self):
+        for operator in ('as', 'satisfies'):
+            with self.subTest(operator=operator):
+                code = '''
+class Registry {
+  options = { enabled: true } OPERATOR Record<string, boolean>
+  new(key: 'enabled') {
+    return this.options[key] ? new Registry() : null;
+  }
+}
+'''.replace('OPERATOR', operator)
+                functions = get_ts_function_list(code)
+                self.assertEqual(
+                    [('new', 4, 2, ['key'])],
+                    [(f.name, f.start_line, f.cyclomatic_complexity, f.parameters)
+                     for f in functions])
+
+    def test_split_abstract_constructor_assertion_stays_type_only(self):
+        code = '''class Rect {
+  constructor(readonly width: number) {}
+}
+abstract class Shape {
+  factory = Rect as abstract
+    new (width: number) => Rect
+  area() { return new Rect(2).width; }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('constructor', 2, ['width']), ('area', 7, [])], [
+            (f.name, f.start_line, f.parameters) for f in functions
+        ])
+
+    def test_abstract_constructor_return_type_stays_with_field_arrow(self):
+        code = '''
+abstract class Item {}
+class Registry {
+  factory = (): abstract
+    new () => Item => Item;
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('factory', 12)], [(f.name, f.token_count) for f in functions])
+
+    def test_abstract_constructor_return_type_stays_with_method(self):
+        code = '''
+abstract class Item {}
+class Registry {
+  build(): abstract
+    new () => Item { return Item; }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual([('build', 14)], [(f.name, f.token_count) for f in functions])
+
+    def test_new_method_after_a_qualified_type_ending_in_abstract(self):
+        code = '''
+const defaults = { abstract: new Map<string, string>() };
+class Registry {
+  cache: typeof defaults.abstract
+  new(key: string) { return this.cache.get(key); }
+  constructor() { this.cache = defaults.abstract; }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual(
+            [('new', 1, 17, ['key']), ('constructor', 1, 12, [])],
+            [(f.name, f.cyclomatic_complexity, f.token_count, f.full_parameters)
+             for f in functions])
+
+    def test_non_null_field_value_before_a_method_named_new(self):
+        code = '''
+class Registry {
+  cache = new Map<string, string>()!
+  new(key: string) { return this.cache.get(key); }
+}
+
+class Cache {
+  data = new Map<string, string>();
+  current = this.data!
+  new(key: string) { return this.current.get(key); }
+}
+'''
+        functions = get_ts_function_list(code)
+        self.assertEqual(
+            [('new', 4, 1, ['key']), ('new', 10, 1, ['key'])],
+            [(f.name, f.start_line, f.cyclomatic_complexity, f.full_parameters)
+             for f in functions])
+
     def test_function_declare(self):
         functions = get_ts_function_list("""
             declare function create(o): void;

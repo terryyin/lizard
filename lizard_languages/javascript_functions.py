@@ -65,7 +65,7 @@ class JavaScriptFunctionsMixin:
             self._discard_signature()
             if not self.started_function:
                 return
-        if (self._state == self._state_global
+        if (self._state == self._state_global and not self._class_body_pending
                 and ends_expression(self.last_token)
                 and starts_statement(token)):
             self._end_statement()
@@ -256,7 +256,8 @@ class JavaScriptFunctionsMixin:
     def _expecting_func_opening_bracket(self, token):
         # Do not reset started_function for arrow functions (=>)
         if token == ':':
-            self.next(self._state_global)
+            if not self.as_class or self.function_name not in ('new', 'get new', 'set new'):
+                self.next(self._state_global)
             self._consume_type_annotation()
             return
         elif token == ';' and self.as_object and self._in_abstract_context:

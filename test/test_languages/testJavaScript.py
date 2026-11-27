@@ -338,6 +338,168 @@ function wrap(promise) {
                                  [(f.name, f.cyclomatic_complexity)
                                   for f in functions])
 
+    def test_class_members_named_new(self):
+        code = '''
+class Point {
+  x = 0;
+  constructor(x) { this.x = x; }
+
+  static new(x) {
+    if (!Number.isFinite(x)) return null;
+    return new Point(x);
+  }
+
+  xOffset = 1
+  new(x) { return new (Point)(x + this.xOffset); }
+}
+
+class PointFactory {
+  get new() { return Point.new; }
+}
+'''
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(filename, code).function_list
+                self.assertEqual(
+                    [('constructor', 1), ('new', 2), ('new', 1), ('get new', 1)],
+                    [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_bare_generator_methods_named_new(self):
+        code = '''
+class EventStream {
+  *new(events) {
+    for (const event of events) yield event;
+  }
+  close() {}
+}
+class Replay {
+  constructor(events) { this.events = events; }
+  *new() { yield* this.events; }
+}
+'''
+        for filename in ('a.js', 'a.ts'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(filename, code).function_list
+                self.assertEqual(
+                    [('new', 2, ['events']), ('close', 1, []),
+                     ('constructor', 1, ['events']), ('new', 1, [])],
+                    [(f.name, f.cyclomatic_complexity, f.parameters) for f in functions])
+
+    def test_multiline_class_heritage_reads_nested_method(self):
+        code = '''
+class Registry {
+  entry = class extends
+    new Proxy(Base, {
+      construct(target, args) { return Reflect.construct(target, args); },
+    }) {};
+
+  new() { return new this.entry(); }
+}
+'''
+        for filename in ('a.js', 'a.ts', 'a.jsx', 'a.tsx'):
+            with self.subTest(filename=filename):
+                functions = analyze_file.analyze_source_code(filename, code).function_list
+                self.assertEqual(
+                    [('construct', 5, ['target', 'args']), ('new', 8, [])],
+                    [(f.name, f.start_line, f.parameters) for f in functions])
+
+    def test_nested_class_heritage_reads_methods_in_both_bodies(self):
+        code = '''
+class Registry {
+  entry = class extends class extends
+    new Proxy(Base, {}) {
+      new(id) { return id; }
+    } {
+      new(id, label) { return [id, label]; }
+    };
+}
+'''
+        functions = analyze_file.analyze_source_code('a.js', code).function_list
+        self.assertEqual(
+            [('new', 5, ['id']), ('new', 7, ['id', 'label'])],
+            [(f.name, f.start_line, f.parameters) for f in functions])
+
+    def test_arrow_field_keeps_grouped_constructor_inside_class_heritage(self):
+        code = '''
+class Registry {
+  entry = () => class extends
+    new (this.Proxy ?? Proxy)(Base, {}) {};
+  new() { return new (this.entry())(); }
+}
+'''
+        functions = analyze_file.analyze_source_code('a.js', code).function_list
+        self.assertEqual(
+            [('entry', 3, 4), ('new', 5, 5)],
+            [(f.name, f.start_line, f.end_line) for f in functions])
+
+    def test_constructor_calls_in_multiline_field_values(self):
+        code = '''
+const async = 2;
+
+class Formatter {
+  constructor(normalize) { this.normalize = normalize; }
+  valueOf() { return this.normalize(0); }
+}
+
+class Dashboard {
+  enabled = true;
+  seed = 4;
+  formatter = this.cachedFormatter
+    ?? new Formatter(value => value || "unknown");
+  cache = this.enabled
+    ? new (Map)
+    : null;
+  score = this.seed
+    + async * new Formatter(value => value || 3);
+
+  render(value) { return this.formatter.normalize(value); }
+}
+'''
+        functions = analyze_file.analyze_source_code('dashboard.js', code).function_list
+        self.assertEqual(
+            [('constructor', 1), ('valueOf', 1), ('(anonymous)', 2),
+             ('(anonymous)', 2), ('render', 1)],
+            [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_generator_methods_named_new(self):
+        code = '''
+class EventStream {
+  static *new(events) { for (const event of events) yield event; }
+  async *new(events) { for await (const event of events) yield event; }
+  dispose() { return true; }
+}
+'''
+        functions = analyze_file.analyze_source_code('events.js', code).function_list
+        self.assertEqual(
+            [('new', 2), ('new', 2), ('dispose', 1)],
+            [(f.name, f.cyclomatic_complexity) for f in functions])
+
+    def test_new_method_after_a_ternary_field_keeps_its_own_parameters(self):
+        code = '''
+class Registry {
+  value = true
+    ? Object()
+    : null
+  new(ok) { return ok && this.value; }
+  dispose() { return true; }
+}
+'''
+        functions = analyze_file.analyze_source_code('registry.js', code).function_list
+        self.assertEqual(
+            [('new', 2, ['ok']), ('dispose', 1, [])],
+            [(f.name, f.cyclomatic_complexity, f.full_parameters) for f in functions])
+
+    def test_new_method_after_a_field_with_optional_new_property(self):
+        code = '''
+class Factory {
+  cached = this.options?.new
+  new(x) { return x ? 1 : 0; }
+}
+'''
+        functions = analyze_file.analyze_source_code('factory.js', code).function_list
+        self.assertEqual([('new', 2, ['x'])],
+                         [(f.name, f.cyclomatic_complexity, f.full_parameters) for f in functions])
+
     def test_key_named_like_a_keyword_is_no_structure(self):
         code = '''
 function options(a) {
