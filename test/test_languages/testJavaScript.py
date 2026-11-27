@@ -166,6 +166,48 @@ class Test_JavaScript_nullish_coalescing(unittest.TestCase):
                                             for f in functions])
 
 
+class TestJavaScriptElseIfComplexity(unittest.TestCase):
+    def test_elseif_identifier_adds_no_complexity(self):
+        code = """\
+function addBranches(branches, add) {
+  for (const elseif of branches) {
+    add(elseif.test);
+  }
+}
+"""
+        for filename in ('branches.js', 'branches.ts'):
+            with self.subTest(filename=filename):
+                self.assertEqual([('addBranches', 2, 1)], self.complexities(filename, code))
+
+    def test_javascript_else_if_adds_complexity(self):
+        code = """\
+function choose(primary, backup) {
+  if (primary) return 1;
+  else if (backup) return 2;
+  return 0;
+}
+"""
+        self.assertEqual([('choose', 3, 2)], self.complexities('branches.js', code))
+
+    def test_php_elseif_adds_complexity(self):
+        code = """\
+<?php
+function choose($primary, $backup) {
+  if ($primary) return 1;
+  elseif ($backup) return 2;
+  return 0;
+}
+"""
+        self.assertEqual([('choose', 3, 2)], self.complexities('branches.php', code))
+
+    @staticmethod
+    def complexities(filename, code):
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        result = analyzer.analyze_source_code(filename, code)
+        return [(f.name, f.cyclomatic_complexity, f.cognitive_complexity)
+                for f in result.function_list]
+
+
 class Test_JavaScript_keyword_as_the_name_of_a_member(unittest.TestCase):
     def test_keyword_after_a_dot_is_not_a_condition(self):
         code = (
