@@ -4,6 +4,7 @@ language selection and .gitignore rules, and dropping duplicate files.
 """
 import os
 import hashlib
+import re
 from fnmatch import fnmatch
 from lizard_languages import get_reader_for
 from lizard_ext import auto_open, auto_read
@@ -23,6 +24,64 @@ def md5_hash_file(full_path_name):
         return None
 
 
+_SEGMENT_PART = re.compile(r"\\(?P<escape>.|$)|(?P<bracket>\[)|\*{2,}")
+
+
+def _compatible_gitignore_segment(segment):
+    if segment == '**':
+        return segment
+
+    parts = []
+    position = 0
+    while True:
+        match = _SEGMENT_PART.search(segment, position)
+        if match is None:
+            parts.append(segment[position:])
+            return ''.join(parts)
+
+        parts.append(segment[position:match.start()])
+        position = match.end()
+        if match.group('escape') is not None:
+            if not match.group('escape'):
+                return None
+            parts.append(match[0])
+        elif match.group('bracket'):
+            # PathSpec allows a literal ']' at the start of a character class.
+            class_start = position
+            if segment[class_start:class_start + 1] in ('!', '^'):
+                class_start += 1
+            if segment[class_start:class_start + 1] == ']':
+                class_start += 1
+            close = segment.find(']', class_start)
+            if close == -1:
+                return None
+            end = close + 1
+            body = segment[position:end].replace('\\', r'\\')
+            # PathSpec treats a nested POSIX class opener as literal text.
+            parts.append('[' + body.replace('[:', r'\[:'))
+            position = end
+        else:
+            parts.append('*')
+
+
+def _compatible_gitignore_pattern(pattern):
+    """Keep the wildcard and bracket semantics used by PathSpec."""
+    negation = '!' if pattern.startswith('!') else ''
+    glob = pattern[len(negation):]
+    # A leading globstar can match zero directories, even after '/'.
+    if glob.startswith('/**/'):
+        glob = glob[1:]
+
+    segments = []
+    # PathSpec splits at every slash, including inside escapes and brackets.
+    for segment in glob.split('/'):
+        compatible = _compatible_gitignore_segment(segment)
+        if compatible is None:
+            return None
+        segments.append(compatible)
+    return negation + '/'.join(segments)
+
+
 def _build_gitignore_spec(patterns):
     '''Compile gitignore patterns while tolerating malformed lines.'''
     try:
@@ -32,9 +91,12 @@ def _build_gitignore_spec(patterns):
 
     compiled = []
     for pattern in patterns:
-        rules = gitmatch.compile([pattern]).patterns
+        compatible = _compatible_gitignore_pattern(pattern)
+        rules = gitmatch.compile([compatible]).patterns if compatible is not None else []
         if not rules and '\\' in pattern:
-            rules = gitmatch.compile([pattern.replace('\\', '/')]).patterns
+            fallback = _compatible_gitignore_pattern(pattern.replace('\\', '/'))
+            if fallback is not None:
+                rules = gitmatch.compile([fallback]).patterns
         compiled.extend(rules)
     return _GitignoreSpec(compiled) if compiled else None
 
