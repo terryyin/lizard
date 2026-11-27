@@ -33,6 +33,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._ts_declare = False  # Track if 'declare' was seen
         self._static_seen = False  # Track if 'static' was seen
         self._async_seen = False  # Track if 'async' was seen
+        self._async_signature = False
+        self._async_named_prefix = False
         self._prev_token = ''  # Track previous token to detect method calls
         # Token before the last '<': a generic arrow `x = <T>(...)` follows
         # '=' or 'async'; a generic call `x = f<T>(...)` follows a callee.
@@ -81,6 +83,12 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
     def _state_global(self, token):
         if self._pending_bindings:
             self._resolve_pending_bindings(token)
+        if self._async_seen and token not in ('(', '=>') and not token.startswith('<'):
+            # Keep a same-line async prefix through a method's type parameters
+            # and its opening parenthesis, or through a bare parameter's arrow.
+            self._async_named_prefix = (
+                self.last_token == 'async' and not self.context.newline
+                and token.replace('$', '_').isidentifier())
         if self._ts_declare or token in _SPECIAL_TOKENS:
             if ((self._ts_declare or token in DECLARATION_WORDS)
                     and self._handle_type_declaration(token)):
@@ -99,6 +107,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                     self._prev_token = token
                     return
                 if token == 'async':
+                    if not self._async_seen:
+                        self._async_named_prefix = False
                     if self._in_prop_value:
                         self._end_field_before_modifier()
                     self._async_seen = True
@@ -137,6 +147,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self._signature = True
             self._arrow_only_signature = False
             self._state = self._function
+            self._async_signature = (
+                self.last_token == 'async' and self._prev_token == 'async'
+                and not self.context.newline)
         elif (token in ('if', 'switch', 'for', 'while', 'catch')
               and not getattr(token, 'is_member_name', False)):
             self._condition_kind = token
@@ -144,6 +157,8 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         elif token in ('else', 'do', 'try', 'final'):
             self.next(self._expecting_statement_or_block)
         elif token in ('=>',):
+            if self.last_token != ')':
+                self._async_signature = self._async_seen and self._async_named_prefix
             self._arrow_line = self.context.current_line
             if not self._pending_bindings:
                 name = self.last_tokens
@@ -159,6 +174,9 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         elif token == '<' and self._class_body_pending:
             self._consume_generic_type_params()
         elif token == "(":
+            self._async_signature = (
+                self.last_token == 'async' and self._prev_token == 'async'
+                and not self.context.newline)
             self._parenthesis_prefix = self._prev_token
             if (self._prev_token in ('.', 'new')
                     or self._binding_candidate
@@ -198,6 +216,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             # Expression arrows read object operands; block bodies and typed
             # signatures awaiting a real body still open a nested function.
             if self.started_function and not self._expression_body:
+                self.context.current_function.javascript_async_body = self._async_signature
                 self.sub_state(
                     self.__class__(self.context),
                     self._end_function_body)

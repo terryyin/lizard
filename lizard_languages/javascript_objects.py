@@ -124,6 +124,10 @@ class JavaScriptObjectsMixin:
                 return True
             # Only "field = (" and "key: (" can open a group; a "(" after
             # a member name opens parameters.
+            self._async_signature = (
+                self._prev_token == 'async' and (
+                    self._async_named_prefix or self._in_prop_value
+                    and self.last_token == 'async' and not self.context.newline))
             self._signature = self.last_token not in ('=', ':')
             self._arrow_only_signature = not self._signature or (
                 self.last_token == 'async' and self.last_tokens == '='
@@ -178,6 +182,9 @@ class JavaScriptObjectsMixin:
         body, and not statements, `finally {`."""
         previous = self.last_token
         if self._class_body_pending:
+            return True
+        if (previous == 'await' and self._prev_token == 'await'
+                and getattr(self.context.current_function, 'javascript_async_body', False)):
             return True
         if previous is None:
             # A group's first token, `f({`, but in a block, `finally { {`.

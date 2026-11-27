@@ -141,6 +141,8 @@ class JavaScriptFunctionsMixin:
                 and self.context.current_function):
             # The body may start on the next line: `(e) =>\n  f(e)`.
             self.context.current_function.start_line = arrow_line
+        if self.started_function and token != '{':
+            self.context.current_function.javascript_async_body = self._async_signature
         if token == '{':
             # A block body closes any expression body (`a => b => {}`).
             if self._expression_body:
