@@ -37,7 +37,7 @@ class LizardExtension(object):  # pylint: disable=R0903
         if hasattr(reader, "loops"):
             loops = reader.loops
         else:
-            loops = set(['if', 'foreach', 'for', 'while', '&&', '||',
+            loops = set(['if', 'foreach', 'for', 'while',
                          '?', 'catch', 'case', 'try', 'def'])
         block_ends = getattr(reader, "block_ends", ('}',))
         block_starts = getattr(reader, "block_starts", ('{',))
@@ -47,7 +47,7 @@ class LizardExtension(object):  # pylint: disable=R0903
             indent_indicator = ';'
         # Most tokens cannot change the depth: one lookup skips them.
         depth_tokens = frozenset(
-            (indent_indicator, 'else', 'if', '(', ')', '&&', '||')
+            (indent_indicator, 'else', 'if', '(', ')')
         ).union(block_ends, block_starts, loops)
         context = reader.context
         for token in tokens:
@@ -73,21 +73,8 @@ class LizardExtension(object):  # pylint: disable=R0903
                 # Handle closing parenthesis - end of condition
                 elif token == ')':
                     context.close_condition()
-
-                # Handle logical operators && and || within conditions
-                elif token in ('&&', '||'):
-                    if context.get_in_condition():
-                        # Only add nesting depth for the first logical operator in a condition
-                        # Subsequent && or || operators in the same condition don't add depth
-                        if not context.get_logical_operator_added():
-                            l_depth = context.open_level()
-                            context.set_logical_operator_added(True)
-                    else:
-                        # Not in a condition, treat as regular nesting
-                        l_depth = context.open_level()
-
                 # Handle other loop keywords (if, for, while, etc.)
-                elif token in loops and token not in ('&&', '||') \
+                elif token in loops \
                         and not getattr(token, 'is_optional', False) \
                         and not getattr(token, 'is_member_name', False):
                     l_depth = context.open_level()
@@ -141,31 +128,12 @@ class NDFileInfoAddition(FileInfoBuilder):
         self.current_function.levels_awaiting_body = 0
         return self.add_nd_condition(-levels)
 
-    def set_in_condition(self, in_condition):
-        self.current_function.in_condition = in_condition
-
-    def get_in_condition(self):
-        return self.current_function.in_condition
-
     def open_condition(self):
         """A "(" opens a condition, or a level inside one."""
-        function = self.current_function
-        function.in_condition = True
-        function.condition_depth += 1
-        function.logical_operator_added = False
+        self.current_function.condition_depth += 1
 
     def close_condition(self):
         """A ")" closes a level, and the condition with its last level."""
-        self.decrement_condition_depth()
-        function = self.current_function
-        if function.condition_depth == 0:
-            function.in_condition = False
-            function.logical_operator_added = False
-
-    def increment_condition_depth(self):
-        self.current_function.condition_depth += 1
-
-    def decrement_condition_depth(self):
         function = self.current_function
         if function.condition_depth > 0:
             function.condition_depth -= 1
@@ -175,23 +143,12 @@ class NDFileInfoAddition(FileInfoBuilder):
             enclosing = self.stacked_functions[-1]
             if enclosing.condition_depth > 0:
                 enclosing.condition_depth -= 1
-                if enclosing.condition_depth == 0:
-                    enclosing.in_condition = False
-                    enclosing.logical_operator_added = False
 
     def get_condition_depth(self):
         return self.current_function.condition_depth
 
     def reset_condition_tracking(self):
-        self.current_function.in_condition = False
         self.current_function.condition_depth = 0
-        self.current_function.logical_operator_added = False
-
-    def set_logical_operator_added(self, added):
-        self.current_function.logical_operator_added = added
-
-    def get_logical_operator_added(self):
-        return self.current_function.logical_operator_added
 
     def set_prev_was_else(self, value):
         self.current_function.prev_was_else = value
@@ -233,9 +190,7 @@ def _init_nesting_depth_data(self, *_):
     self.max_nesting_depth = 0
     self.levels_awaiting_body = 0  # structure levels closed by their body
     self.block_levels = []  # structure levels each open block will close
-    self.in_condition = False  # Track if we're inside a condition
     self.condition_depth = 0   # Track nesting depth within conditions
-    self.logical_operator_added = False  # Track if we've added nesting for logical operators in current condition
     self.prev_was_else = False  # Track "else if" to not add nesting for the if (Issue #418)
 
 

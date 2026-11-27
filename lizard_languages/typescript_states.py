@@ -135,6 +135,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             if self.started_function and not self.as_object:
                 self._pop_function_from_stack()
             self._signature = True
+            self._arrow_only_signature = False
             self._state = self._function
         elif (token in ('if', 'switch', 'for', 'while', 'catch')
               and not getattr(token, 'is_member_name', False)):
@@ -170,6 +171,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        and self._generic_prefix in ('=', 'async'))):
                 # Only "name = (" can open a group.
                 self._signature = self.last_token != '='
+                self._arrow_only_signature = True
                 if not self.started_function:
                     self._function(self.function_name)
                 self.next(self._function, token)
@@ -198,7 +200,7 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             if self.started_function and not self._expression_body:
                 self.sub_state(
                     self.__class__(self.context),
-                    self._pop_function_from_stack)
+                    self._end_function_body)
             elif self._statement_block_start():
                 # A block statement, `{ const r = f(() => 1); }`, holds
                 # statements rather than object members.
@@ -248,6 +250,10 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         if self._prev_token != 'new':
             self._prev_token = token
 
+    def _end_function_body(self):
+        self.context.last_closed_function_body = self.context.current_function
+        self._pop_function_from_stack()
+
     def _statement_block_start(self):
         """Whether a '{' here starts a statement: right after a ';' or at
         the start of a function body or block, outside any expression."""
@@ -291,6 +297,15 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         else:
             self._prev_token = ''
             self.next(self._state_global, token)
+            # pylint: disable-next=comparison-with-callable
+            if token == 'function' and self._state == self._function:
+                self.next(self._braceless_function_declaration)
+
+    def _braceless_function_declaration(self, token):
+        """Record a declaration allowed as an if body in non-strict JS."""
+        self._function(token)
+        if token == '(' and self.started_function:
+            self.context.current_function.is_braceless_declaration = True
 
     def _state_template_literal(self, token):
         if token == '`':

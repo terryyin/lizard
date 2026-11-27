@@ -20,9 +20,106 @@ public String funcB() {
         self.assertEqual('funcA()', result[0].long_name)
         self.assertEqual('funcB()', result[1].long_name)
 
+    def test_json_text_block_counts_as_one_token(self):
+        code = '''
+class DiscountSchema {
+    String schema() {
+        return """
+            {
+                "if": {"required": ["discount"]},
+                "then": {"required": ["price"]}
+            }
+            """;
+    }
+
+    boolean enabled(int n) {
+        return n > 0;
+    }
+}
+'''
+        schema, enabled = get_java_function_list(code)
+        self.assertEqual(1, schema.cyclomatic_complexity)
+        self.assertEqual(8, schema.token_count)
+        self.assertEqual(8, schema.nloc)
+        self.assertEqual(10, schema.end_line)
+        self.assertEqual(12, enabled.start_line)
+
+    def test_text_block_with_escaped_quote_keeps_the_full_literal(self):
+        code = r'''
+class Help {
+    String example() {
+        return """
+            Use \""" to quote a text block.
+            if (ready) run();
+            """ + "\n";
+    }
+}
+'''
+        result, = get_java_function_list(code)
+        self.assertEqual(1, result.cyclomatic_complexity)
+        self.assertEqual(10, result.token_count)
+        self.assertEqual(6, result.nloc)
+
     def test_function_with_throws(self):
         result = get_java_function_list("void fun() throws e1, e2{}")
         self.assertEqual(1, len(result))
+
+    def test_lambda_field_does_not_consume_next_constructor(self):
+        code = """
+import java.util.function.Predicate;
+
+class ItemFilter {
+    private final Predicate<String> allowed = value -> this.valid(value) && permitted(value);
+
+    ItemFilter() {
+        if (!allowed.test("sample")) {
+            throw new IllegalStateException();
+        }
+    }
+
+    private boolean valid(String value) {
+        return !value.isEmpty();
+    }
+
+    private boolean permitted(String value) {
+        return value.length() < 20;
+    }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(['ItemFilter::ItemFilter', 'ItemFilter::valid', 'ItemFilter::permitted'],
+                         [function.name for function in result])
+        constructor = result[0]
+        self.assertEqual((7, 11), (constructor.start_line, constructor.end_line))
+        self.assertEqual(2, constructor.cyclomatic_complexity)
+
+    def test_comparison_in_lambda_field_preserves_following_members(self):
+        code = """
+import java.util.function.IntPredicate;
+
+class LambdaComparison {
+    final IntPredicate allowed = n -> this.check() && (n < 2);
+
+    LambdaComparison() {}
+    public boolean check() { return true; }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(['LambdaComparison::LambdaComparison', 'LambdaComparison::check'],
+                         [function.name for function in result])
+        self.assertEqual([5, 8], [function.token_count for function in result])
+
+    def test_instanceof_field_preserves_following_constructor(self):
+        code = """
+class TextValue {
+    final boolean allowed = value() instanceof String;
+    TextValue() {}
+    Object value() { return ""; }
+}
+"""
+        result = get_java_function_list(code)
+        self.assertEqual(['TextValue::TextValue', 'TextValue::value'],
+                         [function.name for function in result])
 
     def test_anonymous_class_in_field_initializer(self):
         code = """
@@ -250,6 +347,41 @@ enum Op {
             ["Op::apply", "Op::apply", "(anonymous)::help", "Op::apply", "Op::Op", "Op::Op"],
             [f.name for f in result])
 
+    def test_local_class_fields_preserve_the_enclosing_method(self):
+        result = get_java_function_list("""class Registry {
+    void configure(boolean enabled) {
+        class Target {
+            Runnable action;
+            void clear() { action = null; }
+            int retries;
+        }
+        Target target = new Target();
+        if (enabled) {
+            target.clear();
+        }
+    }
+    void reset() {}
+}
+""")
+        self.assertEqual(
+            [('Target::clear', 5, 5, 1), ('Registry::configure', 2, 12, 2),
+             ('Registry::reset', 13, 13, 1)],
+            [(function.name, function.start_line, function.end_line, function.cyclomatic_complexity)
+             for function in result])
+
+    def test_anonymous_class_field_preserves_the_enclosing_method(self):
+        result = get_java_function_list("""class Registry {
+    Object configure() {
+        return new Object() {
+            String label = "entry";
+        };
+    }
+}
+""")
+        self.assertEqual([('Registry::configure', 2, 6)],
+                         [(function.name, function.start_line, function.end_line)
+                          for function in result])
+
     def test_local_record_in_method_body(self):
         result = get_java_function_list("""
 class A {
@@ -273,6 +405,25 @@ class A {
 }
 """)
         self.assertEqual(["B::f", "A::g", "R::r", "A::R"], [f.name for f in result])
+
+    def test_local_method_signatures_include_each_enclosing_class_once(self):
+        result = get_java_function_list("""class Report {
+    Runnable printLater() {
+        class Printer implements Runnable {
+            public void run() {
+                class Sink { void flush() {} }
+                new Sink().flush();
+            }
+        }
+        return new Printer();
+    }
+}
+""")
+        self.assertEqual(
+            [('Sink::flush', 'Report::printLater.Printer::run.Sink::flush()'),
+             ('Printer::run', 'Report::printLater.Printer::run()'),
+             ('Report::printLater', 'Report::printLater()')],
+            [(function.name, function.long_name) for function in result])
 
     def test_interface_methods_with_bodies(self):
         result = get_java_function_list("""

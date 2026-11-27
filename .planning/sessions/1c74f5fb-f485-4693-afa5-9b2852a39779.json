@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "sessionId": "1c74f5fb-f485-4693-afa5-9b2852a39779",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-26T15:08:48.642Z",
+  "story": "SEED-078#multiline-token-long-names",
+  "ranges": [
+    {
+      "base": "70c09234a41a6821c6d3d70f3d9a4347ff946f65",
+      "candidate": "60a63ca6b53de36242570c289850d2b89c9afdd8"
+    },
+    {
+      "base": "60a63ca6b53de36242570c289850d2b89c9afdd8",
+      "candidate": "e0a9bd7edf9a957e13f716b3aad65039841e7734"
+    },
+    {
+      "base": "e0a9bd7edf9a957e13f716b3aad65039841e7734",
+      "candidate": "69822407c81e7f7cfef7a347e2190f73b07b9400"
+    }
+  ]
+}

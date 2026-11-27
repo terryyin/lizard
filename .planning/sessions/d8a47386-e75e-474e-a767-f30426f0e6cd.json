@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "sessionId": "d8a47386-e75e-474e-a767-f30426f0e6cd",
+  "workflow": "dough-story-refinement",
+  "closedAt": "2026-11-26T15:03:13.875Z",
+  "story": "SEED-078#c-family-pr-timing",
+  "ranges": [
+    {
+      "base": "70c09234a41a6821c6d3d70f3d9a4347ff946f65",
+      "candidate": "b4b18d996a5367ef8ad6567bf65764851910bf2a"
+    }
+  ]
+}

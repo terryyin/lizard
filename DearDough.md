@@ -140,6 +140,14 @@ When slice planning names an already-oversized suite as the only proof home and 
   - Evidence: plan 038 Current decisions allowed extending shared `mark_member_names` or a Perl-local wrap and settled only "no reader-file split"; implementation edited `lizard_languages/code_reader.py` (269 lines); conversation `89a21532-f79f-4cc8-900e-cda83a0a689d` refactor subagent `4b02ce7d-0671-4a00-9681-6e7785f4398d` returned `## REFACTOR JIDOKA STOP`; 2026-11-26 07:21-07:58 +08:00
   - Observed effect: Production helper over 250 lines had no size decision; the refactor pass stopped, the coordinator settled keep-without-split from the plan's own helper-extension decision, and the pass resumed
   - Inference: Same gap as above on a shared production file rather than a proof home; naming each alternative's target file size and keep-or-extract decision in the plan would have avoided one stop and resume round trip
+- Execution: SEED-075#kotlin-adjacent-nested-comments at `09437ff0`
+  - Timestamp: unknown
+  - Tool: Codex
+  - Model: gpt-6.2-sol
+  - Open Dough release: 0.3.116
+  - Evidence: The execution-ready plan at `75d72bc2` selected `lizard_languages/kotlin.py` (271 lines) for the scanner and recorded no reorganization. The execution preflight measured the file, but delegated the edit before settling that decision on 2026-11-26.
+  - Observed effect: The independent refactor stopped at 310 lines. The coordinator settled a same-reader split using the existing Perl and Fortran pattern, then the pass moved `KotlinStates` byte for byte and reran affected proof. The scanner stayed in `kotlin.py`.
+  - Inference: Recording the tokenizer and state-machine seam at preparation would have avoided the mid-delivery stop and the repeated focused verification.
 
 ## DD-491 — Black assumed as selective formatter, then `git checkout` wiped the slice
 
@@ -183,8 +191,100 @@ Other. `testSvelte.py`'s linear-time tests assert under 1 s of wall-clock time. 
   - Observed effect: about 3 minutes of reruns and diagnosis; the full `make` gate stayed red locally for reasons unrelated to the change
   - Inference: concurrent worktree sessions sharing the machine make absolute wall-clock bounds unreliable as a local gate
 
+## DD-494 — `nix develop -c` from `AGENTS.md` fails on this host without flake features
+
+Concrete defect. `AGENTS.md` and `.agents/agent-map.md` tell agents to prefix tooling with `nix develop -c`. On this host `nix-command` is not enabled, so that literal command fails, and every execution has to rediscover `nix --extra-experimental-features 'nix-command flakes' develop -c`.
+
+### Occurrences
+- Execution: SEED-075#plsql-national-literals
+  - Timestamp: 2026-11-26T15:30:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: coordinator readiness check `nix develop -c python -m pytest test/test_languages/testPLSQL.py` failed with `experimental Nix feature 'nix-command' is disabled`; plan 041's premises already used the flag form; implementation `bcfcf39d`
+  - Observed effect: one failed readiness command, and every delegation brief had to carry the corrected wrapper
+  - Inference: the cost is small per execution but recurs. Enabling the features in the host's Nix config, or documenting the flag form, would remove it. Timestamp approximate within the session
+- Execution: SEED-075#plsql-nonstrict-case
+  - Timestamp: 2026-11-26T21:55:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: coordinator readiness `nix develop -c python -m pytest …` failed with `experimental Nix feature 'nix-command' is disabled`; the slice-2 implementer's first `slice-clock.mjs run` passed the flag form as one string and failed with `spawn nix --extra-experimental-features … ENOENT` (job evidence `slice2/corrected-test.log`), then wrote an `nx.sh` wrapper; implementation `3eb7f65d`
+  - Observed effect: one failed readiness command, the corrected wrapper carried in every brief, and one wasted implementer proof run
+  - Inference: the longer flag form makes quoting mistakes more likely when commands are passed as argument arrays
+- Execution: SEED-078#c-family-pr-timing
+  - Timestamp: 2026-11-26T23:12:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: the coordinator's first key-example run, `nix develop -c python …`, failed with `experimental Nix feature 'nix-command' is disabled`. The plan's premises already used the flag form.
+  - Observed effect: one failed command, after which the flag form was used throughout
+- Execution: SEED-078#nd-without-logical-operators
+  - Timestamp: 2026-11-27T00:00:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: the coordinator's readiness command `nix develop -c python -m pytest -q test/testNestingDepth.py` failed with `experimental Nix feature 'nix-command' is disabled`. Plan 048's premises already used the flag form. First implementation commit `28f3ba58`.
+  - Observed effect: one failed readiness command. Every brief then carried the flag form, and no implementer run failed on it.
+  - Inference: the timestamp is approximate to the session start; only the date is certain
+
+## DD-495 — Coordinator acceptance and paired timing caught two defects after green implementer proof
+
+Other. In slice 2 the implementer's tests, full suite and CLI proof all passed. Two defects were found only after that. A coordinator probe of a plan decision ("declaration and long-name text in source spelling") showed lowercased keywords in `long_name`. The plan's paired-runner qualification then measured a +5.9% slowdown on the PL/SQL API workload. Both were fixed within the slice before delivery.
+
+### Occurrences
+- Execution: SEED-075#plsql-nonstrict-case
+  - Timestamp: 2026-11-26T22:12:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: plan 044 Story obligations G1; job evidence `slice2/longname.py` printed `TRUE or FALSE`; `perf/out/api-plsql.json` +5.9%, 95% CI [-0.5, 12.7]; after the fix `api-plsql-r2.json` CI [-3.7, 2.6]; implementation `34a6d195`
+  - Observed effect: two short correction rounds (about 2 slice-clock minutes) instead of a follow-up correction story
+  - Inference: the implementer had flagged the long-name risk as an untested gap in its return. Reading a return's "unexpected" items against the plan's Current decisions is what turned that flag into a proved obligation
+
+## DD-496 — An evidence subheading blocked guarded delivery
+
+Other. The coordinator added an `Accepted proof` subheading within the ordered slices. The story-obligations check accepted the plan. Guarded delivery interpreted the level-three heading as another slice and refused before staging.
+
+### Occurrences
+- Execution: SEED-078#multiline-token-long-names
+  - Timestamp: 2026-11-26T22:58:00+08:00
+  - Tool: Codex
+  - Model: gpt-6.2-sol
+  - Open Dough release: 0.3.116
+  - Evidence: plan 046 and guarded delivery's `plan/status mutation` result. Delivery accepted `60a63ca6` after changing the evidence label to bold text.
+  - Observed effect: one refused preparation and a repeated source-freshness check.
+
+## DD-497 — Default paired timing on the shared host could not settle a 3% gate
+
+Other. The plan timed eight workloads with the paired runner's default settings (1.2 s calibrated batches, 20 pairs). On this shared 16-core host, other agents kept the load average at 6–13. The first pass gave no passing result: five bound-not-met with ±4–12% intervals, and three inconclusive short-batch results. The profile showed no added cost. All eight passed only after retries decided before launch: `--seconds 4`, then `--pairs 40`, then `--seconds 8` for Java, each starting below load 4 or 3. A `DECISION.txt` written before each retry, and a stop rule declared before the last one, kept the retries from becoming a search for a pass.
+
+### Occurrences
+- Execution: SEED-078#c-family-pr-timing
+  - Timestamp: 2026-11-26T23:18:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: `6ee1ea00:.planning/slice-plans/047-c-family-pr-timing/PLAN.md`, slice 1 accepted proof and learnings. The run-1 to run-4 JSON and `DECISION.txt` files were Git-ignored local evidence, deleted at wrap-up.
+  - Observed effect: about 2.5 hours from the first launch to the last pass, including about 50 minutes waiting for load to drop. Run 2 still missed four workloads because load rose during the runs after starting below 4.
+  - Inference: on this host, start the gate with 4–8 s batches and a load threshold, and expect waits. Whether the runner's default should change remains a question for the runner's owner
+
+## DD-498 — An oversized-file edit reached delivery without a reorganization decision
+
+Concrete defect. The file-size check in the refactor checks needs a settled reorganization decision, or the developer's narrow exception, before an edit to a file over 250 lines. Execute-plan's delegation guidance says to carry that decision in the brief. Plan 048 named edits to `test/testNestingDepth.py` (707 lines), `lizard_languages/groovy.py` (672), `test/test_languages/testJavaScript.py` (632) and `CHANGELOG.md` (259) without such a decision. Sibling plan 049 settled its split as slice 1. The coordinator also delivered slice 1, a test-only edit to the 707-line file, under the refactor-pass skip without checking file size.
+
+### Occurrences
+- Execution: SEED-078#nd-without-logical-operators
+  - Timestamp: 2026-11-27T00:30:00+08:00
+  - Tool: Claude Code
+  - Model: claude-opus-5-5
+  - Open Dough release: 0.3.116
+  - Evidence: slice 1 `28f3ba58` was delivered with the refactor-pass skip recorded. Before slice 2's brief, `wc -l` and the file-size rule surfaced the gap. The developer chose to split the ND tests and to grant narrow exceptions for the other three files. Plan 048 (recoverable at `aefed2b1:.planning/slice-plans/048-nd-without-logical-operators/PLAN.md`) gained Structure slice 2, `d1c0b23d`.
+  - Observed effect: one developer question, and an added slice of about 3.4 active minutes. Behavior delivery was not blocked.
+  - Inference: the gap starts in preparation, because the plan listed the files without their sizes. A file-size check at slice planning would catch it before any execution. The timestamp is approximate within the session
+
 ## Retention
 
-- Highest allocated local number: 493
+- Highest allocated local number: 498
 - Shared-feedback adoption and compaction recovery (2026-11-07): `7129516bc5bd9ba57f370a6353ffe0e10eb1c861:DearDough.md`; its rows are retained at the linked Open Dough finding owners (`483d3a1e8f0ea24b929675b9a195faca48ac8f47:docs/maintainer/findings/`).
 - Shared-feedback compaction recovery (2026-11-03): `4195708bad2061ebc1c829ebdff7868605b173bb:DearDough.md`; its rows are retained at the linked Open Dough finding owners.

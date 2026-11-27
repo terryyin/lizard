@@ -364,6 +364,20 @@ function reset() {
                          function_summaries(info.function_list))
         self.assertEqual(script.nloc, info.nloc)
 
+    def test_script_end_in_line_comment(self):
+        info = get_vue_file_info('''\
+<script setup>
+function format(value) {
+  return value ?? ''
+}
+// end</script>
+<template>
+  <textarea>Use </script> to close the script block.</textarea>
+</template>
+''')
+        self.assertEqual(3, info.nloc)
+        self.assertEqual(11, info.token_count)
+
     def test_lang_text_in_another_attribute_value(self):
         functions = get_vue_function_list('''\
 <script data-help=" lang='js' " lang="ts">
@@ -412,6 +426,59 @@ class Store {
 </script>
 ''')
         self.assertEqual(['clear'], [f.name for f in functions])
+
+    def test_mixed_case_script_end(self):
+        info = analyze_file.analyze_source_code('a.vue', '''\
+<script setup>
+function format(value) {
+  return value ?? ''
+}
+</ScRiPt >
+<template>
+  {{ [1].map(value => format(value)) }}
+</template>
+''')
+        self.assertEqual(['format'], [f.name for f in info.function_list])
+        self.assertEqual(3, info.nloc)
+
+    def test_script_end_tag_delimiter(self):
+        for delimiter in ('/', '\xa0'):
+            with self.subTest(delimiter=delimiter):
+                functions = get_vue_function_list('''\
+<script setup>
+const closingTag = '</SCRIPT@>'
+function repair() { return closingTag.replace('@', '') }
+const openingTag = '<script>'
+</script>
+<template>{{ repair() }}</template>
+'''.replace('@', delimiter))
+                self.assertEqual(['repair'], [f.name for f in functions])
+
+    def test_script_end_case_is_ascii(self):
+        functions = get_vue_function_list('''\
+<script setup lang="tsx">
+function component() {
+  return <scrıpt>Example</scrıpt>
+}
+const answer = () => 42
+</script>
+<template>{{ answer() }}</template>
+''')
+        self.assertEqual(['component', 'answer'], [f.name for f in functions])
+
+    def test_script_end_before_comment(self):
+        info = analyze_file.analyze_source_code('a.vue', '''\
+<script setup>
+const nums = [1, 2]
+const scale = n => n * 2
+// end of setup</script>
+<template>
+  <p>{{ nums.map(n => scale(n)) }}</p>
+  <!-- Keep the closing tag </SCRIPT> beside generated code. -->
+</template>
+''')
+        self.assertEqual(['scale'], [f.name for f in info.function_list])
+        self.assertEqual(2, info.nloc)
 
     def test_unclosed_template_markup_keeps_the_script(self):
         for template in (

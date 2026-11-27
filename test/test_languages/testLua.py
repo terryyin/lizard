@@ -21,6 +21,27 @@ class Test_tokenizing_Lua(unittest.TestCase):
         self.check_tokens(['[[this is a string]]'], '[[this is a string]]')
         self.check_tokens(['[==[this is a string]==]'], '[==[this is a string]==]')
 
+    def test_custom_token_backreference_keeps_its_capture_number(self):
+        addition = r'|(\d+)-\1|\[[^\n]+?\]'
+        source = 'return 12-12, [=[first ]] line]=], [==[second]=] line]==]'
+
+        tokens = list(LuaReader.generate_tokens(source, addition))
+
+        self.assertEqual(
+            ['return', ' ', '12-12', ',', ' ', '[=[first ]] line]=]',
+             ',', ' ', '[==[second]=] line]==]'],
+            tokens)
+
+    def test_verbose_custom_tokens_preserve_a_shebang(self):
+        addition = r'(?x)| ([0-9]+) - \1'
+        script = '#!/usr/bin/env lua\nreturn 12-12\n'
+        expected = ['#!/usr/bin/env lua', '\n', 'return', ' ', '12-12', '\n']
+
+        self.assertEqual(expected, list(LuaReader.generate_tokens(script, addition)))
+        self.assertEqual(
+            ['\ufeff'] + expected,
+            list(LuaReader.generate_tokens('\ufeff' + script, addition)))
+
     def test_comment(self):
         self.check_tokens(['a', ' ', '--this is a comment', '\n'], "a --this is a comment\n")
 
@@ -33,6 +54,18 @@ class Test_tokenizing_Lua(unittest.TestCase):
 
 
 class Test_parser_for_Lua(unittest.TestCase):
+
+    def test_floor_division_keeps_the_rest_of_the_line(self):
+        code = '''
+local function pages(record_count, page_size)
+  return record_count // page_size + (record_count % page_size > 0 and 1 or 0)
+end
+'''
+
+        functions = get_function_list(code)
+
+        self.assertEqual([('pages', 3)], [
+            (fn.name, fn.cyclomatic_complexity) for fn in functions])
 
     def test_empty(self):
         functions = get_function_list("")
@@ -82,6 +115,56 @@ class Test_parser_for_Lua(unittest.TestCase):
                 ''')
         self.assertEqual(2, len(result))
         self.assertEqual("g", result[1].name)
+
+    def test_long_comment_with_equal_signs_does_not_count_as_code(self):
+        result = get_function_list('''
+local function scale(value)
+  --[=[
+  if config.old_scale then
+    return value or 0
+  end
+  ]=]
+  return value * 2
+end
+''')
+        self.assertEqual(
+            [('scale', 2, 9, 1, 3)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity, f.nloc)
+             for f in result])
+
+    def test_long_string_ignores_a_shorter_closing_delimiter(self):
+        result = get_function_list('''
+local function query_script()
+  return [=[
+  local last = values[indexes[i]]
+  if last then
+    return last
+  end
+  ]=]
+end
+''')
+        self.assertEqual(
+            [('query_script', 2, 9, 1)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_nested_long_delimiters_preserve_the_following_callback(self):
+        result = get_function_list('''
+describe("jobs", function()
+  it("waits for the child job", function()
+    child_exec_lua([[
+      ffi.cdef[=[ void start_job(void); ]=]
+      start({timeout = 300})
+    ]])
+    retry(function()
+      return child_ready()
+    end)
+  end)
+end)
+''')
+        self.assertEqual(
+            [(8, 10), (3, 11), (2, 12)],
+            [(f.start_line, f.end_line) for f in result])
 
     def test_do(self):
         result = get_function_list('''
@@ -179,6 +262,23 @@ end
                 ''')
         self.assertEqual(2, len(result))
         self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_ruby_condition_words_are_lua_identifiers(self):
+        analyzer = FileAnalyzer(get_extensions(['cognitive']))
+        result = analyzer.analyze_source_code('deadline.lua', '''
+local function deadline(policy, when)
+  if when < policy.start then
+    return policy.rescue(when)
+  elseif when > policy.finish then
+    return policy.ensure(when)
+  end
+  return when
+end
+''')
+        self.assertEqual(
+            [(3, 2)],
+            [(f.cyclomatic_complexity, f.cognitive_complexity)
+             for f in result.function_list])
 
     def test_class_method(self):
         result = get_function_list('''
@@ -327,6 +427,92 @@ end
             [('f', 2, 5, 1)],
             [(f.name, f.start_line, f.end_line, f.parameter_count)
              for f in result])
+
+    def test_length_operator_keeps_the_rest_of_the_expression(self):
+        result = get_function_list('''
+local function groups_per_team(group_count, team)
+  return group_count / #team > 0 and 1 or 0
+end
+''')
+        self.assertEqual(3, result[0].cyclomatic_complexity)
+
+    def test_length_operator_keeps_the_loop_body(self):
+        result = get_function_list('''
+local function enable(accounts)
+  for i = 1, #accounts do
+    if accounts[i].active then
+      accounts[i]:enable()
+    end
+  end
+end
+''')
+        self.assertEqual(
+            [('enable', 2, 8)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_length_operator_in_a_wrapped_loop_header(self):
+        result = get_function_list('''
+local function enable(accounts)
+  for i = 1,
+      #accounts do
+    if accounts[i].active then
+      accounts[i]:enable()
+    end
+  end
+end
+''')
+        self.assertEqual(
+            [('enable', 2, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_length_and_floor_division_in_a_wrapped_loop_header(self):
+        result = get_function_list('''
+local function paginate(limit, payload, page_size)
+  for page = 1, limit // page_size +
+      #payload do
+    send_page(payload, page)
+  end
+end
+''')
+        self.assertEqual(
+            [('paginate', 2, 7, 2)],
+            [(f.name, f.start_line, f.end_line, f.cyclomatic_complexity)
+             for f in result])
+
+    def test_table_loop_header_keeps_the_enclosing_test_callback(self):
+        result = get_function_list('''
+describe('marks', function()
+  it('opens a mark', function() open_mark() end)
+  for _, entry in ipairs({
+    { name = 'mark' },
+  }) do
+    eq({ entry.name }, { 'mark' })
+  end
+end)
+''')
+        self.assertEqual(
+            [('(anonymous)', 3, 3), ('(anonymous)', 2, 9)],
+            [(f.name, f.start_line, f.end_line) for f in result])
+
+    def test_loop_header_keeps_the_callback_and_loop_body(self):
+        result = get_function_list('''
+local function visit(root)
+  for path, kind in walk(root, {
+    ignore = function(name)
+      do
+        return name == ".git"
+      end
+    end,
+  }) do
+    if kind == "file" then
+      index(path)
+    end
+  end
+end
+''')
+        self.assertEqual(
+            [('ignore', 4, 8), ('visit', 2, 14)],
+            [(f.name, f.start_line, f.end_line) for f in result])
 
     def test_call_of_it_in_a_loop_with_a_length(self):
         result = get_function_list('''

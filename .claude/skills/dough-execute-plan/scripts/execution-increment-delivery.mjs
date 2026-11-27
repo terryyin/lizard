@@ -133,7 +133,7 @@ export async function deliverManagedExecutionIncrement(request) {
 
   // The launch reference, when this publication carries one, names the
   // session whose evidence the accepted pair joins.
-  const { landingContext: resolvedLanding, reference } =
+  const { landingContext: resolvedLanding, ...sessionEvidence } =
     await resolveLaunchLanding({
       landingContext,
       workspace,
@@ -169,7 +169,7 @@ export async function deliverManagedExecutionIncrement(request) {
     recordAcceptedIncrement(workspace, {
       base: published.suffixBase,
       candidate: published.receipt.sha,
-      reference,
+      ...sessionEvidence,
     });
 
     if (observation.directory && observation.state !== "unobserved") {

@@ -41,3 +41,21 @@ func test_if_else(x, y):
         # Expected: 4 = base(1) + if(1) + if(1) + elif(1)
         self.assertEqual(4, functions[0].cyclomatic_complexity, 
                         "GDScript should count elif keyword")
+
+    def test_nested_named_lambdas_use_each_enclosing_name_once(self):
+        functions = get_gdscript_function_list("""
+extends Node
+
+func build_formatter(prefix):
+    var with_suffix = func apply_suffix(suffix):
+        var formatter = func combine(value):
+            return prefix + value + suffix
+        return formatter
+    return with_suffix
+""")
+        self.assertEqual(
+            ['build_formatter.apply_suffix.combine',
+             'build_formatter.apply_suffix', 'build_formatter'],
+            [function.name for function in functions])
+        self.assertEqual('build_formatter.apply_suffix.combine( value )',
+                         functions[0].long_name)

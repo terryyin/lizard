@@ -20,14 +20,16 @@ _MARKUP = re.compile(
     re.S)
 _ATTRIBUTE = re.compile(
     r'''([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]*)))?''')
-_SCRIPT_END = re.compile(r'</script(?=[\s/>]|\Z)')
+_SCRIPT_END_LOWERCASE = re.compile(r'</script(?=[\s/>]|\Z)')
+_SCRIPT_END = re.compile(r'</(?ai:script)(?=[\t\n\f\r >])')
 # In a script, a closing tag in a string, a comment or a template is text.
 _SCRIPT_TEXT_OR_END = re.compile(
     r'/\*.*?\*/|' + LINE_COMMENT
     + r'''|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|''' + REGEX_TOKEN
-    + r'|`|' + _SCRIPT_END.pattern, re.S)
+    + r'|`|' + _SCRIPT_END_LOWERCASE.pattern, re.S)
 # Elements of a template that hold only text, as in an HTML parser.
 _TEXT_ELEMENTS = frozenset(('script', 'style', 'textarea', 'title'))
+_SCRIPT_END_TAIL = re.compile(r'[\t\n\f\r ]*>')
 # The blocks of reused source objects (warmed analyzer batches): the same
 # code strings keep their memoized regex marks.
 _BLOCK_CACHE = {}
@@ -54,20 +56,21 @@ class _ScriptTag(str):
         return (_attribute(self, 'lang') or 'js').lower()
 
 
-def _script_blocks(source):
+def _script_blocks(source, end_pattern):
     """(tag start, tag, code, code end) of each top-level script block."""
-    cached = _BLOCK_CACHE.get(id(source))
+    key = (id(source), end_pattern)
+    cached = _BLOCK_CACHE.get(key)
     if cached is not None and cached[0] is source:
         return cached[1]
     blocks = [
         (tag_start, _ScriptTag(source[tag_start:code_start]),
          source[code_start:code_end], code_end)
-        for tag_start, code_start, code_end in _find_script_blocks(source)]
-    _BLOCK_CACHE[id(source)] = (source, blocks)
+        for tag_start, code_start, code_end in _find_script_blocks(source, end_pattern)]
+    _BLOCK_CACHE[key] = (source, blocks)
     return blocks
 
 
-def _find_script_blocks(source):
+def _find_script_blocks(source, end_pattern):
     """(tag start, code start, code end) of each top-level script block.
 
     As in the Vue compiler, a top-level HTML <template> holds nested markup,
@@ -87,7 +90,7 @@ def _find_script_blocks(source):
             # goes on after its tag rather than losing the rest of the file.
             pos = _markup_end(source, pos) or pos
         elif name == 'script':
-            end = _script_end(source, pos)
+            end = _script_end(source, pos, end_pattern)
             yield match.start(), pos, end
             pos = end
         else:
@@ -96,15 +99,18 @@ def _find_script_blocks(source):
                 pos = end
 
 
-def _script_end(source, pos):
+def _script_end(source, pos, end_pattern):
     """Where the code ends: at the first closing tag, as in Vue. When another
     closing tag follows before the next script, the first one was text in
     the code, and the first closing tag outside strings, comments and
     templates ends it."""
-    end = _SCRIPT_END.search(source, pos)
+    end = end_pattern.search(source, pos)
     if end is None:
         return len(source)
-    stray = _SCRIPT_END.search(source, end.end())
+    # Keep the recovery scan on its original lowercase boundaries.
+    if not source.startswith('</script', end.start()):
+        return end.start()
+    stray = _SCRIPT_END_LOWERCASE.search(source, end.end())
     if stray is None or source.find('<script', end.end(), stray.start()) >= 0:
         return end.start()
     while True:
@@ -114,6 +120,11 @@ def _script_end(source, pos):
         token = match.group()
         if token.startswith('</'):
             return match.start()
+        if token.startswith('//') and '</script' in token:
+            # The markup end tag can close the script on the comment line.
+            for tag in re.finditer(r'</script', token):
+                if _SCRIPT_END_TAIL.match(source, match.start() + tag.end()):
+                    return match.start() + tag.start()
         if token == '`':
             pos, expressions = _template_end(source, match.start())
             if expressions is None:
@@ -154,6 +165,7 @@ class VueReader(TypeScriptReader):
     # A lang="tsx" block keeps whole templates, as in a .tsx file.
     _scan_atomic_templates = True
     script_tokens = staticmethod(TypeScriptReader.generate_tokens)
+    _script_end_pattern = _SCRIPT_END
 
     def __init__(self, context):
         super(VueReader, self).__init__(context)
@@ -163,7 +175,8 @@ class VueReader(TypeScriptReader):
         """The code of the script blocks, tokenized by their lang, and the
         tokens of the markup around them."""
         pos = 0
-        for tag_start, tag, code, code_end in _script_blocks(source_code):
+        blocks = _script_blocks(source_code, cls._script_end_pattern)
+        for tag_start, tag, code, code_end in blocks:
             yield from cls.markup_tokens(source_code, pos, tag_start)
             yield from cls.tag_tokens(tag)
             tokenizer = (TSXReader.generate_tokens if tag.lang in ('tsx', 'jsx')

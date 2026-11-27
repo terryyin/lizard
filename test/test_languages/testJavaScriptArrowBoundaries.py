@@ -105,6 +105,67 @@ class TestStatementAfterExpressionArrow(unittest.TestCase):
         self.assert_in_all_readers(code, [
             ('set', 2, 2, 1, 1, 7), ('bind', 1, 4, 1, 4, 13)])
 
+    def test_block_after_a_parenthesized_initializer(self):
+        code = """function select(value, fallback) {
+  const selected = (value || fallback)
+  {
+    const value = decorate(selected)
+    if (value) log(value)
+  }
+  return selected
+}"""
+        self.assert_in_all_readers(code, [('select', 1, 8, 3, 8, 34)])
+
+    def test_block_after_a_call_to_async(self):
+        code = """function schedule(value) {
+  const task = async(value)
+  {
+    if (task) track(task)
+  }
+  return task
+}"""
+        self.assert_in_all_readers(code, [('schedule', 1, 7, 2, 7, 24)])
+
+    def test_block_after_an_arrow_body_with_a_grouped_assignment(self):
+        code = """function bind(model, fallback) {
+  const set = value => model.value = (value)
+  {
+    if (fallback) model.reset()
+  }
+  return set
+}"""
+        self.assert_in_all_readers(code, [
+            ('set', 2, 2, 1, 1, 7), ('bind', 1, 7, 2, 7, 26)])
+
+    def test_class_heritage_call_inside_an_arrow_assignment(self):
+        code = """function update(Base, mixin) {
+  const create = () => mixin = class extends mixin(Base) {
+    pick(x) { return x ? 1 : 0 }
+  }
+  return create
+}"""
+        for ext in EXTENSIONS:
+            with self.subTest(ext=ext):
+                functions = analyze_file.analyze_source_code(
+                    'a.' + ext, code).function_list
+                self.assertEqual(
+                    [('pick', 3, 3, 2, 1, 11, 1),
+                     ('create', 2, 4, 1, 3, 15, 0),
+                     ('update', 1, 6, 1, 4, 13, 2)],
+                    [(f.name, f.start_line, f.end_line,
+                      f.cyclomatic_complexity, f.nloc, f.token_count,
+                      f.parameter_count) for f in functions])
+
+    def test_computed_method_in_a_multiline_default_export(self):
+        code = """export default
+{
+  ['='](left, right) {
+    return left === right || left.equals(right)
+  }
+}
+"""
+        self.assert_in_all_readers(code, [('(anonymous)', 3, 5, 2, 3, 18)])
+
     def test_assignment_in_parentheses_in_an_arrow_body(self):
         code = ('function bind(model, ready) {\n'
                 '  const set = value => model.value = (last = value) && ready\n'
@@ -191,6 +252,19 @@ class TestExpressionArrowContinuation(unittest.TestCase):
         self.assertEqual([('(anonymous)', 2, 2, 1, 1, 3), ('after', 4, 4)],
                          [f if f[0] != 'after' else f[:3]
                           for f in functions_in('a.js', code)])
+
+    def test_arrow_body_ends_on_the_same_line_as_its_callback(self):
+        code = '''const columns = (length) =>
+  Array.from({ length }).map((_, index) => ({
+    key: String(index),
+  }))
+'''
+        for ext in EXTENSIONS:
+            with self.subTest(ext=ext):
+                self.assertEqual([
+                    ('(anonymous)', 2, 4, 1, 3, 12),
+                    ('columns', 1, 4, 1, 2, 22)],
+                    functions_in('a.' + ext, code))
 
     def test_generic_arguments_split_after_comma_keep_their_line(self):
         code = ('const f = (x) => foo<A,\n B>(x)\n'
