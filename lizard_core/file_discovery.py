@@ -4,6 +4,7 @@ language selection and .gitignore rules, and dropping duplicate files.
 """
 import os
 import hashlib
+import re
 from fnmatch import fnmatch
 from lizard_languages import get_reader_for
 from lizard_ext import auto_open, auto_read
@@ -23,31 +24,94 @@ def md5_hash_file(full_path_name):
         return None
 
 
+_SEGMENT_PART = re.compile(r"\\(?P<escape>.|$)|(?P<bracket>\[)|\*{2,}")
+
+
+def _compatible_gitignore_segment(segment):
+    if segment == '**':
+        return segment
+
+    parts = []
+    position = 0
+    while True:
+        match = _SEGMENT_PART.search(segment, position)
+        if match is None:
+            parts.append(segment[position:])
+            return ''.join(parts)
+
+        parts.append(segment[position:match.start()])
+        position = match.end()
+        if match.group('escape') is not None:
+            if not match.group('escape'):
+                return None
+            parts.append(match[0])
+        elif match.group('bracket'):
+            # PathSpec allows a literal ']' at the start of a character class.
+            class_start = position
+            if segment[class_start:class_start + 1] in ('!', '^'):
+                class_start += 1
+            if segment[class_start:class_start + 1] == ']':
+                class_start += 1
+            close = segment.find(']', class_start)
+            if close == -1:
+                return None
+            end = close + 1
+            body = segment[position:end].replace('\\', r'\\')
+            # PathSpec treats a nested POSIX class opener as literal text.
+            parts.append('[' + body.replace('[:', r'\[:'))
+            position = end
+        else:
+            parts.append('*')
+
+
+def _compatible_gitignore_pattern(pattern):
+    """Keep the wildcard and bracket semantics used by PathSpec."""
+    negation = '!' if pattern.startswith('!') else ''
+    glob = pattern[len(negation):]
+    # A leading globstar can match zero directories, even after '/'.
+    if glob.startswith('/**/'):
+        glob = glob[1:]
+
+    segments = []
+    # PathSpec splits at every slash, including inside escapes and brackets.
+    for segment in glob.split('/'):
+        compatible = _compatible_gitignore_segment(segment)
+        if compatible is None:
+            return None
+        segments.append(compatible)
+    return negation + '/'.join(segments)
+
+
 def _build_gitignore_spec(patterns):
-    '''
-    Builds a PathSpec from gitignore patterns, tolerating lines pathspec
-    can't parse (e.g. Windows-style paths with unescaped backslashes) by
-    normalizing separators or, failing that, dropping just that line.
-    '''
+    '''Compile gitignore patterns while tolerating malformed lines.'''
     try:
-        import pathspec
-        from pathspec.patterns.gitwildmatch import GitWildMatchPatternError
+        import gitmatch
     except ImportError:
         return None
 
-    def _valid_form(pattern):
-        for candidate in (pattern, pattern.replace('\\', '/')):
-            try:
-                pathspec.PathSpec.from_lines('gitwildmatch', [candidate])
-                return candidate
-            except GitWildMatchPatternError:
-                continue
-        return None
+    compiled = []
+    for pattern in patterns:
+        compatible = _compatible_gitignore_pattern(pattern)
+        rules = gitmatch.compile([compatible]).patterns if compatible is not None else []
+        if not rules and '\\' in pattern:
+            fallback = _compatible_gitignore_pattern(pattern.replace('\\', '/'))
+            if fallback is not None:
+                rules = gitmatch.compile([fallback]).patterns
+        compiled.extend(rules)
+    return _GitignoreSpec(compiled) if compiled else None
 
-    valid_patterns = [p for p in (_valid_form(p) for p in patterns) if p]
-    if not valid_patterns:
-        return None
-    return pathspec.PathSpec.from_lines('gitwildmatch', valid_patterns)
+
+class _GitignoreSpec:
+    def __init__(self, patterns):
+        self.patterns = patterns
+
+    def match_file(self, path):
+        # Apply the last matching rule across the file and its parent directories.
+        parents = [path[:i] for i, char in enumerate(path) if char == '/']
+        for rule in reversed(self.patterns):
+            if rule.match(path) or any(rule.match(parent, is_dir=True) for parent in parents):
+                return not rule.negative
+        return False
 
 
 def get_all_source_files(paths, exclude_patterns, lans, use_gitignore=True):
