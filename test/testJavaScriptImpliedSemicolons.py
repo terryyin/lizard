@@ -67,6 +67,22 @@ function configure(options: { resolve?: () => boolean; debug: boolean }) {
                                  [(f.name, f.max_nesting_depth, f.max_nested_structures)
                                   for f in functions])
 
+    def test_asserted_function_can_end_a_braceless_if_body(self):
+        code = '''function configure(ready: boolean, debug: boolean) {
+  let resolve: () => boolean = () => false
+  if (ready)
+    resolve = function () { return true }!
+  if (debug) resolve()
+}
+'''
+        result = FileAnalyzer(get_extensions(['ND', 'NS'])).analyze_source_code(
+            'configure.ts', code)
+
+        configure = result.function_list[-1]
+        self.assertEqual('configure', configure.name)
+        self.assertEqual(
+            (1, 1), (configure.max_nesting_depth, configure.max_nested_structures))
+
     def test_prefix_negation_after_a_function_declaration_continues(self):
         code = """\
 function configure() {
