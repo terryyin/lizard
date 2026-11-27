@@ -209,7 +209,7 @@ function response(text) {
         ('(anonymous)', ['ttl'], 4), ('reset', ['ttl'], 4),
         ('configure', ['ready'], 1), ('response', ['text'], 2),
     ]
-    assert result[-1].max_nesting_depth == 1
+    assert result[-1].max_nesting_depth == 0
 
 
 @pytest.mark.parametrize('suffix', ('ts', 'tsx', 'vue'))
