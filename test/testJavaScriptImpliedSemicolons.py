@@ -170,3 +170,83 @@ class StatementEnds:
             if self.finder.before_token:
                 self.ends.append((token, context.current_line))
             yield token
+
+
+class TestAssertedFunctionExpressionBoundaries(unittest.TestCase):
+    def test_following_identifier_starts_a_sibling_statement(self):
+        for signature in ('function ()', 'function fallback()', 'async function ()'):
+            for assertion in ('!', '!!'):
+                with self.subTest(signature=signature, assertion=assertion):
+                    code = """\
+function configure(options: { resolve?: () => boolean; debug: boolean }) {
+  const resolve = options.resolve || %s { return true }%s
+  options.debug && resolve()
+}
+""" % (signature, assertion)
+                    analyzer = FileAnalyzer(get_extensions(['nd', 'ns']))
+                    functions = analyzer.analyze_source_code('options.ts', code).function_list
+                    configure = functions[-1]
+                    self.assertEqual(('configure', 1, 0),
+                                     (configure.name, configure.max_nesting_depth,
+                                      configure.max_nested_structures))
+
+    def test_function_declaration_followed_by_prefix_negation(self):
+        code = """\
+function configure() {
+  function ready() { return true }!
+    ready()
+}
+"""
+        for filename in ('options.ts', 'options.js'):
+            with self.subTest(filename=filename):
+                extension = StatementEnds()
+                analyzer = FileAnalyzer(get_extensions([extension]))
+                analyzer.analyze_source_code(filename, code)
+                self.assertNotIn(('ready', 3), extension.ends)
+
+    def test_negation_on_a_new_line_after_a_function_expression(self):
+        code = """\
+function configure() {
+  const ready = function () { return true }
+  !
+    ready()
+}
+"""
+        for filename in ('options.ts', 'options.js'):
+            with self.subTest(filename=filename):
+                extension = StatementEnds()
+                analyzer = FileAnalyzer(get_extensions([extension]))
+                analyzer.analyze_source_code(filename, code)
+                self.assertNotIn(('ready', 4), extension.ends)
+
+    def test_following_identifier_after_the_alternate_of_a_conditional(self):
+        code = """\
+function configure(options: { resolve?: () => boolean; debug: boolean }) {
+  const resolve = options.resolve ? options.resolve : function () { return true }!
+  options.debug && resolve()
+}
+"""
+        analyzer = FileAnalyzer(get_extensions(['nd', 'ns']))
+        for source in (code, code.replace('}!\n', '}!;\n')):
+            with self.subTest(semicolon='!;' in source):
+                functions = analyzer.analyze_source_code('options.ts', source).function_list
+                configure = functions[-1]
+                self.assertEqual(('configure', 1, 0),
+                                 (configure.name, configure.max_nesting_depth,
+                                  configure.max_nested_structures))
+
+    def test_case_colon_is_not_a_conditional_alternate(self):
+        code = """\
+function configure(useDefault) {
+  switch (0) {
+    case useDefault ? 0 : 1: function ready() { return true }!
+      ready()
+  }
+}
+"""
+        for filename in ('options.ts', 'options.js'):
+            with self.subTest(filename=filename):
+                extension = StatementEnds()
+                analyzer = FileAnalyzer(get_extensions([extension]))
+                analyzer.analyze_source_code(filename, code)
+                self.assertNotIn(('ready', 4), extension.ends)
