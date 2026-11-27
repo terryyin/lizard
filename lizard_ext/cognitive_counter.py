@@ -66,6 +66,7 @@ class _Counter(_FunctionCandidates):
         self.logical_ops = frozenset(
             getattr(reader, 'logical_operators', ())) - _UNARY_OR_COALESCING
         self.line = None
+        self.php_member_access = profile.php_member_access
         self.openers = []       # (bracket, function) of each open bracket
 
     def process(self, token, line=None, function=None):
@@ -217,7 +218,16 @@ class _Counter(_FunctionCandidates):
         return (token in profile.ifs or token in profile.loops
                 or token in profile.switches or token in profile.catches)
 
+    def _discard_bare_php_method_call(self):
+        state = self.state
+        if (state.pending_call and state.prev2 not in self.php_member_access
+                and '::' in self.function.name):
+            state.pending_call = False
+            state.pending -= 1
+
     def _resolve_pending(self, token):
+        if self.php_member_access:
+            self._discard_bare_php_method_call()
         state = self.state
         if state.pending_call:
             state.pending_call = False

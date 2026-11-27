@@ -1394,6 +1394,45 @@ end
 """))
 
 
+class TestPHPFunctionAndMethodRecursion(unittest.TestCase):
+
+    def test_same_named_built_in_is_not_a_recursive_method_call(self):
+        self.assertEqual([0], cogc("walk.php", """
+            <?php
+            class Walk {
+                public function next(array &$items) {
+                    return next($items);
+                }
+            }
+        """))
+
+    def test_bare_free_function_can_call_itself(self):
+        self.assertEqual([2], cogc("retry.php", """
+            <?php
+            function retry(int $remaining): int {
+                if ($remaining <= 0) return 0;
+                return retry($remaining - 1);
+            }
+        """))
+
+    def test_namespace_keeps_functions_and_methods_distinct(self):
+        self.assertEqual([0, 2], cogc("walk.php", r"""
+            <?php
+            namespace Cache;
+
+            class Walk {
+                public function next(array &$items) {
+                    return \next($items);
+                }
+            }
+
+            function retry(int $remaining): int {
+                if ($remaining <= 0) return 0;
+                return namespace\retry($remaining - 1);
+            }
+        """))
+
+
 class TestProfilesBuiltFromTheReaders(unittest.TestCase):
     """The control-flow keywords come from the language readers; a profile
     only adds what cyclomatic complexity does not count."""
