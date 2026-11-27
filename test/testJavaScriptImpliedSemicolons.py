@@ -156,6 +156,51 @@ class TestImpliedSemicolonsOfOneFile(unittest.TestCase):
         self.assertEqual([('if', 6), ('else', 7), ('}', 8)], extension.ends)
 
 
+class TestTypeScriptPostfixStatementBoundaries(unittest.TestCase):
+    def test_asserted_function_expression_ends_before_a_control_statement(self):
+        for assertion in ('!', '!!'):
+            with self.subTest(assertion=assertion):
+                code = """\
+function configure(options: { resolve?: () => boolean; debug: boolean }) {
+  const resolve = options.resolve || function () { return true }%s
+  if (options.debug) resolve()
+}
+""" % assertion
+                analyzer = FileAnalyzer(get_extensions(['nd', 'ns']))
+                functions = analyzer.analyze_source_code('options.ts', code).function_list
+                self.assertEqual([('resolve', 0, 0), ('configure', 1, 1)],
+                                 [(f.name, f.max_nesting_depth, f.max_nested_structures)
+                                  for f in functions])
+
+    def test_asserted_function_can_end_a_braceless_if_body(self):
+        code = '''function configure(ready: boolean, debug: boolean) {
+  let resolve: () => boolean = () => false
+  if (ready)
+    resolve = function () { return true }!
+  if (debug) resolve()
+}
+'''
+        result = FileAnalyzer(get_extensions(['ND', 'NS'])).analyze_source_code(
+            'configure.ts', code)
+
+        configure = result.function_list[-1]
+        self.assertEqual('configure', configure.name)
+        self.assertEqual(
+            (1, 1), (configure.max_nesting_depth, configure.max_nested_structures))
+
+    def test_prefix_negation_after_a_function_declaration_continues(self):
+        code = """\
+function configure() {
+  function ready() { return true }!
+    ready()
+}
+"""
+        extension = StatementEnds()
+        analyzer = FileAnalyzer(get_extensions([extension]))
+        analyzer.analyze_source_code('options.ts', code)
+        self.assertNotIn(('ready', 3), extension.ends)
+
+
 class StatementEnds:
     """An extension that records where the reader finds a statement end
     without a ';'."""
