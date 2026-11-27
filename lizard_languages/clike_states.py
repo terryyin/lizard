@@ -142,6 +142,10 @@ class CLikeStates(CodeStateMachine):
             for tkn in self._saved_tokens:
                 self._state(tkn)
         elif token == '(':
+            if len(self._saved_tokens) == 2 and self._saved_tokens[0] == 'requires':
+                self._saved_tokens = []
+                self.next(self._state_throw, token)
+                return
             self._state = self._state_global
             for tkn in self._saved_tokens:
                 self._state(tkn)
