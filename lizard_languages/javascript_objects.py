@@ -12,6 +12,8 @@ class JavaScriptObjectsMixin:
     # A class body or an object literal: braces that hold members.  The
     # reader also reads blocks such as `catch {` or `case 1: {` as objects.
     holds_members = False
+    _possible_regex_line = None
+    _slash_can_close_literal = False
     # In an object: a default value is open, `{ a = async function () {} }`.
     _default_value = False
 
@@ -186,9 +188,9 @@ class JavaScriptObjectsMixin:
             # A value, `{ a: {`, but in a block, `finally { label: {`.
             return self.holds_members
         if previous == '/':
-            # The end of a regular expression can be a token of its own,
-            # `"" + /a/` + line break + `{`.  Nothing divides by an object.
-            return False
+            # Division takes an object across a line break unless the
+            # slash can close a split regex literal on its own line.
+            return not (self.context.newline and self._slash_can_close_literal)
         if self.context.newline and (
                 previous == '!' or previous[0].isalpha() or previous[0] in '_$'):
             # A "{" that starts a line after a word or a '!' is almost always

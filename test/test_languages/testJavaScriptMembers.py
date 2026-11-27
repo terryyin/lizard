@@ -20,6 +20,46 @@ class Test_JavaScript_members(unittest.TestCase):
         functions = get_js_function_list("var obj = {set prop(val) {}}")
         self.assertEqual('set prop', functions[0].name)
 
+    def test_keyword_method_in_division_operand(self):
+        functions = get_js_function_list("""
+function ratio() {
+    return 1 / { valueOf() { return 1; }, catch(error) { return error; } };
+}
+function next(ready) {
+    "" + /a/
+    { if (ready) { run(); } }
+}
+""")
+        self.assertEqual(
+            [('valueOf', 1, []), ('catch', 1, ['error']),
+             ('ratio', 1, []), ('next', 2, ['ready'])],
+            [(f.name, f.cyclomatic_complexity, f.parameters) for f in functions])
+
+    def test_keyword_method_in_division_operand_on_next_line(self):
+        functions = get_js_function_list("""
+function newlineDivision() {
+    return 4 /
+        { valueOf() { return 2; }, catch() {} };
+}
+function portion(total, scale, enabled) {
+    return total / scale /
+        { valueOf() { return enabled ? 2 : 1; }, catch() {} };
+}
+function afterRegex(ready) {
+    "" + /1/
+    { if (ready) run(); }
+}
+function afterHead(ready) {
+    if (ready) /1/
+    { if (ready) run(); }
+}
+""")
+        self.assertEqual(
+            [('valueOf', 1), ('catch', 1), ('newlineDivision', 1),
+             ('valueOf', 2), ('catch', 1), ('portion', 1),
+             ('afterRegex', 2), ('afterHead', 3)],
+            [(f.name, f.cyclomatic_complexity) for f in functions])
+
     def test_class_method_decorators(self):
         code = '''
             class Example {

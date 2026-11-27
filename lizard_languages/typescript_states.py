@@ -2,7 +2,7 @@
 
 from .code_reader import CodeStateMachine
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
-from .javascript_expression import JSXChildBrace
+from .javascript_expression import JSXChildBrace, ends_expression
 from .javascript_functions import JavaScriptFunctionsMixin
 from .javascript_objects import JavaScriptObjectsMixin
 from .typescript_signatures import ReturnTypeColon
@@ -12,7 +12,7 @@ from .typescript_declarations import (
 # Ordinary tokens skip declaration and marker dispatch together.
 _MARKER_TOKENS = frozenset(('static', 'async', 'new', '?', 'case', ':'))
 _SPECIAL_TOKENS = DECLARATION_WORDS | _MARKER_TOKENS
-_TAIL_TOKENS = frozenset(('`', ':', ',', '!'))
+_TAIL_TOKENS = frozenset(('`', ':', ',', '!', '/'))
 
 
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
@@ -238,6 +238,14 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                 return
             elif token == '!':
                 self._postfix_operand = self._assertion_operand()
+            elif token == '/':
+                line = self.context.current_line
+                self._slash_can_close_literal = self._possible_regex_line == line
+                # A bare slash after an operand divides. A reader waiting
+                # for an operand or a statement may see a split regex.
+                if (not self._prev_token or self.last_token in ('}', 'return', 'throw')
+                        or not ends_expression(self.last_token or '')):
+                    self._possible_regex_line = line
             elif token == ',':
                 if self._declaration_binding is not None:
                     self._declaration_binding = True
