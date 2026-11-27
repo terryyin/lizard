@@ -514,6 +514,38 @@ function* patterns(parse: <T>(input: string) => T, enabled: boolean) {
         )
         self.assert_functions(source, [('a', 1, 1, 2)])
 
+    def test_non_null_assertion_keeps_division_after_a_comment(self):
+        for filename in ('average.ts', 'average.tsx'):
+            for space in (' ', '\u00a0'):
+                with self.subTest(filename=filename, space=space):
+                    source = f'''\
+async function average(total: number | undefined, count: number, fallback: number) {{
+  return total!{space}/* loaded above */ / (count || fallback) / 100;
+}}
+'''
+                    function, = analyze_file.analyze_source_code(filename, source).function_list
+                    self.assertEqual((2, 29), (function.cyclomatic_complexity, function.token_count))
+
+    def test_javascript_whitespace_keeps_prefix_regex_context(self):
+        for space in ('\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005'
+                      '\u2006\u2007\u2008\u2009\u200a\u202f\u205f\u3000\ufeff'):
+            with self.subTest(space=ascii(space)):
+                source = f'''\
+async function excludes(label) {{
+  return{space}! /* exclude this spelling */ /colou?r/.test(label);
+}}
+'''
+                self.assert_functions(source, [('excludes', 1, 3, 1)])
+
+    def test_javascript_whitespace_between_jsx_negations(self):
+        source = '''\
+async function Status(label: string) {
+  return <span>{!\u00a0! /* match this spelling */ /colou?r/.test(label) ? "yes" : "no"}</span>;
+}
+'''
+        function, = analyze_file.analyze_source_code('status.tsx', source).function_list
+        self.assertEqual(2, function.cyclomatic_complexity)
+
     def test_regex_with_quote_brace_flag_preserves_following_function(self):
         patterns = ('/"/', '/{/', '/}/', '/`/', r'/\\//', '/[/]/', '/x/g', '/[?#]/')
         for pattern in patterns:
