@@ -41,6 +41,37 @@ class Test_JavaScript_members(unittest.TestCase):
         functions = get_js_function_list(code)
         self.assertEqual('inner', functions[0].name)
 
+    def test_nested_members_named_interface_keep_following_functions(self):
+        functions = get_js_function_list('''
+            function connect(host) {
+                return {
+                    network: { interface: host },
+                    adapter: { interface(name) { return name || host; } },
+                };
+            }
+            function retry(target) { return connect(target); }
+        ''')
+        self.assertEqual(
+            [('interface', 2, ['name']), ('connect', 1, ['host']),
+             ('retry', 1, ['target'])],
+            [(f.name, f.cyclomatic_complexity, f.parameters) for f in functions])
+
+    def test_accessors_named_interface_keep_the_accessor_prefix(self):
+        functions = get_js_function_list('''
+            const network = {
+                _port: 'eth0',
+                get interface() { return this._port; },
+                set interface(value) { this._port = value; },
+                get port() { return this._port; },
+                set port(value) { this._port = value; },
+            };
+            function after() { return network.interface; }
+        ''')
+        self.assertEqual(
+            [('get interface', []), ('set interface', ['value']),
+             ('get port', []), ('set port', ['value']), ('after', [])],
+            [(f.name, f.parameters) for f in functions])
+
     def test_simple_class_two_methods_WORKS(self):
         # This simpler case works fine
         code = '''
