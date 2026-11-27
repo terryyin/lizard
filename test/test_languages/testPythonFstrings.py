@@ -386,6 +386,38 @@ class Test_Python_fstring_complexity(unittest.TestCase):
         self.assertEqual([], list(tokens))
         self.assertEqual(9, len(calls))
 
+    def test_caller_quote_covering_an_adjacent_literal_keeps_field_tokens(self):
+        from lizard_languages.python import PythonReader
+
+        source = 'f"{total if taxed else base}" " USD"'
+        addition = r'|(?P<quote>"[^"]*" +" USD")'
+        field = 'total if taxed else base'
+        calls = []
+
+        def identity(match):
+            calls.append((match[0], match.span(), match.string, match.pos, match.endpos, match.lastgroup))
+            return match[0]
+
+        tokens = iter(PythonReader.generate_tokens(source, addition, identity))
+
+        self.assertEqual([], calls)
+        self.assertEqual('f', next(tokens))
+        self.assertEqual([
+            ('f', (0, 1), source, 0, len(source), None),
+            (source[1:], (1, len(source)), source, 0, len(source), 'quote'),
+        ], calls)
+        self.assertEqual('total', next(tokens))
+        field_tokens = ['total', ' ', 'if', ' ', 'taxed', ' ', 'else', ' ', 'base']
+        offset = 0
+        field_calls = []
+        for token in field_tokens:
+            end = offset + len(token)
+            field_calls.append((token, (offset, end), field, 0, len(field), None))
+            offset = end
+        self.assertEqual(field_calls, calls[2:])
+        self.assertEqual(field_tokens[1:] + ['"" " USD"'], list(tokens))
+        self.assertEqual(field_calls, calls[2:])
+
     def test_token_factory_transforms_fstring_literal_text(self):
         from lizard_languages.python import PythonReader
 
