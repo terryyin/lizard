@@ -326,6 +326,35 @@ class Test_Python_fstring_complexity(unittest.TestCase):
         self.assertEqual(['f', 'quote', '{', 'value', '}', 'quote'], tokens)
         self.assertEqual([((1, 2), source, 0, 10), ((9, 10), source, 0, 10)], matches)
 
+    def test_caller_quote_patterns_win_at_reused_fstring_quotes(self):
+        from lizard_languages.python import PythonReader
+
+        source = 'f"{record["value"]}" + tail'
+        tail = [' ', '+', ' ', 'tail']
+        for addition, opening, name, groups, rest in (
+                (r'|(?P<quote>")', '"', 'quote', ('"',),
+                 ['quote', '{', 'record', '[', 'quote', 'value', 'quote', ']', '}', 'quote']),
+                (r'|(?P<quote>"[^"]*")', '"{record["', 'quote', ('"{record["',),
+                 ['quote', 'value', 'quote']),
+                (r'|"[^"]*"', '"{record["', None, (), ['quote', 'value', 'quote']),
+                (r'|(")[^"]*\1', '"{record["', None, ('"',), ['quote', 'value', 'quote'])):
+            with self.subTest(addition=addition):
+                calls = []
+
+                def mark_quote(match):
+                    token = match[0]
+                    calls.append((token, match.span(), match.lastgroup, match.groups(), match.re.groups))
+                    return 'quote' if token.startswith('"') else token
+
+                tokens = iter(PythonReader.generate_tokens(source, addition, mark_quote))
+
+                self.assertEqual('f', next(tokens))
+                self.assertEqual([
+                    ('f', (0, 1), None, (None,) * len(groups), len(groups)),
+                    (opening, (1, 1 + len(opening)), name, groups, len(groups)),
+                ], calls)
+                self.assertEqual(rest + tail, list(tokens))
+
     def test_token_factory_transforms_fstring_literal_text(self):
         from lizard_languages.python import PythonReader
 
