@@ -24,30 +24,32 @@ def md5_hash_file(full_path_name):
 
 
 def _build_gitignore_spec(patterns):
-    '''
-    Builds a PathSpec from gitignore patterns, tolerating lines pathspec
-    can't parse (e.g. Windows-style paths with unescaped backslashes) by
-    normalizing separators or, failing that, dropping just that line.
-    '''
+    '''Compile gitignore patterns while tolerating malformed lines.'''
     try:
-        import pathspec
-        from pathspec.patterns.gitwildmatch import GitWildMatchPatternError
+        import gitmatch
     except ImportError:
         return None
 
-    def _valid_form(pattern):
-        for candidate in (pattern, pattern.replace('\\', '/')):
-            try:
-                pathspec.PathSpec.from_lines('gitwildmatch', [candidate])
-                return candidate
-            except GitWildMatchPatternError:
-                continue
-        return None
+    compiled = []
+    for pattern in patterns:
+        rules = gitmatch.compile([pattern]).patterns
+        if not rules and '\\' in pattern:
+            rules = gitmatch.compile([pattern.replace('\\', '/')]).patterns
+        compiled.extend(rules)
+    return _GitignoreSpec(compiled) if compiled else None
 
-    valid_patterns = [p for p in (_valid_form(p) for p in patterns) if p]
-    if not valid_patterns:
-        return None
-    return pathspec.PathSpec.from_lines('gitwildmatch', valid_patterns)
+
+class _GitignoreSpec:
+    def __init__(self, patterns):
+        self.patterns = patterns
+
+    def match_file(self, path):
+        # Apply the last matching rule across the file and its parent directories.
+        parents = [path[:i] for i, char in enumerate(path) if char == '/']
+        for rule in reversed(self.patterns):
+            if rule.match(path) or any(rule.match(parent, is_dir=True) for parent in parents):
+                return not rule.negative
+        return False
 
 
 def get_all_source_files(paths, exclude_patterns, lans, use_gitignore=True):

@@ -1,5 +1,7 @@
 import unittest
 import platform
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 from lizard import get_all_source_files
 import os
@@ -25,6 +27,26 @@ def _wire_gitignore_fs_mocks(mock_exists, mock_relpath):
 
 
 class TestFilesFilter(unittest.TestCase):
+    def test_gitignore_precedence_across_scan_roots(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory) / 'project'
+            other = Path(directory) / 'other'
+            (root / 'build').mkdir(parents=True)
+            (root / 'bin' / 'Debug').mkdir(parents=True)
+            other.mkdir()
+            (root / '.gitignore').write_text(
+                'build/\n!build/keep.py\n*.generated.py\nbin\\Debug\\\n',
+                encoding='utf-8')
+            kept = root / 'build' / 'keep.py'
+            kept.write_text('def keep(): pass\n', encoding='utf-8')
+            (root / 'build' / 'drop.py').write_text('def drop(): pass\n', encoding='utf-8')
+            (root / 'bin' / 'Debug' / 'debug.py').write_text('def debug(): pass\n', encoding='utf-8')
+            (other / 'app.generated.py').write_text('def generated(): pass\n', encoding='utf-8')
+
+            files = get_all_source_files([str(root), str(other)], [], [])
+
+            self.assertEqual([str(kept)], list(files))
+
     @patch.object(os, "walk")
     def test_no_matching(self, mock_os_walk):
         mock_os_walk.return_value = []

@@ -98,7 +98,7 @@ setup(
     packages=['lizard_ext', 'lizard_languages', 'lizard_core'],
     #data_files=[('lizard_ext', [])],
     py_modules=['lizard'],
-    install_requires=['pygments', 'pathspec'],
+    install_requires=['pygments', 'gitmatch>=0.2.1,<0.4'],
     entry_points={'console_scripts': ['lizard = lizard:main']},
     author='Terry Yin',
     author_email='terry@odd-e.com',
