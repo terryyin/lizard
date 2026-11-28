@@ -31,6 +31,12 @@ _FSTRING_PREFIXES = frozenset(('f', 'rf', 'fr', 'bf', 'fb'))
 # All string prefixes (any case), which the tokenizer emits apart from the string.
 _INTERPOLATED_PREFIXES = _FSTRING_PREFIXES | frozenset(('t', 'tr', 'rt'))
 _STRING_PREFIXES = _INTERPOLATED_PREFIXES | frozenset(('r', 'u', 'b', 'br', 'rb'))
+# String prefixes have one or two ASCII letters.
+_CASED_STRING_PREFIXES = frozenset(
+    spelling
+    for prefix in _STRING_PREFIXES
+    for spelling in (prefix, prefix.upper(), prefix.capitalize(), prefix[0] + prefix[1:].upper())
+)
 
 
 # Match at the start of a word token, before the common pattern reads \w+.
@@ -43,8 +49,8 @@ _CLOSERS = {'(': ')', '[': ']', '{': '}'}
 
 def generate_tokens(source_code, addition='', token_class=None, *, interpolate=True):
     if interpolate and not addition and token_class is None:
-        pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _CRLF_JOIN)
-        return _mark_prefixed_strings(_source_tokens(source_code, pattern))
+        pattern = compiled_token_pattern(_PY_ADDITION + _CRLF_JOIN)
+        return _source_tokens(source_code, pattern)
 
     pattern = compiled_token_pattern(_PY_ADDITION + addition)
     if not interpolate:
@@ -59,21 +65,32 @@ def generate_tokens(source_code, addition='', token_class=None, *, interpolate=T
 
 def _source_tokens(source, pattern):
     start = 0
-    scanner = (pattern, None)
+    scanner = None
     while True:
-        for match in pattern.finditer(source, start):
-            token = match.group()
-            kind = match.lastgroup
-            if kind == 'interpolated':
-                string = _read_string(source, match.end(), token.lower(), scanner)
+        matches = pattern.finditer(source, start)
+        for match in matches:
+            token = match[0]
+            if token not in _CASED_STRING_PREFIXES:
+                yield '\\\n' if token == '\\\r\n' else token
+                continue
+            quote_start = match.end()
+            if source[quote_start:quote_start + 1] not in ('"', "'"):
+                yield token
+                continue
+            prefix = token.lower()
+            if prefix in _INTERPOLATED_PREFIXES:
+                if scanner is None:
+                    field_pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _CRLF_JOIN)
+                    scanner = (field_pattern, None)
+                string = _read_string(source, quote_start, prefix, scanner)
                 if string is not None:
                     start, parts = string
                     yield token
                     yield from parts
                     break
-            elif kind == 'crlf_join':
-                token = '\\\n'
+            quoted = next(matches)[0]
             yield token
+            yield PrefixedStringToken(quoted)
         else:
             return
 
