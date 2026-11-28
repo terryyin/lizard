@@ -1,6 +1,8 @@
 """Python tokens and f-string interpolation expressions."""
 
-from .code_reader import CodeReader
+from re import Match
+
+from .token_pattern import compiled_token_pattern, fold_token_stream, tokens_in_span
 
 
 class FStringExpressionToken(str):
@@ -27,102 +29,414 @@ _PY_TRIPLE_QUOTE = (
 # str/bytes f-string prefixes (any case). Excludes bare b/rb (not f-strings).
 _FSTRING_PREFIXES = frozenset(('f', 'rf', 'fr', 'bf', 'fb'))
 # All string prefixes (any case), which the tokenizer emits apart from the string.
-_STRING_PREFIXES = _FSTRING_PREFIXES | frozenset((
-    'r', 'u', 'b', 't', 'br', 'rb', 'tr', 'rt'))
+_INTERPOLATED_PREFIXES = _FSTRING_PREFIXES | frozenset(('t', 'tr', 'rt'))
+_STRING_PREFIXES = _INTERPOLATED_PREFIXES | frozenset(('r', 'u', 'b', 'br', 'rb'))
+# String prefixes have one or two ASCII letters.
+_CASED_STRING_PREFIXES = frozenset(
+    spelling
+    for prefix in _STRING_PREFIXES
+    for spelling in (prefix, prefix.upper(), prefix.capitalize(), prefix[0] + prefix[1:].upper())
+)
 
 
-def generate_tokens(source_code, addition='', token_class=None):
-    # Python comments end at the physical newline; a trailing '\' does not
-    # extend the comment to the next line (issue #317).
-    # '//' is the floor division operator, not the start of a comment.
-    tokens = CodeReader.generate_tokens(
-        source_code,
-        r"|\#[^\n]*|//=?" + _PY_TRIPLE_QUOTE + addition,
-        token_class)
-    return _expand_fstring_interpolations(tokens, token_class)
+# Match at the start of a word token, before the common pattern reads \w+.
+_INTERPOLATED_START = r"""|(?P<interpolated>(?i:fr|rf|bf|fb|f|tr|rt|t))(?=['"])"""
+_CRLF_JOIN = r"|(?P<crlf_join>\\\r\n)"
+_PY_ADDITION = r"|\#[^\n]*|//=?" + _PY_TRIPLE_QUOTE
+_QUOTE_FALLBACK_PROBE = r"""|(['"])"""
+_CLOSERS = {'(': ')', '[': ']', '{': '}'}
 
 
-def _expand_fstring_interpolations(tokens, token_class):
-    """Re-tokenize the {...} interpolations of f-strings so control-flow
-    keywords inside them reach the condition counter.
+def generate_tokens(source_code, addition='', token_class=None, *, interpolate=True):
+    if interpolate and not addition and token_class is None:
+        pattern = compiled_token_pattern(_PY_ADDITION + _CRLF_JOIN)
+        return _source_tokens(source_code, pattern)
 
-    Addresses GitHub issue #317: control flow inside interpolations was
-    invisible to the tokenizer when the f-string was one opaque string token.
+    pattern = compiled_token_pattern(_PY_ADDITION + addition)
+    if not interpolate:
+        return _mark_prefixed_strings(
+            tokens_in_span(pattern, source_code, 0, len(source_code), token_class))
 
-    The tokenizer emits a string prefix ('f', 'rb', ...) as its own token
-    right before the string body, so a prefixed string is a prefix token
-    immediately followed by a string token, marked as a PrefixedStringToken.
-    """
+    field_pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _CRLF_JOIN)
+    scanner = (field_pattern, token_class)
+    values = _source_hook_values(source_code, pattern, scanner, addition)
+    return _mark_prefixed_strings(fold_token_stream(values, _identity), scanner)
+
+
+def _source_tokens(source, pattern):
+    start = 0
+    scanner = None
+    while True:
+        matches = pattern.finditer(source, start)
+        for match in matches:
+            token = match[0]
+            if token not in _CASED_STRING_PREFIXES:
+                yield '\\\n' if token == '\\\r\n' else token
+                continue
+            quote_start = match.end()
+            if source[quote_start:quote_start + 1] not in ('"', "'"):
+                yield token
+                continue
+            prefix = token.lower()
+            if prefix in _INTERPOLATED_PREFIXES:
+                if scanner is None:
+                    field_pattern = compiled_token_pattern(_PY_ADDITION + _INTERPOLATED_START + _CRLF_JOIN)
+                    scanner = (field_pattern, None)
+                string = _read_string(source, quote_start, prefix, scanner)
+                if string is not None:
+                    start, parts = string
+                    yield token
+                    yield from parts
+                    break
+            quoted = next(matches)[0]
+            yield token
+            yield PrefixedStringToken(quoted)
+        else:
+            return
+
+
+def _source_hook_values(source, pattern, scanner, addition):
+    field_pattern, token_class = scanner
+    original_factory = Match.group if token_class is None else token_class
+    factory = original_factory
+    start = 0
+    while True:
+        matches = pattern.finditer(source, start)
+        for match in matches:
+            value = factory(match)
+            yield value
+            prefix = value.lower() if isinstance(value, str) else None
+            if prefix not in _INTERPOLATED_PREFIXES:
+                continue
+            quote_start = match.end()
+            if quote_start == match.start() or source[quote_start:quote_start + 1] not in ('"', "'"):
+                continue
+            raw = _read_string(source, quote_start, prefix, (field_pattern, None))
+            if raw is None:
+                continue
+
+            end, _ = raw
+            quoted = next(matches)
+            if (quoted.span() != (quote_start, end) and
+                    field_pattern.match(source, quote_start).end() != end and
+                    not _caller_matches_quote(source, quote_start, addition)):
+                # Resume the regex scan only when the lexer corrects a quote boundary.
+                yield source[quote_start:end]
+                if factory is original_factory:
+                    factory = _factory_with_original_matches(source, matches, original_factory)
+                start = end
+                break
+            yield factory(quoted)
+        else:
+            return
+
+
+def _caller_matches_quote(source, start, addition):
+    if not addition:
+        return False
+    # Built-in Python alternatives before the caller have first choice.
+    before_caller = compiled_token_pattern(_PY_ADDITION + _QUOTE_FALLBACK_PROBE)
+    if before_caller.match(source, start).lastindex is None:
+        return False
+    # Mark the fallback after the caller's groups, leaving their numbering intact.
+    after_caller = compiled_token_pattern(_PY_ADDITION + addition + _QUOTE_FALLBACK_PROBE)
+    return after_caller.match(source, start).lastindex != after_caller.groups
+
+
+def _mark_prefixed_strings(tokens, scanner=None):
+    """Keep the prefix and the string as separate tokens."""
     prefix = None
     for token in tokens:
         if prefix is not None:
             held, prefix = prefix, None
-            if isinstance(token, str) and token[:1] in ('"', "'"):
-                yield held
-                string = PrefixedStringToken(token)
-                if held.lower() in _FSTRING_PREFIXES:
-                    for inner in _tokenize_fstring_body(string, token_class):
-                        yield inner
-                else:
-                    yield string
-                continue
             yield held
-            # not a string after all; fall through to classify this token
-        if isinstance(token, str) and \
-                token.lower() in _STRING_PREFIXES:
+            if isinstance(token, str) and token[:1] in ('"', "'") and not isinstance(
+                    token, (FStringExpressionToken, FStringLiteralToken, PrefixedStringToken)):
+                if scanner is not None and held.lower() in _INTERPOLATED_PREFIXES:
+                    yield from _expand_quoted_token(token, held.lower(), scanner)
+                    continue
+                yield PrefixedStringToken(token)
+                continue
+        if (isinstance(token, str) and token.lower() in _STRING_PREFIXES and
+                not isinstance(token, FStringExpressionToken)):
             prefix = token
-            continue
-        yield token
+        else:
+            yield token
     if prefix is not None:
         yield prefix
 
 
-def _skip_quoted_literal(body, pos):
-    """Advance past a Python string literal in body; return new position."""
-    n = len(body)
-    if pos + 2 < n and body[pos:pos + 3] in ('"""', "'''"):
-        quote = body[pos:pos + 3]
-        pos += 3
-        while pos < n:
-            if body[pos:pos + 3] == quote:
-                return pos + 3
-            if body[pos] == '\\':
-                pos += 2
-                continue
-            pos += 1
-        return n
-    if pos < n and body[pos] in '"\'':
-        quote = body[pos]
-        pos += 1
-        while pos < n:
-            if body[pos] == '\\':
-                pos += 2
-                continue
-            if body[pos] == quote:
-                return pos + 1
-            pos += 1
-        return n
-    return pos
+def _identity(token):
+    return token
 
 
-def _find_interpolation_end(body, start):
-    """Return index after the closing '}' of an interpolation opened at start."""
-    depth = 1
-    j = start + 1
-    n = len(body)
-    while j < n and depth:
-        if body[j] in '"\'':
-            j = _skip_quoted_literal(body, j)
+def _expand_quoted_token(token, prefix, scanner):
+    string = _read_string(token, 0, prefix, scanner)
+    if string is not None and string[0] == len(token):
+        parts = string[1]
+        if scanner[1] is not None:
+            # Complete the field callbacks before yielding the first expansion token.
+            parts = list(_expand_factory_fields(parts, token, scanner))
+        yield from parts
+    elif prefix in _FSTRING_PREFIXES:
+        yield from _legacy_fstring_body(PrefixedStringToken(token), scanner[1])
+    else:
+        yield PrefixedStringToken(token)
+
+
+def _expand_factory_fields(parts, source, scanner):
+    for part in parts:
+        if isinstance(part, _FactoryField):
+            tokens = _field_parts(part.tokens, source, part.start, part.end, scanner)
+            yield from (FStringExpressionToken(token) for token in tokens)
+        else:
+            yield part
+
+
+def _read_string(source, start, prefix, scanner):
+    quote = source[start:start + 3]
+    if quote not in ('"""', "'" * 3):
+        quote = quote[0]
+    pos = literal_start = start + len(quote)
+    parts = []
+    raw = 'r' in prefix
+    if 't' in prefix:
+        scanner = (scanner[0], None)
+    while pos < len(source):
+        if source.startswith(quote, pos):
+            end = pos + len(quote)
+            if not parts or 't' in prefix:
+                return end, [PrefixedStringToken(source[start:end])]
+            _append_literal(parts, source, literal_start, pos, quote)
+            return end, parts
+        char = source[pos]
+        if source[pos:pos + 2] in ('{{', '}}'):
+            pos += 2
+        elif char == '{':
+            field_start = pos + 1
+            field = _read_field(source, field_start, quote, raw, scanner)
+            if field is None:
+                return None
+            _append_literal(parts, source, literal_start, pos, quote)
+            pos, tokens = field
+            if scanner[1] is None:
+                parts.extend(FStringExpressionToken(token) for token in tokens)
+            elif tokens:
+                parts.append(_FactoryField(field_start, pos - 1, tokens))
+            literal_start = pos
+        elif char == '\\':
+            pos = _after_escape(source, pos, raw)
+        elif char in '\r\n' and len(quote) == 1:
+            return None
+        else:
+            pos += 1
+    return None
+
+
+def _append_literal(parts, source, start, end, quote):
+    if start < end:
+        text = source[start:end].replace('{{', '{').replace('}}', '}')
+        parts.append(FStringLiteralToken(quote + text + quote))
+
+
+def _read_field(source, pos, quote, raw, scanner):
+    pattern, token_class = scanner
+    parts = []
+    closers = []
+    while pos < len(source):
+        match = pattern.match(source, pos)
+        token = match.group()
+        pos = match.end()
+        kind = match.lastgroup
+        if kind == 'interpolated':
+            if token_class is None:
+                parts.append(token)
+                result = _read_string(source, pos, token.lower(), scanner)
+            else:
+                result = _defer_nested_string(source, match, pattern)
+            if result is None:
+                return None
+            pos, tokens = result
+            parts.extend(tokens)
             continue
-        if body[j] == '{':
-            depth += 1
-        elif body[j] == '}':
-            depth -= 1
-        j += 1
-    return j
+        if (token_class is not None and token.lower() in _STRING_PREFIXES and
+                source[pos:pos + 1] in ('"', "'")):
+            quoted = pattern.match(source, pos)
+            if quoted.end() > pos + 1:
+                parts.append(_NestedFactoryString(match.start(), quoted.end()))
+                pos = quoted.end()
+                continue
+        if not closers:
+            if token == '}':
+                return pos, parts
+            if token.startswith(':'):
+                result = _read_format(source, match, quote, raw, scanner)
+                if result is None:
+                    return None
+                pos, tokens = result
+                parts.append(match if token_class is not None else ':')
+                parts.extend(tokens)
+                return pos, parts
+        if token in _CLOSERS:
+            closers.append(_CLOSERS[token])
+        elif token in (')', ']', '}'):
+            if not closers or token != closers.pop():
+                return None
+        if kind == 'crlf_join' and token_class is None:
+            token = '\\\n'
+        parts.append(match if token_class is not None else token)
+    return None
 
 
-def _tokenize_fstring_body(token, token_class):
+def _defer_nested_string(source, match, pattern):
+    result = _read_string(source, match.end(), match.group().lower(), (pattern, None))
+    if result is None:
+        return None
+    end, _ = result
+    return end, [_NestedFactoryString(match.start(), end)]
+
+
+def _field_parts(parts, source, start, end, scanner):
+    pattern, token_class = scanner
+    # Replay nested format fields against the same source as the outer field.
+    field = source[start:end]
+    original_pattern = compiled_token_pattern(_PY_ADDITION)
+    field_factory = _factory_with_original_matches(field, original_pattern.finditer(field), token_class)
+    values = _field_factory_values(parts, field, start, (pattern, field_factory))
+    tokens = fold_token_stream(values, _identity, is_macro_hash=_starts_factory_macro)
+    return _mark_prefixed_strings(tokens, scanner)
+
+
+def _field_factory_values(parts, field, start, scanner):
+    pattern, token_class = scanner
+    for part in parts:
+        if isinstance(part, Match):
+            yield token_class(pattern.match(field, part.start() - start))
+        elif isinstance(part, _NestedFactoryString):
+            yield from part.render(field, start, scanner)
+        else:
+            yield from _format_factory_tokens(field, part.start - start, part.stop - start, scanner)
+
+
+def _factory_with_original_matches(source, matches, token_class):
+    original = next(matches, None)
+
+    def factory(match):
+        nonlocal original
+        if match.string is source:
+            while original is not None and original.start() < match.start():
+                original = next(matches, None)
+            # Keep the original scan origin when the token boundaries agree.
+            if original is not None and original.span() == match.span():
+                match = original
+        return token_class(match)
+
+    return factory
+
+
+def _format_factory_tokens(field, start, end, scanner):
+    pattern, token_class = scanner
+    for match in pattern.finditer(field, start):
+        if match.start() >= end:
+            return
+        if match.end() > end:
+            # A format fill or flag cannot consume the following field.
+            for bounded in pattern.finditer(field, match.start(), end):
+                if bounded.start() == end:
+                    return
+                yield _format_factory_value(bounded, token_class)
+            return
+        yield _format_factory_value(match, token_class)
+
+
+def _format_factory_value(match, token_class):
+    token = token_class(match)
+    if token == '#' and match.group().startswith('#'):
+        return _FormatHash(token)
+    return token
+
+
+def _starts_factory_macro(token):
+    return not isinstance(token, _FormatHash)
+
+
+class _FormatHash(str):
+    """A raw format flag that does not start a comment."""
+
+
+class _FactoryField:
+    """A field whose factory waits for the enclosing token to be accepted."""
+
+    def __init__(self, start, end, tokens):
+        self.start = start
+        self.end = end
+        self.tokens = tokens
+
+
+class _NestedFactoryString:
+    """Defer a nested string until the enclosing field's offsets are known."""
+
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+    def render(self, field, start, scanner):
+        pattern, token_class = scanner
+        end = self.end - start
+        prefix = pattern.match(field, self.start - start)
+        yield token_class(prefix)
+        quoted = pattern.match(field, prefix.end())
+        if quoted.end() == end:
+            yield token_class(quoted)
+        else:
+            yield field[prefix.end():end]
+
+
+def _read_format(source, delimiter, quote, raw, scanner):
+    # '#' and quotes are ordinary format text. Only '{' opens a field here.
+    token_class = scanner[1]
+    pos = delimiter.start() + 1
+    literal_start = pos if token_class is None else delimiter.end()
+    parts = []
+    while pos < len(source):
+        char = source[pos]
+        if char in '{}':
+            if token_class is None:
+                _append_literal(parts, source, literal_start, pos, quote)
+            elif literal_start < pos:
+                parts.append(slice(literal_start, pos))
+            if char == '}':
+                return pos + 1, parts
+            field = _read_field(source, pos + 1, quote, raw, scanner)
+            if field is None:
+                return None
+            parts.append('{' if token_class is None else slice(pos, pos + 1))
+            pos, tokens = field
+            parts.extend(tokens)
+            parts.append('}' if token_class is None else slice(pos - 1, pos))
+            literal_start = pos
+        elif char == '\\':
+            pos = _after_escape(source, pos, raw)
+        else:
+            pos += 1
+    return None
+
+
+def _after_escape(source, pos, raw):
+    if not raw and source.startswith(r'\N{', pos):
+        end = source.find('}', pos + 3)
+        if end != -1:
+            return end + 1
+    if source.startswith('\r\n', pos + 1):
+        return pos + 3
+    if source[pos + 1:pos + 2] in ('\\', "'", '"', '\r', '\n'):
+        return pos + 2
+    # A backslash does not escape a replacement field's opening brace.
+    return pos + 1
+
+
+# The caller owns this token boundary. Keep the original expansion of its partial text.
+def _legacy_fstring_body(token, token_class):
     """Split an f-string body into literal chunks (kept as string tokens)
     and interpolation expressions (re-tokenized so inner keywords count).
 
@@ -151,16 +465,85 @@ def _tokenize_fstring_body(token, token_class):
             # ever-shorter interpolation body).
             produced.extend(
                 FStringExpressionToken(tok)
-                for tok in generate_tokens(
-                    body[i + 1:j - 1], '', token_class))
+                for tok in _legacy_field_tokens(body[i + 1:j - 1], token_class))
             i = j
             continue
         literal.append(body[i])
         i += 1
     if not produced:
-        yield token  # no interpolation; leave the string token untouched
+        yield token
         return
     if literal:
         produced.append(FStringLiteralToken(quote + ''.join(literal) + quote))
     for tok in produced:
         yield tok
+
+
+def _legacy_field_tokens(source, token_class):
+    pattern = compiled_token_pattern(_PY_ADDITION)
+    tokens = tokens_in_span(pattern, source, 0, len(source), token_class)
+    prefix = None
+    for token in tokens:
+        if prefix is not None:
+            held, prefix = prefix, None
+            if isinstance(token, str) and token[:1] in ('"', "'"):
+                yield held
+                string = PrefixedStringToken(token)
+                if held.lower() in _FSTRING_PREFIXES:
+                    yield from _legacy_fstring_body(string, token_class)
+                else:
+                    yield string
+                continue
+            yield held
+            # Classify the current token normally.
+        if isinstance(token, str) and token.lower() in _STRING_PREFIXES:
+            prefix = token
+            continue
+        yield token
+    if prefix is not None:
+        yield prefix
+
+
+def _find_interpolation_end(body, start):
+    """Return index after the closing '}' of an interpolation opened at start."""
+    depth = 1
+    j = start + 1
+    n = len(body)
+    while j < n and depth:
+        if body[j] in '"\'':
+            j = _skip_quoted_literal(body, j)
+            continue
+        if body[j] == '{':
+            depth += 1
+        elif body[j] == '}':
+            depth -= 1
+        j += 1
+    return j
+
+
+def _skip_quoted_literal(body, pos):
+    """Advance past a Python string literal in body; return new position."""
+    n = len(body)
+    if pos + 2 < n and body[pos:pos + 3] in ('"""', "'''"):
+        quote = body[pos:pos + 3]
+        pos += 3
+        while pos < n:
+            if body[pos:pos + 3] == quote:
+                return pos + 3
+            if body[pos] == '\\':
+                pos += 2
+                continue
+            pos += 1
+        return n
+    if pos < n and body[pos] in '"\'':
+        quote = body[pos]
+        pos += 1
+        while pos < n:
+            if body[pos] == '\\':
+                pos += 2
+                continue
+            if body[pos] == quote:
+                return pos + 1
+            pos += 1
+        return n
+    return pos

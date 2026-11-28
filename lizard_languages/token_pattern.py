@@ -121,9 +121,14 @@ def tokens_in_span(pattern, source, start, end, token_class=None,
     token; languages without a preprocessor keep '#' as its own token."""
     if token_class is None:
         token_class = _token_text
+    return fold_token_stream(pattern.finditer(source, start, end), token_class, macros)
+
+
+def fold_token_stream(items, token_class, macros=True, *, is_macro_hash=None):
+    """Turn each item into a token and combine preprocessor lines."""
     macro = ""
-    for match in pattern.finditer(source, start, end):
-        token = token_class(match)
+    for item in items:
+        token = token_class(item)
         if macro:
             if "\\\n" in token or "\n" not in token:
                 macro += token
@@ -131,7 +136,7 @@ def tokens_in_span(pattern, source, start, end, token_class=None,
                 yield macro
                 yield token
                 macro = ""
-        elif token == "#" and macros:
+        elif token == "#" and macros and (is_macro_hash is None or is_macro_hash(token)):
             macro = token
         else:
             yield token
