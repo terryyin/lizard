@@ -1,7 +1,5 @@
 """Shared JavaScript and TypeScript runtime state dispatch."""
 
-from functools import lru_cache
-
 from .code_reader import CodeStateMachine
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
 from .javascript_expression import JSXChildBrace
@@ -52,13 +50,14 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_condition = False  # Inside `if (...)` / `for (...)`
 
     def __call__(self, token, reader=None):
-        if self._binding_candidate:
-            # Only named-formal readers need events for initializer dispatch.
-            self._binding_candidate.read_token(token, report=False)
+        bindings = self._binding_candidate or self._property_formals
+        if bindings:
+            bindings.read_token(token, report=False)
         return CodeStateMachine.__call__(self, token, reader)
 
     def _quoted_property_state(self):
-        return _quoted_property_state_type(type(self))(self.context)
+        # Configured states keep their own token hooks and dispatch order.
+        return self.__class__(self.context)
 
     def next(self, state, token=None):
         self._state = state
@@ -319,18 +318,18 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
             self.next(self._state_global)
 
 
-@lru_cache()
-def _quoted_property_state_type(state_type):
-    if issubclass(state_type, _QuotedPropertyFormals):
-        return state_type
-    # Match the configured reader type so nested state discovery still works.
-    return type('QuotedPropertyStates', (_QuotedPropertyFormals, state_type), {})
-
-
-class _QuotedPropertyFormals:
-    """Collect formals only when reading a quoted property group."""
+class _BuiltinTypeScriptStates(TypeScriptStates):
+    """Skip the quoted tracker in the ordinary built-in reader."""
 
     def __call__(self, token, reader=None):
-        if self._property_formals:
-            self._property_formals.read_token(token, report=False)
-        return super().__call__(token, reader)
+        if self._binding_candidate:
+            # Only named-formal readers need events for initializer dispatch.
+            self._binding_candidate.read_token(token, report=False)
+        return CodeStateMachine.__call__(self, token, reader)
+
+    def _quoted_property_state(self):
+        return _BuiltinQuotedPropertyStates(self.context)
+
+
+class _BuiltinQuotedPropertyStates(_BuiltinTypeScriptStates):
+    __call__ = TypeScriptStates.__call__

@@ -145,6 +145,28 @@ const hooks = {
     ]
 
 
+def test_configured_token_hook_normalizes_quoted_and_ordinary_formals():
+    class ConfiguredState(TypeScriptStates):
+        def __call__(self, token, reader=None):
+            if token == 'input' and not isinstance(self._state, TypeScriptStates):
+                token = 'normalized'
+            return super().__call__(token, reader)
+
+    def configure(reader):
+        reader.parallel_states[0] = ConfiguredState(reader.context)
+
+    source = '''const hooks = {
+  'event:ready': (input: number) => input,
+  submit: (input: number) => input,
+};'''
+
+    info, _, _ = read(configure=configure, source=source)
+
+    assert [(f.start_line, f.parameters) for f in info.function_list] == [
+        (2, ['normalized']), (3, ['normalized']),
+    ]
+
+
 class StateIterable:
     def __init__(self, states):
         self.states = states
