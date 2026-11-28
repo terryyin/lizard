@@ -1,5 +1,10 @@
 # Change Log
 
+## Unreleased
+
+### Changes
+- Nesting depth (ND, `-END`) no longer counts the logical operators `&&` and `||`, inside or outside a condition; it counts only control structures, as ADR 0001 defines it. The ternary `?` still counts. ND values may drop, so functions may no longer exceed the `-N`/`--ND` threshold. NS (`-ENS`), CCN and cognitive complexity are unchanged (issue #693)
+
 ## 1.26.1
 
 ### Bug Fixes

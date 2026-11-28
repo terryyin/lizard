@@ -88,7 +88,7 @@ export async function resumeManagedExecutionIncrement(request) {
         identity: oneShotIdentity,
       })
     : undefined;
-  const { landingContext: resolvedLanding, reference } =
+  const { landingContext: resolvedLanding, ...sessionEvidence } =
     await resolveLaunchLanding({
       landingContext,
       workspace,
@@ -142,7 +142,7 @@ export async function resumeManagedExecutionIncrement(request) {
   recordAcceptedIncrement(workspace, {
     base: published.suffixBase,
     candidate: published.acceptedSha,
-    reference,
+    ...sessionEvidence,
   });
 
   // Register on the recovered owner after remote acceptance.

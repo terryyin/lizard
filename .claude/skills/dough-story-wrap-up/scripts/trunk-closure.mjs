@@ -19,7 +19,6 @@
 // is not pushed again, and once the worktree is gone the recorded management
 // context (`--repository`) carries completion and cleanup.
 import { existsSync } from "node:fs";
-import { resolve } from "node:path";
 import { mailboxRoot } from "../../dough-execute-plan/scripts/ci-mailbox-location.mjs";
 import { isDirectCliEntry } from "../../dough-execute-plan/scripts/ci-direct-entry.mjs";
 import { refreshDefaultCheckout } from "../../dough-execute-plan/scripts/maintain-default-checkout.mjs";
@@ -38,7 +37,12 @@ import {
   publishClosureRecord,
   sealedCompletion,
 } from "./trunk-closure-session-record.mjs";
-import { finishArguments } from "./trunk-closure-arguments.mjs";
+import { runFinishCommand } from "./trunk-closure-command.mjs";
+import {
+  adoptAdmittedSession,
+  admittedRefreshCheckout,
+} from "./trunk-closure-admitted-session.mjs";
+import { clearFirstLandingExpectationForContext } from "../../dough-execute-plan/scripts/first-landing-expectation.mjs";
 import {
   completeFinalClosure,
   completionRecovery,
@@ -77,6 +81,7 @@ export async function finishTrunkClosure({
   remote = "origin",
   identity,
   createdForWork = false,
+  admittedLaunchContext,
   session,
   coordinator,
   observerDirectory,
@@ -106,6 +111,20 @@ export async function finishTrunkClosure({
       reason: `${tracking} does not contain the before-cleanup commit`,
     });
   }
+  const borrowed =
+    admittedLaunchContext &&
+    (await adoptAdmittedSession({
+      admittedLaunchContext,
+      workspace,
+      branch,
+      identity,
+      repository,
+      remote,
+      targetRef,
+      tracking,
+      final,
+      backlogPath,
+    }));
   const root = await observerAccess(workspace, repository);
   const published = await settleFinalClosure({
     workspace,
@@ -181,7 +200,7 @@ export async function finishTrunkClosure({
         });
   // After the record stage, so a published record reaches the checkout too.
   const refresh = await refreshDefaultCheckout({
-    checkout: defaultCheckout,
+    checkout: admittedRefreshCheckout(defaultCheckout, borrowed),
     remote,
     integrationBranch: targetBranchName(targetRef),
   });
@@ -190,6 +209,8 @@ export async function finishTrunkClosure({
     const { stopped, ...detail } = closed;
     return stop(stopped, { ...accepted, completion, refresh, ...detail });
   }
+  if (admittedLaunchContext)
+    await clearFirstLandingExpectationForContext(admittedLaunchContext);
   const cleanup = await retireWorktree({
     repository,
     worktree: workspace,
@@ -214,30 +235,7 @@ export async function finishTrunkClosure({
 }
 
 if (isDirectCliEntry(import.meta.url, process.argv[1])) {
-  let args;
-  try {
-    args = finishArguments(process.argv.slice(2));
-  } catch (error) {
-    process.stderr.write(`${error.message}\n`);
-    process.exitCode = 2;
-  }
-  if (args) {
-    let result;
-    try {
-      result = await finishTrunkClosure({
-        ...args,
-        workspace: resolve(args.workspace),
-        repository: args.repository ? resolve(args.repository) : undefined,
-        defaultCheckout: args.defaultCheckout
-          ? resolve(args.defaultCheckout)
-          : undefined,
-      });
-    } catch (error) {
-      // A failed Git step stops closure; nothing after it ran.
-      result = stop("git", { reason: "git error", error: error.message });
-    }
-    if (result.startReceipt) process.stdout.write(result.startReceipt);
-    process.stdout.write(`${JSON.stringify(result)}\n`);
-    if (!result.ok) process.exitCode = 1;
-  }
+  await runFinishCommand(process.argv.slice(2), finishTrunkClosure, (error) =>
+    stop("git", { reason: "git error", error: error.message }),
+  );
 }

@@ -106,11 +106,18 @@ metric scenarios fail.
 
 ### Continuous integration
 
-`.github/workflows/python-app.yml` runs on every branch push and on pull
-requests to `master` and `feature/**`; there is no workflow path filter. Its
-cheap `changes` job runs `scripts/web_changes.py`, and the `web` job runs only
-when that job outputs `web=true`. The Python matrix (`build`) does not depend
-on either job, so it always runs and never waits for a browser build.
+`.github/workflows/python-app.yml` runs on branch pushes and on pull requests
+to `master` and `feature/**`. A non-default-branch push whose revision is
+already the head of an open PR to one of those branches leaves testing to
+the PR run. Testing runs on Ubuntu with Python 3.13 for other branch pushes
+and PRs. Apply the `ci:windows` label to a PR to also test Python 3.13 on
+Windows. Default-branch pushes test Python 3.8, 3.13, and 3.14 on both Ubuntu
+and Windows. A new run for the same PR cancels the superseded run.
+
+The `changes` job runs `scripts/web_changes.py` for revisions selected for
+testing, and the `web` job runs only when that job outputs `web=true`. The
+Python and browser jobs can then run in parallel. Push comparisons use the
+range from each push, so a later push leaves earlier browser checks to finish.
 
 `scripts/web_changes.py` is the only home of the web change boundary
 (`WEB_PATHS`): `website/`, `templates/`, the Flask/App Engine entry files, the

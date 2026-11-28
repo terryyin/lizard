@@ -70,12 +70,9 @@ class StReader(CodeReader, StCommentsMixin):
         block_endings = '|'.join(f'END_{_}' for _ in StReader._blocks)
         addition = (
             r'(?i)'  # case-insensitive
-            r'//' + _until_end + r'|'    # line comment
-            r'\(\*' + _until_end + r'|'  # block comment  (* ... *)
-            r'OR|'
-            r'AND|'
-            r'XOR|'
-            r'NOT|'
+            r'|//' + _until_end + r'|'    # line comment
+            r'\(\*.*?\*\)|'  # block comment  (* ... *)
+            r'(?:OR|AND|XOR|NOT)\b|'
             r'ELSE\s+IF|'
             + block_endings + addition
         )
@@ -98,13 +95,13 @@ class StReader(CodeReader, StCommentsMixin):
             else:
                 # ST normalization: collapse END_* into END
                 upper_tok = token.upper()
-                if upper_tok.startswith("END_"):
+                if upper_tok.startswith("END_") and upper_tok != "END_VAR":
                     yield "END"
                     continue
 
                 # Eliminate whitespace, keep line breaks
                 if not token.isspace() or token == '\n':
-                    yield token
+                    yield upper_tok if upper_tok in self.conditions else token
 
 
 class StStates(CodeStateMachine):

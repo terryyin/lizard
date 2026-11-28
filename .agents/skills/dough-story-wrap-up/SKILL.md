@@ -52,6 +52,10 @@ outside it. Reporting is the final operation.
 
 ## Establish execution completion
 
+For an admitted Dashboard session in a borrowed checkout, use its
+[owned claim checkout](../dough-execute-plan/references/wrap-up-closure-publication.md#finish-a-dashboard-admission-from-its-owned-claim-checkout)
+for Trunk Mode closure and retirement.
+
 - For planned work, run [`check --planned-completion`](../dough-execute-plan/references/story-obligations.md#use-the-record-at-execution-boundaries) on the selected plan. Every slice must be done and its obligations settled.
 - Work without a plan, including an investigation whose approach stayed unselected, is
   complete when its story or instruction, changes, and execution results show the promised outcome, including evidenced no-change.

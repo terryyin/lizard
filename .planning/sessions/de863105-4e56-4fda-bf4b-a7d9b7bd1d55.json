@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "sessionId": "de863105-4e56-4fda-bf4b-a7d9b7bd1d55",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-26T10:19:07.180Z",
+  "story": "SEED-075#kotlin-adjacent-nested-comments",
+  "ranges": [
+    {
+      "base": "75d72bc218d404fd9d001ef02f43291708ce462e",
+      "candidate": "09437ff0fa6e820b8f2dd886018d433c63ff6f58"
+    },
+    {
+      "base": "09437ff0fa6e820b8f2dd886018d433c63ff6f58",
+      "candidate": "a796d94df3a4f6330c9b223dc1e4faf9a874e777"
+    },
+    {
+      "base": "a796d94df3a4f6330c9b223dc1e4faf9a874e777",
+      "candidate": "97486fea97ac450f339d51c1f3246da9754264ee"
+    },
+    {
+      "base": "97486fea97ac450f339d51c1f3246da9754264ee",
+      "candidate": "5331c6f850b7a760542601084476a421229ba441"
+    }
+  ]
+}

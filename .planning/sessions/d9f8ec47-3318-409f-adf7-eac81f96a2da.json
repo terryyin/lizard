@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "sessionId": "d9f8ec47-3318-409f-adf7-eac81f96a2da",
+  "workflow": "dough-story-refinement",
+  "closedAt": "2026-11-26T07:41:08.817Z",
+  "story": "SEED-075#plsql-national-literals",
+  "ranges": [
+    {
+      "base": "bf648012182215e4532c94434533ef8208d5dd1d",
+      "candidate": "b718716b953675e12ed831465bf9aae78847da3f"
+    }
+  ]
+}

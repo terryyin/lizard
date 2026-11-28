@@ -13,7 +13,13 @@ class NestingStack(object):
         self.pending_function = None
 
     def with_namespace(self, name):
-        return ''.join([x.name_in_space for x in self.nesting_stack] + [name])
+        # A function's name already includes everything enclosing it.
+        names = [name]
+        for nesting in reversed(self.nesting_stack):
+            names.append(nesting.name_in_space)
+            if isinstance(nesting, FunctionInfo):
+                break
+        return ''.join(reversed(names))
 
     def add_bare_nesting(self):
         self.nesting_stack.append(self._create_nesting())
@@ -121,8 +127,11 @@ class FileInfoBuilder(object):
     def add_to_function_name(self, app):
         self.current_function.add_to_function_name(app)
 
-    def parameter(self, token):
-        self.current_function.add_parameter(token)
+    def parameter(self, token, name=None):
+        self.current_function.add_parameter(token, name=name)
+
+    def add_parameter_declaration(self, name, declaration):
+        self.current_function.add_parameter_declaration(name, declaration)
 
     def end_of_function(self):
         if not self.forgive:

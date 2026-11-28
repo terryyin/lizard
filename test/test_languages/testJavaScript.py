@@ -362,7 +362,7 @@ class Flags {
                     filename, source).function_list
                 self.assertEqual(
                     [('options', 1, 0, 0, 0, []),
-                     ('read', 2, 1, 1, 0, [['&&', 7]]),
+                     ('read', 2, 1, 0, 0, [['&&', 7]]),
                      ('catch', 1, 0, 0, 0, [])],
                     [(f.name, f.cyclomatic_complexity,
                       f.cognitive_complexity, f.max_nesting_depth,

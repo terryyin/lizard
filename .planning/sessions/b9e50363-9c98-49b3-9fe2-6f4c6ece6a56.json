@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "sessionId": "b9e50363-9c98-49b3-9fe2-6f4c6ece6a56",
+  "workflow": "dough-execute-plan",
+  "closedAt": "2026-11-26T14:11:37.778Z",
+  "story": "SEED-076#ruby-reader-test-topics",
+  "ranges": [
+    {
+      "base": "1f2524f50a99eb64784c05a03e8d3da4500e7a25",
+      "candidate": "6646ecc3f2ac2b2cab3dc693c6eaa6c6688fbc18"
+    },
+    {
+      "base": "6646ecc3f2ac2b2cab3dc693c6eaa6c6688fbc18",
+      "candidate": "67f2264fa2b4e0d93f7ea6a2b9710e0022ddcd2e"
+    },
+    {
+      "base": "67f2264fa2b4e0d93f7ea6a2b9710e0022ddcd2e",
+      "candidate": "15f074370e570412a61af956ade14b0cc00b8f5a"
+    }
+  ]
+}

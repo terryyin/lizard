@@ -38,6 +38,8 @@ class FortranReader(CodeReader, FortranCommentsMixin):
         # Include all patterns and the (?i) flag in addition
         addition = (
             r'(?i)|'
+            r"'(?:''|[^'])*'|"
+            r'"(?:""|[^"])*"|'
             r'\/\/|'
             r'\#' + _until_end + r'|'
             r'\!' + _until_end + r'|'

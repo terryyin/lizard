@@ -622,6 +622,48 @@ class TestOtherBraceLanguages(unittest.TestCase):
                 return 0
             }"""))
 
+    def test_go_logical_sequences_in_separate_statements(self):
+        self.assertEqual([2], cogc("a.go", """
+            func allowed(enabled, verified, active bool) bool {
+                ready := enabled && verified &&
+                    active
+                allowed := enabled && ready
+                return allowed
+            }"""))
+
+    def test_go_logical_sequence_before_an_if(self):
+        self.assertEqual([3], cogc("a.go", """
+            func visible(enabled, verified bool, allowed func() bool) bool {
+                ready := enabled && allowed() /* Check only when enabled.
+                */ if ready && verified {
+                    return true
+                }
+                return false
+            }"""))
+
+    def test_go_logical_sequence_after_a_trailing_dot_float(self):
+        self.assertEqual([3, 1], cogc("a.go", """
+            func visible(enabled bool, timeout float64) bool {
+                ready := enabled && timeout > 0.
+                if enabled && ready {
+                    return true
+                }
+                return false
+            }
+
+            func active(enabled bool, state struct{ ready, active bool }) bool {
+                return enabled && state.
+                    ready && state.active
+            }"""))
+
+    def test_go_logical_sequence_after_a_function_literal(self):
+        self.assertEqual([0, 2], cogc("a.go", """
+            func enabledForCallback(enabled bool) bool {
+                ready := enabled && nil != func() {}
+                allowed := enabled && ready
+                return allowed
+            }"""))
+
     def test_csharp_nullable_types_are_not_ternaries(self):
         self.assertEqual([1], cogc("a.cs", """
             class A {
@@ -949,6 +991,33 @@ class TestJavaScriptKeywordAsTheNameOfAMember(unittest.TestCase):
                     class Deferred {
                       static %s() { return this?.%s(); }   // +1 recursion
                     }""" % (name, name)))
+
+    def test_optional_method_call_on_another_object(self):
+        code = """
+            function run(plugin) {
+              return plugin?.run();
+            }"""
+        for filename in ('a.js', 'a.ts'):
+            with self.subTest(filename=filename):
+                self.assertEqual([0], cogc(filename, code))
+
+    def test_optional_method_call_on_grouped_this(self):
+        self.assertEqual([2], cogc("a.js", """
+            class Retry {
+              run(attempts) {
+                if (attempts > 0) (this)?.run(attempts - 1);
+              }
+            }"""))
+
+    def test_optional_method_call_on_type_asserted_this(self):
+        for receiver in ('(this as Retry | undefined)', 'this!'):
+            with self.subTest(receiver=receiver):
+                self.assertEqual([2], cogc("a.ts", """
+                    class Retry {
+                      run(this: Retry | undefined, attempts: number): void {
+                        if (attempts > 0) %s?.run(attempts - 1);
+                      }
+                    }""" % receiver))
 
     def test_other_languages_can_call_a_structure_word(self):
         self.assertEqual([4], cogc("a.pl", """
