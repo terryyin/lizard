@@ -53,40 +53,44 @@ def perl_tokens(source, addition, token_class, documentation):
 
 def _tokens_in_span(source, pattern, token_class, start, stop):
     previous = before_previous = ''
-    matches = pattern.finditer(source, start, stop)
     heredocs = []
-    while (match := next(matches, None)) is not None:
-        if match.lastgroup == 'perl_documentation':
-            yield from repeat('\n', match[0].count('\n'))
-            continue
-
-        token = match[0]
-        if token == '\n' and heredocs:
-            end = match.end()
-            for label, indented in heredocs:
-                end = _skip_heredoc(source, end, stop, label, indented)
-            yield from repeat('\n', source.count('\n', match.start(), end))
-            matches = pattern.finditer(source, end, stop)
-            heredocs.clear()
-            continue
-
-        literal_end = None
-        if match.lastgroup == 'perl_quote':
-            literal_end = _quote_end(source, match, previous, before_previous, heredocs)
-            if isinstance(literal_end, _EvaluatedReplacement):
-                yield from _evaluated_tokens(source, pattern, token_class, match.start(), literal_end)
-                matches = pattern.finditer(source, literal_end.quote_end, stop)
-                before_previous, previous = previous, None
+    while True:
+        for match in pattern.finditer(source, start, stop):
+            group = match.lastgroup
+            token = match[0]
+            if group == 'perl_documentation':
+                yield from repeat('\n', token.count('\n'))
                 continue
-        if literal_end is not None and literal_end != match.end():
-            # The regular expression only matched the opener. Resume after the literal.
-            token = source[match.start():literal_end]
-            matches = pattern.finditer(source, literal_end, stop)
-            if token_class:
-                match = _LITERAL.match(source, match.start(), literal_end)
-        yield token_class(match) if token_class else token
-        if not (token.isspace() or token.startswith('#')):
-            before_previous, previous = previous, token if literal_end is None else None
+            if heredocs and token == '\n':
+                start = match.end()
+                for label, indented in heredocs:
+                    start = _skip_heredoc(source, start, stop, label, indented)
+                yield from repeat('\n', source.count('\n', match.start(), start))
+                heredocs.clear()
+                break
+
+            literal_end = None
+            if group == 'perl_quote':
+                literal_end = _quote_end(source, match, previous, before_previous, heredocs)
+                if isinstance(literal_end, _EvaluatedReplacement):
+                    yield from _evaluated_tokens(source, pattern, token_class, match.start(), literal_end)
+                    before_previous, previous = previous, None
+                    start = literal_end.quote_end
+                    break
+                if literal_end is not None and literal_end != match.end():
+                    # The pattern matched only the opener. Resume after the literal.
+                    start = literal_end
+                    token = source[match.start():start]
+                    if token_class:
+                        match = _LITERAL.match(source, match.start(), start)
+                    yield token_class(match) if token_class else token
+                    before_previous, previous = previous, None
+                    break
+            yield token_class(match) if token_class else token
+            if not (token.isspace() or token.startswith('#')):
+                before_previous, previous = previous, token if literal_end is None else None
+        else:
+            return
 
 
 def _evaluated_tokens(source, pattern, token_class, start, replacement):
