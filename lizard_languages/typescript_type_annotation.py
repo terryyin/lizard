@@ -21,6 +21,7 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         self._expect_type = True
         self._function_arrow = False
         self._parenthesis_first = None
+        self._parenthesis_parameter_type = False
         self._conditional_type = False
         self._conditional_questions = 0
         self._line_break = False
@@ -36,10 +37,27 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
         self._line_break = False
         brackets = self._brackets
         if brackets:
-            if self._parenthesis_first is None and len(brackets) == 1:
-                # A parenthesized function type groups its own arrow; the
-                # arrow after the group belongs to the runtime signature.
-                self._parenthesis_first = token
+            if len(brackets) == 1:
+                if self._parenthesis_first is None:
+                    # Literal and generic callable types cannot begin
+                    # the parameter list of an ungrouped function type.
+                    first = token[:1]
+                    if (first in ('"', "'", '`', '<') or first.isdigit()
+                            or token in ('-', 'true', 'false', 'null')):
+                        self._parenthesis_first = '('
+                    else:
+                        self._parenthesis_first = token
+                elif brackets[-1] == ')':
+                    if token == ':':
+                        self._parenthesis_parameter_type = True
+                    elif (not self._parenthesis_parameter_type
+                          and (token in ('|', '&', '[', '.', 'extends')
+                               or token.startswith('<')
+                               or self._parenthesis_first in (
+                                   'keyof', 'typeof', 'readonly', 'unique', 'infer')
+                               and token.isidentifier())):
+                        # A grouped type has no parameter list for an arrow.
+                        self._parenthesis_first = '('
             if token in self.BRACKETS:
                 brackets.append(self.BRACKETS[token])
             elif token == brackets[-1]:
@@ -83,6 +101,7 @@ class TypeScriptTypeAnnotationStates(CodeStateMachine):
                 token == '(' and not self._expect_type and not self._closed_type)
             brackets.append(self.BRACKETS[token])
             self._parenthesis_first = None if token == '(' else token
+            self._parenthesis_parameter_type = False
             self._function_arrow = False
         else:
             first = token[:1]

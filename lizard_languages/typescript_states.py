@@ -18,6 +18,8 @@ _TAIL_TOKENS = frozenset(('`', ':', ',', '!'))
 class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
                        JavaScriptObjectsMixin, TypeScriptDeclarationsMixin,
                        CodeStateMachine):
+    _property_formals = None
+
     def __init__(self, context):
         super().__init__(context)
         self.last_tokens = ''
@@ -48,10 +50,14 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_condition = False  # Inside `if (...)` / `for (...)`
 
     def __call__(self, token, reader=None):
-        if self._binding_candidate:
-            # Only named-formal readers need events for initializer dispatch.
-            self._binding_candidate.read_token(token, report=False)
+        bindings = self._binding_candidate or self._property_formals
+        if bindings:
+            bindings.read_token(token, report=False)
         return CodeStateMachine.__call__(self, token, reader)
+
+    def _quoted_property_state(self):
+        # Configured states keep their own token hooks and dispatch order.
+        return self.__class__(self.context)
 
     def next(self, state, token=None):
         self._state = state
@@ -310,3 +316,20 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
     def _state_template_literal(self, token):
         if token == '`':
             self.next(self._state_global)
+
+
+class _BuiltinTypeScriptStates(TypeScriptStates):
+    """Skip the quoted tracker in the ordinary built-in reader."""
+
+    def __call__(self, token, reader=None):
+        if self._binding_candidate:
+            # Only named-formal readers need events for initializer dispatch.
+            self._binding_candidate.read_token(token, report=False)
+        return CodeStateMachine.__call__(self, token, reader)
+
+    def _quoted_property_state(self):
+        return _BuiltinQuotedPropertyStates(self.context)
+
+
+class _BuiltinQuotedPropertyStates(_BuiltinTypeScriptStates):
+    __call__ = TypeScriptStates.__call__

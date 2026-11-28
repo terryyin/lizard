@@ -9,7 +9,7 @@ from .clike import CCppCommentsMixin
 from .js_style_regex_expression import js_style_regex_expression
 from .javascript_bindings import JavaScriptBindings
 from .typescript_type_annotation import TypeScriptTypeAnnotationStates
-from .typescript_states import TypeScriptStates
+from .typescript_states import TypeScriptStates, _BuiltinTypeScriptStates
 from .typescript_signatures import ReturnTypeColon, return_type_colon
 from .javascript_templates import LINE_COMMENT, interpolation_code, template_tokens
 from .javascript_expression import awaiting_function_body, end_before_line_token
@@ -137,7 +137,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
     def __init__(self, context):
         super().__init__(context)
         self.context.class_field_annotations = self._class_field_annotations
-        self.parallel_states = [TypeScriptStates(context)]
+        self.parallel_states = [_BuiltinTypeScriptStates(context)]
         self._previous_token = None
         self._implied_semicolons = None
 
@@ -200,7 +200,7 @@ class TypeScriptReader(CodeReader, CCppCommentsMixin):
         allowed_process = (
             CodeReader.process_token, TypeScriptReader.process_token)
         if (type(states) not in (list, tuple) or len(states) != 1
-                or type(states[0]) is not TypeScriptStates
+                or type(states[0]) is not _BuiltinTypeScriptStates
                 or getattr(states[0], '_binding_candidate', False) is not None
                 or type(self).process_token not in allowed_process
                 or getattr(self.process_token, '__func__', None)

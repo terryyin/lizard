@@ -8,6 +8,7 @@ import pytest
 from lizard import FileInfoBuilder, analyze_files, get_extensions
 from lizard_languages.javascript_bindings import JavaScriptBindings
 from lizard_languages.typescript import TypeScriptReader
+from lizard_languages.typescript_states import TypeScriptStates
 
 
 SOURCE = 'const selected = x => x || fallback'
@@ -54,12 +55,12 @@ class DecisionCounter:
         self.finished = [function.name for function in self.context.fileinfo.function_list]
 
 
-def read(reader_class=ObservedReader, configure=None):
+def read(reader_class=ObservedReader, configure=None, source=SOURCE):
     context = FileInfoBuilder('dispatch.ts')
     reader = reader_class(context)
     if configure:
         configure(reader)
-    tokens = reader.generate_tokens(SOURCE)
+    tokens = reader.generate_tokens(source)
     for processor in get_extensions([]):
         tokens = processor(tokens, reader)
     emitted = list(reader(tokens, reader))
@@ -120,6 +121,50 @@ def test_configured_root_keeps_binding_owner_tracking():
     assert binding.defaults == 1
     assert binding.previous == 'fallback'
     assert reader.finished == [('selected', 2)]
+
+
+def test_configured_state_reads_quoted_property_arrows():
+    class ConfiguredState(TypeScriptStates):
+        pass
+
+    def configure(reader):
+        reader.parallel_states[0] = ConfiguredState(reader.context)
+
+    source = '''declare const enabled: boolean;
+const hooks = {
+  'event:ready': (count: number) => count,
+  'event:submit': (enabled
+    ? (item: string): string => item
+    : (item: string) => item),
+};'''
+
+    info, _, _ = read(configure=configure, source=source)
+
+    assert [(f.start_line, f.parameters) for f in info.function_list] == [
+        (3, ['count']), (5, ['item']), (6, ['item']),
+    ]
+
+
+def test_configured_token_hook_normalizes_quoted_and_ordinary_formals():
+    class ConfiguredState(TypeScriptStates):
+        def __call__(self, token, reader=None):
+            if token == 'input' and not isinstance(self._state, TypeScriptStates):
+                token = 'normalized'
+            return super().__call__(token, reader)
+
+    def configure(reader):
+        reader.parallel_states[0] = ConfiguredState(reader.context)
+
+    source = '''const hooks = {
+  'event:ready': (input: number) => input,
+  submit: (input: number) => input,
+};'''
+
+    info, _, _ = read(configure=configure, source=source)
+
+    assert [(f.start_line, f.parameters) for f in info.function_list] == [
+        (2, ['normalized']), (3, ['normalized']),
+    ]
 
 
 class StateIterable:
