@@ -209,7 +209,7 @@ class JavaScriptObjectsMixin:
 
     def _read_quoted_property_group(self):
         """Collect possible parameters while the group reads expressions."""
-        group = self.__class__(self.context)
+        group = self._quoted_property_state()
         group._call_group = True
         parameters = []
         formals = group._property_formals = JavaScriptBindings(')', parameters=parameters)

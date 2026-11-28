@@ -1,5 +1,7 @@
 """Shared JavaScript and TypeScript runtime state dispatch."""
 
+from functools import lru_cache
+
 from .code_reader import CodeStateMachine
 from .javascript_bindings import BindingSummary, JavaScriptBindingsMixin
 from .javascript_expression import JSXChildBrace
@@ -50,11 +52,13 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
         self._in_condition = False  # Inside `if (...)` / `for (...)`
 
     def __call__(self, token, reader=None):
-        bindings = self._binding_candidate or self._property_formals
-        if bindings:
+        if self._binding_candidate:
             # Only named-formal readers need events for initializer dispatch.
-            bindings.read_token(token, report=False)
+            self._binding_candidate.read_token(token, report=False)
         return CodeStateMachine.__call__(self, token, reader)
+
+    def _quoted_property_state(self):
+        return _quoted_property_state_type(type(self))(self.context)
 
     def next(self, state, token=None):
         self._state = state
@@ -313,3 +317,20 @@ class TypeScriptStates(JavaScriptBindingsMixin, JavaScriptFunctionsMixin,
     def _state_template_literal(self, token):
         if token == '`':
             self.next(self._state_global)
+
+
+@lru_cache()
+def _quoted_property_state_type(state_type):
+    if issubclass(state_type, _QuotedPropertyFormals):
+        return state_type
+    # Match the configured reader type so nested state discovery still works.
+    return type('QuotedPropertyStates', (_QuotedPropertyFormals, state_type), {})
+
+
+class _QuotedPropertyFormals:
+    """Collect formals only when reading a quoted property group."""
+
+    def __call__(self, token, reader=None):
+        if self._property_formals:
+            self._property_formals.read_token(token, report=False)
+        return super().__call__(token, reader)
